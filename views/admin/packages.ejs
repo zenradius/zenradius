@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.nav.packages', 'Paket Internet') %> | <%= company %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'packages', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-wifi"></i>
+      <span><%= t('admin.nav.packages', 'Paket Internet') %></span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i>
+        <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
+      </span>
+      <button class="btn btn-p btn-sm" onclick="openModal('addPkgModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.packages.add', 'Tambah Paket') %></button>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='error'?'d':'s' %>"><%= msg.text %></div>
+    <% } %>
+
+    <% if (routers && routers.length > 0) { %>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-bd" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label class="fl" style="margin:0"><i class="bi bi-hdd-network"></i> <%= t('admin.packages.filter_router', 'Filter Router') %></label>
+        <select id="router-filter" class="fs" style="max-width:260px" onchange="changeRouterFilter(this.value)">
+          <option value="" <%= (!selectedRouterId) ? 'selected' : '' %>><%= t('admin.packages.all_routers', '-- Semua Router --') %></option>
+          <% routers.forEach(r => { %>
+            <option value="<%= r.id %>" <%= (String(selectedRouterId||'') === String(r.id)) ? 'selected' : '' %>><%= r.name %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-ul"></i> <%= t('admin.packages.list', 'Daftar Paket Internet') %> (<%= packages.length %>)</h6>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('admin.packages.table.name', 'Nama Paket') %></th>
+              <th><%= t('admin.packages.table.speed', 'Kecepatan') %></th>
+              <th><%= t('admin.packages.table.price', 'Harga') %></th>
+              <th><%= t('admin.packages.table.billing_type', 'Tipe Billing') %></th>
+              <th><%= t('admin.packages.table.router', 'Router') %></th>
+              <th><%= t('admin.packages.table.customers', 'Pelanggan') %></th>
+              <th><%= t('admin.packages.table.status', 'Status') %></th>
+              <th><%= t('admin.packages.table.actions', 'Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!packages || packages.length === 0) { %>
+              <tr><td colspan="8" class="text-center text-muted" style="padding:20px"><%= t('admin.packages.empty', 'Belum ada paket internet.') %></td></tr>
+            <% } else { %>
+            <% packages.forEach(pkg => { %>
+                <tr>
+                  <td><strong><%= pkg.name %></strong><% if (pkg.description) { %><div class="hint" style="font-size:12px;color:var(--muted)"><%= pkg.description %></div><% } %></td>
+                  <td>
+                    <%= (pkg.speed_down/1000) %>/<%= (pkg.speed_up/1000) %> Mbps
+                    <% if (pkg.speed_down_upto || pkg.speed_up_upto) { %>
+                      <div class="hint" style="font-size:11px;color:var(--muted)"><%= t('admin.packages.upto', 'up to') %> <%= (pkg.speed_down_upto/1000) %>/<%= (pkg.speed_up_upto/1000) %> Mbps</div>
+                    <% } %>
+                  </td>
+                  <td>
+                    Rp <%= Number(pkg.price).toLocaleString('id-ID') %>
+                    <% if (pkg.promo_price) { %>
+                      <div class="hint" style="font-size:11px;color:#22c55e"><%= t('admin.packages.promo', 'Promo') %>: Rp <%= Number(pkg.promo_price).toLocaleString('id-ID') %> (<%= pkg.promo_cycles %>x)</div>
+                    <% } %>
+                  </td>
+                  <td><span class="badge <%= pkg.billing_type === 'prepaid' ? 'bw' : 'bs' %>"><%= pkg.billing_type === 'prepaid' ? t('admin.packages.prepaid', 'Prabayar') : t('admin.packages.postpaid', 'Pascabayar') %></span></td>
+                  <td><%= pkg.router_name || t('admin.packages.all_routers_short', 'Semua Router') %></td>
+                  <td><span class="badge bs"><%= pkg.customer_count || 0 %></span></td>
+                  <td>
+                    <span class="badge <%= pkg.is_active ? 'bs' : 'bd' %>">
+                      <%= pkg.is_active ? t('common.active', 'Aktif') : t('common.inactive', 'Nonaktif') %>
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-g btn-icon btn-sm" onclick='editPkg(<%- JSON.stringify(pkg) %>)'><i class="bi bi-pencil"></i></button>
+                      <form action="/admin/packages/<%= pkg.id %>/delete" method="POST" onsubmit="return confirm(I18N.confirmDeletePackage)">
+                        <button type="submit" class="btn btn-d btn-icon btn-sm"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah -->
+<div class="mo" id="addPkgModal">
+  <div class="mb">
+    <form action="/admin/packages" method="POST">
+      <div class="mh"><span class="mt"><%= t('admin.packages.modal.add_title', 'Tambah Paket Internet') %></span><button type="button" class="mc" onclick="closeModal('addPkgModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.name', 'Nama Paket') %></label><input type="text" name="name" class="fc" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.price', 'Harga (Rp)') %></label><input type="number" name="price" class="fc" min="0" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.speed_down', 'Kecepatan Download (Mbps)') %></label><input type="number" name="speed_down" class="fc" min="0" step="0.1" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.speed_up', 'Kecepatan Upload (Mbps)') %></label><input type="number" name="speed_up" class="fc" min="0" step="0.1" required></div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.packages.form.billing_type', 'Tipe Billing') %></label>
+          <select name="billing_type" class="fs">
+            <option value="postpaid"><%= t('admin.packages.postpaid', 'Pascabayar') %></option>
+            <option value="prepaid"><%= t('admin.packages.prepaid', 'Prabayar') %></option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.duration_days', 'Durasi (Hari)') %></label><input type="number" name="duration_days" class="fc" min="1" value="30"></div>
+        <% if (routers && routers.length > 0) { %>
+        <div class="fg">
+          <label class="fl"><%= t('admin.packages.form.router', 'Router (opsional)') %></label>
+          <select name="router_id" class="fs">
+            <option value=""><%= t('admin.packages.all_routers', '-- Semua Router --') %></option>
+            <% routers.forEach(r => { %><option value="<%= r.id %>"><%= r.name %></option><% }) %>
+          </select>
+        </div>
+        <% } %>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.description', 'Deskripsi') %></label><textarea name="description" class="fc" rows="2"></textarea></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addPkgModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('common.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit -->
+<div class="mo" id="editPkgModal">
+  <div class="mb">
+    <form id="editPkgForm" method="POST">
+      <div class="mh"><span class="mt"><%= t('admin.packages.modal.edit_title', 'Edit Paket Internet') %></span><button type="button" class="mc" onclick="closeModal('editPkgModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.name', 'Nama Paket') %></label><input type="text" name="name" id="e-pkg-name" class="fc" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.price', 'Harga (Rp)') %></label><input type="number" name="price" id="e-pkg-price" class="fc" min="0" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.speed_down', 'Kecepatan Download (Mbps)') %></label><input type="number" name="speed_down" id="e-pkg-speed-down" class="fc" min="0" step="0.1" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.speed_up', 'Kecepatan Upload (Mbps)') %></label><input type="number" name="speed_up" id="e-pkg-speed-up" class="fc" min="0" step="0.1" required></div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.packages.form.billing_type', 'Tipe Billing') %></label>
+          <select name="billing_type" id="e-pkg-billing-type" class="fs">
+            <option value="postpaid"><%= t('admin.packages.postpaid', 'Pascabayar') %></option>
+            <option value="prepaid"><%= t('admin.packages.prepaid', 'Prabayar') %></option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.duration_days', 'Durasi (Hari)') %></label><input type="number" name="duration_days" id="e-pkg-duration" class="fc" min="1"></div>
+        <% if (routers && routers.length > 0) { %>
+        <div class="fg">
+          <label class="fl"><%= t('admin.packages.form.router', 'Router (opsional)') %></label>
+          <select name="router_id" id="e-pkg-router" class="fs">
+            <option value=""><%= t('admin.packages.all_routers', '-- Semua Router --') %></option>
+            <% routers.forEach(r => { %><option value="<%= r.id %>"><%= r.name %></option><% }) %>
+          </select>
+        </div>
+        <% } %>
+        <div class="fg"><label class="fl"><%= t('admin.packages.form.description', 'Deskripsi') %></label><textarea name="description" id="e-pkg-desc" class="fc" rows="2"></textarea></div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.packages.form.status', 'Status') %></label>
+          <select name="is_active" id="e-pkg-status" class="fs">
+            <option value="1"><%= t('common.active', 'Aktif') %></option>
+            <option value="0"><%= t('common.inactive', 'Nonaktif') %></option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('editPkgModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('admin.packages.save_changes', 'Simpan Perubahan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const I18N = {
+  confirmDeletePackage: "<%= t('admin.packages.confirm_delete', 'Hapus paket ini?') %>"
+};
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function editPkg(p) {
+  document.getElementById('editPkgForm').action = '/admin/packages/' + p.id + '/update';
+  document.getElementById('e-pkg-name').value = p.name;
+  document.getElementById('e-pkg-price').value = p.price;
+  document.getElementById('e-pkg-speed-down').value = (p.speed_down || 0) / 1000;
+  document.getElementById('e-pkg-speed-up').value = (p.speed_up || 0) / 1000;
+  document.getElementById('e-pkg-billing-type').value = p.billing_type || 'postpaid';
+  document.getElementById('e-pkg-duration').value = p.duration_days || 30;
+  document.getElementById('e-pkg-desc').value = p.description || '';
+  document.getElementById('e-pkg-status').value = p.is_active;
+  const routerSel = document.getElementById('e-pkg-router');
+  if (routerSel) routerSel.value = p.router_id || '';
+  openModal('editPkgModal');
+}
+
+function changeRouterFilter(routerId) {
+  const url = new URL(window.location.href);
+  if (routerId) url.searchParams.set('router_id', routerId);
+  else url.searchParams.delete('router_id');
+  window.location.href = url.toString();
+}
+</script>
+</body>
+</html>

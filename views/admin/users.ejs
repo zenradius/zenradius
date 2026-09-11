@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.nav.user_management', 'Manajemen Pengguna') %> | <%= company %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'user_management', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-person-lines-fill"></i>
+      <span><%= t('admin.users.title', 'Manajemen Pengguna') %></span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i> <%= t('admin.role.admin', 'Admin') %>
+      </span>
+      <button class="btn btn-p btn-sm" onclick="openModal('addUserModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.users.create', 'Buat Pengguna') %></button>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='error'?'d':'s' %>"><%= msg.text %></div>
+    <% } %>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-bd" style="padding:14px">
+        <form method="GET" action="/admin/users" class="d-flex gap-2 flex-wrap" style="align-items:center">
+          <input type="text" name="q" class="fc" style="max-width:260px" placeholder="<%= t('admin.users.search_placeholder', 'Cari nama, username, atau HP...') %>" value="<%= q || '' %>">
+          <select name="role" class="fs" style="max-width:200px">
+            <option value=""><%= t('admin.users.all_roles', 'Semua Role') %></option>
+            <% canonicalRoles.forEach(r => { %>
+              <option value="<%= r %>" <%= roleFilter===r ? 'selected' : '' %>><%= t('roles.' + r, r) %></option>
+            <% }) %>
+          </select>
+          <select name="status" class="fs" style="max-width:160px">
+            <option value=""><%= t('common.all_status', 'Semua Status') %></option>
+            <option value="active" <%= statusFilter==='active' ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+            <option value="inactive" <%= statusFilter==='inactive' ? 'selected' : '' %>><%= t('common.inactive', 'Nonaktif') %></option>
+          </select>
+          <button type="submit" class="btn btn-g btn-sm"><i class="bi bi-search"></i> <%= t('admin.users.search', 'Cari') %></button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-ul"></i> <%= t('admin.users.list', 'Daftar Pengguna') %></h6>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('admin.users.table.name', 'Nama') %></th>
+              <th><%= t('admin.users.table.username', 'Username') %></th>
+              <th><%= t('admin.users.table.role', 'Role') %></th>
+              <th><%= t('admin.users.table.status', 'Status') %></th>
+              <th><%= t('admin.users.table.source', 'Sumber') %></th>
+              <th><%= t('admin.users.table.actions', 'Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!users || users.length === 0) { %>
+              <tr><td colspan="6" class="text-center text-muted" style="padding:20px"><%= t('admin.users.empty', 'Tidak ada pengguna ditemukan.') %></td></tr>
+            <% } else { %>
+              <% users.forEach(u => { %>
+                <tr>
+                  <td><strong><%= u.name %></strong></td>
+                  <td><code><%= u.username %></code></td>
+                  <td><span class="badge bp"><%= t('roles.' + u.role, u.role) %></span></td>
+                  <td>
+                    <span class="badge <%= u.active ? 'bs' : 'bd' %>">
+                      <%= u.active ? t('common.active', 'Aktif') : t('common.inactive', 'Nonaktif') %>
+                    </span>
+                  </td>
+                  <td><span class="text-muted"><%= u.source %></span></td>
+                  <td>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-g btn-icon btn-sm" onclick='editUser(<%- JSON.stringify(u) %>)'><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-g btn-icon btn-sm" onclick='openResetPassword("<%= u.source %>", <%= u.id %>)'><i class="bi bi-key"></i></button>
+                      <form action="/admin/users/<%= u.source %>/<%= u.id %>/status" method="POST" onsubmit="return confirm(u_active_<%= u.source %>_<%= u.id %> ? I18N.confirmDisable : I18N.confirmEnable)">
+                        <input type="hidden" name="active" value="<%= u.active ? '0' : '1' %>">
+                        <script>var u_active_<%= u.source %>_<%= u.id %> = <%= u.active ? 'true' : 'false' %>;</script>
+                        <button type="submit" class="btn <%= u.active ? 'btn-d' : 'btn-p' %> btn-icon btn-sm">
+                          <i class="bi <%= u.active ? 'bi-slash-circle' : 'bi-check-circle' %>"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Create -->
+<div class="mo" id="addUserModal">
+  <div class="mb">
+    <form action="/admin/users" method="POST">
+      <div class="mh"><span class="mt"><%= t('admin.users.create', 'Buat Pengguna') %></span><button type="button" class="mc" onclick="closeModal('addUserModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl"><%= t('admin.users.table.role', 'Role') %></label>
+          <select name="source" class="fs" required>
+            <option value="technicians"><%= t('roles.teknisi', 'Teknisi Lapangan') %></option>
+            <option value="cashiers"><%= t('roles.customer_service', 'Layanan Pelanggan') %></option>
+            <option value="collectors"><%= t('roles.customer_service', 'Layanan Pelanggan') %> (Kolektor)</option>
+            <option value="agents"><%= t('roles.reseller', 'Reseller Resmi') %></option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl"><%= t('admin.technicians.form.full_name', 'Nama Lengkap') %></label><input type="text" name="name" class="fc" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.technicians.form.login_username', 'Username Login') %></label><input type="text" name="username" class="fc" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.technicians.form.password', 'Password') %></label><input type="password" name="password" class="fc" required autocomplete="new-password"></div>
+        <div class="fg"><label class="fl"><%= t('admin.technicians.form.whatsapp', 'No. WhatsApp') %></label><input type="text" name="phone" class="fc"></div>
+        <div class="fg"><label class="fl"><%= t('admin.technicians.form.area', 'Area Tugas') %></label><input type="text" name="area" class="fc" placeholder="(teknisi/kolektor)"></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addUserModal')"><%= t('admin.users.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('admin.users.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit -->
+<div class="mo" id="editUserModal">
+  <div class="mb">
+    <form id="editUserForm" method="POST">
+      <div class="mh"><span class="mt"><%= t('admin.users.edit', 'Edit Pengguna') %></span><button type="button" class="mc" onclick="closeModal('editUserModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl"><%= t('admin.technicians.form.full_name', 'Nama Lengkap') %></label><input type="text" name="name" id="eu-name" class="fc" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.technicians.form.login_username', 'Username Login') %></label><input type="text" name="username" id="eu-username" class="fc" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.technicians.form.whatsapp', 'No. WhatsApp') %></label><input type="text" name="phone" id="eu-phone" class="fc"></div>
+        <div class="fg" id="eu-area-group"><label class="fl"><%= t('admin.technicians.form.area', 'Area Tugas') %></label><input type="text" name="area" id="eu-area" class="fc"></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('editUserModal')"><%= t('admin.users.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('admin.users.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Reset Password -->
+<div class="mo" id="resetPwModal">
+  <div class="mb">
+    <form id="resetPwForm" method="POST">
+      <div class="mh"><span class="mt"><%= t('admin.users.reset_password', 'Reset Password') %></span><button type="button" class="mc" onclick="closeModal('resetPwModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl"><%= t('admin.users.new_password', 'Password Baru') %></label><input type="password" name="new_password" class="fc" required autocomplete="new-password"></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('resetPwModal')"><%= t('admin.users.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('admin.users.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const I18N = {
+  confirmDisable: "<%= t('admin.users.confirm_disable', 'Nonaktifkan pengguna ini?') %>",
+  confirmEnable: "<%= t('admin.users.confirm_enable', 'Aktifkan pengguna ini?') %>"
+};
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function editUser(u) {
+  document.getElementById('editUserForm').action = '/admin/users/' + u.source + '/' + u.id + '/update';
+  document.getElementById('eu-name').value = u.name || '';
+  document.getElementById('eu-username').value = u.username || '';
+  document.getElementById('eu-phone').value = u.phone || '';
+  document.getElementById('eu-area').value = u.area || '';
+  document.getElementById('eu-area-group').style.display = (u.source === 'technicians' || u.source === 'collectors') ? '' : 'none';
+  openModal('editUserModal');
+}
+
+function openResetPassword(source, id) {
+  document.getElementById('resetPwForm').action = '/admin/users/' + source + '/' + id + '/reset-password';
+  openModal('resetPwModal');
+}
+</script>
+</body>
+</html>

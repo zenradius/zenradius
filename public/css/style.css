@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  --portal-bg: #173945;
+  --portal-surface: #183f51;
+  --portal-surface-raised: #1b4656;
+  --portal-ink: #edf7f5;
+  --portal-muted: #a8bec2;
+  --portal-teal: #2dd4bf;
+  --portal-teal-strong: #14b8a6;
+  --portal-line: rgba(190, 239, 255, 0.32);
+}
+
+body {
+  background: #173945;
+  background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+  color: var(--portal-ink);
+  font-family: 'DM Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand { font-family: 'Space Grotesk', sans-serif; }
+.card, .glass-card { border: 1px solid var(--portal-line); border-radius: 16px; box-shadow: 0 10px 24px rgba(0,0,0,.14); }
+.btn-primary { background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%); border-color: rgba(20,184,166,.6); box-shadow: 0 10px 22px rgba(45,212,191,.22); color: #062c2a; }
+.btn-primary:hover, .btn-primary:focus { background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%); border-color: rgba(20,184,166,.6); filter: brightness(1.03); }
+.form-control:focus, .form-select:focus { border-color: rgba(45,212,191,.5); box-shadow: 0 0 0 3px rgba(45,212,191,.12); }
+.card {
+  border-radius: 1.2rem;
+  border: 1px solid var(--portal-line);
+  background: linear-gradient(145deg, rgba(23,35,44,.98), rgba(27,49,56,.92));
+}
+.card .form-label {
+  font-weight: 500;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--portal-teal) 0%, var(--portal-teal-strong) 100%);
+  border: 1px solid rgba(20,184,166,.6);
+  font-weight: 600;
+  color: #062c2a;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--portal-teal) 0%, var(--portal-teal-strong) 100%);
+}
+img[alt="Logo"] {
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 8px;
+}
+
+/* Style untuk judul Portal Pelanggan */
+.login-header h4 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Style untuk header perusahaan */
+.login-header p {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cek Tagihan | <%= settings.company_header || 'ZenRadius - Pusat Layanan' %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="stylesheet" href="/css/unified.css">
+  <style>
+    :root {
+      --portal-bg: #173945;
+      --portal-panel: #173945;
+      --portal-panel-strong: #173945;
+      --portal-line: rgba(190, 239, 255, 0.32);
+      --portal-line-strong: rgba(190, 239, 255, 0.38);
+      --portal-primary: #2dd4bf;
+      --portal-secondary: #14b8a6;
+      --portal-text: #edf7f5;
+      --portal-muted: #a8bec2;
+    }
+
+    @keyframes softGlow {
+      0%, 100% { box-shadow: 0 0 0 rgba(35, 96, 96, 0.06), 0 8px 18px rgba(23, 57, 69, 0.14); }
+      50% { box-shadow: 0 0 0 2px rgba(35, 96, 96, 0.08), 0 12px 22px rgba(35, 96, 96, 0.10); }
+    }
+
+    body{
+      background: #173945;
+      background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      color: var(--portal-text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+    .cardx{background:#173945;backdrop-filter:blur(14px);border:1px solid rgba(190,239,255,.32);border-radius:14px;box-shadow:0 14px 32px rgba(3,14,20,.34);overflow:hidden;max-width:720px;width:100%;position:relative}
+    .cardx::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:140%;background:linear-gradient(135deg,rgba(255,255,255,.04),transparent 40%,rgba(124,221,218,.04));pointer-events:none}
+    .head{background:#173945;padding:22px 20px;border-bottom:1px solid rgba(190,239,255,.22)}
+    .body{padding:22px 20px}
+    .form-control,.form-select{
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(190, 239, 255, 0.22);
+      color: var(--portal-text);
+      border-radius: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .form-control::placeholder{
+      color: rgba(237, 250, 250, 0.38);
+    }
+    .form-control:focus,.form-select:focus{
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(45, 212, 191, 0.55);
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14);
+      color: #fff;
+    }
+    .field { position: relative; width: 100%; }
+    .muted{color: var(--portal-muted)}
+    .tbl{width:100%;border-collapse:separate;border-spacing:0}
+    .tbl th,.tbl td{padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.18);vertical-align:middle}
+    .tbl thead th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:rgba(148,163,184,.95)}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18)}
+    .pill-u{background: rgba(251, 113, 133, .14);color:#fb7185;border-color: rgba(251, 113, 133, .35)}
+    .pill-p{background: rgba(74, 222, 128, .14);color:#4ade80;border-color: rgba(74, 222, 128, .35)}
+    .btnx{border-radius:12px;font-weight:700;transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; min-height: 46px; padding: 10px 16px; line-height: 1.2;}
+    .btnx:hover{transform: translateY(-2px); filter: brightness(1.03);}
+    .btn-primary{background:linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%);border:1px solid rgba(126,231,219,.48);color:#f4fffd;box-shadow:0 8px 20px rgba(10,41,50,.24);animation:softGlow 5s ease-in-out infinite}
+    .btn-primary:hover{background:linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%)!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important;filter:brightness(1.04)}
+    a{color:#a5f4ed}
+    .payment-methods-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    @media (max-width: 390px){.payment-methods-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .pay-scroll{max-height: 220px; overflow:auto; padding-right: 4px}
+    .pm-radio{position:absolute;opacity:0;pointer-events:none}
+    .pay-method-item{display:flex;align-items:center;gap:12px;padding:12px 12px;background: rgba(15,23,42,.62);border: 1px solid rgba(124,221,218,.18);border-radius: 14px;cursor:pointer;transition: all .2s ease}
+    .pay-method-item:hover{background: rgba(25,211,197,.08);border-color: rgba(25,211,197,.3);transform: translateY(-1px);box-shadow: 0 8px 20px rgba(25,211,197,.12)}
+    .pm-radio:checked + .pay-method-item{background: rgba(25,211,197,.12);border-color: rgba(25,211,197,.5);box-shadow: 0 12px 24px rgba(25,211,197,.18)}
+    .p-icon{width:42px;height:42px;background: rgba(30,41,59,.9);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6366f1;box-shadow: 0 10px 24px rgba(0,0,0,.3);overflow:hidden;flex:0 0 auto}
+    .p-logo{width:100%;height:100%;object-fit:contain;padding:7px;background: rgba(255,255,255,.95)}
+    .p-badge{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;letter-spacing:.2px;text-transform:uppercase}
+    .pb-qris{background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(139,92,246,.95));color:#0b1220}
+    .pb-dana{background: linear-gradient(135deg, rgba(59,130,246,.95), rgba(14,165,233,.95));color:#0b1220}
+    .pb-ovo{background: linear-gradient(135deg, rgba(168,85,247,.95), rgba(99,102,241,.95));color:#0b1220}
+    .pb-shopeepay{background: linear-gradient(135deg, rgba(249,115,22,.95), rgba(244,63,94,.95));color:#0b1220}
+    .pb-linkaja{background: linear-gradient(135deg, rgba(239,68,68,.95), rgba(244,63,94,.95));color:#0b1220}
+    .pb-gopay{background: linear-gradient(135deg, rgba(34,197,94,.95), rgba(16,185,129,.95));color:#0b1220}
+    .pb-bank{background: linear-gradient(135deg, rgba(15,23,42,.82), rgba(30,41,59,.92));color:#e2e8f0}
+    .p-info{display:flex;flex-direction:column;min-width:0}
+    .p-name{font-size:14px;font-weight:700;color:#f8fafc}
+    .p-sub{font-size:12px;color: rgba(148,163,184,.9);display:flex;flex-wrap:wrap;gap:6px}
+    .p-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background: rgba(15,23,42,.35);color: rgba(226,232,240,.92);font-size:11px;font-weight:700;line-height:1.4;white-space:nowrap}
+    @media (max-width: 576px){
+      .pay-method-item{flex-direction:column;align-items:flex-start;gap:10px;padding:12px}
+      .p-sub{display:none}
+      .p-name{font-size:13px}
+      .p-icon{width:42px;height:42px;font-size:20px}
+    }
+    @media (max-width: 576px){.wrap{padding:10px}.cardx{border-radius:15px}.body{padding:18px 14px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="cardx">
+      <div class="head" style="text-align:center;padding-top:28px;padding-bottom:22px;">
+        <img src="/img/logo.png?v=zenradius" alt="ZenRadius" style="height:42px;width:auto;max-width:220px;object-fit:contain;display:block;margin:0 auto 14px;" onerror="this.style.display='none'">
+        <p class="muted small mb-0 mx-auto" style="max-width:460px;line-height:1.7;">Akses rincian lembar tagihan Anda secara instan, transparan, dan akurat. Cukup masukkan <strong style="color:#d9fffb;">ID Pelanggan</strong> atau <strong style="color:#d9fffb;">Nomor WhatsApp</strong> untuk meninjau periode pembayaran.</p>
+      </div>
+      <div class="body">
+        <form method="GET" action="/customer/check-billing" class="mb-3">
+          <div class="row g-2 align-items-center">
+            <div class="col-12 col-md-8">
+              <div class="field">
+                <i class="bi bi-person-bounding-box" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(190,239,255,.65);font-size:15px;pointer-events:none;z-index:4;"></i>
+                <input class="form-control" name="q" value="<%= query || '' %>" placeholder="Masukkan ID Pelanggan atau No WhatsApp" style="padding-left: 38px; height: 46px;" required>
+              </div>
+            </div>
+            <div class="col-12 col-md-4 d-grid">
+              <button class="btn btn-primary btnx" type="submit" style="height: 46px;">
+                <i class="bi bi-search me-1"></i> Cek Tagihan
+              </button>
+            </div>
+          </div>
+          <div class="muted small mt-2">
+            Contoh: <code style="color:#d9fffb;">CUST-001</code> atau <code style="color:#d9fffb;">08xxxxxxxxxx</code>
+          </div>
+        </form>
+
+        <% if (error) { %>
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i><%= error %>
+          </div>
+        <% } %>
+        <% if (info) { %>
+          <div class="alert alert-success">
+            <i class="bi bi-check-circle me-2"></i><%= info %>
+          </div>
+        <% } %>
+
+        <% if (query && !customer && (!matches || matches.length === 0)) { %>
+          <div class="alert alert-warning">
+            <i class="bi bi-info-circle me-2"></i>Pelanggan tidak ditemukan. Pastikan input sudah benar.
+          </div>
+        <% } %>
+
+        <% if (!customer && matches && matches.length > 0) { %>
+          <div class="mb-2 fw-bold">Hasil Pencarian</div>
+          <div class="muted small mb-2">Pilih pelanggan untuk melihat detail tagihan</div>
+          <div class="table-responsive">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Pelanggan</th>
+                  <th class="text-end">Belum Bayar</th>
+                  <th class="text-end">Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% matches.forEach(m => { %>
+                  <tr>
+                    <td>
+                      <div class="fw-semibold"><%= m.customer_name %></div>
+                      <div class="muted small">
+                        ID: <%= m.customer_id %><% if (m.customer_phone) { %> &middot; WA: <%= m.customer_phone %><% } %>
+                      </div>
+                    </td>
+                    <td class="text-end fw-semibold"><%= Number(m.unpaid_count || 0) %></td>
+                    <td class="text-end fw-semibold">Rp <%= Number(m.total_amount || 0).toLocaleString('id-ID') %></td>
+                    <td class="text-end">
+                      <a class="btn btn-outline-light btn-sm btnx" href="/customer/check-billing?q=<%= encodeURIComponent(String(m.customer_id)) %>">
+                        Lihat
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+
+        <% if (customer) { %>
+          <div class="mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <div>
+                <div class="fw-bold"><%= customer.name %></div>
+                <div class="muted small">
+                  ID: <%= customer.id %>
+                  <% if (customer.phone) { %> &middot; WA: <%= customer.phone %><% } %>
+                  <% if (customer.package_name) { %> &middot; Paket: <%= customer.package_name %><% } %>
+                </div>
+              </div>
+              <div>
+                <% const unpaidCount = unpaidInvoices ? unpaidInvoices.length : 0; %>
+                <% if (unpaidCount > 0) { %>
+                  <span class="pill pill-u"><i class="bi bi-exclamation-circle"></i> <%= unpaidCount %> Belum Bayar</span>
+                <% } else { %>
+                  <span class="pill pill-p"><i class="bi bi-check-circle"></i> Lunas</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <% const monthNames = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']; %>
+
+          <% if (!unpaidInvoices || unpaidInvoices.length === 0) { %>
+            <div class="alert alert-success">
+              <i class="bi bi-check-circle me-2"></i>Semua tagihan sudah lunas.
+            </div>
+          <% } else { %>
+            <div class="mb-2 fw-bold">Tagihan Belum Dibayar</div>
+            <div class="table-responsive">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>Periode</th>
+                    <th class="text-end">Nominal</th>
+                    <th class="text-end" style="width: 80px">Pilih</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% unpaidInvoices.forEach((inv, idx) => { %>
+                    <tr>
+                      <td>
+                        <div class="fw-semibold"><%= monthNames[Number(inv.period_month)] %> <%= inv.period_year %></div>
+                        <div class="muted small">INV-<%= inv.id %></div>
+                      </td>
+                      <td class="text-end fw-semibold">Rp <%= Number(inv.amount || 0).toLocaleString('id-ID') %></td>
+                      <td class="text-end">
+                        <input
+                          class="form-check-input inv-radio"
+                          type="radio"
+                          name="inv_select"
+                          value="<%= inv.id %>"
+                          data-inv-id="<%= inv.id %>"
+                          data-amount="<%= Number(inv.amount || 0) %>"
+                          data-token="<%= (invoiceTokens && invoiceTokens[String(inv.id)]) ? invoiceTokens[String(inv.id)] : '' %>"
+                          <%= idx === 0 ? 'checked' : '' %>
+                          <%= idx === 0 ? 'required' : '' %>
+                        >
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-3" style="border-top:1px solid rgba(148,163,184,.18); padding-top: 14px">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <div class="fw-bold">Pembayaran</div>
+                <div class="muted small">
+                  <span id="pay_inv_text"></span>
+                  <span id="pay_amount_text"></span>
+                </div>
+              </div>
+
+              <form id="payForm" method="POST" action="/customer/public/payment/create/0" class="d-grid gap-2">
+                <input type="hidden" name="token" id="pay_token" value="">
+                <input type="hidden" name="method" id="pay_method" value="">
+
+                <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
+                <% if (hasStaticQris || (paymentChannels && paymentChannels.length > 0)) { %>
+                  <div class="pay-scroll">
+                    <div class="payment-methods-grid">
+                      <% if (hasStaticQris) { %>
+                        <label style="cursor: pointer">
+                          <input
+                            class="pm-radio"
+                            type="radio"
+                            name="payment_method"
+                            value="QRIS_STATIC"
+                            data-code="QRIS_STATIC"
+                            checked
+                            required
+                          >
+                          <div class="pay-method-item">
+                            <div class="p-icon"><i class="bi bi-qr-code-scan"></i></div>
+                            <div class="p-info">
+                              <span class="p-name">QRIS Statis (Scan)</span>
+                              <span class="p-sub">
+                                <span class="p-chip">Nominal unik</span>
+                                <span class="p-chip">E-Wallet</span>
+                              </span>
+                            </div>
+                          </div>
+                        </label>
+                      <% } %>
+                      <% paymentChannels.forEach((ch, idx) => {
+                        const code = String(ch.code || '').toUpperCase();
+                        const name = String(ch.name || code);
+                        const group = String(ch.group || '').toLowerCase();
+                        const fee = Number(ch.total_fee?.flat || 0);
+                        const feePercent = Number(ch.total_fee?.percent || 0);
+                        const iconUrl = String(ch.icon_url || '');
+                        
+                        let badgeClass = 'pb-bank';
+                        let iconHtml = '<i class="bi bi-credit-card"></i>';
+                        
+                        if (code === 'QRIS') {
+                          badgeClass = 'pb-qris';
+                          iconHtml = '<i class="bi bi-qr-code-scan"></i>';
+                        } else if (group.includes('e-wallet') || group.includes('ewallet')) {
+                          if (name.toLowerCase().includes('dana')) {
+                            badgeClass = 'pb-dana';
+                            iconHtml = '<span class="p-badge pb-dana">DANA</span>';
+                          } else if (name.toLowerCase().includes('ovo')) {
+                            badgeClass = 'pb-ovo';
+                            iconHtml = '<span class="p-badge pb-ovo">OVO</span>';
+                          } else if (name.toLowerCase().includes('shopee')) {
+                            badgeClass = 'pb-shopeepay';
+                            iconHtml = '<span class="p-badge pb-shopeepay">SPay</span>';
+                          } else if (name.toLowerCase().includes('linkaja')) {
+                            badgeClass = 'pb-linkaja';
+                            iconHtml = '<span class="p-badge pb-linkaja">LinkAja</span>';
+                          } else if (name.toLowerCase().includes('gopay')) {
+                            badgeClass = 'pb-gopay';
+                            iconHtml = '<span class="p-badge pb-gopay">GoPay</span>';
+                          } else {
+                            iconHtml = '<i class="bi bi-wallet2"></i>';
+                          }
+                        } else if (group.includes('virtual') || group.includes('bank')) {
+                          iconHtml = '<i class="bi bi-bank"></i>';
+                        }
+                      %>
+                        <label style="cursor: pointer">
+                          <input
+                            class="pm-radio"
+                            type="radio"
+                            name="payment_method"
+                            value="<%= code %>"
+                            data-code="<%= code %>"
+                            <%= (!hasStaticQris && idx === 0) ? 'checked' : '' %>
+                            required
+                          >
+                          <div class="pay-method-item">
+                            <div class="p-icon">
+                              <% if (iconUrl) { %>
+                                <img src="<%= iconUrl %>" alt="<%= name %>" class="p-logo">
+                              <% } else { %>
+                                <%- iconHtml %>
+                              <% } %>
+                            </div>
+                            <div class="p-info">
+                              <span class="p-name"><%= name %></span>
+                              <span class="p-sub">
+                                <% if (fee > 0 || feePercent > 0) { %>
+                                  <span class="p-chip">
+                                    <% if (feePercent > 0) { %>
+                                      +<%= feePercent %>%
+                                    <% } %>
+                                    <% if (fee > 0) { %>
+                                      <%= feePercent > 0 ? ' + ' : '+' %>Rp <%= fee.toLocaleString('id-ID') %>
+                                    <% } %>
+                                  </span>
+                                <% } else { %>
+                                  <span class="p-chip">Gratis</span>
+                                <% } %>
+                                <% if (ch.active === false) { %>
+                                  <span class="p-chip" style="background: rgba(248, 81, 73, .12); color:#fca5a5">Nonaktif</span>
+                                <% } %>
+                              </span>
+                            </div>
+                          </div>
+                        </label>
+                      <% }) %>
+                    </div>
+                  </div>
+                <% } else { %>
+                  <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Metode pembayaran tidak tersedia saat ini.
+                  </div>
+                <% } %>
+
+                <button id="payBtn" class="btn btn-primary btnx w-100" type="submit" disabled>
+                  <i class="bi bi-credit-card me-1"></i> Bayar Sekarang
+                </button>
+              </form>
+            </div>
+
+            <script>
+              (function () {
+                const invRadios = Array.from(document.querySelectorAll('.inv-radio'));
+                const payMethodRadios = Array.from(document.querySelectorAll('input[name="payment_method"]'));
+                const payForm = document.getElementById('payForm');
+                const payToken = document.getElementById('pay_token');
+                const payMethod = document.getElementById('pay_method');
+                const payBtn = document.getElementById('payBtn');
+                const invText = document.getElementById('pay_inv_text');
+                const amtText = document.getElementById('pay_amount_text');
+
+                function updatePaymentForm() {
+                  if (!payForm || !payToken || !payMethod || !payBtn) return;
+                  
+                  const selectedInv = invRadios.find(r => r.checked);
+                  const selectedMethod = payMethodRadios.find(r => r.checked);
+                  
+                  if (!selectedInv) {
+                    payBtn.disabled = true;
+                    return;
+                  }
+
+                  const invId = String(selectedInv.dataset.invId || selectedInv.value || '').trim();
+                  const token = String(selectedInv.dataset.token || '').trim();
+                  const amount = Number(selectedInv.dataset.amount || 0) || 0;
+                  const methodCode = selectedMethod ? String(selectedMethod.dataset.code || selectedMethod.value || '').trim() : '';
+
+                  payForm.action = `/customer/public/payment/create/${encodeURIComponent(invId)}`;
+                  payToken.value = token;
+                  payMethod.value = methodCode;
+                  
+                  if (invText) invText.textContent = invId ? `INV-${invId} &middot; ` : '';
+                  if (amtText) amtText.textContent = amount ? `Rp ${amount.toLocaleString('id-ID')}` : '';
+                  
+                  payBtn.disabled = !invId || !token || !methodCode;
+                }
+
+                invRadios.forEach(r => r.addEventListener('change', updatePaymentForm));
+                payMethodRadios.forEach(r => r.addEventListener('change', updatePaymentForm));
+                
+                updatePaymentForm();
+              })();
+            </script>
+          <% } %>
+
+          <% const paidInvoices = (invoices || []).filter(i => i.status === 'paid'); %>
+          <% if (paidInvoices.length > 0) { %>
+            <div class="mt-4">
+              <div class="mb-2 fw-bold">Riwayat (Lunas)</div>
+              <div class="muted small">Menampilkan <%= Math.min(paidInvoices.length, 10) %> data terbaru</div>
+              <div class="table-responsive mt-2">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>Periode</th>
+                      <th class="text-end">Nominal</th>
+                      <th>Tanggal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% paidInvoices.slice(0, 10).forEach(inv => { %>
+                      <tr>
+                        <td>
+                          <div class="fw-semibold"><%= monthNames[Number(inv.period_month)] %> <%= inv.period_year %></div>
+                          <div class="muted small">INV-<%= inv.id %></div>
+                        </td>
+                        <td class="text-end">Rp <%= Number(inv.amount || 0).toLocaleString('id-ID') %></td>
+                        <td class="muted small"><%= inv.paid_at ? new Date(inv.paid_at).toLocaleString('id-ID') : '-' %></td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          <% } %>
+        <% } %>
+
+        <div class="text-center mt-4">
+          <a class="d-inline-flex align-items-center justify-content-center gap-1 text-decoration-none small" href="/" style="color:#a5f4ed;font-weight:700;">
+            <i class="bi bi-arrow-left"></i> Kembali Halaman
+          </a>
+        </div>
+
+        <div class="muted small mt-3 text-center" style="line-height:1.55;">
+          � <%= new Date().getFullYear() %> <strong><%- footerInfo %></strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

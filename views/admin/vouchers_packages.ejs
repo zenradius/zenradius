@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.nav.voucher_packages', 'Paket Voucher') %> | <%= company %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'voucher_packages', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-ticket-perforated"></i>
+      <span><%= t('admin.nav.voucher_packages', 'Paket Voucher') %></span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i>
+        <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
+      </span>
+      <button class="btn btn-p btn-sm" onclick="openModal('addVpModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.voucher_packages.add', 'Tambah Paket Voucher') %></button>
+    </div>
+  </div>
+
+  <div class="page">
+    <div id="msg-box"></div>
+
+    <% if (routers && routers.length > 0) { %>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-bd" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label class="fl" style="margin:0"><i class="bi bi-hdd-network"></i> <%= t('admin.voucher_packages.filter_router', 'Filter Router') %></label>
+        <select id="router-filter" class="fs" style="max-width:260px" onchange="changeRouterFilter(this.value)">
+          <option value="" <%= (!selectedRouterId) ? 'selected' : '' %>><%= t('admin.voucher_packages.all_routers', '-- Semua Router --') %></option>
+          <% routers.forEach(r => { %>
+            <option value="<%= r.id %>" <%= (String(selectedRouterId||'') === String(r.id)) ? 'selected' : '' %>><%= r.name %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-ul"></i> <%= t('admin.voucher_packages.list', 'Daftar Paket Voucher Hotspot') %> (<span id="vp-count">0</span>)</h6>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('admin.voucher_packages.table.profile', 'Nama Profil') %></th>
+              <th><%= t('admin.voucher_packages.table.router', 'Router') %></th>
+              <th><%= t('admin.voucher_packages.table.price', 'Harga') %></th>
+              <th><%= t('admin.voucher_packages.table.validity', 'Masa Aktif') %></th>
+              <th><%= t('admin.voucher_packages.table.prefix', 'Prefix Kode') %></th>
+              <th><%= t('admin.voucher_packages.table.code_length', 'Panjang Kode') %></th>
+              <th><%= t('admin.voucher_packages.table.status', 'Status') %></th>
+              <th><%= t('admin.voucher_packages.table.actions', 'Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody id="vp-tbody">
+            <tr><td colspan="8" class="text-center text-muted" style="padding:20px"><%= t('admin.voucher_packages.loading', 'Memuat data...') %></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah -->
+<div class="mo" id="addVpModal">
+  <div class="mb">
+    <form id="addVpForm">
+      <div class="mh"><span class="mt"><%= t('admin.voucher_packages.modal.add_title', 'Tambah Paket Voucher') %></span><button type="button" class="mc" onclick="closeModal('addVpModal')">&times;</button></div>
+      <div class="mbody">
+        <% if (routers && routers.length > 0) { %>
+        <div class="fg">
+          <label class="fl"><%= t('admin.voucher_packages.form.router', 'Router') %></label>
+          <select name="router_id" id="a-vp-router" class="fs" required>
+            <option value=""><%= t('admin.voucher_packages.choose_router', '-- Pilih Router --') %></option>
+            <% routers.forEach(r => { %><option value="<%= r.id %>"><%= r.name %></option><% }) %>
+          </select>
+        </div>
+        <% } else { %>
+        <div class="alert alert-w"><%= t('admin.voucher_packages.no_router', 'Belum ada router aktif. Tambahkan router terlebih dahulu di menu Router.') %></div>
+        <% } %>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.profile', 'Nama Profil Hotspot') %></label><input type="text" name="profile_name" id="a-vp-profile" class="fc" placeholder="Contoh: 1Jam, 1Hari" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.price', 'Harga (Rp)') %></label><input type="number" name="price" id="a-vp-price" class="fc" min="0" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.validity', 'Masa Aktif') %></label><input type="text" name="validity" id="a-vp-validity" class="fc" placeholder="Contoh: 1h, 1d, 7d" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.prefix', 'Prefix Kode (opsional)') %></label><input type="text" name="prefix" id="a-vp-prefix" class="fc" placeholder="Contoh: VC"></div>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.code_length', 'Panjang Kode') %></label><input type="number" name="code_length" id="a-vp-code-length" class="fc" min="4" max="16" value="6"></div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.voucher_packages.form.charset', 'Karakter Kode') %></label>
+          <select name="charset" id="a-vp-charset" class="fs">
+            <option value="mixed"><%= t('admin.voucher_packages.charset.mixed', 'Huruf & Angka') %></option>
+            <option value="numeric"><%= t('admin.voucher_packages.charset.numeric', 'Angka Saja') %></option>
+            <option value="alpha"><%= t('admin.voucher_packages.charset.alpha', 'Huruf Saja') %></option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addVpModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('common.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit -->
+<div class="mo" id="editVpModal">
+  <div class="mb">
+    <form id="editVpForm">
+      <input type="hidden" name="id" id="e-vp-id">
+      <div class="mh"><span class="mt"><%= t('admin.voucher_packages.modal.edit_title', 'Edit Paket Voucher') %></span><button type="button" class="mc" onclick="closeModal('editVpModal')">&times;</button></div>
+      <div class="mbody">
+        <% if (routers && routers.length > 0) { %>
+        <div class="fg">
+          <label class="fl"><%= t('admin.voucher_packages.form.router', 'Router') %></label>
+          <select name="router_id" id="e-vp-router" class="fs" required>
+            <% routers.forEach(r => { %><option value="<%= r.id %>"><%= r.name %></option><% }) %>
+          </select>
+        </div>
+        <% } %>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.profile', 'Nama Profil Hotspot') %></label><input type="text" name="profile_name" id="e-vp-profile" class="fc" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.price', 'Harga (Rp)') %></label><input type="number" name="price" id="e-vp-price" class="fc" min="0" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.validity', 'Masa Aktif') %></label><input type="text" name="validity" id="e-vp-validity" class="fc" required></div>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.prefix', 'Prefix Kode (opsional)') %></label><input type="text" name="prefix" id="e-vp-prefix" class="fc"></div>
+        <div class="fg"><label class="fl"><%= t('admin.voucher_packages.form.code_length', 'Panjang Kode') %></label><input type="number" name="code_length" id="e-vp-code-length" class="fc" min="4" max="16"></div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.voucher_packages.form.charset', 'Karakter Kode') %></label>
+          <select name="charset" id="e-vp-charset" class="fs">
+            <option value="mixed"><%= t('admin.voucher_packages.charset.mixed', 'Huruf & Angka') %></option>
+            <option value="numeric"><%= t('admin.voucher_packages.charset.numeric', 'Angka Saja') %></option>
+            <option value="alpha"><%= t('admin.voucher_packages.charset.alpha', 'Huruf Saja') %></option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.voucher_packages.form.status', 'Status') %></label>
+          <select name="is_active" id="e-vp-status" class="fs">
+            <option value="1"><%= t('common.active', 'Aktif') %></option>
+            <option value="0"><%= t('common.inactive', 'Nonaktif') %></option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('editVpModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('admin.voucher_packages.save_changes', 'Simpan Perubahan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const I18N = {
+  confirmDeleteVoucherPackage: "<%= t('admin.voucher_packages.confirm_delete', 'Hapus paket voucher ini?') %>",
+  loadFailed: "<%= t('admin.voucher_packages.load_failed', 'Gagal memuat data paket voucher.') %>",
+  saveFailed: "<%= t('admin.voucher_packages.save_failed', 'Gagal menyimpan paket voucher.') %>",
+  deleteFailed: "<%= t('admin.voucher_packages.delete_failed', 'Gagal menghapus paket voucher.') %>",
+  empty: "<%= t('admin.voucher_packages.empty', 'Belum ada paket voucher.') %>",
+  allRoutersShort: "<%= t('admin.voucher_packages.all_routers_short', '-') %>"
+};
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function showMsg(type, text) {
+  const box = document.getElementById('msg-box');
+  box.innerHTML = '<div class="alert alert-' + (type === 'error' ? 'd' : 's') + '">' + text + '</div>';
+  setTimeout(() => { box.innerHTML = ''; }, 4000);
+}
+
+function changeRouterFilter(routerId) {
+  const url = new URL(window.location.href);
+  if (routerId) url.searchParams.set('router_id', routerId);
+  else url.searchParams.delete('router_id');
+  window.location.href = url.toString();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+async function loadVoucherPackages() {
+  const params = new URLSearchParams(window.location.search);
+  const routerId = params.get('router_id') || '';
+  const qs = routerId ? ('?router_id=' + encodeURIComponent(routerId)) : '';
+  const tbody = document.getElementById('vp-tbody');
+  try {
+    const res = await fetch('/admin/api/vouchers/packages' + qs);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || I18N.loadFailed);
+    const rows = data.rows || [];
+    document.getElementById('vp-count').textContent = rows.length;
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:20px">' + I18N.empty + '</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td><strong>${escapeHtml(r.profile_name)}</strong></td>
+        <td>${escapeHtml(r.router_name || I18N.allRoutersShort)}</td>
+        <td>Rp ${Number(r.price).toLocaleString('id-ID')}</td>
+        <td>${escapeHtml(r.validity)}</td>
+        <td>${escapeHtml(r.prefix || '-')}</td>
+        <td>${r.code_length}</td>
+        <td><span class="badge ${r.is_active ? 'bs' : 'bd'}">${r.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
+        <td>
+          <div class="d-flex gap-2">
+            <button class="btn btn-g btn-icon btn-sm" onclick='editVp(${JSON.stringify(r).replace(/'/g, "&#39;")})'><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-d btn-icon btn-sm" onclick="deleteVp(${r.id})"><i class="bi bi-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:20px">' + escapeHtml(e.message || I18N.loadFailed) + '</td></tr>';
+  }
+}
+
+function editVp(r) {
+  document.getElementById('e-vp-id').value = r.id;
+  const routerSel = document.getElementById('e-vp-router');
+  if (routerSel) routerSel.value = r.router_id || '';
+  document.getElementById('e-vp-profile').value = r.profile_name;
+  document.getElementById('e-vp-price').value = r.price;
+  document.getElementById('e-vp-validity').value = r.validity;
+  document.getElementById('e-vp-prefix').value = r.prefix || '';
+  document.getElementById('e-vp-code-length').value = r.code_length;
+  document.getElementById('e-vp-charset').value = r.charset || 'mixed';
+  document.getElementById('e-vp-status').value = r.is_active;
+  openModal('editVpModal');
+}
+
+async function deleteVp(id) {
+  if (!confirm(I18N.confirmDeleteVoucherPackage)) return;
+  try {
+    const res = await fetch('/admin/api/vouchers/packages/' + id + '/delete', { method: 'POST' });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || I18N.deleteFailed);
+    showMsg('success', I18N.deleteFailed === undefined ? 'OK' : 'Berhasil dihapus.');
+    loadVoucherPackages();
+  } catch (e) {
+    showMsg('error', e.message || I18N.deleteFailed);
+  }
+}
+
+async function submitVpForm(form, isEdit) {
+  const fd = new FormData(form);
+  const payload = Object.fromEntries(fd.entries());
+  try {
+    const res = await fetch('/admin/api/vouchers/packages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || I18N.saveFailed);
+    showMsg('success', 'Berhasil disimpan.');
+    closeModal(isEdit ? 'editVpModal' : 'addVpModal');
+    form.reset();
+    loadVoucherPackages();
+  } catch (e) {
+    showMsg('error', e.message || I18N.saveFailed);
+  }
+}
+
+document.getElementById('addVpForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  submitVpForm(this, false);
+});
+document.getElementById('editVpForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  submitVpForm(this, true);
+});
+
+loadVoucherPackages();
+</script>
+</body>
+</html>

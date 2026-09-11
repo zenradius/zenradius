@@ -1,0 +1,162 @@
+<!--
+  Simulator Paket Internet — KANAN HERO
+  Single source of truth: variabel `packages` yang sama persis dengan
+  section "Daftar Paket" (packages table → customerSvc.getAllPackages() →
+  difilter is_active di server). Tidak ada data paket yang di-hardcode di sini.
+-->
+<div class="pkg-simulator" id="pkg-simulator">
+  <div class="sim-header">
+    <span class="sim-badge"><i class="bi bi-cpu"></i> SIMULASI CERDAS</span>
+    <h3 class="sim-title">Temukan Paket yang Tepat</h3>
+  </div>
+
+  <div class="sim-flex">
+    <div class="sim-field">
+      <label class="sim-label">Kebutuhan Internet</label>
+      <div class="sim-needs" id="sim-needs" role="group" aria-label="Kebutuhan internet">
+      <button type="button" class="sim-need-btn active" data-need="normal">
+        <svg class="sim-need-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/></svg>
+        <span style="text-transform: uppercase;">Normal</span>
+      </button>
+      <button type="button" class="sim-need-btn" data-need="streaming">
+        <svg class="sim-need-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>
+        <span style="text-transform: uppercase;">Streaming</span>
+      </button>
+      <button type="button" class="sim-need-btn" data-need="gaming">
+        <svg class="sim-need-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="5"/><line x1="7" y1="11" x2="7" y2="13"/><line x1="6" y1="12" x2="8" y2="12"/><circle cx="16" cy="11" r="0.6" fill="currentColor"/><circle cx="18" cy="13" r="0.6" fill="currentColor"/></svg>
+        <span style="text-transform: uppercase;">Gaming</span>
+      </button>
+      <button type="button" class="sim-need-btn" data-need="bisnis">
+        <svg class="sim-need-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
+        <span style="text-transform: uppercase;">Bisnis</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="sim-result" id="sim-result">
+    <div class="sim-recommend">
+      <div class="sim-eyebrow">Rekomendasi Terbaik</div>
+      <div class="sim-rec-name" id="sim-rec-name">—</div>
+      <div class="sim-rec-meta" id="sim-rec-meta">
+        <span id="sim-rec-speed"></span>
+        <span class="sim-dot">•</span>
+        <span id="sim-rec-price"></span>
+      </div>
+      <div class="sim-rec-check" id="sim-rec-check"><i class="bi bi-check-circle-fill me-1"></i>Sesuai untuk kebutuhan Anda</div>
+      <div class="sim-custom-msg" id="sim-custom-msg" style="display:none;">
+        Kebutuhan Anda membutuhkan koneksi dengan kapasitas lebih tinggi.
+      </div>
+      <a href="#" class="sim-cta" id="sim-cta">Lihat Detail Paket <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</div>
+
+<!--
+  Data sumber: persis `packages` yang dipakai section "Daftar Paket".
+  Difilter is_active di server, di sini difilter lagi untuk keamanan.
+-->
+<script type="application/json" id="sim-packages-data"><%- JSON.stringify(packages).replace(/</g, '\\u003c').replace(/>/g, '\\u003e') %></script>
+<script>
+(function () {
+  'use strict';
+  var dataEl = document.getElementById('sim-packages-data');
+  if (!dataEl) return;
+
+  var PKGS = [];
+  try { PKGS = JSON.parse(dataEl.textContent) || []; } catch (e) { PKGS = []; }
+
+  // Hanya paket ACTIVE & punya kecepatan valid → single source of truth
+  PKGS = PKGS
+    .filter(function (p) { return p && p.is_active !== 0 && p.is_active !== false && p.is_active !== '0'; })
+    .map(function (p) {
+      return {
+        id: p.id,
+        name: p.name,
+        price: Number(p.price || 0),
+        speedMbps: Math.round(Number(p.speed_down || 0) / 1000),
+        billing_type: p.billing_type,
+        duration_days: p.duration_days,
+        use_ppn: p.use_ppn
+      };
+    })
+    .filter(function (p) { return p.speedMbps > 0; })
+    .sort(function (a, b) { return a.speedMbps - b.speedMbps; });
+
+  var NEED_RANGES = {
+    normal: { min: 10, max: 50, copy: 'Cocok untuk browsing, chatting, dan kebutuhan rumah tangga dengan 2–5 perangkat aktif sekaligus.' },
+    streaming: { min: 50, max: 100, copy: 'Ideal untuk streaming 4K, video call, dan hiburan keluarga dengan 3–6 perangkat aktif secara bersamaan.' },
+    gaming: { min: 50, max: 100, copy: 'Pas untuk gaming online dan kebutuhan multiplayer dengan 2–5 perangkat, tetap responsif dan stabil.' },
+    bisnis: { min: 100, max: 200, copy: 'Direkomendasikan untuk bisnis atau kantor rumah dengan 6–15 perangkat aktif, transfer file besar, dan meeting video yang padat.' }
+  };
+
+  var need = 'normal';
+
+  var recNameEl = document.getElementById('sim-rec-name');
+  var recSpeedEl = document.getElementById('sim-rec-speed');
+  var recPriceEl = document.getElementById('sim-rec-price');
+  var recMetaEl = document.getElementById('sim-rec-meta');
+  var recCheckEl = document.getElementById('sim-rec-check');
+  var customMsgEl = document.getElementById('sim-custom-msg');
+  var ctaEl = document.getElementById('sim-cta');
+  var resultEl = document.getElementById('sim-result');
+
+  function fmtPrice(n) { return 'Rp ' + n.toLocaleString('id-ID'); }
+  function periodText(p) {
+    var base = (p.billing_type === 'prepaid')
+      ? ('masa aktif ' + (p.duration_days || 30) + ' hari')
+      : 'per bulan';
+    return base + (p.use_ppn ? ', termasuk PPN' : '');
+  }
+
+  function compute() {
+    var cfg = NEED_RANGES[need] || NEED_RANGES.normal;
+    var estMin = cfg.min;
+    var estMax = cfg.max;
+    var est = Math.round((estMin + estMax) / 2);
+
+    // Algoritma: ambil paket aktif dengan speed >= estimasi tengah, pilih yang terkecil
+    var match = null;
+    for (var i = 0; i < PKGS.length; i++) {
+      if (PKGS[i].speedMbps >= est) { match = PKGS[i]; break; }
+    }
+
+    if (match) {
+      resultEl.classList.remove('is-custom');
+      recNameEl.textContent = match.name;
+      recSpeedEl.textContent = match.speedMbps + ' Mbps';
+      recPriceEl.textContent = fmtPrice(match.price) + ' / ' + periodText(match);
+      recMetaEl.style.display = '';
+      recCheckEl.style.display = '';
+      recCheckEl.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Rekomendasi ideal untuk kebutuhan Anda';
+      customMsgEl.style.display = 'none';
+      ctaEl.textContent = 'Lihat Detail Paket';
+      ctaEl.setAttribute('href', '#package-' + match.id);
+      ctaEl.classList.remove('is-contact');
+    } else {
+      // Tidak ada paket aktif yang cukup → Paket Custom (bukan paket palsu)
+      resultEl.classList.add('is-custom');
+      recNameEl.textContent = 'Paket Custom';
+      recMetaEl.style.display = 'none';
+      recCheckEl.style.display = 'none';
+      customMsgEl.style.display = '';
+      customMsgEl.textContent = 'Kebutuhan Anda membutuhkan koneksi dengan kapasitas lebih tinggi. Konsultasikan kebutuhan Anda agar kami rekomendasikan solusi terbaik.';
+      ctaEl.textContent = 'Hubungi ZenRadius';
+      ctaEl.setAttribute('href', '#contact-info');
+      ctaEl.classList.add('is-contact');
+    }
+  }
+
+  // Pilihan kebutuhan
+  var needBtns = document.querySelectorAll('.sim-need-btn');
+  for (var n = 0; n < needBtns.length; n++) {
+    needBtns[n].addEventListener('click', function () {
+      for (var k = 0; k < needBtns.length; k++) needBtns[k].classList.remove('active');
+      this.classList.add('active');
+      need = this.getAttribute('data-need');
+      compute();
+    });
+  }
+
+  compute();
+})();
+</script>

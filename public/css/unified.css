@@ -1,0 +1,463 @@
+/* Unified Stylesheet for BINUSNET Billing Portal
+   This stylesheet replaces the need for multiple CSS files and inline styles.
+   All EJS templates should include this file instead of their own inline styles.
+*/
+
+/* ── CSS Variables for Consistent theming — synced with landing (#173945/#236060/#173e4d etc.) ── */
+:root {
+  --portal-bg: #173945;
+  --portal-surface: #183f51;
+  --portal-surface-raised: #1b4656;
+  --portal-ink: #edf7f5;
+  --portal-muted: #a8bec2;
+  --portal-primary: #2dd4bf;
+  --portal-primary-strong: #22a7f0;
+  --portal-accent: #fbbf24;
+  --portal-line: rgba(190, 239, 255, 0.32);
+  --card-bg: #173945;
+  --soft-primary: rgba(45, 212, 191, 0.14);
+  --soft-success: rgba(74, 222, 128, 0.14);
+  --soft-warning: rgba(251, 191, 36, 0.14);
+  --soft-danger: rgba(251, 113, 133, 0.14);
+}
+
+/* ── Base Styles — landing background unify ── */
+* {
+  box-sizing: border-box;
+}
+
+/* ── Custom Premium Scrollbar ── */
+/* Untuk Chrome, Safari, dan Edge */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(23, 57, 69, 0.3); /* Transparan tipis menyatu dengan background */
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--portal-primary) 0%, var(--portal-primary-strong) 100%);
+  border: 2px solid #173945; /* Memberi sela agar tampak melayang */
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--portal-primary-strong) 0%, var(--portal-primary) 100%);
+  filter: brightness(1.1);
+}
+
+/* Untuk Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--portal-primary) rgba(23, 57, 69, 0.3);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #173945;
+  background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+                    radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
+                    linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+  color: var(--portal-ink);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── Typography ── */
+h1, h2, h3, h4, h5, h6,
+.navbar-brand, .tb-title, .sb-name, .sc-val {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.card, .glass-card {
+  border: 1px solid var(--portal-line);
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 100%);
+  border-color: rgba(20, 184, 166, 0.6);
+  box-shadow: 0 10px 22px rgba(45, 212, 191, 0.22);
+  color: #062c2a;
+  font-weight: 600;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 100%);
+  border-color: rgba(20, 184, 166, 0.6);
+  filter: brightness(1.03);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: rgba(45, 212, 191, 0.5);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+}
+
+/* ── Glassmorphism Effects ── */
+.glass {
+  background: rgba(23, 35, 44, 0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--portal-line);
+}
+
+/* ── Notification Bell ── */
+.notif-bell-btn {
+  position: relative;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid var(--portal-line);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--portal-ink);
+}
+
+/* ── Layout Utilities ── */
+.container-fluid {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+/* ── Responsive Utilities ── */
+@media (max-width: 960px) {
+  .customer-login {
+    grid-template-columns: 1fr;
+  }
+  .customer-visual {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(124, 221, 218, 0.12);
+  }
+}
+
+@media (max-width: 576px) {
+  body {
+    padding: 0;
+  }
+  .visual-title {
+    font-size: 2rem;
+    margin-top: 14px;
+    margin-bottom: 10px;
+  }
+  .visual-copy {
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .visual-metrics {
+    gap: 10px;
+  }
+  .metric-card {
+    padding: 14px 12px;
+  }
+  .login-card {
+    padding-top: 24px;
+  }
+  .login-card form,
+  .login-links,
+  .customer-foot {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .customer-login {
+    border-radius: 18px;
+  }
+}
+
+/* ── Image Styling ── */
+img[alt="Logo"] {
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Alert Styles ── */
+.alert {
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 1rem;
+}
+
+.alert-danger {
+  background: rgba(251, 71, 133, 0.1);
+  color: #fb7185;
+}
+
+.alert-success {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+}
+
+/* ── Form Styles ── */
+.form-label {
+  color: #f8fafc;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+  color: #ffffff;
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(220, 236, 238, 0.24);
+  border-radius: 10px;
+}
+
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
+.form-text {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* ── Card Styles ── */
+.card {
+  border-radius: 1.2rem;
+  border: 1px solid var(--portal-line);
+  background: linear-gradient(145deg, rgba(23, 35, 44, .98), rgba(27, 49, 56, .92));
+}
+
+.card .form-label {
+  font-weight: 500;
+}
+
+/* ── Navigation ── */
+.navbar {
+  background: rgba(23, 35, 44, 0.92) !important;
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--portal-line);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+}
+
+.navbar-brand {
+  font-weight: 800;
+  color: #f8fafc !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+}
+
+.navbar-brand img {
+  height: 60px;
+  width: auto;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ── Buttons ── */
+.btn {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.btn-secondary {
+  background: rgba(107, 114, 128, 0.2);
+  border: 1px solid var(--portal-line);
+  color: var(--portal-ink);
+}
+
+.btn-secondary:hover {
+  background: rgba(107, 114, 128, 0.3);
+}
+
+/* ── Footer ── */
+.customer-foot {
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 13px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 0;
+  text-align: center;
+}
+
+.customer-foot a {
+  color: #a5b4fc;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.customer-foot a:hover {
+  text-decoration: underline;
+}
+
+/* ── Floating Particle Effects ── */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--portal-primary);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: float-up var(--animation-duration, 8s) linear infinite;
+  pointer-events: none;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100px) scale(1);
+    opacity: 0;
+  }
+}
+
+.body-particles {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Simulator Layout Utilities ── */
+.sim-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.sim-center {
+  text-align: center;
+}
+
+.sim-section {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ── Floating Particle Effects ── */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--portal-primary);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: float-up var(--animation-duration, 8s) linear infinite;
+  pointer-events: none;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100px) scale(1);
+    opacity: 0;
+  }
+}
+
+.body-particles {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Utilities ── */
+.text-muted {
+  color: var(--portal-muted) !important;
+}
+
+.bg-primary {
+  background: var(--soft-primary) !important;
+  color: var(--portal-primary) !important;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+}
+
+.bg-success {
+  background: var(--soft-success) !important;
+  color: var(--portal-primary) !important;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+.bg-warning {
+  background: var(--soft-warning) !important;
+  color: var(--portal-accent) !important;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.bg-danger {
+  background: var(--soft-danger) !important;
+  color: #fb7185 !important;
+  border: 1px solid rgba(251, 113, 133, 0.35);
+}
+
+/* ── Hover Effects ── */
+.hover-lift:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+/* ── Focus States ── */
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+  outline: 2px solid var(--portal-primary);
+  outline-offset: 2px;
+}

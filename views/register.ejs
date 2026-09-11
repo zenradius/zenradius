@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#173945">
+  <title>Pendaftaran Pelanggan Baru | <%= settings.company_header || 'ZenRadius' %></title>
+  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/img/icon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    /* -- Custom Premium Scrollbar -- */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(23, 57, 69, 0.3);
+      border-radius: 100px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #22D3EE 0%, #34D399 100%);
+      border: 2px solid #173945;
+      border-radius: 100px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #34D399 0%, #22D3EE 100%);
+      filter: brightness(1.1);
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #22D3EE rgba(23, 57, 69, 0.3);
+    }
+
+    :root {
+      --bg: #173945;
+      --text: #edf7f5;
+      --primary: #22D3EE;
+      --btn-bg: rgba(35, 96, 96, 1);
+      --btn-color: #f4fffd;
+      --btn-border: rgba(126, 231, 219, 0.48);
+      --btn-shadow: 0 8px 20px rgba(10, 41, 50, 0.24);
+      --success: #4ade80;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --info: #60a5fa;
+      --muted: rgba(237, 250, 250, 0.58);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:'DM Sans',system-ui,sans-serif;
+      background:var(--bg);
+      background-image:radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%);
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;min-height:100dvh;padding:24px;color:var(--text);
+    }
+
+    .wrap{width:100%;max-width:500px;display:flex;flex-direction:column;align-items:center}
+    .card{
+      width:100%;background:var(--bg);border:1px solid rgba(190,239,255,.28);
+      border-radius:16px;padding:40px 32px 32px;box-shadow:0 20px 48px rgba(3,14,20,.45);
+      display:flex;flex-direction:column;align-items:center;max-height:90vh;overflow-y:auto;
+    }
+
+    .logo{width:min(220px,72%);height:auto;object-fit:contain;display:block;margin:0 auto 16px}
+    .sub{font-size:13px;color:rgba(237,250,250,.72);font-weight:600;letter-spacing:.02em;margin-bottom:6px;text-align:center}
+
+    .copy{font-size:13px;color:rgba(237,250,250,.58);text-align:center;line-height:1.5;max-width:350px;margin:0 auto 22px}
+
+    .alert{width:100%;border-radius:10px;font-size:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:12px;margin-top:-10px}
+    .alert-danger{background:rgba(248,81,73,.1);color:#ff7b72;border:1px solid rgba(248,81,73,.22)}
+    .alert-success{background:rgba(74,222,128,.1);color:#86efac;border:1px solid rgba(74,222,128,.22)}
+
+    form{width:100%;display:flex;flex-direction:column;align-items:stretch}
+    .fg{margin-bottom:14px;width:100%}
+    .fg:last-of-type{margin-bottom:18px}
+    .fl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#6db8d3;margin-bottom:6px;display:block;text-align:left}
+
+    .field{position:relative;width:100%}
+    .field i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(190,239,255,.7);font-size:15px;pointer-events:none}
+
+    .eye-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: rgba(190, 239, 255, 0.7);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      z-index: 2;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .eye-toggle:hover {
+      background: rgba(45, 212, 191, 0.08);
+      color: #d9fffb;
+    }
+
+    .fc.with-eye {
+      padding-right: 40px;
+    }
+
+    .fc{
+      width:100%;padding:10px 14px 10px 40px;font-size:14px;color:#f0fdfa;
+      background:rgba(255,255,255,.06);border:1px solid rgba(190,239,255,.22);border-radius:10px;outline:none;transition:border-color .2s,box-shadow .2s,background .2s;
+    }
+
+    .fc::placeholder{color:rgba(237,250,250,.38)}
+
+    .fc:focus{background:rgba(255,255,255,.09);border-color:rgba(45,212,191,.55);box-shadow:0 0 0 3px rgba(45,212,191,.14);color:#fff}
+
+    textarea.fc {
+      resize: vertical;
+      min-height: 60px;
+      padding-left: 40px;
+    }
+
+    select.fc {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: none !important;
+      background-color: rgba(255,255,255,.06) !important;
+      cursor: pointer;
+    }
+
+    select.fc option {
+      background: #0f2f3d;
+      color: #32b7db;
+      padding: 10px 8px;
+      font-weight: 500;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+
+    select.fc option:hover {
+      background: #1a4d5c;
+      color: #32b7db;
+    }
+
+    select.fc option:checked {
+      background: linear-gradient(135deg, #1a4d5c 0%, #0f3844 100%);
+      color: #32b7db;
+      font-weight: 600;
+    }
+
+    .btn-p{
+      align-self:center;min-width:160px;max-width:none;padding:10px 22px;font-size:13px;font-weight:800;
+      color:var(--btn-color);background:linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);border:1px solid var(--btn-border);border-radius:10px;box-shadow:var(--btn-shadow);
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .25s;width:100%;
+    }
+
+    .btn-p:hover{background:linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%)!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important;filter:brightness(1.04);transform:translateY(-1px)}
+
+    .btn-p:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.06);border:1px solid rgba(190,239,255,.22);color:#f0fdfa;font-size:12px;padding:9px 14px;border-radius:10px;transition:all .2s;flex:1;
+    }
+
+    .btn-secondary:hover{background:rgba(255,255,255,.09);border-color:rgba(45,212,191,.55);color:#fff}
+
+    .map-btn-group{display:flex;gap:10px;margin-bottom:14px}
+
+    .links{width:100%;display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:12px;flex-direction:column;align-items:center}
+    .links a{color:#7dd3fc;font-weight:700;text-decoration:none}.links a:hover{text-decoration:underline}
+
+    .terms-box{margin:12px 0 16px;padding:12px;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.25);border-radius:10px;font-size:12px;line-height:1.6;color:#d9fffb}
+
+    .terms-box input[type="checkbox"] {
+      accent-color: #22d3ee;
+      cursor: pointer;
+    }
+
+    .terms-box a{color:#22d3ee;text-decoration:none;font-weight:700}
+
+    .terms-box a:hover{text-decoration:underline;color:#d9fffb}
+
+    .coord-text{font-size:11px;color:rgba(237,250,250,.58);margin-top:6px}
+
+    .foot{margin-top:14px;padding-top:12px;border-top:1px solid rgba(190,239,255,.12);font-size:11px;color:rgba(237,250,250,.48);text-align:center;width:100%}
+
+    .foot a{color:#7dd3fc;text-decoration:none;font-weight:700}
+
+    .footer-text{font-size:12px;color:rgba(237,250,250,.58);text-align:center}
+    .footer-text a{color:#7dd3fc;text-decoration:none;font-weight:700}
+    .footer-text a:hover{text-decoration:underline}
+
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid rgba(190, 239, 255, 0.28);
+      color: var(--text);
+    }
+
+    .modal-header, .modal-footer {
+      border-color: rgba(190, 239, 255, 0.15) !important;
+    }
+
+    .btn-close-white {
+      filter: invert(1);
+    }
+
+    #picker-map {
+      height: 350px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .spin {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* GPS Result Modal Styling */
+    .gps-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .gps-modal-content {
+      background: var(--bg);
+      border: 1px solid rgba(190, 239, 255, 0.28);
+      border-radius: 16px;
+      max-width: 420px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 20px 48px rgba(3, 14, 20, 0.45);
+      animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(30px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .gps-header {
+      padding: 24px;
+      text-align: center;
+      border-bottom: 1px solid rgba(190, 239, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .gps-header.success {
+      background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(16, 185, 129, 0.05));
+    }
+
+    .gps-header.error {
+      background: linear-gradient(135deg, rgba(248, 81, 73, 0.1), rgba(239, 68, 68, 0.05));
+    }
+
+    .gps-header i {
+      font-size: 32px;
+    }
+
+    .gps-header.success i {
+      color: #4ade80;
+    }
+
+    .gps-header.error i {
+      color: #f87171;
+    }
+
+    .gps-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.05em;
+    }
+
+    .gps-body {
+      padding: 24px;
+    }
+
+    .gps-accuracy {
+      background: rgba(45, 212, 191, 0.08);
+      border: 1px solid rgba(45, 212, 191, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .accuracy-label {
+      font-size: 12px;
+      color: rgba(237, 250, 250, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .accuracy-value {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .accuracy-value.excellent {
+      color: #4ade80;
+    }
+
+    .accuracy-value.good {
+      color: #60a5fa;
+    }
+
+    .accuracy-value.medium {
+      color: #fbbf24;
+    }
+
+    .accuracy-status {
+      font-size: 12px;
+      color: rgba(237, 250, 250, 0.6);
+      font-weight: 600;
+    }
+
+    .gps-coords {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .coord-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(190, 239, 255, 0.15);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .coord-label {
+      font-size: 12px;
+      color: rgba(237, 250, 250, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+
+    .coord-value {
+      font-size: 13px;
+      color: #22D3EE;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.02em;
+    }
+
+    .error-message {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 12px 0;
+    }
+
+    .error-hint {
+      font-size: 13px;
+      color: rgba(237, 250, 250, 0.7);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .gps-footer {
+      padding: 16px 24px;
+      border-top: 1px solid rgba(190, 239, 255, 0.15);
+      display: flex;
+      gap: 12px;
+    }
+
+    .gps-btn-close {
+      flex: 1;
+      padding: 10px 16px;
+      border: 1px solid rgba(190, 239, 255, 0.22);
+      background: rgba(45, 212, 191, 0.1);
+      color: #22D3EE;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .gps-btn-close:hover {
+      background: rgba(45, 212, 191, 0.2);
+      border-color: rgba(45, 212, 191, 0.4);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 640px) {
+      .gps-modal-content {
+        max-width: calc(100% - 40px);
+      }
+      
+      .gps-header, .gps-body, .gps-footer {
+        padding: 18px;
+      }
+      
+      .gps-header h3 {
+        font-size: 16px;
+      }
+      
+      .accuracy-value {
+        font-size: 24px;
+      }
+    }
+
+    @media (max-width:640px) {
+      .wrap{max-width:100%}
+      .card{padding:28px 20px 20px}
+      .copy{font-size:12px;margin-bottom:16px}
+      .fc{font-size:13px}
+      .btn-p{font-size:12px;padding:9px 18px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <img class="logo" src="/img/logo.png?v=zenradius" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.src='/img/icon.png'">
+      <p class="sub">Registrasi Anggota Baru</p>
+      <p class="copy">Daftarkan diri Anda untuk berlangganan layanan internet ZenRadius. Proses cepat, transparan, dan terhubung instan.</p>
+      
+      <% if (error) { %><div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i><%= error %></div><% } %>
+      <% if (success) { %>
+        <div class="alert alert-success"><i class="bi bi-check-circle"></i><%= success %></div>
+        <div style="text-align:center;margin-top:16px">
+          <a href="/customer/login" class="btn-p" style="max-width:200px"><i class="bi bi-box-arrow-in-right"></i> Kembali ke Login</a>
+        </div>
+      <% } else { %>
+        <form method="POST" action="/customer/register" id="register-form" onsubmit="return validateRegisterForm(event)">
+          <div class="fg">
+            <label class="fl" for="reg-name">Nama Lengkap Sesuai Identitas</label>
+            <div class="field"><i class="bi bi-person"></i><input class="fc" id="reg-name" name="name" type="text" placeholder="Contoh: Budi Santoso" required autofocus></div>
+            <small id="name-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="reg-phone">Nomor WhatsApp Aktif (Menerima Password)</label>
+            <div class="field"><i class="bi bi-whatsapp"></i><input class="fc" id="reg-phone" name="phone" type="tel" placeholder="Contoh: 081234567890" required></div>
+            <small id="phone-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="reg-email">Email (Opsional)</label>
+            <div class="field"><i class="bi bi-envelope"></i><input class="fc" id="reg-email" name="email" type="email" placeholder="Contoh: budi@zenradius.net"></div>
+            <small id="email-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
+            <small class="coord-text">Email untuk pengiriman invoice otomatis.</small>
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="reg-address">Alamat Pemasangan</label>
+            <div class="field" style="position:relative">
+              <i class="bi bi-geo-alt" style="position:absolute;left:13px;top:12px"></i>
+              <textarea class="fc" id="reg-address" name="address" placeholder="Sertakan RT/RW, Desa, Kecamatan" style="padding-left:40px" required></textarea>
+            </div>
+            <small id="address-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
+          </div>
+
+          <div class="fg">
+            <label class="fl">Lokasi di Peta (Opsional)</label>
+            <div class="map-btn-group">
+              <button type="button" class="btn-secondary" onclick="openPicker()"><i class="bi bi-geo-alt-fill"></i> Pilih Peta</button>
+              <button type="button" class="btn-secondary" onclick="getLocation()"><i class="bi bi-crosshair"></i> GPS</button>
+            </div>
+            <input type="hidden" name="lat" id="reg_lat">
+            <input type="hidden" name="lng" id="reg_lng">
+            <div class="coord-text" id="coordText">Koordinat belum dipilih.</div>
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="reg-package">Pilih Paket Layanan</label>
+            <div class="field" style="position:relative">
+              <i class="bi bi-box-seam" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);z-index:1;color:rgba(190,239,255,.7)"></i>
+              <select class="fc" id="reg-package" name="package_id" required style="padding-left:40px;cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:rgba(255,255,255,.06);padding-right:14px;font-weight:500">
+                <option value="" disabled selected>Pilih paket...</option>
+                <% packages.forEach(function(pkg) { %>
+                  <option value="<%= pkg.id %>" <%= typeof selectedPackageId !== 'undefined' && String(selectedPackageId) === String(pkg.id) ? 'selected' : '' %>>
+                    <%= pkg.name %> - Rp <%= pkg.price.toLocaleString('id-ID') %>/bulan
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+            <small id="package-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
+          </div>
+
+          <div class="terms-box">
+            <label style="display:flex;align-items:flex-start;gap:10px;margin:0;cursor:pointer;font-weight:500">
+              <input type="checkbox" name="agree_terms" value="1" required style="margin-top:2px;flex-shrink:0;width:16px;height:16px;cursor:pointer">
+              <span style="flex:1">Saya menyetujui <a href="/customer/tos" target="_blank" rel="noopener noreferrer">Syarat & Ketentuan</a> dan <a href="/customer/privacy" target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a>.</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn-p" id="submit-register-btn"><i class="bi bi-person-plus-fill"></i> Daftar Sekarang</button>
+        </form>
+      <% } %>
+
+      <div class="links" style="margin-top:14px;border-top:1px solid rgba(190,239,255,.12);padding-top:12px">
+        <a href="/customer/login">Sudah punya akun? Login</a>
+      </div>
+
+      <div class="foot">
+        <div>&copy; <%= new Date().getFullYear() %> <%- footerInfo %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="mapPickerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content" style="border-radius:16px">
+        <div class="modal-header border-0">
+          <h6 class="modal-title"><i class="bi bi-geo-alt-fill"></i> Pilih Lokasi Pemasangan</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="picker-map"></div>
+          <div class="coord-text">Geser pin atau klik peta untuk menentukan titik lokasi.</div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn-secondary" data-bs-dismiss="modal">Selesai</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  <script>
+    const officeLat = Number('<%= settings.office_lat || "" %>') || -6.200000;
+    const officeLng = Number('<%= settings.office_lng || "" %>') || 106.816666;
+    let pickerMap, pickerMarker, pickerModal;
+
+    function setCoords(lat, lng) {
+      const latStr = Number(lat).toFixed(8);
+      const lngStr = Number(lng).toFixed(8);
+      document.getElementById('reg_lat').value = latStr;
+      document.getElementById('reg_lng').value = lngStr;
+      document.getElementById('coordText').innerText = `Lat: ${latStr} � Lng: ${lngStr}`;
+    }
+
+    function openPicker() {
+      pickerModal = pickerModal || new bootstrap.Modal(document.getElementById('mapPickerModal'));
+      pickerModal.show();
+
+      let latVal = parseFloat(document.getElementById('reg_lat').value);
+      let lngVal = parseFloat(document.getElementById('reg_lng').value);
+      let useDefault = !latVal || !lngVal;
+
+      // Function to initialize map
+      function initMap(lat, lng) {
+        // Wait for modal to be fully visible before initializing map
+        setTimeout(() => {
+          if (!pickerMap) {
+            try {
+              pickerMap = L.map('picker-map').setView([lat, lng], 16);
+              L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+              }).addTo(pickerMap);
+
+              pickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pickerMap);
+              pickerMarker.on('dragend', () => {
+                const p = pickerMarker.getLatLng();
+                setCoords(p.lat, p.lng);
+              });
+              pickerMap.on('click', (e) => {
+                pickerMarker.setLatLng(e.latlng);
+                setCoords(e.latlng.lat, e.latlng.lng);
+              });
+            } catch(e) {
+              console.error('Map initialization error:', e);
+            }
+          } else {
+            try {
+              pickerMap.setView([lat, lng], 16);
+              if (pickerMarker) pickerMarker.setLatLng([lat, lng]);
+              pickerMap.invalidateSize();
+            } catch(e) {
+              console.error('Map update error:', e);
+            }
+          }
+        }, 400);
+      }
+
+      // Try to get browser location first if coordinates not set
+      if (useDefault && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const browserLat = pos.coords.latitude;
+            const browserLng = pos.coords.longitude;
+            console.log('Browser location found:', browserLat, browserLng);
+            setCoords(browserLat, browserLng);
+            initMap(browserLat, browserLng);
+          },
+          (err) => {
+            console.log('Geolocation error, using default:', err.code);
+            // Fall back to office location or default
+            latVal = latVal || officeLat;
+            lngVal = lngVal || officeLng;
+            initMap(latVal, lngVal);
+          },
+          { 
+            enableHighAccuracy: true, 
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+      } else {
+        latVal = latVal || officeLat;
+        lngVal = lngVal || officeLng;
+        console.log('Using existing or default coords:', latVal, lngVal);
+        initMap(latVal, lngVal);
+      }
+    }
+
+    function showGPSResult(success, data = {}) {
+      // Create modal HTML
+      const modalHTML = `
+        <div class="gps-modal" id="gpsResultModal">
+          <div class="gps-modal-content">
+            ${success ? `
+              <div class="gps-header success">
+                <i class="bi bi-check-circle-fill"></i>
+                <h3>Lokasi Berhasil Diambil</h3>
+              </div>
+              <div class="gps-body">
+                <div class="gps-accuracy">
+                  <div class="accuracy-label">Akurasi</div>
+                  <div class="accuracy-value ${data.accuracyClass}">
+                    �${data.accuracy.toFixed(0)}m
+                  </div>
+                  <div class="accuracy-status">${data.accuracyText}</div>
+                </div>
+                <div class="gps-coords">
+                  <div class="coord-item">
+                    <span class="coord-label">Latitude</span>
+                    <span class="coord-value">${data.lat.toFixed(8)}</span>
+                  </div>
+                  <div class="coord-item">
+                    <span class="coord-label">Longitude</span>
+                    <span class="coord-value">${data.lng.toFixed(8)}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="gps-footer">
+                <button class="gps-btn-close">Tutup</button>
+              </div>
+            ` : `
+              <div class="gps-header error">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <h3>Gagal Mengambil Lokasi</h3>
+              </div>
+              <div class="gps-body">
+                <p class="error-message">${data.message}</p>
+                <p class="error-hint">${data.hint}</p>
+              </div>
+              <div class="gps-footer">
+                <button class="gps-btn-close">Tutup</button>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+      
+      // Remove existing modal if any
+      const existing = document.getElementById('gpsResultModal');
+      if (existing) existing.remove();
+      
+      // Append new modal
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      
+      // Add event listener to close button
+      document.querySelector('.gps-btn-close').addEventListener('click', () => {
+        document.getElementById('gpsResultModal').remove();
+      });
+      
+      // Close on background click
+      document.getElementById('gpsResultModal').addEventListener('click', (e) => {
+        if (e.target.id === 'gpsResultModal') {
+          document.getElementById('gpsResultModal').remove();
+        }
+      });
+    }
+
+    function getLocation() {
+      if (!navigator.geolocation) {
+        showGPSResult(false, {
+          message: 'GPS tidak didukung di perangkat ini.',
+          hint: 'Pastikan perangkat Anda memiliki fitur geolocation dan browser yang kompatibel.'
+        });
+        return;
+      }
+      
+      const gpsBtn = document.querySelector('button[onclick="getLocation()"]');
+      const originalText = gpsBtn.innerHTML;
+      gpsBtn.disabled = true;
+      gpsBtn.innerHTML = '<i class="bi bi-hourglass-split spin"></i> Menunggu GPS...';
+      
+      let attemptCount = 0;
+      const maxAttempts = 2;
+      
+      function requestGPS() {
+        attemptCount++;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const accuracy = pos.coords.accuracy;
+            
+            console.log(`GPS Success (Attempt ${attemptCount}):`, {
+              latitude: lat,
+              longitude: lng,
+              accuracy: accuracy.toFixed(2) + 'm',
+              timestamp: new Date(pos.timestamp).toISOString()
+            });
+            
+            setCoords(lat, lng);
+            
+            // Determine accuracy status
+            let accuracyClass, accuracyText;
+            if (accuracy > 100) {
+              accuracyClass = 'medium';
+              accuracyText = 'Sedang';
+            } else if (accuracy > 50) {
+              accuracyClass = 'good';
+              accuracyText = 'Baik';
+            } else {
+              accuracyClass = 'excellent';
+              accuracyText = 'Sangat Baik';
+            }
+            
+            gpsBtn.disabled = false;
+            gpsBtn.innerHTML = originalText;
+            
+            showGPSResult(true, {
+              lat: lat,
+              lng: lng,
+              accuracy: accuracy,
+              accuracyClass: accuracyClass,
+              accuracyText: accuracyText
+            });
+            
+            // Auto-update map if picker is open
+            if (pickerMap) {
+              pickerMap.setView([lat, lng], 16);
+              if (pickerMarker) pickerMarker.setLatLng([lat, lng]);
+            }
+          },
+          (err) => {
+            console.error(`GPS Error (Attempt ${attemptCount}):`, {
+              code: err.code,
+              message: err.message
+            });
+            
+            let errorMsg = 'Gagal mengambil lokasi GPS.';
+            let errorHint = 'Silakan coba lagi atau gunakan metode lain.';
+            let shouldRetry = false;
+            
+            if (err.code === 1) {
+              errorMsg = 'Izin GPS Ditolak';
+              errorHint = 'Silakan aktifkan lokasi di pengaturan browser atau sistem operasi Anda.';
+            } else if (err.code === 2) {
+              errorMsg = 'Sinyal GPS Tidak Tersedia';
+              errorHint = 'Pindah ke area terbuka (outdoor) untuk sinyal GPS yang lebih baik.';
+              if (attemptCount < maxAttempts) {
+                shouldRetry = true;
+              }
+            } else if (err.code === 3) {
+              errorMsg = 'Waktu Tunggu GPS Habis';
+              errorHint = 'Sistem membutuhkan waktu lebih lama. Silakan coba lagi.';
+              if (attemptCount < maxAttempts) {
+                shouldRetry = true;
+              }
+            }
+            
+            if (shouldRetry) {
+              showGPSResult(false, {
+                message: errorMsg,
+                hint: `${errorHint}\n\nMencoba lagi (Attempt ${attemptCount + 1}/${maxAttempts})...`
+              });
+              setTimeout(requestGPS, 3000);
+            } else {
+              gpsBtn.disabled = false;
+              gpsBtn.innerHTML = originalText;
+              showGPSResult(false, {
+                message: errorMsg,
+                hint: errorHint
+              });
+            }
+          },
+          { 
+            enableHighAccuracy: true,
+            timeout: 20000,      // 20 detik untuk akurasi maksimal
+            maximumAge: 0        // Tidak cache, selalu fresh GPS data
+          }
+        );
+      }
+      
+      requestGPS();
+    }
+
+    function validateRegisterForm(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('reg-name').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const address = document.getElementById('reg-address').value.trim();
+      const packageId = document.getElementById('reg-package').value;
+      const agreeTerms = document.getElementById('register-form').querySelector('input[name="agree_terms"]').checked;
+      
+      const form = document.getElementById('register-form');
+      const nameError = document.getElementById('name-error');
+      const phoneError = document.getElementById('phone-error');
+      const emailError = document.getElementById('email-error');
+      const addressError = document.getElementById('address-error');
+      const packageError = document.getElementById('package-error');
+      const submitBtn = document.getElementById('submit-register-btn');
+      
+      [nameError, phoneError, emailError, addressError, packageError].forEach(el => {
+        if (el) el.style.display = 'none';
+      });
+      
+      let isValid = true;
+      
+      if (!name) {
+        nameError.textContent = 'Nama lengkap wajib diisi.';
+        nameError.style.display = 'block';
+        isValid = false;
+      } else if (name.length < 3) {
+        nameError.textContent = 'Nama minimal 3 karakter.';
+        nameError.style.display = 'block';
+        isValid = false;
+      } else if (name.length > 100) {
+        nameError.textContent = 'Nama maksimal 100 karakter.';
+        nameError.style.display = 'block';
+        isValid = false;
+      }
+      
+      if (!phone) {
+        phoneError.textContent = 'Nomor WhatsApp wajib diisi.';
+        phoneError.style.display = 'block';
+        isValid = false;
+      } else if (!/^[0-9]{10,15}$/.test(phone.replace(/\D/g, ''))) {
+        phoneError.textContent = 'Nomor WhatsApp harus 10-15 digit.';
+        phoneError.style.display = 'block';
+        isValid = false;
+      }
+      
+      if (email && !isValidEmail(email)) {
+        emailError.textContent = 'Format email tidak valid.';
+        emailError.style.display = 'block';
+        isValid = false;
+      }
+      
+      if (!address) {
+        addressError.textContent = 'Alamat pemasangan wajib diisi.';
+        addressError.style.display = 'block';
+        isValid = false;
+      } else if (address.length < 10) {
+        addressError.textContent = 'Alamat minimal 10 karakter.';
+        addressError.style.display = 'block';
+        isValid = false;
+      } else if (address.length > 300) {
+        addressError.textContent = 'Alamat maksimal 300 karakter.';
+        addressError.style.display = 'block';
+        isValid = false;
+      }
+      
+      if (!packageId) {
+        packageError.textContent = 'Silakan pilih paket layanan.';
+        packageError.style.display = 'block';
+        isValid = false;
+      }
+      
+      if (!agreeTerms) {
+        alert('Anda harus menerima Syarat & Ketentuan untuk melanjutkan.');
+        isValid = false;
+      }
+      
+      if (isValid) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Memproses...';
+        form.submit();
+      }
+      
+      return false;
+    }
+    
+    function isValidEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    const packageFromUrl = new URLSearchParams(window.location.search).get('package');
+    const packageSelect = document.querySelector('select[name="package_id"]');
+    if (packageFromUrl && packageSelect) {
+      const matchingPackage = Array.from(packageSelect.options).find((option) => option.value === packageFromUrl);
+      if (matchingPackage) packageSelect.value = packageFromUrl;
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

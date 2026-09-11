@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.settings.title', 'Pengaturan') %> | <%= company %></title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/img/icon.png">
+  <link rel="manifest" href="/admin/manifest.webmanifest">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: (typeof activePage !== 'undefined' && activePage ? activePage : 'settings'), company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-gear"></i> <%= t('admin.settings.system_title', 'Pengaturan Sistem') %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+            <div class="lang-dropdown">
+        <button type="button" class="lang-btn" onclick="toggleLangDropdown(this)" aria-haspopup="true" aria-expanded="false">
+          <i class="bi bi-globe"></i> <span><%= (lang || 'id').toUpperCase() %></span> <i class="bi bi-chevron-down" style="font-size:10px"></i>
+        </button>
+        <div class="lang-menu">
+          <a href="/lang/id" class="lang-item <%= (lang || 'id') === 'id' ? 'active' : '' %>">Indonesia</a>
+          <a href="/lang/en" class="lang-item <%= (lang || 'id') === 'en' ? 'active' : '' %>">English</a>
+        </div>
+      </div>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- E-Wallet Notification Logs View -->
+    <% if (typeof viewMode !== 'undefined' && viewMode === 'ewallet_logs') { %>
+    <div class="page-container" style="max-width: 100%; padding: 0;">
+      <!-- Header Section -->
+      <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%); border-bottom: 1px solid rgba(59, 130, 246, 0.15); padding: 28px; border-radius: 12px 12px 0 0; margin-bottom: 0;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+          <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary), #0ea5e9); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-wallet2" style="font-size: 24px; color: white;"></i>
+          </div>
+          <div>
+            <h5 style="margin: 0; font-size: 18px; font-weight: 700;">Log Notifikasi E-Wallet (Webhook)</h5>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted);">Monitor semua payment notifications dari MacroDroid, Tripay, Midtrans, Xendit, Duitku</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card" style="border-radius: 0 0 12px 12px; border-top: none; margin: 0;">
+        <div class="card-bd" style="padding: 24px;">
+          
+          <!-- Quick Stats -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px;">
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 10px; padding: 14px; text-align: center;">
+              <div style="font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Status Live</div>
+              <div style="font-size: 16px; font-weight: 700; color: #10b981;"><i class="bi bi-broadcast" id="live_indicator" style="margin-right: 6px;"></i><span id="live_status">Offline</span></div>
+            </div>
+            <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px; padding: 14px; text-align: center;">
+              <div style="font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Total Logs</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--primary);" id="total_logs">0</div>
+            </div>
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 10px; padding: 14px; text-align: center;">
+              <div style="font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Berhasil</div>
+              <div style="font-size: 16px; font-weight: 700; color: #10b981;" id="success_count">0</div>
+            </div>
+          </div>
+
+          <!-- Filter & Control Bar -->
+          <div style="background: rgba(0, 0, 0, 0.02); padding: 16px; border-radius: 10px; margin-bottom: 24px; border: 1px solid var(--border);">
+            <div style="display: grid; grid-template-columns: 2fr 2fr 1fr auto; gap: 12px; align-items: flex-end;">
+              <div class="fg" style="margin-bottom: 0;">
+                <label class="fl">🔍 Service Filter</label>
+                <select class="fs" id="ew_service" onchange="loadEwalletLogs()" style="margin-bottom: 0;">
+                  <option value="">Semua Service</option>
+                  <option value="Tripay">🔵 Tripay</option>
+                  <option value="Midtrans">🟢 Midtrans</option>
+                  <option value="Xendit">🟡 Xendit</option>
+                  <option value="Duitku">🟣 Duitku</option>
+                  <option value="E-Wallet">📱 E-Wallet</option>
+                </select>
+              </div>
+              <div class="fg" style="margin-bottom: 0;">
+                <label class="fl">🔎 Search Content</label>
+                <input class="fc" id="ew_q" placeholder="Cari nominan, reference, atau konten..." onchange="loadEwalletLogs()" style="margin-bottom: 0;">
+              </div>
+              <div class="fg" style="margin-bottom: 0;">
+                <label class="fl">📊 Limit</label>
+                <input class="fc" type="number" id="ew_limit" value="200" min="10" max="1000" onchange="loadEwalletLogs()" style="margin-bottom: 0;">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-p btn-sm btn-icon" id="ew_live_btn" onclick="toggleEwalletLive()" title="Toggle Live Mode"><i class="bi bi-broadcast"></i></button>
+                <button type="button" class="btn btn-g btn-sm btn-icon" onclick="loadEwalletLogs()" title="Refresh Data"><i class="bi bi-arrow-repeat"></i></button>
+                <button type="button" class="btn btn-d btn-sm btn-icon" onclick="clearEwalletLogs()" title="Clear All Logs"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notification Alert -->
+          <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 10px; padding: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 14px;">
+            <div style="flex-shrink: 0; width: 40px; height: 40px; background: rgba(59, 130, 246, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <i class="bi bi-bell" style="font-size: 18px; color: var(--primary);"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px;">Browser Notifications</div>
+              <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;" id="ew_notif_hint">Aktifkan notifikasi untuk mendapat alert real-time saat ada payment notification baru</div>
+              <button type="button" class="btn btn-s btn-sm" onclick="enableEwalletNotif()"><i class="bi bi-bell"></i> Aktifkan Notif</button>
+            </div>
+          </div>
+
+          <!-- Logs Table -->
+          <div style="border-radius: 10px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+              <thead>
+                <tr style="background: linear-gradient(90deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.03) 100%); border-bottom: 1px solid var(--border);">
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 165px;">📅 Waktu</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 110px;">🏢 Service</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 125px;">💰 Nominal</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 90px;">✓ Status</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 140px;">🔗 Matched</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted);">📝 Content</th>
+                  <th style="padding: 14px; text-align: center; font-weight: 700; color: var(--muted); min-width: 50px;">⚙️</th>
+                </tr>
+              </thead>
+              <tbody id="ew_logs_body">
+                <tr>
+                  <td colspan="7" style="padding: 32px 14px; text-align: center; color: var(--muted);">
+                    <i class="bi bi-hourglass-split" style="opacity: 0.5; margin-right: 8px;"></i>Memuat data...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Footer Info -->
+          <div style="margin-top: 20px; padding: 14px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(14, 165, 233, 0.02) 100%); border-radius: 8px; border-left: 3px solid var(--primary); font-size: 12px; color: var(--muted);">
+            <i class="bi bi-info-circle" style="color: var(--primary); margin-right: 8px; font-weight: 600;"></i>
+            <span><strong>Tips:</strong> Log terbaru muncul di paling atas. Aktifkan Live Mode untuk auto-refresh setiap 5 detik dengan browser notification saat ada payment baru.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } else { %>
+
+    <form method="POST" action="/admin/settings">
+
+        <!-- Telegram Bot dipindahkan ke halaman /admin/telegram-bot (menu UTAMA > Telegram Bot) -->
+        <% if (false) { %>
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-telegram"></i> <%= t('admin.settings.telegram.title', 'Pengaturan Telegram Bot (Backup Admin)') %></h6></div>
+          <div class="card-bd">
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl"><%= t('admin.settings.telegram.status', 'Status Bot Telegram') %></label>
+                <select class="fs" name="telegram_enabled">
+                  <option value="true" <%= settings.telegram_enabled ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+                  <option value="false" <%= !settings.telegram_enabled ? 'selected' : '' %>><%= t('common.inactive', 'Nonaktif') %></option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.settings.telegram.admin_id', 'Admin Telegram ID') %></label>
+                <input class="fc" name="telegram_admin_id" value="<%= settings.telegram_admin_id || '' %>" placeholder="Contoh: 12345678">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.telegram.bot_token', 'Telegram Bot Token') %></label>
+              <div style="display:flex;gap:8px">
+                <input class="fc" name="telegram_bot_token" value="<%= settings.telegram_bot_token || '' %>" placeholder="Dapatkan dari @BotFather">
+                <button type="button" class="btn btn-g" onclick="syncTelegram()" title="<%= t('admin.settings.telegram.sync_title', 'Sinkronkan / Hapus Webhook Lama') %>"><i class="bi bi-arrow-repeat"></i> <%= t('admin.settings.telegram.sync', 'Sinkronkan') %></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+
+        <div class="settings-grid">
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-person-gear"></i> Pengaturan Profil</h6></div>
+          <div class="card-bd">
+        
+        <!-- General Info -->
+        <div>
+          <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-info-circle"></i> <%= t('admin.settings.app_info', 'Info Aplikasi') %></h6>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.company_name', 'Nama Aplikasi / Perusahaan') %></label>
+            <input class="fc" name="company_header" value="<%= settings.company_header || '' %>" placeholder="ZenRadius">
+          </div>
+          <div class="fg">
+            <label class="fl">URL Publik Aplikasi (Public Base URL)</label>
+            <input class="fc" name="public_base_url" value="<%= settings.public_base_url || '' %>" placeholder="https://app.zenradius.net">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Digunakan untuk menyusun tautan login pelanggan yang dikirim via WhatsApp. Contoh: <span class="mono">https://app.zenradius.net</span></div>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.footer_info', 'Info Footer') %></label>
+            <input class="fc" name="footer_info" value="<%= settings.footer_info || '' %>" placeholder="ZenRadius - All Rights Reserved">
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.owner_name', 'Nama Manajer / Owner') %></label>
+              <input class="fc" name="company_manager" value="<%= settings.company_manager || '' %>" placeholder="Admin Pusat">
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.primary_phone', 'Telepon Utama (CS)') %></label>
+              <input class="fc" name="company_phone" value="<%= settings.company_phone || '' %>" placeholder="081234567890">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.company_email', 'Email Perusahaan') %></label>
+            <input class="fc" name="company_email" value="<%= settings.company_email || '' %>" placeholder="support@zenradius.net">
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.office_address', 'Alamat Kantor') %></label>
+            <input class="fc" name="company_address" value="<%= settings.company_address || '' %>" placeholder="Jl. Utama No. 123">
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.operational_hours', 'Jam Operasional') %></label>
+            <input class="fc" name="operational_hours" value="<%= settings.operational_hours || '' %>" placeholder="Setiap Hari: 08.00 - 22.00 WIB">
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- Server Settings -->
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-gear"></i> Pengaturan Server</h6></div>
+          <div class="card-bd">
+            <div class="fg" style="margin-top:15px; border-top: 1px dashed var(--border); padding-top: 15px;">
+              <label class="fl">Ganti Logo Aplikasi (berlaku di seluruh tampilan: landing, login semua role, dashboard, sidebar, invoice, PWA)</label>
+              <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+                <div style="flex: 1 1 200px">
+                  <input class="fc" type="file" id="logo_upload_file" name="logo_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                  <div style="font-size:10px; color:var(--muted); margin-top:4px">Format file: PNG/JPG/WebP. Ukuran maks 2MB. Logo akan langsung di-upload dan menimpa yang lama. Ikon PWA & favicon otomatis disinkronkan.</div>
+                </div>
+                <button class="btn btn-s" type="button" id="logo_upload_btn"><i class="bi bi-upload"></i> Upload Logo</button>
+              </div>
+              <div style="margin-top:10px; display:flex; gap:12px; align-items:center;">
+                <div style="font-size:10px; color:var(--muted)">Logo Saat Ini:</div>
+                <img src="/img/logo.png?v=<%= Date.now() %>" alt="Current Logo" style="height:40px; object-fit:contain; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px; border:1px solid var(--border)">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl"><%= t('admin.settings.server_port', 'Port Server') %></label>
+                <input class="fc" type="number" name="server_port" value="<%= settings.server_port || 3001 %>">
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.settings.timezone', 'Zona Waktu') %></label>
+                <select class="fs" name="timezone">
+                  <option value="Asia/Jakarta" <%= settings.timezone === 'Asia/Jakarta' ? 'selected' : '' %>>WIB (Asia/Jakarta)</option>
+                  <option value="Asia/Makassar" <%= settings.timezone === 'Asia/Makassar' ? 'selected' : '' %>>WITA (Asia/Makassar)</option>
+                  <option value="Asia/Jayapura" <%= settings.timezone === 'Asia/Jayapura' ? 'selected' : '' %>>WIT (Asia/Jayapura)</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.settings.customer_otp_login', 'Login OTP Pelanggan') %></label>
+                <select class="fs" name="login_otp_enabled">
+                  <option value="true" <%= settings.login_otp_enabled ? 'selected' : '' %>><%= t('admin.settings.otp_enabled', 'Aktif (Kirim via WA)') %></option>
+                  <option value="false" <%= !settings.login_otp_enabled ? 'selected' : '' %>><%= t('admin.settings.otp_disabled', 'Nonaktif (Langsung)') %></option>
+                </select>
+              </div>
+            </div>
+            <div class="hint" style="margin-top:6px;color:var(--warning)">
+              <i class="bi bi-info-circle"></i> <strong>Pembayaran Kolektor:</strong> Pengaturan approval pembayaran kolektor sekarang diatur per akun kolektor pada menu Manajemen Kolektor, bukan dari pengaturan global.
+            </div>
+            <div class="fg" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
+              <label class="fl">Kredensial Admin</label>
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Username Admin</label>
+                  <input class="fc" name="admin_username" value="<%= settings.admin_username || '' %>">
+                </div>
+                <div class="fg">
+                  <label class="fl">Password Admin</label>
+                  <input class="fc" type="password" name="admin_password" value="<%= settings.admin_password || '' %>">
+                </div>
+              </div>
+              <label class="fl">Admin API Key (Untuk akses luar)</label>
+              <input class="fc" name="admin_api_key" value="<%= settings.admin_api_key || '' %>">
+            </div>
+          </div>
+        </div>
+
+        <!-- Office Attendance Settings -->
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-geo-alt"></i> Lokasi & Absensi</h6></div>
+          <div class="card-bd">
+            <div class="form-row">
+              <div>
+                <div class="fg">
+                  <label class="fl"><%= t('admin.settings.office_lat', 'Latitude Kantor') %></label>
+                  <input class="fc" name="office_lat" value="<%= settings.office_lat || '' %>" placeholder="-6.xxx">
+                </div>
+                <div class="fg">
+                  <label class="fl"><i class="bi bi-shield-check"></i> Geofencing Absensi</label>
+                  <select class="fs" name="attendance_geofencing">
+                    <option value="true" <%= settings.attendance_geofencing === 'true' || settings.attendance_geofencing === true ? 'selected' : '' %>>Aktif (Validasi Lokasi)</option>
+                    <option value="false" <%= settings.attendance_geofencing === 'false' || settings.attendance_geofencing === false ? 'selected' : '' %>>Nonaktif (Bebas)</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div class="fg">
+                  <label class="fl"><%= t('admin.settings.office_lng', 'Longitude Kantor') %></label>
+                  <input class="fc" name="office_lng" value="<%= settings.office_lng || '' %>" placeholder="106.xxx">
+                </div>
+                <div class="fg">
+                  <label class="fl"><i class="bi bi-geo-alt"></i> Radius Absensi (meter)</label>
+                  <input type="number" class="fc" name="attendance_radius" value="<%= settings.attendance_radius || '100' %>" placeholder="100" min="10" max="1000">
+                </div>
+              </div>
+            </div>
+            <div class="hint" style="margin-top:-6px;margin-bottom:12px;color:var(--muted)">
+              <i class="bi bi-info-circle"></i> Koordinat kantor digunakan untuk validasi lokasi absensi karyawan (geofencing)
+            </div>
+            <div class="hint" style="margin-top:2px;color:var(--warning)"><i class="bi bi-exclamation-triangle"></i> <strong>Geofencing:</strong> Karyawan hanya bisa absen jika berada dalam radius yang ditentukan dari koordinat kantor.</div>
+          </div>
+        </div>
+
+        </div>
+
+        <!-- Integrasi WhatsApp dipindahkan ke halaman /admin/whatsapp -->
+        <% if (false) { %>
+        <div>
+          <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-whatsapp"></i> Integrasi WhatsApp</h6>
+          <div class="fg">
+            <label class="fl">Enable WhatsApp Bot</label>
+            <select class="fs" name="whatsapp_enabled">
+              <option value="true" <%= settings.whatsapp_enabled ? 'selected' : '' %>>Aktif</option>
+              <option value="false" <%= !settings.whatsapp_enabled ? 'selected' : '' %>>Nonaktif</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Nomor Admin WA (Pisahkan dengan koma)</label>
+            <input class="fc" name="whatsapp_admin_numbers" value="<%= (settings.whatsapp_admin_numbers || []).join(', ') %>" placeholder="6281xxx, 6282xxx">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Nomor admin akan menerima notifikasi monitoring sistem. Nomor teknisi diambil otomatis dari <a href="/admin/technicians" style="color:var(--brand);font-weight:600">Data Teknisi</a>.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Jeda Antar Pesan Broadcast (Detik)</label>
+            <input class="fc" type="number" name="whatsapp_broadcast_delay" value="<%= settings.whatsapp_broadcast_delay || 2 %>" min="1" max="60">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Rekomendasi: Minimal 2 detik agar tidak terdeteksi spam oleh WhatsApp.</div>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Payment Gateway dipindahkan ke halaman /admin/payment-gateway (menu KEUANGAN > Payment Gateway) -->
+        <% if (false) { %>
+        <div class="settings-span-2">
+          <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-wallet2"></i> Pengaturan Payment Gateway</h6>
+          
+          <div class="form-row3" style="margin-bottom: 20px;">
+            <div class="fg">
+              <label class="fl">Default Gateway</label>
+              <select class="fs" name="default_gateway">
+                <option value="tripay" <%= settings.default_gateway === 'tripay' ? 'selected' : '' %>>Tripay</option>
+                <option value="midtrans" <%= settings.default_gateway === 'midtrans' ? 'selected' : '' %>>Midtrans</option>
+                <option value="xendit" <%= settings.default_gateway === 'xendit' ? 'selected' : '' %>>Xendit</option>
+                <option value="duitku" <%= settings.default_gateway === 'duitku' ? 'selected' : '' %>>Duitku</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">QRIS Statis (Semi-Otomatis)</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status QRIS Statis</label>
+                <select class="fs" name="qris_static_enabled">
+                  <option value="true" <%= (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false') ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= (settings.qris_static_enabled === false || settings.qris_static_enabled === 'false') ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">QRIS Static QR URL</label>
+                <input class="fc" name="qris_static_qr_url" value="<%= settings.qris_static_qr_url || '' %>" placeholder="https://.../qris.png atau link QRIS">
+              </div>
+              <div class="fg">
+                <label class="fl">Catatan</label>
+                <input class="fc" value="Pusat layanan pelanggan akan menampilkan QRIS + nominal unik (kode bayar)." readonly>
+              </div>
+            </div>
+            <div class="fg" style="margin-top:10px">
+              <label class="fl">QRIS Static Payload (String)</label>
+              <textarea class="fc" name="qris_static_payload" rows="3" placeholder="000201010211...6304XXXX"><%= settings.qris_static_payload || '' %></textarea>
+              <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika diisi, sistem akan membuat QRIS dinamis per transaksi (nominal langsung terisi saat scan). Jika kosong, sistem pakai URL gambar seperti biasa.</div>
+            </div>
+            <div style="margin-top:10px">
+              <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+                <div class="fg" style="min-width:260px; flex: 1 1 260px">
+                  <label class="fl">Upload Gambar QRIS (opsional)</label>
+                  <input class="fc" type="file" id="qris_upload_file" name="qris_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                  <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika di-upload, sistem akan menyimpan file dan otomatis mengisi URL QRIS.</div>
+                </div>
+                <button class="btn btn-s" type="button" id="qris_upload_btn" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
+              </div>
+            </div>
+            <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js" integrity="sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx" crossorigin="anonymous"></script>
+            <script>
+              (function () {
+                const fileInput = document.getElementById('qris_upload_file');
+                const btn = document.getElementById('qris_upload_btn');
+                if (!fileInput || !btn) return;
+
+                const normalizePayload = (raw) => {
+                  let s = String(raw || '').replace(/[\r\n\t]+/g, '').trim();
+                  const idx = s.indexOf('000201');
+                  if (idx > 0) s = s.slice(idx);
+                  const lastCrc = s.lastIndexOf('6304');
+                  if (lastCrc >= 0 && s.length >= lastCrc + 8) s = s.slice(0, lastCrc + 8);
+                  return s;
+                };
+
+                const decodeQrPayloadInBrowser = async (file) => {
+                  try {
+                    if (!window.jsQR) return '';
+                    const url = URL.createObjectURL(file);
+                    const img = new Image();
+                    img.decoding = 'async';
+                    img.src = url;
+                    await new Promise((resolve, reject) => {
+                      img.onload = () => resolve();
+                      img.onerror = () => reject(new Error('Gagal membaca gambar'));
+                    });
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    if (!ctx) return '';
+                    canvas.width = img.naturalWidth || img.width || 0;
+                    canvas.height = img.naturalHeight || img.height || 0;
+                    if (!canvas.width || !canvas.height) return '';
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const res = window.jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+                    URL.revokeObjectURL(url);
+                    if (!res || !res.data) return '';
+                    const s = normalizePayload(res.data);
+                    return s.startsWith('000201') ? s : '';
+                  } catch {
+                    return '';
+                  }
+                };
+
+                btn.addEventListener('click', async () => {
+                  const f = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+                  if (!f) return;
+                  const fd = new FormData();
+                  fd.append('qris_file', f);
+                  const payload = await decodeQrPayloadInBrowser(f);
+                  if (payload) fd.append('qris_payload', payload);
+                  btn.disabled = true;
+                  try {
+                    const r = await fetch('/admin/settings/qris-upload', { method: 'POST', body: fd, credentials: 'same-origin' });
+                    if (!r.ok) throw new Error('Upload gagal');
+                    window.location.href = '/admin/settings';
+                  } catch (e) {
+                    window.location.href = '/admin/settings';
+                  } finally {
+                    btn.disabled = false;
+                  }
+                });
+              })();
+            </script>
+            <% if (settings.qris_static_qr_url) { %>
+              <div style="margin-top:10px; display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+                <div style="font-size:10px; color:var(--muted)">Preview:</div>
+                <img src="<%= settings.qris_static_qr_url %>" alt="QRIS" style="height:72px; width:72px; object-fit:contain; background:#fff; border-radius:12px; padding:8px; border:1px solid rgba(0,0,0,0.08)">
+                <div style="font-size:10px; color:var(--muted)">Gunakan tombol <span style="font-weight:700">QR</span> di menu Billing untuk membuat nominal unik per invoice.</div>
+              </div>
+            <% } %>
+
+            <!-- Webhook Integration for MacroDroid -->
+            <div style="margin-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px;">
+              <h6 style="font-size:11px; margin-bottom: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-phone"></i> Webhook Notifikasi SMS/E-Wallet (MacroDroid)</h6>
+              <div class="fg">
+                <label class="fl">Link Webhook MacroDroid (URL POST)</label>
+                <div style="display:flex;gap:8px">
+                  <% 
+                    const base = settings.public_base_url ? settings.public_base_url.replace(/\/+$/, '') : '';
+                    const secret = process.env.MY_WEBHOOK_SECRET || '';
+                    const macroWebhookUrl = base ? (base + '/api/webhook/v1/payment-notif?secret_key=' + secret) : '/api/webhook/v1/payment-notif?secret_key=' + secret;
+                  %>
+                  <input class="fc" id="macro_webhook_url" readonly value="<%= macroWebhookUrl %>">
+                  <button type="button" class="btn btn-g" onclick="copyInput('macro_webhook_url', 'Link Webhook')"><i class="bi bi-copy"></i></button>
+                </div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Kirimkan request HTTP POST ke URL ini dari MacroDroid Anda (sudah termasuk kunci rahasia).</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tripay Section -->
+          <div style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">Tripay Configuration</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status Tripay</label>
+                <select class="fs" name="tripay_enabled">
+                  <option value="true" <%= settings.tripay_enabled === true ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= settings.tripay_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Tripay API Key</label>
+                <input class="fc" name="tripay_api_key" value="<%= settings.tripay_api_key || '' %>" type="password">
+              </div>
+              <div class="fg">
+                <label class="fl">Tripay Private Key</label>
+                <input class="fc" name="tripay_private_key" value="<%= settings.tripay_private_key || '' %>" type="password">
+              </div>
+            </div>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Tripay Merchant Code</label>
+                <input class="fc" name="tripay_merchant_code" value="<%= settings.tripay_merchant_code || '' %>" placeholder="Txxxx">
+              </div>
+              <div class="fg">
+                <label class="fl">Tripay Mode</label>
+                <select class="fs" name="tripay_mode">
+                  <option value="sandbox" <%= settings.tripay_mode === 'sandbox' ? 'selected' : '' %>>Sandbox</option>
+                  <option value="live" <%= settings.tripay_mode === 'live' ? 'selected' : '' %>>Live</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Midtrans Section -->
+          <div style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">Midtrans Configuration</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status Midtrans</label>
+                <select class="fs" name="midtrans_enabled">
+                  <option value="true" <%= settings.midtrans_enabled === true ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= settings.midtrans_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Midtrans Server Key</label>
+                <input class="fc" name="midtrans_server_key" value="<%= settings.midtrans_server_key || '' %>" type="password">
+              </div>
+              <div class="fg">
+                <label class="fl">Midtrans Mode</label>
+                <select class="fs" name="midtrans_mode">
+                  <option value="sandbox" <%= settings.midtrans_mode === 'sandbox' ? 'selected' : '' %>>Sandbox</option>
+                  <option value="live" <%= settings.midtrans_mode === 'live' ? 'selected' : '' %>>Live</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Xendit Section -->
+          <div style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-top: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">Xendit Configuration</h6>
+            <div class="form-row2">
+              <div class="fg">
+                <label class="fl">Status Xendit</label>
+                <select class="fs" name="xendit_enabled">
+                  <option value="true" <%= settings.xendit_enabled === true ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= settings.xendit_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Xendit Secret API Key</label>
+                <input class="fc" name="xendit_api_key" value="<%= settings.xendit_api_key || '' %>" type="password" placeholder="xnd_development_...">
+              </div>
+            </div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Xendit menggunakan callback token yang disetting di dashboard Xendit.</div>
+          </div>
+
+          <!-- Duitku Section -->
+          <div style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-top: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">Duitku Configuration</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status Duitku</label>
+                <select class="fs" name="duitku_enabled">
+                  <option value="true" <%= settings.duitku_enabled === true ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= settings.duitku_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Duitku Merchant Code</label>
+                <input class="fc" name="duitku_merchant_code" value="<%= settings.duitku_merchant_code || '' %>" placeholder="Dxxxx">
+              </div>
+              <div class="fg">
+                <label class="fl">Duitku API Key</label>
+                <input class="fc" name="duitku_api_key" value="<%= settings.duitku_api_key || '' %>" type="password">
+              </div>
+            </div>
+            <div class="form-row2">
+              <div class="fg">
+                <label class="fl">Duitku Mode</label>
+                <select class="fs" name="duitku_mode">
+                  <option value="sandbox" <%= settings.duitku_mode === 'sandbox' ? 'selected' : '' %>>Sandbox</option>
+                  <option value="live" <%= settings.duitku_mode === 'live' ? 'selected' : '' %>>Live</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg" style="margin-top: 15px;">
+            <label class="fl">Link Webhook (Copy ke Dashboard Gateway)</label>
+            <div style="display:flex;gap:8px">
+              <input class="fc" id="webhook_url" readonly value="<%= (typeof paymentWebhookUrl !== 'undefined' && paymentWebhookUrl) ? paymentWebhookUrl : ('http://' + (settings.server_host || 'localhost') + ':' + (settings.server_port || 3001) + '/customer/payment/callback') %>">
+              <button type="button" class="btn btn-g" onclick="copyWebhook()"><i class="bi bi-copy"></i></button>
+            </div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Gunakan link ini untuk kolom Webhook URL di Tripay atau Midtrans Notification URL.</div>
+          </div>
+        </div>
+        <% } %>
+
+        <div class="card mb16">
+          <div class="card-bd" style="text-align:right">
+            <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+          </div>
+        </div>
+    </form>
+    <% } %>
+
+  </div>
+</div>
+
+<script>
+function copyInput(id, name) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.select();
+    document.execCommand('copy');
+    alert(name + ' berhasil disalin!');
+  }
+}
+function copyWebhook() {
+  const el = document.getElementById('webhook_url');
+  el.select();
+  document.execCommand('copy');
+  alert('Link Webhook berhasil disalin!');
+}
+async function syncTelegram() {
+  try {
+    const res = await fetch('/admin/api/telegram/sync', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) alert(data.message);
+    else alert('Gagal: ' + data.error);
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+if ('serviceWorker' in navigator) {
+  try { navigator.serviceWorker.register('/sw.js', { scope: '/admin/' }).catch(() => {}); } catch {}
+}
+
+async function copyText(text) {
+  const v = String(text ?? '');
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(v);
+      return true;
+    }
+  } catch {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = v;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+function canNotify() {
+  return typeof Notification !== 'undefined';
+}
+
+function notifEnabled() {
+  return localStorage.getItem('ew_notif_enabled') === '1';
+}
+
+function setNotifEnabled(v) {
+  localStorage.setItem('ew_notif_enabled', v ? '1' : '0');
+}
+
+function updateNotifHint() {
+  const el = document.getElementById('ew_notif_hint');
+  if (!el) return;
+  const perm = canNotify() ? Notification.permission : 'unsupported';
+  const enabled = notifEnabled();
+  let msg = '';
+  if (perm === 'unsupported') msg = 'Notifikasi browser tidak didukung di device ini.';
+  else if (perm === 'denied') msg = 'Notifikasi diblokir. Izinkan di pengaturan browser.';
+  else if (perm === 'granted') msg = enabled ? 'Notif aktif. Notifikasi muncul saat ada log baru (mode Live).' : 'Notif siap, tapi masih nonaktif.';
+  else msg = 'Klik "Aktifkan Notif" untuk minta izin notifikasi.';
+  el.textContent = msg;
+}
+
+async function enableEwalletNotif() {
+  if (!canNotify()) return updateNotifHint();
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      setNotifEnabled(true);
+      updateNotifHint();
+      try { new Notification('E-Wallet Monitor', { body: 'Notifikasi aktif.' }); } catch {}
+      return;
+    }
+    setNotifEnabled(false);
+    updateNotifHint();
+  } catch {
+    setNotifEnabled(false);
+    updateNotifHint();
+  }
+}
+
+let ewLastId = Number(localStorage.getItem('ew_last_id') || 0);
+let ewLiveTimer = null;
+let ewLiveActive = false;
+
+function showEwalletNotification(row) {
+  if (!notifEnabled()) return;
+  if (!canNotify() || Notification.permission !== 'granted') return;
+  const svc = String(row?.service || 'E-Wallet');
+  const amt = row?.parsed_ok ? `Rp ${(Number(row.parsed_amount) || 0).toLocaleString('id-ID')}` : 'Nominal tidak terdeteksi';
+  const body = String(row?.content || '').replace(/\r?\n/g, ' ').slice(0, 140);
+  try {
+    new Notification(`${svc}: ${amt}`, { body });
+  } catch {}
+}
+
+function toggleEwalletLive() {
+  ewLiveActive = !ewLiveActive;
+  const btn = document.getElementById('ew_live_btn');
+  const statusEl = document.getElementById('live_status');
+  const indicatorEl = document.getElementById('live_indicator');
+  
+  if (btn) {
+    btn.className = ewLiveActive ? 'btn btn-d btn-sm btn-icon' : 'btn btn-p btn-sm btn-icon';
+    btn.innerHTML = ewLiveActive ? '<i class="bi bi-stop-circle"></i>' : '<i class="bi bi-broadcast"></i>';
+    btn.title = ewLiveActive ? 'Stop Live Mode' : 'Start Live Mode';
+  }
+  
+  if (statusEl) {
+    statusEl.textContent = ewLiveActive ? 'Online' : 'Offline';
+    statusEl.style.color = ewLiveActive ? '#10b981' : 'var(--muted)';
+  }
+  
+  if (indicatorEl) {
+    indicatorEl.style.animation = ewLiveActive ? 'pulse 1.5s infinite' : 'none';
+    indicatorEl.style.color = ewLiveActive ? '#10b981' : 'var(--muted)';
+  }
+  
+  if (ewLiveTimer) {
+    clearInterval(ewLiveTimer);
+    ewLiveTimer = null;
+  }
+  if (ewLiveActive) {
+    loadEwalletLogs(true);
+    ewLiveTimer = setInterval(() => loadEwalletLogs(true), 5000);
+  }
+}
+
+async function loadEwalletLogs() {
+  const body = document.getElementById('ew_logs_body');
+  const service = document.getElementById('ew_service')?.value || '';
+  const q = document.getElementById('ew_q')?.value || '';
+  const limit = document.getElementById('ew_limit')?.value || '200';
+  if (!body) return;
+  body.innerHTML = '<tr><td colspan="7" style="padding: 32px 14px; text-align: center; color: var(--muted);"><i class="bi bi-hourglass-split" style="opacity: 0.5; margin-right: 8px;"></i>Memuat...</td></tr>';
+  try {
+    const url = `/admin/api/webhook/payment-notif/logs?limit=${encodeURIComponent(limit)}&service=${encodeURIComponent(service)}&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Gagal memuat log');
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+    
+    // Update statistics
+    const totalLogs = document.getElementById('total_logs');
+    const successCount = document.getElementById('success_count');
+    if (totalLogs) totalLogs.textContent = rows.length;
+    if (successCount) {
+      const success = rows.filter(r => Number(r.parsed_ok || 0)).length;
+      successCount.textContent = success;
+    }
+    
+    if (rows.length === 0) {
+      body.innerHTML = '<tr><td colspan="7" style="padding: 32px 14px; text-align: center; color: var(--muted);"><i class="bi bi-inbox" style="opacity: 0.5; margin-right: 8px;"></i>Belum ada data log.</td></tr>';
+      return;
+    }
+    const newest = rows[0];
+    const newestId = Number(newest?.id || 0);
+    if (newestId && ewLastId === 0) {
+      ewLastId = newestId;
+      localStorage.setItem('ew_last_id', String(ewLastId));
+    } else if (newestId && newestId > ewLastId) {
+      ewLastId = newestId;
+      localStorage.setItem('ew_last_id', String(ewLastId));
+      showEwalletNotification(newest);
+    }
+
+    body.innerHTML = rows.map(r => {
+      const ok = Number(r.parsed_ok || 0) ? 'Y' : 'N';
+      const amount = (r.parsed_amount != null && r.parsed_amount !== '') ? Number(r.parsed_amount).toLocaleString('id-ID') : '-';
+      const created = r.created_at ? escHtml(r.created_at) : '-';
+      const svc = escHtml(r.service || '-');
+      const content = escHtml((r.content || '').replace(/\r?\n/g, ' '));
+      const okBadge = ok === 'Y' ? '<span class="badge bs"><i class="bi bi-check-circle-fill" style="margin-right:2px;"></i>Berhasil</span>' : '<span class="badge bw"><i class="bi bi-clock" style="margin-right:2px;"></i>Pending</span>';
+      const amountHtml = ok === 'Y'
+        ? `<span class="mono" style="font-weight:700;color:#10b981">Rp ${amount}</span>`
+        : `<span class="mono">Rp ${amount}</span>`;
+      const rawEnc = encodeURIComponent(String(r.content || ''));
+      const rawShortEnc = encodeURIComponent(String(r.content || '').replace(/\r?\n/g, ' ').slice(0, 180));
+      const matchedInvoiceId = Number(r.matched_invoice_id || 0) || 0;
+      const matchedVoucherOrderId = Number(r.matched_voucher_order_id || 0) || 0;
+      const matchedDonationOrderId = Number(r.matched_donation_order_id || 0) || 0;
+      const matchHtml = matchedInvoiceId
+        ? `<a class="badge bp" href="/admin/billing?search=${matchedInvoiceId}" target="_blank" style="cursor:pointer;"><i class="bi bi-link-45deg" style="margin-right:2px;"></i>INV#${matchedInvoiceId}</a>`
+        : (matchedVoucherOrderId 
+            ? `<span class="badge" style="background:rgba(59, 130, 246, 0.12); color: #3b82f6;"><i class="bi bi-ticket-perferated" style="margin-right:2px;"></i>VOUCHER#${matchedVoucherOrderId}</span>` 
+            : (matchedDonationOrderId 
+                ? `<span class="badge" style="background:rgba(250, 176, 0, 0.12); color: #f0ad4e;"><i class="bi bi-heart" style="margin-right:2px;"></i>DONASI#${matchedDonationOrderId}</span>` 
+                : '<span style="color:var(--muted);">-</span>'));
+      return `<tr style="border-bottom: 1px solid var(--border); transition: background-color 0.2s; hover:background-color: rgba(0,0,0,0.02);">
+        <td class="mono" style="padding: 14px; font-size: 11px;">${created}</td>
+        <td style="padding: 14px; font-weight: 500; font-size: 12px;">${svc}</td>
+        <td style="padding: 14px; font-size: 12px;">${amountHtml}</td>
+        <td style="padding: 14px; font-size: 11px;">${okBadge}</td>
+        <td style="padding: 14px; font-size: 11px;">${matchHtml}</td>
+        <td style="max-width:350px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:14px;color:var(--muted);font-size:11px;" title="${content}">${content}</td>
+        <td style="padding: 14px; text-align: center;">
+          <button type="button" class="btn btn-g btn-sm btn-icon btn-copy-ew" data-raw="${rawEnc}" data-short="${rawShortEnc}" title="Copy Raw JSON"><i class="bi bi-clipboard"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    body.querySelectorAll('.btn-copy-ew').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const rawEnc = btn.getAttribute('data-raw') || '';
+        const rawShortEnc = btn.getAttribute('data-short') || '';
+        const decoded = decodeURIComponent(rawEnc);
+        const shortText = rawShortEnc ? decodeURIComponent(rawShortEnc) : 'Tersalin.';
+        const ok = await copyText(decoded);
+        if (ok) {
+          alert(`Tersalin:\n${shortText}`);
+        } else {
+          alert('Gagal menyalin.');
+        }
+      });
+    });
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="7" class="text-center text-muted">${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+async function clearEwalletLogs() {
+  if (!confirm('Hapus semua log e-wallet?')) return;
+  try {
+    const res = await fetch('/admin/api/webhook/payment-notif/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Gagal menghapus log');
+    await loadEwalletLogs();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+// Logo Upload JavaScript
+(function () {
+  const fileInput = document.getElementById('logo_upload_file');
+  const btn = document.getElementById('logo_upload_btn');
+  if (!fileInput || !btn) return;
+
+  btn.addEventListener('click', async () => {
+    const f = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!f) {
+      alert('Pilih file logo terlebih dahulu');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('logo_file', f);
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
+    try {
+      const r = await fetch('/admin/settings/logo-upload', { method: 'POST', body: fd, credentials: 'same-origin' });
+      if (!r.ok) throw new Error('Upload logo gagal');
+      window.location.href = '/admin/settings';
+    } catch (e) {
+      alert(e.message);
+      window.location.href = '/admin/settings';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-upload"></i> Upload Logo';
+    }
+  });
+})();
+
+setTimeout(loadEwalletLogs, 200);
+setTimeout(updateNotifHint, 250);
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),5000);
+
+// Add pulse animation CSS
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  tr:hover { background-color: rgba(0,0,0,0.02) !important; }
+`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>

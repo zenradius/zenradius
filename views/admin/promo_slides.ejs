@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Manajemen Promo Slides | <%= company %></title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" href="/img/pwa-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/img/pwa-icon.svg">
+  <link rel="manifest" href="/admin/manifest.webmanifest">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .promo-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; margin-top: 18px; width: 100%; max-width: 100%; overflow: hidden; }
+    @media (min-width: 1200px) {
+      .promo-grid { grid-template-columns: 440px 1fr; }
+    }
+    .promo-hero { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 22px; }
+    .promo-hero-body { display: grid; grid-template-columns: 1fr; gap: 18px; padding: 20px; align-items: center; }
+    @media (min-width: 981px) {
+      .promo-hero-body { grid-template-columns: 1fr auto; }
+    }
+    .promo-kicker { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(190,239,255,0.3); border-radius: 999px; color: rgba(190,239,255,0.9); background: var(--pdim); padding: 6px 10px; font-size: 12px; font-weight: 700; }
+    .promo-heading { margin: 12px 0 8px; color: var(--text); font-size: 28px; line-height: 1.16; font-weight: 800; }
+    .promo-copy { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .promo-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+    .metric-tile { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .metric-label i { color: var(--primary); }
+    .metric-value { margin-top: 8px; color: var(--text); font-size: 22px; font-weight: 800; }
+    .promo-preview-frame { display: grid; align-content: center; gap: 10px; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg3); width: 100%; max-width: 400px; justify-self: center; }
+    .slide-preview-container { position: relative; width: 100%; aspect-ratio: 8/3; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; justify-content: center; }
+    .slide-preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .slide-preview-empty { display: grid; place-items: center; gap: 8px; color: var(--muted); text-align: center; font-size: 12px; z-index: 1; }
+    .slide-preview-empty i { font-size: 34px; opacity: 0.5; color: var(--primary); }
+    .slide-preview-overlay { position: absolute; inset: auto 0 0; padding: 12px 14px; color: #fff; background: linear-gradient(to top, rgba(23,57,69,0.95), rgba(23,57,69,0)); z-index: 2; }
+    .preview-title { margin: 0 0 3px; font-size: 15px; line-height: 1.25; font-weight: 700; }
+    .preview-desc { margin: 0; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .promo-form { display: grid; gap: 12px; }
+    .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .form-row.three { grid-template-columns: 0.65fr 1fr 1fr; }
+    .fg { display: flex; flex-direction: column; min-width: 0; }
+    .fl { margin-bottom: 6px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .fc { width: 100%; min-height: 40px; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: rgba(23,57,69,0.6); color: var(--text); font-size: 13px; font-family: inherit; outline: none; }
+    .fc:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--pdim); }
+    .fc::placeholder { color: var(--muted); }
+    .fc::-webkit-calendar-picker-indicator {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2322d3ee' class='bi bi-calendar-event' viewBox='0 0 16 16'%3E%3Cpath d='M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z'/%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z'/%3E%3C/svg%3E");
+      cursor: pointer;
+      filter: drop-shadow(0 0 2px var(--pdim));
+    }
+    .check-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .check-tile { display: flex; align-items: center; gap: 9px; border: 1px solid var(--border); border-radius: 8px; background: rgba(23,57,69,0.4); color: var(--text); padding: 10px; cursor: pointer; font-size: 12px; font-weight: 700; }
+    .check-tile input { width: 16px; height: 16px; accent-color: var(--primary); }
+    .promo-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+    .promo-table { width: 100%; border-collapse: collapse; min-width: 860px; }
+    .promo-table th,
+    .promo-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+    .promo-table th { background: var(--bg3); color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 700; }
+    .promo-table tr:last-child td { border-bottom: 0; }
+    .slide-thumb { width: 144px; aspect-ratio: 8/3; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); display: block; background: var(--bg3); }
+    .slide-title { color: var(--text); font-size: 14px; font-weight: 700; line-height: 1.35; }
+    .slide-desc { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .slide-link { margin-top: 6px; color: var(--primary); font-size: 11px; max-width: 340px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .status-pill, .order-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 6px 9px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .order-pill { border: 1px solid var(--border); background: rgba(190,239,255,0.08); color: var(--text); }
+    .status-on { background: var(--sdim); color: var(--success); }
+    .status-off { background: rgba(255,255,255,0.08); color: var(--muted); }
+    .date-stack { color: var(--text); font-size: 12px; line-height: 1.55; white-space: nowrap; }
+    .date-stack span { color: var(--muted); }
+    .action-row { display: flex; gap: 7px; align-items: center; }
+    .empty-state { padding: 44px 16px; text-align: center; color: var(--muted); }
+    .empty-state i { display: block; margin-bottom: 10px; color: var(--primary); font-size: 48px; opacity: 0.6; }
+    .empty-title { color: var(--text); font-size: 15px; font-weight: 700; }
+    .hint { color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .alert { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; }
+    .alert-s { background: var(--sdim); color: var(--success); border: 1px solid rgba(52,211,153,0.22); }
+    .alert-d { background: var(--ddim); color: var(--danger); border: 1px solid rgba(248,113,113,0.22); }
+    .modal-wrapper { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 18px; }
+    .modal-overlay { position: absolute; inset: 0; background: rgba(3,14,20,0.7); backdrop-filter: blur(4px); }
+    .modal-content { position: relative; width: min(560px, 100%); max-height: 92vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--bg2); box-shadow: 0 24px 60px rgba(3,14,20,0.45); }
+    .modal-header, .modal-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+    .modal-header h5 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 700; }
+    .modal-header h5 i { color: var(--primary); }
+    .modal-close { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 18px; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 16px; }
+    .modal-footer { justify-content: flex-end; border-top: 1px solid var(--border); border-bottom: 0; }
+    .current-image { width: 100%; aspect-ratio: 8/3; object-fit: cover; display: block; border: 1px solid var(--border); border-radius: 8px; background: var(--bg3); }
+    @media (max-width: 980px) { .promo-hero-body, .promo-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .promo-hero-body, .card-bd { padding: 14px; } .promo-heading { font-size: 22px; } .promo-metrics, .form-row, .form-row.three, .check-row { grid-template-columns: 1fr; } .promo-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'promo_slides', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-images"></i> Manajemen Promo Slides
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-images"></i> Promo Slides</span>
+      <div class="lang-dropdown">
+        <button type="button" class="lang-btn" onclick="toggleLangDropdown(this)" aria-haspopup="true" aria-expanded="false">
+          <i class="bi bi-globe"></i> <span><%= (lang || 'id').toUpperCase() %></span> <i class="bi bi-chevron-down" style="font-size:10px"></i>
+        </button>
+        <div class="lang-menu">
+          <a href="/lang/id" class="lang-item <%= (lang || 'id') === 'id' ? 'active' : '' %>">Indonesia</a>
+          <a href="/lang/en" class="lang-item <%= (lang || 'id') === 'en' ? 'active' : '' %>">English</a>
+        </div>
+      </div>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type === 'success' ? 's' : 'd' %>">
+        <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-circle' %>"></i> <%= msg.text %>
+      </div>
+    <% } %>
+
+    <div class="promo-shell">
+      <section class="card" style="margin-bottom:22px">
+        <div class="promo-hero-body">
+          <div>
+            <span class="promo-kicker"><i class="bi bi-broadcast"></i> Portal pelanggan</span>
+            <h1 class="promo-heading">Atur banner promosi yang langsung terlihat di dashboard pelanggan.</h1>
+            <p class="promo-copy">Kelola gambar, urutan tampil, periode kampanye, dan tautan aksi dari satu panel. Rasio 8:3 menjaga slide tetap rapi di layar desktop dan mobile.</p>
+
+            <div class="promo-metrics">
+              <div class="metric-tile">
+                <div class="metric-label"><i class="bi bi-stack"></i> Total slide</div>
+                <div class="metric-value"><%= slides.length %></div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-label"><i class="bi bi-check2-circle"></i> Aktif</div>
+                <div class="metric-value"><%= slides.filter(s => s.is_active).length %></div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-label"><i class="bi bi-aspect-ratio"></i> Rasio</div>
+                <div class="metric-value">8:3</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="promo-preview-frame">
+            <div class="slide-preview-container">
+              <div id="no-img-text" class="slide-preview-empty">
+                <i class="bi bi-image"></i>
+                <span>Unggah gambar untuk pratinjau</span>
+              </div>
+              <img id="preview-img-element" class="slide-preview-img" style="display:none" alt="Pratinjau promo slide">
+              <div id="preview-overlay-content" class="slide-preview-overlay" style="display:none">
+                <h4 id="preview-title" class="preview-title"></h4>
+                <p id="preview-desc" class="preview-desc"></p>
+              </div>
+            </div>
+            <div class="hint">Pratinjau mengikuti ruang banner portal pelanggan dengan object-fit cover.</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="promo-grid">
+        <section class="card">
+          <div class="card-hd">
+            <h6><i class="bi bi-plus-circle"></i> Tambah Slide Baru</h6>
+          </div>
+          <div class="card-bd">
+            <form class="promo-form" method="POST" action="/admin/promo-slides" enctype="multipart/form-data">
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Judul Promo *</label>
+                  <input class="fc" name="title" placeholder="Contoh: Promo upgrade 100 Mbps" required>
+                </div>
+                <div class="fg">
+                  <label class="fl">Gambar Slide *</label>
+                  <input class="fc" type="file" name="image" accept="image/*" required>
+                </div>
+              </div>
+
+              <div class="fg">
+                <label class="fl">Deskripsi Singkat</label>
+                <input class="fc" name="description" placeholder="Kalimat pendek yang tampil di atas banner">
+              </div>
+
+              <div class="fg">
+                <label class="fl">Link Tujuan Promo</label>
+                <input class="fc" name="url" placeholder="https://app.zenradius.net/promo" type="url">
+              </div>
+
+              <div class="form-row three">
+                <div class="fg">
+                  <label class="fl">Urutan</label>
+                  <input class="fc" type="number" name="sort_order" value="0" min="0">
+                </div>
+                <div class="fg">
+                  <label class="fl">Tanggal Mulai</label>
+                  <input class="fc" type="date" name="start_date">
+                </div>
+                <div class="fg">
+                  <label class="fl">Tanggal Akhir</label>
+                  <input class="fc" type="date" name="end_date">
+                </div>
+              </div>
+
+              <div class="check-row">
+                <label class="check-tile" for="open_in_new_tab">
+                  <input type="checkbox" id="open_in_new_tab" name="open_in_new_tab">
+                  <span>Buka di tab baru</span>
+                </label>
+                <label class="check-tile" for="is_active">
+                  <input type="checkbox" id="is_active" name="is_active" checked>
+                  <span>Aktifkan slide</span>
+                </label>
+              </div>
+
+              <button type="submit" class="btn btn-p" style="width:100%;justify-content:center;margin-top:16px"><i class="bi bi-cloud-arrow-up-fill"></i> Tambah Slide</button>
+              <div class="hint">Gunakan gambar 800 x 300 px atau kelipatannya agar teks dan objek utama tidak terpotong.</div>
+            </form>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <h6><i class="bi bi-images"></i> Daftar Promo Slides</h6>
+            <span class="status-pill status-on" style="margin-left:auto"><i class="bi bi-stack"></i> <%= slides.length %> item</span>
+          </div>
+          <div class="card-bd">
+            <% if (slides && slides.length > 0) { %>
+              <div class="promo-table-wrap">
+                <table class="promo-table">
+                  <thead>
+                    <tr>
+                      <th style="width:58px">ID</th>
+                      <th style="width:170px">Gambar</th>
+                      <th>Detail</th>
+                      <th style="width:92px">Urutan</th>
+                      <th style="width:160px">Periode</th>
+                      <th style="width:106px">Status</th>
+                      <th style="width:104px">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% slides.forEach(s => { %>
+                      <tr>
+                        <td><strong>#<%= s.id %></strong></td>
+                        <td><img class="slide-thumb" src="<%= s.image_path %>" alt="<%= s.title || 'Promo slide' %>"></td>
+                        <td>
+                          <div class="slide-title"><%= s.title || '(Tanpa Judul)' %></div>
+                          <div class="slide-desc"><%= s.description || '-' %></div>
+                          <% if (s.url) { %>
+                            <div class="slide-link"><i class="bi bi-link-45deg"></i> <%= s.url %><%= s.open_in_new_tab ? ' (Tab baru)' : '' %></div>
+                          <% } %>
+                        </td>
+                        <td><span class="order-pill"><i class="bi bi-sort-numeric-down"></i> <%= s.sort_order %></span></td>
+                        <td>
+                          <div class="date-stack">
+                            <div><span>Mulai:</span> <%= s.start_date || 'Selamanya' %></div>
+                            <div><span>Akhir:</span> <%= s.end_date || 'Selamanya' %></div>
+                          </div>
+                        </td>
+                        <td>
+                          <% if (s.is_active) { %>
+                            <span class="status-pill status-on"><i class="bi bi-check-circle"></i> Aktif</span>
+                          <% } else { %>
+                            <span class="status-pill status-off"><i class="bi bi-x-circle"></i> Nonaktif</span>
+                          <% } %>
+                        </td>
+                        <td>
+                          <div class="action-row">
+                            <button type="button" class="btn btn-sm btn-g" onclick="editSlide(<%= s.id %>)" aria-label="Edit slide"><i class="bi bi-pencil-fill"></i></button>
+                            <form method="POST" action="/admin/promo-slides/<%= s.id %>/delete" onsubmit="return confirm('Apakah Anda yakin ingin menghapus slide promosi ini secara permanen?');">
+                              <button type="submit" class="btn btn-sm btn-d" aria-label="Hapus slide"><i class="bi bi-trash-fill"></i></button>
+                            </form>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="empty-state">
+                <i class="bi bi-images"></i>
+                <div class="empty-title">Belum ada promo slide</div>
+                <div class="hint">Tambahkan slide pertama untuk mulai menampilkan banner promosi di portal pelanggan.</div>
+              </div>
+            <% } %>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="editSlideModal" class="modal-wrapper" style="display:none;">
+  <div class="modal-overlay" onclick="closeEditModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5><i class="bi bi-pencil-square"></i> Edit Promo Slide</h5>
+      <button type="button" class="modal-close" onclick="closeEditModal()" aria-label="Tutup modal"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <form id="editForm" method="POST" enctype="multipart/form-data">
+      <div class="modal-body">
+        <input type="hidden" id="editSlideId" name="id">
+
+        <div class="promo-form">
+          <div class="fg">
+            <label class="fl">Judul Promo *</label>
+            <input class="fc" id="editTitle" name="title" required>
+          </div>
+
+          <div class="fg">
+            <label class="fl">Deskripsi Singkat</label>
+            <input class="fc" id="editDescription" name="description">
+          </div>
+
+          <div class="fg">
+            <label class="fl">Gambar Slide Saat Ini</label>
+            <img id="editImagePreview" class="current-image" src="" alt="Gambar promo saat ini">
+          </div>
+
+          <div class="fg">
+            <label class="fl">Ganti File Gambar</label>
+            <input class="fc" type="file" id="editImage" name="image" accept="image/*">
+            <div class="hint" style="margin-top:6px">Kosongkan jika ingin mempertahankan gambar lama.</div>
+          </div>
+
+          <div class="fg">
+            <label class="fl">Link Tujuan Promo</label>
+            <input class="fc" id="editUrl" name="url" type="url">
+          </div>
+
+          <div class="form-row three">
+            <div class="fg">
+              <label class="fl">Urutan</label>
+              <input class="fc" type="number" id="editSortOrder" name="sort_order" min="0">
+            </div>
+            <div class="fg">
+              <label class="fl">Tanggal Mulai</label>
+              <input class="fc" type="date" id="editStartDate" name="start_date">
+            </div>
+            <div class="fg">
+              <label class="fl">Tanggal Akhir</label>
+              <input class="fc" type="date" id="editEndDate" name="end_date">
+            </div>
+          </div>
+
+          <div class="check-row">
+            <label class="check-tile" for="editOpenInNewTab">
+              <input type="checkbox" id="editOpenInNewTab" name="open_in_new_tab">
+              <span>Buka di tab baru</span>
+            </label>
+            <label class="check-tile" for="editIsActive">
+              <input type="checkbox" id="editIsActive" name="is_active">
+              <span>Aktifkan slide</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-g" onclick="closeEditModal()">Batal</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const titleInput = document.querySelector('form[action="/admin/promo-slides"] input[name="title"]');
+  const descInput = document.querySelector('form[action="/admin/promo-slides"] input[name="description"]');
+  const imageInput = document.querySelector('form[action="/admin/promo-slides"] input[name="image"]');
+  const previewTitle = document.getElementById('preview-title');
+  const previewDesc = document.getElementById('preview-desc');
+  const previewImg = document.getElementById('preview-img-element');
+  const noImgText = document.getElementById('no-img-text');
+  const overlayContent = document.getElementById('preview-overlay-content');
+
+  function updatePreview() {
+    const nextTitle = titleInput.value.trim();
+    const nextDescription = descInput.value.trim();
+
+    if (nextTitle || nextDescription) {
+      overlayContent.style.display = 'block';
+      previewTitle.textContent = nextTitle || 'Judul Promosi';
+      previewDesc.textContent = nextDescription || 'Detail isi promo slide...';
+      return;
+    }
+
+    overlayContent.style.display = 'none';
+  }
+
+  titleInput.addEventListener('input', updatePreview);
+  descInput.addEventListener('input', updatePreview);
+
+  imageInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      previewImg.src = event.target.result;
+      previewImg.style.display = 'block';
+      noImgText.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function openEditModal(id) {
+    fetch(`/admin/api/promo-slides/${id}`)
+      .then(response => {
+        if (!response.ok) throw new Error('Data slide tidak ditemukan');
+        return response.json();
+      })
+      .then(slide => {
+        document.getElementById('editSlideId').value = slide.id;
+        document.getElementById('editTitle').value = slide.title || '';
+        document.getElementById('editDescription').value = slide.description || '';
+        document.getElementById('editUrl').value = slide.url || '';
+        document.getElementById('editSortOrder').value = slide.sort_order || 0;
+        document.getElementById('editStartDate').value = slide.start_date || '';
+        document.getElementById('editEndDate').value = slide.end_date || '';
+        document.getElementById('editOpenInNewTab').checked = Number(slide.open_in_new_tab) === 1;
+        document.getElementById('editIsActive').checked = Number(slide.is_active) === 1;
+        document.getElementById('editImagePreview').src = slide.image_path || '';
+        document.getElementById('editForm').action = `/admin/promo-slides/${slide.id}/update`;
+        document.getElementById('editSlideModal').style.display = 'flex';
+      })
+      .catch(error => {
+        alert('Gagal memuat data slide: ' + error.message);
+      });
+  }
+
+  function closeEditModal() {
+    document.getElementById('editSlideModal').style.display = 'none';
+    document.getElementById('editForm').reset();
+  }
+
+  document.getElementById('editForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const slideId = document.getElementById('editSlideId').value;
+    const formData = new FormData(this);
+
+    fetch(`/admin/promo-slides/${slideId}/update`, {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Perubahan tidak dapat disimpan');
+        window.location.reload();
+      })
+      .catch(error => {
+        alert('Gagal menyimpan perubahan: ' + error.message);
+      });
+  });
+
+  function editSlide(id) {
+    openEditModal(id);
+  }
+
+  function toggleSidebar() {
+    document.body.classList.toggle('sidebar-collapsed');
+  }
+</script>
+
+</body>
+</html>

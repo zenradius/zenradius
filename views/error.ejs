@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= typeof statusCode !== 'undefined' && statusCode ? statusCode : 404 %> - <%= typeof title !== 'undefined' && title ? title : 'Halaman Tidak Ditemukan' %> | <%= typeof brandName !== 'undefined' && brandName ? brandName : 'ZenRadius' %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --bg: #173945;
+      --card-bg: rgba(23, 57, 69, 0.55);
+      --card-border: rgba(190, 239, 255, 0.28);
+      --text-main: #edf7f5;
+      --text-secondary: rgba(237, 250, 250, 0.72);
+      --text-muted: rgba(237, 250, 250, 0.52);
+
+      --primary: #2dd4bf;
+      --primary-hover: #14b8a6;
+      --primary-light: rgba(45, 212, 191, 0.08);
+
+      --accent-toska: #2dd4bf;
+      --accent-amber: #fbbf24;
+
+      --danger-bg: rgba(248, 81, 73, 0.1);
+      --danger-border: rgba(248, 81, 73, 0.22);
+      --danger-color: #ff7b72;
+
+      --border-color: rgba(190, 239, 255, 0.15);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) rgba(23, 57, 69, 0.3);
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+        radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
+        linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Floating decorative blobs */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+      animation: float 9s ease-in-out infinite;
+    }
+    .blob-1 { width: 260px; height: 260px; background: var(--accent-toska); top: -60px; left: -60px; animation-delay: 0s; }
+    .blob-2 { width: 200px; height: 200px; background: var(--accent-amber); bottom: -40px; right: -40px; animation-delay: 2.4s; }
+    .blob-3 { width: 160px; height: 160px; background: #60a5fa; top: 40%; right: 6%; animation-delay: 4.8s; opacity: 0.18; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0) scale(1); }
+      50% { transform: translateY(-22px) translateX(14px) scale(1.06); }
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 620px;
+      text-align: center;
+    }
+
+    /* SVG Illustration */
+    .illustration {
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto 8px;
+      animation: bob 4.5s ease-in-out infinite;
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .illustration svg { width: 100%; height: auto; display: block; }
+
+    .digit-404 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(56px, 14vw, 96px);
+      line-height: 1;
+      letter-spacing: -2px;
+      background: linear-gradient(135deg, var(--primary) 0%, #7ee7db 55%, var(--accent-amber) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-top: 4px;
+    }
+
+    h1.headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(20px, 4vw, 28px);
+      font-weight: 700;
+      margin-top: 10px;
+      color: var(--text-main);
+    }
+
+    p.copy {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-top: 12px;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .path-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger-color);
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14.5px;
+      text-decoration: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: #06262a;
+      box-shadow: 0 10px 24px rgba(45, 212, 191, 0.28);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(45, 212, 191, 0.38); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-main);
+      border-color: var(--card-border);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+
+    .helper-links {
+      display: none;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border-color);
+      margin-top: 36px;
+      padding-top: 24px;
+      font-family: system-ui, -apple-system, 'Segoe UI', 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      color: rgba(237, 250, 250, 0.72);
+    }
+
+    .footer-bottom a {
+      color: #7dd3fc;
+      text-decoration: none;
+    }
+
+    .footer-bottom a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .wrap { padding: 16px; }
+      .digit-404 { font-size: clamp(48px, 12vw, 72px); }
+      h1.headline { font-size: clamp(18px, 5vw, 24px); }
+      p.copy { font-size: 14px; }
+      .actions { gap: 10px; }
+      .btn { padding: 11px 20px; font-size: 13.5px; }
+    }
+
+    @media (max-width: 480px) {
+      .illustration { max-width: 200px; }
+      .digit-404 { font-size: clamp(40px, 10vw, 56px); }
+      h1.headline { font-size: clamp(16px, 4.5vw, 20px); }
+      p.copy { font-size: 13px; margin-top: 10px; }
+      .path-box { font-size: 12px; padding: 7px 12px; }
+      .actions { flex-direction: column; align-items: stretch; gap: 10px; margin-top: 24px; }
+      .btn { 
+        justify-content: center; 
+        padding: 12px 16px; 
+        font-size: 13px;
+        gap: 6px;
+      }
+      .btn i { font-size: 1rem; }
+      .footer-bottom { 
+        font-size: 0.75rem;
+        margin-top: 28px;
+        padding-top: 20px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      body { padding: 16px; }
+      .wrap { padding: 12px; }
+      .illustration { max-width: 160px; }
+      .digit-404 { font-size: 36px; }
+      h1.headline { font-size: 16px; }
+      p.copy { font-size: 12px; line-height: 1.6; }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="wrap">
+    <div class="illustration" aria-hidden="true">
+      <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#2dd4bf"/>
+            <stop offset="100%" stop-color="#14b8a6"/>
+          </linearGradient>
+          <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fbbf24"/>
+            <stop offset="100%" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Ground shadow -->
+        <ellipse cx="200" cy="262" rx="120" ry="14" fill="#0d2b34" opacity="0.55"/>
+
+        <!-- Disconnected signal tower -->
+        <g transform="translate(60,70)">
+          <rect x="20" y="90" width="10" height="90" rx="3" fill="#2b5a66"/>
+          <path d="M15 90 L35 90 L25 40 Z" fill="#3a6f7c"/>
+          <circle cx="25" cy="34" r="7" fill="url(#g1)"/>
+          <!-- broken signal waves -->
+          <path d="M40 30 Q55 20 40 8" stroke="url(#g1)" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.85"/>
+          <path d="M50 40 Q72 22 52 -4" stroke="url(#g1)" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.45"/>
+        </g>
+
+        <!-- Magnifying glass over a "page" -->
+        <g transform="translate(150,55)">
+          <rect x="0" y="0" width="130" height="150" rx="14" fill="#1c4a55" stroke="rgba(190,239,255,0.25)" stroke-width="2"/>
+          <rect x="18" y="24" width="94" height="10" rx="5" fill="rgba(237,250,250,0.18)"/>
+          <rect x="18" y="46" width="70" height="10" rx="5" fill="rgba(237,250,250,0.14)"/>
+          <rect x="18" y="68" width="80" height="10" rx="5" fill="rgba(237,250,250,0.14)"/>
+          <rect x="18" y="90" width="50" height="10" rx="5" fill="rgba(237,250,250,0.1)"/>
+          <g>
+            <circle cx="146" cy="118" r="34" fill="rgba(45,212,191,0.08)" stroke="url(#g1)" stroke-width="6"/>
+            <line x1="170" y1="142" x2="196" y2="168" stroke="url(#g1)" stroke-width="8" stroke-linecap="round"/>
+            <text x="128" y="127" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="26" fill="#e7fffb">?</text>
+          </g>
+        </g>
+
+        <!-- Floating dots -->
+        <circle cx="55" cy="40" r="4" fill="url(#g2)" opacity="0.8"/>
+        <circle cx="345" cy="70" r="5" fill="url(#g1)" opacity="0.7"/>
+        <circle cx="320" cy="220" r="4" fill="url(#g2)" opacity="0.6"/>
+        <circle cx="70" cy="230" r="3.5" fill="url(#g1)" opacity="0.5"/>
+      </svg>
+    </div>
+
+    <div class="digit-404">404</div>
+
+    <h1 class="headline">Waduh, Halaman Ini Sepertinya Hilang dari Jangkauan Sinyal</h1>
+    <p class="copy">
+      Tenang, ini bukan masalah koneksi internet Anda. Halaman yang Anda tuju mungkin sudah dipindahkan, diganti namanya, atau memang belum pernah ada. Mari kita bantu Anda kembali ke jalur yang benar.
+    </p>
+
+    <% if (typeof error !== 'undefined' && error && String(error).toLowerCase() !== 'halaman yang anda cari tidak ditemukan') { %>
+      <div class="path-box"><i class="bi bi-info-circle"></i> <%= error %></div>
+    <% } %>
+
+    <div class="actions">
+      <a href="/" class="btn btn-primary"><i class="bi bi-house-door-fill"></i> Kembali ke Beranda</a>
+      <a href="javascript:history.back()" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Halaman Sebelumnya</a>
+    </div>
+
+    <div class="footer-bottom d-flex flex-wrap justify-content-center align-items-center gap-2 text-center">
+      <div>
+        &copy; <%= new Date().getFullYear() %> <%- footerInfo %>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,377 @@
+﻿<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.whatsapp.status_title', 'Status WhatsApp') %> | <%= company %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js" integrity="sha384-kgapoJ184YmO0XnbSIH1J6dSp5rSYForqfjCgDat5yiSr8gjCnuTdRRCJXcVZ+pi" crossorigin="anonymous"></script>
+  <style>
+    .wa-status-card { text-align: center; padding: 40px 20px; }
+    .status-indicator { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 48px; }
+    .status-open { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 4px solid #10b981; }
+    .status-qr { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 4px solid #f59e0b; }
+    .status-close { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 4px solid #ef4444; }
+    #qr-container { background: white; padding: 20px; display: inline-block; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .wa-info { margin-top: 20px; color: var(--muted); }
+    .wa-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    .wa-tab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; flex-shrink: 0; }
+    .wa-tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .wa-tab.active { background: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%); color: #f4fffd; border:1px solid rgba(126,231,219,.48); box-shadow:0 8px 20px rgba(10,41,50,.24); }
+    @media (max-width: 768px) {
+      .wa-tabs { font-size: 13px; }
+      .wa-tab { padding: 6px 10px; font-size: 12px; }
+      .form-row, .grid-2 { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body data-connected-label="<%= t('admin.whatsapp.connected', 'Terhubung') %>" data-need-scan-label="<%= t('admin.whatsapp.need_scan', 'Perlu Pemindaian') %>">
+<%- include('partials/sidebar', { activePage: 'whatsapp', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-whatsapp"></i> <%= t('admin.whatsapp.status_title', 'Status WhatsApp') %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <div class="lang-dropdown">
+        <button type="button" class="lang-btn" onclick="toggleLangDropdown(this)" aria-haspopup="true" aria-expanded="false">
+          <i class="bi bi-globe"></i> <span><%= (lang || 'id').toUpperCase() %></span> <i class="bi bi-chevron-down" style="font-size:10px"></i>
+        </button>
+        <div class="lang-menu">
+          <a href="/lang/id" class="lang-item <%= (lang || 'id') === 'id' ? 'active' : '' %>">Indonesia</a>
+          <a href="/lang/en" class="lang-item <%= (lang || 'id') === 'en' ? 'active' : '' %>">English</a>
+        </div>
+      </div>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+    <% const waTab = 'status'; %>
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <div class="wa-tabs">
+      <a href="/admin/whatsapp" class="wa-tab <%= waTab==='status' ? 'active' : '' %>"><i class="bi bi-phone"></i> Status Baileys</a>
+      <a href="/admin/whatsapp/broadcast" class="wa-tab <%= waTab==='broadcast' ? 'active' : '' %>"><i class="bi bi-megaphone"></i> Broadcast & Pengingat</a>
+      <a href="/admin/whatsapp/templates" class="wa-tab <%= waTab==='templates' ? 'active' : '' %>"><i class="bi bi-chat-left-quote"></i> Template Pesan</a>
+      <a href="/admin/whatsapp/live-chat" class="wa-tab"><i class="bi bi-chat-dots-fill"></i> Live Chat (Pesan Langsung)</a>
+    </div>
+
+    <!-- PENGATURAN HYBRID GATEWAY (BAILEYS VS META API) -->
+    <div class="card mb16" style="padding: 20px;">
+      <h6 style="margin-bottom: 15px; font-weight: 700; color: var(--primary);"><i class="bi bi-sliders"></i> Mode WhatsApp Gateway & Meta Cloud API (Resmi)</h6>
+      
+      <form method="POST" action="/admin/whatsapp/gateway-settings">
+        <div class="form-row mb16">
+          <div class="fg">
+            <label class="fl">Pilihan Provider / Gateway WhatsApp</label>
+            <select class="fs" name="wa_gateway_type" id="wa_gateway_type" onchange="toggleGatewayFields()">
+              <option value="baileys" <%= waGatewayType === 'baileys' ? 'selected' : '' %>>🌐 Baileys Web (Gratis & Scan QR)</option>
+              <option value="meta" <%= waGatewayType === 'meta' ? 'selected' : '' %>>🟢 Meta Cloud API (Official - Anti-Banned)</option>
+              <option value="fonnte" <%= waGatewayType === 'fonnte' ? 'selected' : '' %>>🔵 Fonnte (HTTP Gateway - Rp 50rb/bln)</option>
+              <option value="wablas" <%= waGatewayType === 'wablas' ? 'selected' : '' %>>🟣 Wablas (HTTP Gateway - Rp 45rb/bln)</option>
+              <option value="http" <%= waGatewayType === 'http' ? 'selected' : '' %>>🟡 Custom HTTP Gateway</option>
+            </select>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Baileys = gratis tapi risiko banned. HTTP gateway (Fonnte/Wablas/Custom) = provider handle anti-ban, cukup isi token. Meta = official 100% anti-banned.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Nomor WA Pengirim (Business Phone)</label>
+            <input class="fc" name="meta_business_phone" value="<%= metaSettings.meta_business_phone %>" placeholder="Contoh: 628123456789">
+          </div>
+        </div>
+
+        <div id="meta_fields_container" style="<%= waGatewayType === 'meta' ? '' : 'display:none;' %> background: var(--bg3); padding: 16px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb12" style="color: var(--text); font-size: 13px;"><i class="bi bi-shield-check"></i> Kredensial Meta WhatsApp Cloud API</div>
+          <div class="form-row mb12">
+            <div class="fg">
+              <label class="fl">Meta Phone Number ID *</label>
+              <input class="fc" name="meta_phone_number_id" value="<%= metaSettings.meta_phone_number_id %>" placeholder="Contoh: 100654321987654">
+            </div>
+            <div class="fg">
+              <label class="fl">Meta Business Account ID (WABA ID)</label>
+              <input class="fc" name="meta_waba_id" value="<%= metaSettings.meta_waba_id %>" placeholder="Contoh: 109876543210987">
+            </div>
+          </div>
+          <div class="fg mb12">
+            <label class="fl">Meta Permanent Access Token *</label>
+            <textarea class="fc" name="meta_access_token" rows="2" placeholder="Paste Permanent Access Token Meta Graph API di sini..."><%= metaSettings.meta_access_token %></textarea>
+          </div>
+          <div class="fg">
+            <label class="fl">Webhook Verification Token (Verify Token)</label>
+            <input class="fc" name="meta_verify_token" value="<%= metaSettings.meta_verify_token %>" placeholder="Token Rahasia Webhook">
+          </div>
+          <div style="font-size: 11px; margin-top: 10px; background: var(--bg3); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+            <strong style="color: var(--text);"><i class="bi bi-link-45deg"></i> Callback Webhook URL untuk diajukan di Meta Developer Portal:</strong><br>
+            <code style="background: rgba(255,255,255,.08); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; user-select: all; color: var(--text);">http://<%= host %>/api/meta-webhook</code>
+          </div>
+        </div>
+
+        <div id="fonnte_fields_container" style="<%= waGatewayType === 'fonnte' ? '' : 'display:none;' %> background: var(--bg3); padding: 16px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb12" style="color: var(--text); font-size: 13px;"><i class="bi bi-cloud-arrow-up"></i> Kredensial Fonnte</div>
+          <div class="fg mb12">
+            <label class="fl">Fonnte Authorization Token *</label>
+            <input class="fc" name="fonnte_token" value="<%= (metaSettings.fonnte_token || '') %>" placeholder="Dapat dari fonnte.com → Device → Token">
+          </div>
+          <div class="fg">
+            <label class="fl">Fonnte API URL</label>
+            <input class="fc" name="fonnte_url" value="<%= (metaSettings.fonnte_url || 'https://api.fonnte.com/send') %>" placeholder="https://api.fonnte.com/send">
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px">Daftar di <a href="https://fonnte.com" target="_blank">fonnte.com</a> → hubungkan WA → copy token → paste di sini.</div>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <div style="font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 6px;"><i class="bi bi-inbox"></i> Webhook Inbound — balasan masuk Live Chat</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <code style="flex:1;background: var(--bg3); padding: 6px 10px; border-radius: 6px; font-size: 11px; user-select: all; word-break: break-all; border: 1px solid var(--border); color: var(--text);">POST http://<%= host %>/api/webhook/fonnte</code>
+              <button type="button" class="btn btn-g btn-sm" onclick="navigator.clipboard.writeText('http://<%= host %>/api/webhook/fonnte').then(()=>{this.innerHTML='<i class=\'bi bi-check-lg\'></i>'; setTimeout(()=>this.innerHTML='<i class=\'bi bi-clipboard\'></i>',1500)})" title="Salin URL"><i class="bi bi-clipboard"></i></button>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Paste URL ini di Fonnte → Device → Webhook URL.</div>
+          </div>
+        </div>
+
+        <div id="wablas_fields_container" style="<%= waGatewayType === 'wablas' ? '' : 'display:none;' %> background: var(--bg3); padding: 16px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb12" style="color: var(--text); font-size: 13px;"><i class="bi bi-cloud-arrow-up"></i> Kredensial Wablas</div>
+          <div class="fg mb12">
+            <label class="fl">Wablas Domain *</label>
+            <input class="fc" name="wablas_domain" value="<%= (metaSettings.wablas_domain || '') %>" placeholder="Contoh: https://wablas.zenradius.net">
+          </div>
+          <div class="fg">
+            <label class="fl">Wablas Authorization Token *</label>
+            <input class="fc" name="wablas_token" value="<%= (metaSettings.wablas_token || '') %>" placeholder="Token dari Wablas">
+          </div>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <div style="font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 6px;"><i class="bi bi-inbox"></i> Webhook Inbound — balasan masuk Live Chat</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <code style="flex:1;background: var(--bg3); padding: 6px 10px; border-radius: 6px; font-size: 11px; user-select: all; word-break: break-all; border: 1px solid var(--border); color: var(--text);">POST http://<%= host %>/api/webhook/wablas</code>
+              <button type="button" class="btn btn-g btn-sm" onclick="navigator.clipboard.writeText('http://<%= host %>/api/webhook/wablas').then(()=>{this.innerHTML='<i class=\'bi bi-check-lg\'></i>'; setTimeout(()=>this.innerHTML='<i class=\'bi bi-clipboard\'></i>',1500)})" title="Salin URL"><i class="bi bi-clipboard"></i></button>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Paste URL ini di Wablas → Webhook URL.</div>
+          </div>
+        </div>
+
+        <div id="baileys_fields_container" style="<%= waGatewayType === 'baileys' ? '' : 'display:none;' %> background: var(--bg3); padding: 16px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb12" style="color: var(--text); font-size: 13px;"><i class="bi bi-whatsapp"></i> Baileys — Universal Webhook</div>
+          <div style="font-size: 11px; color: var(--muted); margin-bottom: 8px;">Scan QR di bawah untuk Baileys. Webhook di bawah ini opsional — hanya jika ingin Live Chat dari provider eksternal juga masuk.</div>
+          <div style="display:flex;gap:6px;align-items:center; margin-bottom: 8px;">
+            <code style="flex:1;background: var(--bg3); padding: 6px 10px; border-radius: 6px; font-size: 11px; user-select: all; word-break: break-all; border: 1px solid var(--border); color: var(--text);">POST http://<%= host %>/api/webhook/wa-inbound</code>
+            <button type="button" class="btn btn-g btn-sm" onclick="navigator.clipboard.writeText('http://<%= host %>/api/webhook/wa-inbound').then(()=>{this.innerHTML='<i class=\'bi bi-check-lg\'></i>'; setTimeout(()=>this.innerHTML='<i class=\'bi bi-clipboard\'></i>',1500)})" title="Salin URL"><i class="bi bi-clipboard"></i></button>
+          </div>
+          <div style="font-size: 11px; color: var(--muted);">Body: <code style="background: rgba(255,255,255,.08); padding: 1px 4px; border-radius: 3px;">sender / from / phone</code> + <code style="background: rgba(255,255,255,.08); padding: 1px 4px; border-radius: 3px;">message / text / body</code> · GET: <code style="background: rgba(255,255,255,.08); padding: 1px 4px; border-radius: 3px;">?sender=62xxx&message=halo</code></div>
+        </div>
+
+        <div id="http_fields_container" style="<%= waGatewayType === 'http' ? '' : 'display:none;' %> background: var(--bg3); padding: 16px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb12" style="color: var(--text); font-size: 13px;"><i class="bi bi-braces"></i> Custom HTTP Gateway</div>
+          <div class="fg mb12">
+            <label class="fl">HTTP WA URL *</label>
+            <input class="fc" name="http_wa_url" value="<%= (metaSettings.http_wa_url || '') %>" placeholder="https://gateway.zenradius.net/api/send">
+          </div>
+          <div class="form-row mb12">
+            <div class="fg">
+              <label class="fl">Method</label>
+              <select class="fs" name="http_wa_method">
+                <option value="POST" <%= (metaSettings.http_wa_method||'POST')==='POST'?'selected':'' %>>POST</option>
+                <option value="GET" <%= metaSettings.http_wa_method==='GET'?'selected':'' %>>GET</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Authorization Header</label>
+              <input class="fc" name="http_wa_token" value="<%= (metaSettings.http_wa_token || '') %>" placeholder="Bearer xxx atau token">
+            </div>
+          </div>
+          <details style="background: var(--bg); border: 1px solid var(--border); border-radius: 6px; margin-top: 12px;">
+            <summary style="font-size: 11px; color: var(--muted); padding: 8px 10px; cursor: pointer; user-select: none; list-style: none; display: flex; align-items: center; gap: 6px;"><i class="bi bi-chevron-down" style="font-size: 10px;"></i> Pengaturan Lanjutan (payload & header)</summary>
+            <div style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size:11px;color:var(--muted)">Default body: <code style="background: rgba(255,255,255,.08); padding: 1px 4px; border-radius: 3px;">{phone, target, message, text}</code> via JSON.</div>
+              <div class="fg" style="margin:0">
+                <label class="fl">Custom Payload Template (JSON, opsional)</label>
+                <textarea class="fc" name="http_wa_payload" rows="2" placeholder='Contoh: {"receiver":"{phone}","message":"{message}"}'><%= (metaSettings.http_wa_payload || '') %></textarea>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">Placeholder: <code>{phone}</code>, <code>{message}</code>, <code>{message_raw}</code> · Contoh: <code>{"receiver":"{phone}","text":"{message}"}</code></div>
+              </div>
+              <div class="form-row" style="margin:0">
+                <div class="fg" style="margin:0">
+                  <label class="fl">Header Name</label>
+                  <input class="fc" name="http_wa_header_name" value="<%= (metaSettings.http_wa_header_name || 'Authorization') %>" placeholder="Authorization">
+                </div>
+                <div class="fg" style="margin:0">
+                  <label class="fl">Header Tambahan (JSON)</label>
+                  <input class="fc" name="http_wa_headers" value="<%= (metaSettings.http_wa_headers || '') %>" placeholder='{"X-Api-Key":"xxx"}'>
+                </div>
+              </div>
+            </div>
+          </details>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <div style="font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 6px;"><i class="bi bi-inbox"></i> Webhook Inbound — balasan masuk Live Chat</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <code style="flex:1;background: var(--bg3); padding: 6px 10px; border-radius: 6px; font-size: 11px; user-select: all; word-break: break-all; border: 1px solid var(--border); color: var(--text);">POST http://<%= host %>/api/webhook/wa-inbound</code>
+              <button type="button" class="btn btn-g btn-sm" onclick="navigator.clipboard.writeText('http://<%= host %>/api/webhook/wa-inbound').then(()=>{this.innerHTML='<i class=\'bi bi-check-lg\'></i>'; setTimeout(()=>this.innerHTML='<i class=\'bi bi-clipboard\'></i>',1500)})" title="Salin URL"><i class="bi bi-clipboard"></i></button>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Paste URL ini di dashboard provider Custom.</div>
+          </div>
+          <div style="margin-top: 12px; background: var(--bg3); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--muted);">Body otomatis dikenali: <code style="background: rgba(255,255,255,.08); padding: 1px 4px; border-radius: 3px;">sender / from / phone</code> + <code style="background: rgba(255,255,255,.08); padding: 1px 4px; border-radius: 3px;">message / text / body</code> · GET: <code style="background: rgba(255,255,255,.08); padding: 1px 4px; border-radius: 3px;">?sender=62xxx&message=halo</code></div>
+            <label class="fl" style="margin-top: 8px;">Webhook Token (opsional, untuk verifikasi)</label>
+            <input class="fc" name="http_wa_inbound_token" value="<%= (metaSettings.http_wa_inbound_token || '') %>" placeholder="Kosongkan = tidak perlu token. Jika diisi, provider harus kirim ?token=xxx atau header X-Webhook-Token">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan Gateway</button>
+      </form>
+    </div>
+
+    <!-- INTEGRASI WHATSAPP (dipindahkan dari Pengaturan Sistem) -->
+    <div class="card mb16" style="padding: 20px;">
+      <h6 style="margin-bottom: 15px; font-weight: 700; color: var(--primary);"><i class="bi bi-whatsapp"></i> Integrasi WhatsApp Bot</h6>
+      <form method="POST" action="/admin/settings">
+        <input type="hidden" name="_redirect" value="/admin/whatsapp">
+        <div class="form-row mb16">
+          <div class="fg">
+            <label class="fl">Enable WhatsApp Bot</label>
+            <select class="fs" name="whatsapp_enabled">
+              <option value="true" <%= settings.whatsapp_enabled ? 'selected' : '' %>>Aktif</option>
+              <option value="false" <%= !settings.whatsapp_enabled ? 'selected' : '' %>>Nonaktif</option>
+            </select>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Nonaktifkan jika tidak ingin bot WhatsApp berjalan saat server start.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Jeda Antar Pesan Broadcast (Detik)</label>
+            <input class="fc" type="number" name="whatsapp_broadcast_delay" value="<%= settings.whatsapp_broadcast_delay || 2 %>" min="1" max="60">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Rekomendasi: Minimal 2 detik agar tidak terdeteksi spam oleh WhatsApp.</div>
+          </div>
+        </div>
+        <div class="fg mb16">
+          <label class="fl">Nomor Admin WA (Pisahkan dengan koma)</label>
+          <input class="fc" name="whatsapp_admin_numbers" value="<%= (settings.whatsapp_admin_numbers || []).join(', ') %>" placeholder="6281xxx, 6282xxx">
+          <div style="font-size:10px; color:var(--muted); margin-top:4px">Nomor admin akan menerima notifikasi monitoring sistem. Nomor teknisi diambil otomatis dari <a href="/admin/technicians" style="color:var(--brand);font-weight:600">Data Teknisi</a>.</div>
+        </div>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Integrasi WhatsApp</button>
+      </form>
+    </div>
+
+    <script>
+      function toggleGatewayFields() {
+        const val = document.getElementById('wa_gateway_type').value;
+        document.getElementById('meta_fields_container').style.display = val === 'meta' ? 'block' : 'none';
+        document.getElementById('fonnte_fields_container').style.display = val === 'fonnte' ? 'block' : 'none';
+        document.getElementById('wablas_fields_container').style.display = val === 'wablas' ? 'block' : 'none';
+        document.getElementById('http_fields_container').style.display = val === 'http' ? 'block' : 'none';
+        document.getElementById('baileys_fields_container').style.display = val === 'baileys' ? 'block' : 'none';
+      }
+      function toggleMetaFields() { toggleGatewayFields(); }
+    </script>
+
+    <div class="card">
+      <div class="wa-status-card">
+        <div id="status-icon" class="status-indicator status-close">
+          <i class="bi bi-whatsapp"></i>
+        </div>
+        <h2 id="status-text"><%= t('admin.whatsapp.checking', 'Mengecek status...') %></h2>
+        <p id="status-desc" class="text-muted"><%= t('admin.whatsapp.please_wait', 'Harap tunggu sebentar.') %></p>
+        
+        <div id="qr-section" style="display:none">
+          <p class="mb-3"><%= t('admin.whatsapp.qr_instruction', 'Silakan pindai QR Code ini dengan aplikasi WhatsApp Anda:') %></p>
+          <div id="qr-container"></div>
+          <p class="mt-3 text-sm text-muted"><%= t('admin.whatsapp.qr_auto_refresh', 'QR Code akan diperbarui secara otomatis.') %></p>
+        </div>
+
+        <div id="info-section" style="display:none" class="wa-info">
+          <div class="alert alert-s">
+            <i class="bi bi-check-circle-fill"></i> <%= t('admin.whatsapp.connected_title', 'WhatsApp Terhubung') %>
+          </div>
+          <p><%= t('admin.whatsapp.connected_as', 'Terhubung sebagai:') %> <strong id="wa-user">-</strong></p>
+          <p><%= t('admin.whatsapp.last_updated', 'Terakhir diperbarui:') %> <span id="wa-time">-</span></p>
+        </div>
+
+        <div class="mt-5" style="display:flex; justify-content:center; gap:10px">
+          <button class="btn btn-g" onclick="checkStatus()"><i class="bi bi-arrow-clockwise"></i> <%= t('admin.whatsapp.refresh_status', 'Refresh Status') %></button>
+          <form method="POST" action="/admin/whatsapp/test-notification" onsubmit="return confirm('<%= t('admin.whatsapp.confirm_test', 'Kirim test notifikasi WhatsApp ke admin sekarang?') %>');">
+            <button class="btn btn-p"><i class="bi bi-send-check"></i> <%= t('admin.whatsapp.test_notification', 'Kirim Test Notif') %></button>
+          </form>
+          <form method="POST" action="/admin/whatsapp/reset" onsubmit="return confirm('<%= t('admin.whatsapp.confirm_reset', 'Apakah Anda yakin ingin menghapus sesi WhatsApp? Anda harus scan QR ulang setelah ini.') %>')">
+            <button class="btn btn-d"><i class="bi bi-trash"></i> <%= t('admin.whatsapp.reset_session', 'Hapus Sesi / Reset') %></button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const I18N = {
+    descOpen: "<%= t('admin.whatsapp.desc_open', 'Bot WhatsApp aktif dan siap mengirim notifikasi.') %>",
+    descQr: "<%= t('admin.whatsapp.desc_qr', 'Sesi tidak ditemukan atau kedaluwarsa.') %>",
+    descOffPrefix: "<%= t('admin.whatsapp.disconnected_prefix', 'Terputus') %>",
+    descOff: "<%= t('admin.whatsapp.desc_off', 'Bot WhatsApp sedang offline atau sedang mencoba menghubungkan ulang.') %>",
+    deviceFallback: "<%= t('admin.whatsapp.device_fallback', 'Device') %>",
+    waitQrLib: "<%= t('admin.whatsapp.wait_qr_lib', 'Menunggu library QR Code...') %>",
+    qrFail: "<%= t('admin.whatsapp.qr_fail', 'Gagal memproses QR Code. Silakan cek konsol browser.') %>"
+  };
+
+  async function checkStatus() {
+    try {
+      const res = await fetch('/admin/api/whatsapp/status');
+      if (!res.ok) {
+        console.error('API Status Error:', res.statusText);
+        return;
+      }
+      const status = await res.json();
+      console.log('[WA Status]', status);
+      
+      const icon = document.getElementById('status-icon');
+      const text = document.getElementById('status-text');
+      const desc = document.getElementById('status-desc');
+      const qrSection = document.getElementById('qr-section');
+      const infoSection = document.getElementById('info-section');
+      const qrContainer = document.getElementById('qr-container');
+
+      icon.className = 'status-indicator';
+      qrSection.style.display = 'none';
+      infoSection.style.display = 'none';
+
+      const connectedLabel = document.body.dataset.connectedLabel || 'Terhubung';
+      const needScanLabel = document.body.dataset.needScanLabel || 'Perlu Pemindaian';
+
+      if (status.connection === 'open') {
+        icon.classList.add('status-open');
+        text.innerText = connectedLabel;
+        desc.innerText = I18N.descOpen;
+        infoSection.style.display = 'block';
+        document.getElementById('wa-user').innerText = status.user?.id || status.user?.name || I18N.deviceFallback;
+        document.getElementById('wa-time').innerText = new Date(status.lastUpdate).toLocaleTimeString();
+      } else if (status.connection === 'qr' && status.qr) {
+        console.log('Generating QR Code Canvas...');
+        icon.classList.add('status-qr');
+        text.innerText = needScanLabel;
+        desc.innerText = I18N.descQr;
+        qrSection.style.display = 'block';
+        
+        qrContainer.innerHTML = '';
+        if (typeof QRCode === 'undefined') {
+          console.error('QRCode library still not loaded!');
+          qrContainer.innerText = I18N.waitQrLib;
+          return;
+        }
+        QRCode.toCanvas(status.qr, { width: 256, margin: 2 }, function (error, canvas) {
+          if (error) {
+            console.error('QR Generate Error:', error);
+            qrContainer.innerText = I18N.qrFail;
+          } else {
+            console.log('QR Code Canvas generated successfully.');
+            qrContainer.appendChild(canvas);
+          }
+        });
+      } else {
+        icon.classList.add('status-close');
+        text.innerText = I18N.descOffPrefix + ' (' + (status.connection || 'off') + ')';
+        desc.innerText = I18N.descOff;
+      }
+    } catch (e) {
+      console.error('Failed to check WA status', e);
+    }
+  }
+
+  // Check every 5 seconds
+  checkStatus();
+  setInterval(checkStatus, 5000);
+</script>
+</body>
+</html>

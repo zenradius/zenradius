@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Telegram Bot | <%= company %></title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'telegram_bot', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-telegram"></i> Telegram Bot</div>
+    <div class="tb-right">
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <form method="POST" action="/admin/settings">
+      <input type="hidden" name="_redirect" value="/admin/telegram-bot">
+
+      <div class="card mb16">
+        <div class="card-hd"><h6><i class="bi bi-telegram"></i> <%= t('admin.settings.telegram.title', 'Pengaturan Telegram Bot (Backup Admin)') %></h6></div>
+        <div class="card-bd">
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.telegram.status', 'Status Bot Telegram') %></label>
+              <select class="fs" name="telegram_enabled">
+                <option value="true" <%= settings.telegram_enabled ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+                <option value="false" <%= !settings.telegram_enabled ? 'selected' : '' %>><%= t('common.inactive', 'Nonaktif') %></option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.telegram.admin_id', 'Admin Telegram ID') %></label>
+              <input class="fc" name="telegram_admin_id" value="<%= settings.telegram_admin_id || '' %>" placeholder="Contoh: 12345678">
+              <div style="font-size:10px; color:var(--muted); margin-top:4px">Dapatkan ID Anda dari bot <span class="mono">@userinfobot</span> di Telegram.</div>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.telegram.bot_token', 'Telegram Bot Token') %></label>
+            <div style="display:flex;gap:8px">
+              <input class="fc" name="telegram_bot_token" value="<%= settings.telegram_bot_token || '' %>" placeholder="Dapatkan dari @BotFather">
+              <button type="button" class="btn btn-g" onclick="syncTelegram()" title="<%= t('admin.settings.telegram.sync_title', 'Sinkronkan / Hapus Webhook Lama') %>"><i class="bi bi-arrow-repeat"></i> <%= t('admin.settings.telegram.sync', 'Sinkronkan') %></button>
+            </div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Buat bot baru via <span class="mono">@BotFather</span> lalu tempel token di sini.</div>
+          </div>
+        </div>
+        <div class="card-bd" style="border-top:1px solid var(--border);padding-top:20px;text-align:right">
+          <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-info-circle"></i> Panduan Singkat</h6></div>
+      <div class="card-bd">
+        <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:2">
+          <li>Buka Telegram, cari <b>@BotFather</b>, kirim perintah <span class="mono">/newbot</span> dan ikuti instruksi.</li>
+          <li>Salin <b>Bot Token</b> yang diberikan, tempel di kolom Telegram Bot Token di atas.</li>
+          <li>Cari <b>@userinfobot</b> untuk mendapatkan <b>Telegram ID</b> Anda, isikan sebagai Admin Telegram ID.</li>
+          <li>Set status ke <b>Aktif</b> lalu klik <b>Simpan Pengaturan</b>.</li>
+          <li>Klik tombol <b>Sinkronkan</b> jika bot tidak merespons (menghapus webhook lama).</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function syncTelegram() {
+  try {
+    const res = await fetch('/admin/api/telegram/sync', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) alert(data.message);
+    else alert('Gagal: ' + data.error);
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>

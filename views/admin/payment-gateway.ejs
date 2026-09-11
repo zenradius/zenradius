@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Payment Gateway | <%= company %></title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'payment_gateway', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-credit-card-2-front"></i> Payment Gateway</div>
+    <div class="tb-right">
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <form method="POST" action="/admin/settings">
+      <input type="hidden" name="_redirect" value="/admin/payment-gateway">
+
+      <div class="card mb16">
+        <div class="card-hd"><h6><i class="bi bi-wallet2"></i> Pengaturan Payment Gateway</h6></div>
+        <div class="card-bd">
+
+          <div class="form-row" style="margin-bottom: 20px;">
+            <div class="fg">
+              <label class="fl">Pilih Gateway untuk Dikonfigurasi</label>
+              <select class="fs" id="gateway_selector" name="default_gateway" onchange="showGatewayPanel(this.value)">
+                <option value="tripay">Tripay</option>
+                <option value="midtrans">Midtrans</option>
+                <option value="xendit">Xendit</option>
+                <option value="duitku">Duitku</option>
+              </select>
+              <div style="font-size:10px; color:var(--muted); margin-top:4px">Gateway yang dipilih akan dikonfigurasi di bawah dan otomatis dipakai sebagai gateway aktif.</div>
+            </div>
+          </div>
+
+          <div id="panel-qris" style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">QRIS Statis (Semi-Otomatis)</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status QRIS Statis</label>
+                <select class="fs" name="qris_static_enabled">
+                  <option value="true" <%= (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false') ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= (settings.qris_static_enabled === false || settings.qris_static_enabled === 'false') ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">QRIS Static QR URL</label>
+                <input class="fc" name="qris_static_qr_url" value="<%= settings.qris_static_qr_url || '' %>" placeholder="https://.../qris.png atau link QRIS">
+              </div>
+              <div class="fg">
+                <label class="fl">Catatan</label>
+                <input class="fc" value="Pusat layanan pelanggan akan menampilkan QRIS + nominal unik (kode bayar)." readonly>
+              </div>
+            </div>
+            <div class="fg" style="margin-top:10px">
+              <label class="fl">QRIS Static Payload (String)</label>
+              <textarea class="fc" name="qris_static_payload" rows="3" placeholder="000201010211...6304XXXX"><%= settings.qris_static_payload || '' %></textarea>
+              <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika diisi, sistem akan membuat QRIS dinamis per transaksi (nominal langsung terisi saat scan). Jika kosong, sistem pakai URL gambar seperti biasa.</div>
+            </div>
+            <div style="margin-top:10px">
+              <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+                <div class="fg" style="min-width:260px; flex: 1 1 260px">
+                  <label class="fl">Upload Gambar QRIS (opsional)</label>
+                  <input class="fc" type="file" id="qris_upload_file" name="qris_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                  <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika di-upload, sistem akan menyimpan file dan otomatis mengisi URL QRIS.</div>
+                </div>
+                <button class="btn btn-s" type="button" id="qris_upload_btn" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
+              </div>
+            </div>
+            <% if (settings.qris_static_qr_url) { %>
+              <div style="margin-top:10px; display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+                <div style="font-size:10px; color:var(--muted)">Preview:</div>
+                <img src="<%= settings.qris_static_qr_url %>" alt="QRIS" style="height:72px; width:72px; object-fit:contain; background:#fff; border-radius:12px; padding:8px; border:1px solid rgba(0,0,0,0.08)">
+                <div style="font-size:10px; color:var(--muted)">Gunakan tombol <span style="font-weight:700">QR</span> di menu Billing untuk membuat nominal unik per invoice.</div>
+              </div>
+            <% } %>
+
+            <!-- Webhook Integration for MacroDroid -->
+            <div style="margin-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px;">
+              <h6 style="font-size:11px; margin-bottom: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-phone"></i> Webhook Notifikasi SMS/E-Wallet (MacroDroid)</h6>
+              <div class="fg">
+                <label class="fl">Link Webhook MacroDroid (URL POST)</label>
+                <div style="display:flex;gap:8px">
+                  <% 
+                    const base = settings.public_base_url ? settings.public_base_url.replace(/\/+$/, '') : '';
+                    const secret = process.env.MY_WEBHOOK_SECRET || '';
+                    const macroWebhookUrl = base ? (base + '/api/webhook/v1/payment-notif?secret_key=' + secret) : '/api/webhook/v1/payment-notif?secret_key=' + secret;
+                  %>
+                  <input class="fc" id="macro_webhook_url" readonly value="<%= macroWebhookUrl %>">
+                  <button type="button" class="btn btn-g" onclick="copyInput('macro_webhook_url', 'Link Webhook')"><i class="bi bi-copy"></i></button>
+                </div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Kirimkan request HTTP POST ke URL ini dari MacroDroid Anda (sudah termasuk kunci rahasia).</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tripay Section -->
+          <div id="panel-tripay" class="gw-panel" style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">Tripay Configuration</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status Tripay</label>
+                <select class="fs" name="tripay_enabled">
+                  <option value="true" <%= settings.tripay_enabled === true ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= settings.tripay_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Tripay API Key</label>
+                <input class="fc" name="tripay_api_key" value="<%= settings.tripay_api_key || '' %>" type="password">
+              </div>
+              <div class="fg">
+                <label class="fl">Tripay Private Key</label>
+                <input class="fc" name="tripay_private_key" value="<%= settings.tripay_private_key || '' %>" type="password">
+              </div>
+            </div>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Tripay Merchant Code</label>
+                <input class="fc" name="tripay_merchant_code" value="<%= settings.tripay_merchant_code || '' %>" placeholder="Txxxx">
+              </div>
+              <div class="fg">
+                <label class="fl">Tripay Mode</label>
+                <select class="fs" name="tripay_mode">
+                  <option value="sandbox" <%= settings.tripay_mode === 'sandbox' ? 'selected' : '' %>>Sandbox</option>
+                  <option value="live" <%= settings.tripay_mode === 'live' ? 'selected' : '' %>>Live</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Midtrans Section -->
+          <div id="panel-midtrans" class="gw-panel" style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">Midtrans Configuration</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status Midtrans</label>
+                <select class="fs" name="midtrans_enabled">
+                  <option value="true" <%= settings.midtrans_enabled === true ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= settings.midtrans_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Midtrans Server Key</label>
+                <input class="fc" name="midtrans_server_key" value="<%= settings.midtrans_server_key || '' %>" type="password">
+              </div>
+              <div class="fg">
+                <label class="fl">Midtrans Mode</label>
+                <select class="fs" name="midtrans_mode">
+                  <option value="sandbox" <%= settings.midtrans_mode === 'sandbox' ? 'selected' : '' %>>Sandbox</option>
+                  <option value="live" <%= settings.midtrans_mode === 'live' ? 'selected' : '' %>>Live</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Xendit Section -->
+          <div id="panel-xendit" class="gw-panel" style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-top: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">Xendit Configuration</h6>
+            <div class="form-row2">
+              <div class="fg">
+                <label class="fl">Status Xendit</label>
+                <select class="fs" name="xendit_enabled">
+                  <option value="true" <%= settings.xendit_enabled === true ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= settings.xendit_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Xendit Secret API Key</label>
+                <input class="fc" name="xendit_api_key" value="<%= settings.xendit_api_key || '' %>" type="password" placeholder="xnd_development_...">
+              </div>
+            </div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Xendit menggunakan callback token yang disetting di dashboard Xendit.</div>
+          </div>
+
+          <!-- Duitku Section -->
+          <div id="panel-duitku" class="gw-panel" style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-top: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">Duitku Configuration</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status Duitku</label>
+                <select class="fs" name="duitku_enabled">
+                  <option value="true" <%= settings.duitku_enabled === true ? 'selected' : '' %>>Aktif</option>
+                  <option value="false" <%= settings.duitku_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Duitku Merchant Code</label>
+                <input class="fc" name="duitku_merchant_code" value="<%= settings.duitku_merchant_code || '' %>" placeholder="Dxxxx">
+              </div>
+              <div class="fg">
+                <label class="fl">Duitku API Key</label>
+                <input class="fc" name="duitku_api_key" value="<%= settings.duitku_api_key || '' %>" type="password">
+              </div>
+            </div>
+            <div class="form-row2">
+              <div class="fg">
+                <label class="fl">Duitku Mode</label>
+                <select class="fs" name="duitku_mode">
+                  <option value="sandbox" <%= settings.duitku_mode === 'sandbox' ? 'selected' : '' %>>Sandbox</option>
+                  <option value="live" <%= settings.duitku_mode === 'live' ? 'selected' : '' %>>Live</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg" style="margin-top: 15px;">
+            <label class="fl">Link Webhook (Copy ke Dashboard Gateway)</label>
+            <div style="display:flex;gap:8px">
+              <input class="fc" id="webhook_url" readonly value="<%= (typeof paymentWebhookUrl !== 'undefined' && paymentWebhookUrl) ? paymentWebhookUrl : ('http://' + (settings.server_host || 'localhost') + ':' + (settings.server_port || 3001) + '/customer/payment/callback') %>">
+              <button type="button" class="btn btn-g" onclick="copyInput('webhook_url', 'Link Webhook')"><i class="bi bi-copy"></i></button>
+            </div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Gunakan link ini untuk kolom Webhook URL di Tripay atau Midtrans Notification URL.</div>
+          </div>
+
+        </div>
+        <div class="card-bd" style="border-top:1px solid var(--border);padding-top:20px;text-align:right">
+          <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js" integrity="sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx" crossorigin="anonymous"></script>
+<script>
+function showGatewayPanel(key) {
+  document.querySelectorAll('.gw-panel').forEach(el => { el.style.display = 'none'; });
+  const target = document.getElementById('panel-' + key);
+  if (target) target.style.display = 'block';
+  try { localStorage.setItem('pg_selected_gateway', key); } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('gateway_selector');
+  let initial = '<%= settings.default_gateway || "tripay" %>';
+  try {
+    const saved = localStorage.getItem('pg_selected_gateway');
+    if (saved && document.getElementById('panel-' + saved)) initial = saved;
+  } catch(e) {}
+  if (!document.getElementById('panel-' + initial)) initial = 'tripay';
+  if (sel) sel.value = initial;
+  showGatewayPanel(initial);
+});
+
+function copyInput(id, name) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.select();
+    document.execCommand('copy');
+    alert(name + ' berhasil disalin!');
+  }
+}
+
+(function () {
+  const fileInput = document.getElementById('qris_upload_file');
+  const btn = document.getElementById('qris_upload_btn');
+  if (!fileInput || !btn) return;
+
+  const normalizePayload = (raw) => {
+    let s = String(raw || '').replace(/[\r\n\t]+/g, '').trim();
+    const idx = s.indexOf('000201');
+    if (idx > 0) s = s.slice(idx);
+    const lastCrc = s.lastIndexOf('6304');
+    if (lastCrc >= 0 && s.length >= lastCrc + 8) s = s.slice(0, lastCrc + 8);
+    return s;
+  };
+
+  const decodeQrPayloadInBrowser = async (file) => {
+    try {
+      if (!window.jsQR) return '';
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
+      await new Promise((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Gagal membaca gambar'));
+      });
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return '';
+      canvas.width = img.naturalWidth || img.width || 0;
+      canvas.height = img.naturalHeight || img.height || 0;
+      if (!canvas.width || !canvas.height) return '';
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const res = window.jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+      URL.revokeObjectURL(url);
+      if (!res || !res.data) return '';
+      const s = normalizePayload(res.data);
+      return s.startsWith('000201') ? s : '';
+    } catch {
+      return '';
+    }
+  };
+
+  btn.addEventListener('click', async () => {
+    const f = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!f) return;
+    const fd = new FormData();
+    fd.append('qris_file', f);
+    const payload = await decodeQrPayloadInBrowser(f);
+    if (payload) fd.append('qris_payload', payload);
+    btn.disabled = true;
+    try {
+      const r = await fetch('/admin/settings/qris-upload', { method: 'POST', body: fd, credentials: 'same-origin' });
+      if (!r.ok) throw new Error('Upload gagal');
+      window.location.href = '/admin/payment-gateway';
+    } catch (e) {
+      window.location.href = '/admin/payment-gateway';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>

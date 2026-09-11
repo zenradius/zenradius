@@ -1,0 +1,329 @@
+<%- include('partials/header') %>
+
+<div class="mb-4">
+  <div class="text-secondary small"><%= t('tech.dashboard.greeting', 'Halo, Selamat Bekerja!') %></div>
+  <div class="fs-5 fw-bold"><i class="bi bi-person-badge me-2" style="color:#2dd4bf"></i><%= techName %></div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-box" style="border-left: 3px solid #f59e0b;">
+    <div class="lbl"><%= t('tech.dashboard.in_progress', 'Sedang Dikerjakan') %></div>
+    <div class="val text-warning"><%= stats.inProgress %></div>
+  </div>
+  <div class="stat-box" style="border-left: 3px solid #10b981;">
+    <div class="lbl"><%= t('tech.dashboard.resolved_today', 'Selesai Hari Ini') %></div>
+    <div class="val text-success"><%= stats.resolved %></div>
+  </div>
+</div>
+
+<h6 class="mb-3 text-secondary fw-bold text-uppercase" style="font-size: 13px; letter-spacing: 1px;">
+  <i class="bi bi-list-task me-1"></i> <%= t('tech.dashboard.active_tasks', 'Tugas Aktif Anda') %> (<%= tickets.length %>)
+</h6>
+
+<% if (tickets.length === 0) { %>
+  <div class="text-center py-5">
+    <i class="bi bi-check2-circle text-success" style="font-size: 40px;"></i>
+    <p class="text-secondary mt-2 small"><%= t('tech.dashboard.empty_active', 'Bagus! Tidak ada tugas aktif saat ini.') %><br><%= t('tech.dashboard.empty_active_hint', 'Silakan cek tab "Tiket Baru" untuk mengambil tugas.') %></p>
+  </div>
+<% } else { %>
+  <% tickets.forEach(ticket => { %>
+    <div class="t-card">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="badge-status badge-<%= ticket.status %>">
+          <% let statusLabel = ticket.status; if (ticket.status === 'open') statusLabel = t('tech.ticket.open', 'Belum Ditangani'); if (ticket.status === 'in_progress') statusLabel = t('tech.ticket.in_progress', 'Sedang Dikerjakan'); if (ticket.status === 'resolved') statusLabel = t('tech.ticket.resolved', 'Selesai'); %>
+          <% if(ticket.status === 'in_progress') { %> <i class="bi bi-tools"></i> <%= statusLabel %> <% } else { %> <%= statusLabel %> <% } %>
+        </span>
+        <span class="text-secondary" style="font-size: 11px;"><%= new Date(ticket.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}) %></span>
+      </div>
+      
+      <div class="fw-bold mb-1" style="font-size: 15px;"><%= ticket.customer_name %></div>
+      <div class="text-secondary mb-2" style="font-size: 12px;">
+        <i class="bi bi-geo-alt-fill me-1"></i><%= ticket.customer_address || t('tech.ticket.no_address', 'Tidak ada alamat') %><br>
+        <i class="bi bi-telephone-fill me-1"></i><a href="https://wa.me/<%= ticket.customer_phone %>" class="text-decoration-none text-info"><%= ticket.customer_phone || '-' %></a>
+        <% if (ticket.customer_phone) { %>
+          <button type="button" class="btn btn-sm ms-2" style="padding:2px 8px;border:1px solid rgba(124,221,218,.28);color:#a5f4ed;background:rgba(45,212,191,.08);" data-wifi-tag="<%= ticket.customer_phone %>" data-customer-name="<%= ticket.customer_name %>" onclick="openWifiManager(this)">
+            <i class="bi bi-wifi me-1"></i>Kelola WiFi
+          </button>
+        <% } %>
+      </div>
+      
+      <div class="bg-dark p-2 rounded-3 mb-3" style="font-size: 13px; border: 1px solid rgba(124,221,218,.18); background: rgba(4,17,22,.52) !important;">
+        <div class="fw-semibold" style="color:#a5f4ed"><%= ticket.subject %></div>
+        <div class="text-light"><%= ticket.message %></div>
+        <% if (ticket.customer_photos && ticket.customer_photos !== '' && ticket.customer_photos !== '[]') { %>
+          <% const customerPhotos = JSON.parse(ticket.customer_photos || '[]'); %>
+          <% if (customerPhotos.length > 0) { %>
+            <div class="mt-2 pt-2 border-top border-secondary">
+              <div class="text-info small mb-2"><i class="bi bi-images me-1"></i>Foto dari pelanggan (<%= customerPhotos.length %> foto):</div>
+              <div class="row g-1">
+                <% customerPhotos.slice(0, 3).forEach((photo, index) => { %>
+                  <div class="col-4">
+                    <a href="<%= photo %>" target="_blank">
+                      <img src="<%= photo %>" class="img-fluid rounded" style="width:100%; height:50px; object-fit:cover; border:1px solid rgba(124,221,218,.28);">
+                    </a>
+                  </div>
+                <% }) %>
+                <% if (customerPhotos.length > 3) { %>
+                  <div class="col-12 text-center">
+                    <small class="text-muted">+<%= customerPhotos.length - 3 %> foto lainnya</small>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+      
+      <button type="button" class="btn btn-success btn-action" data-bs-toggle="modal" data-bs-target="#resolveModal<%= ticket.id %>">
+        <i class="bi bi-check-circle-fill me-2"></i> <%= t('tech.ticket.mark_resolved', 'Tandai Selesai') %>
+      </button>
+
+      <!-- Modal Selesai -->
+      <div class="modal fade" id="resolveModal<%= ticket.id %>" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content" style="background: linear-gradient(145deg, rgba(25,42,53,.98), rgba(16,30,40,.98)); border: 1px solid rgba(124,221,218,.22);">
+            <div class="modal-header border-bottom border-secondary">
+              <h6 class="modal-title"><i class="bi bi-check-circle me-2"></i><%= t('tech.ticket.resolve_title', 'Selesaikan Tugas') %></h6>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/tech/tickets/<%= ticket.id %>/update" enctype="multipart/form-data" id="resolveForm<%= ticket.id %>">
+              <div class="modal-body">
+                <div class="alert alert-info" style="font-size: 13px;">
+                  <i class="bi bi-info-circle me-2"></i>Tugas untuk <b><%= ticket.customer_name %></b> - <b><%= ticket.subject %></b>
+                </div>
+
+                <input type="hidden" name="status" value="resolved">
+                
+                <!-- Catatan Teknisi -->
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">
+                    <i class="bi bi-pencil-square me-1"></i>Catatan Pekerjaan <span class="text-danger">*</span>
+                  </label>
+                  <textarea 
+                    name="notes" 
+                    class="form-control" 
+                    rows="3" 
+                    placeholder="Jelaskan pekerjaan yang sudah dilakukan, kendala yang ditemui, material yang digunakan, dll."
+                    required
+                    style="background: rgba(4,17,22,.72); border: 1px solid rgba(124,221,218,.24); color: #edf7f5; font-size: 13px;"
+                  ></textarea>
+                  <div class="form-text small">Catatan ini akan dilihat oleh admin dan pelanggan</div>
+                </div>
+
+                <!-- Upload Foto -->
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">
+                    <i class="bi bi-camera me-1"></i>Foto Pekerjaan <span class="text-muted">(Opsional, max 10 foto)</span>
+                  </label>
+                  <input 
+                    type="file" 
+                    name="photos" 
+                    class="form-control" 
+                    accept="image/*"
+                    multiple
+                    capture="environment"
+                    onchange="previewPhotos(this, <%= ticket.id %>)"
+                    style="background: rgba(4,17,22,.72); border: 1px solid rgba(124,221,218,.24); color: #edf7f5; font-size: 13px;"
+                  >
+                  <div class="form-text small">
+                    <i class="bi bi-info-circle me-1"></i>Upload foto sebelum/sesudah pekerjaan, foto perangkat, atau foto signal level. Max 5MB per foto.
+                  </div>
+                </div>
+
+                <!-- Preview Foto -->
+                <div id="photoPreview<%= ticket.id %>" class="row g-2 mb-3" style="display: none;"></div>
+
+                <!-- GPS Location (Hidden) -->
+                <input type="hidden" id="gpsLat<%= ticket.id %>" name="gps_lat" value="">
+                <input type="hidden" id="gpsLng<%= ticket.id %>" name="gps_lng" value="">
+                
+                <div class="alert alert-warning small mb-0" style="font-size: 12px;">
+                  <i class="bi bi-geo-alt-fill me-1"></i>Lokasi GPS akan otomatis tersimpan saat Anda menyelesaikan tugas.
+                </div>
+              </div>
+              <div class="modal-footer border-top border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                  <i class="bi bi-x-circle me-1"></i>Batal
+                </button>
+                <button type="submit" class="btn btn-success btn-sm">
+                  <i class="bi bi-check-circle-fill me-1"></i>Selesai & Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  <% }) %>
+<% } %>
+
+<div class="modal fade" id="wifiManagerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content" style="background:linear-gradient(145deg,rgba(25,42,53,.98),rgba(16,30,40,.98));border:1px solid rgba(124,221,218,.22);">
+      <div class="modal-header border-bottom border-secondary">
+        <div>
+          <h6 class="modal-title"><i class="bi bi-wifi me-2" style="color:#a5f4ed"></i>Kelola WiFi Pelanggan</h6>
+          <div id="wifiManagerCustomer" class="text-secondary small mt-1"></div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="wifiManagerAlert" class="alert d-none small"></div>
+        <div class="p-3 mb-3 rounded-3" style="background:rgba(4,17,22,.52);border:1px solid rgba(124,221,218,.15);">
+          <div class="text-secondary small">SSID saat ini</div>
+          <div id="wifiManagerCurrentSsid" class="fw-bold mt-1">Memuat...</div>
+        </div>
+        <form id="wifiSsidForm" class="mb-3">
+          <label class="form-label small fw-bold">Nama WiFi Baru</label>
+          <div class="input-group">
+            <input id="wifiManagerSsid" class="form-control" maxlength="32" required>
+            <button class="btn btn-primary" type="submit">Simpan SSID</button>
+          </div>
+          <div class="form-text small">Maksimal 32 karakter. Perangkat dapat terputus sesaat.</div>
+        </form>
+        <form id="wifiPasswordForm">
+          <label class="form-label small fw-bold">Password WiFi Baru</label>
+          <input id="wifiManagerPassword" class="form-control mb-2" type="password" minlength="8" maxlength="63" required>
+          <input id="wifiManagerConfirmPassword" class="form-control mb-2" type="password" minlength="8" maxlength="63" placeholder="Konfirmasi password" required>
+          <button class="btn btn-primary w-100" type="submit">Simpan Password</button>
+          <div class="form-text small">Gunakan 8-63 karakter.</div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let wifiManagerTag = '';
+let wifiManagerModal = null;
+
+function showWifiManagerAlert(message, type = 'info') {
+  const alert = document.getElementById('wifiManagerAlert');
+  if (!alert) return;
+  alert.className = `alert alert-${type} small`;
+  alert.textContent = message;
+  alert.classList.remove('d-none');
+}
+
+async function openWifiManager(button) {
+  wifiManagerTag = button?.dataset?.wifiTag || '';
+  if (!wifiManagerTag) return;
+  document.getElementById('wifiManagerCustomer').textContent = button.dataset.customerName || 'Pelanggan';
+  document.getElementById('wifiManagerCurrentSsid').textContent = 'Memuat...';
+  document.getElementById('wifiManagerSsid').value = '';
+  document.getElementById('wifiManagerPassword').value = '';
+  document.getElementById('wifiManagerConfirmPassword').value = '';
+  document.getElementById('wifiManagerAlert').classList.add('d-none');
+  wifiManagerModal = wifiManagerModal || new bootstrap.Modal(document.getElementById('wifiManagerModal'));
+  wifiManagerModal.show();
+  try {
+    const response = await fetch(`/tech/api/device/${encodeURIComponent(wifiManagerTag)}`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Perangkat tidak ditemukan');
+    document.getElementById('wifiManagerCurrentSsid').textContent = data.ssid || '-';
+    document.getElementById('wifiManagerSsid').value = data.ssid === '-' ? '' : (data.ssid || '');
+  } catch (error) {
+    document.getElementById('wifiManagerCurrentSsid').textContent = '-';
+    showWifiManagerAlert(error.message || 'Gagal mengambil detail perangkat.', 'danger');
+  }
+}
+
+async function submitWifiChange(endpoint, payload, button) {
+  button.disabled = true;
+  try {
+    const response = await fetch(`/tech/api/device/${encodeURIComponent(wifiManagerTag)}/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || 'Perubahan gagal dikirim ke ACS.');
+    showWifiManagerAlert('Task perubahan berhasil dikirim ke GenieACS.', 'success');
+    if (endpoint === 'ssid') document.getElementById('wifiManagerCurrentSsid').textContent = payload.ssid;
+  } catch (error) {
+    showWifiManagerAlert(error.message || 'Gagal mengirim perubahan.', 'danger');
+  } finally {
+    button.disabled = false;
+  }
+}
+
+document.getElementById('wifiSsidForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitWifiChange('ssid', { ssid: document.getElementById('wifiManagerSsid').value.trim() }, form.querySelector('button[type="submit"]'));
+});
+
+document.getElementById('wifiPasswordForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const password = document.getElementById('wifiManagerPassword').value;
+  const confirmPassword = document.getElementById('wifiManagerConfirmPassword').value;
+  if (password !== confirmPassword) {
+    showWifiManagerAlert('Konfirmasi password tidak sama.', 'danger');
+    return;
+  }
+  submitWifiChange('password', { password }, form.querySelector('button[type="submit"]'));
+});
+
+// Preview photos before upload
+function previewPhotos(input, ticketId) {
+  const previewContainer = document.getElementById('photoPreview' + ticketId);
+  previewContainer.innerHTML = '';
+  
+  if (input.files && input.files.length > 0) {
+    previewContainer.style.display = 'flex';
+    
+    // Limit to 10 photos
+    const files = Array.from(input.files).slice(0, 10);
+    
+    files.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const col = document.createElement('div');
+        col.className = 'col-4';
+        col.innerHTML = `
+          <div class="position-relative">
+            <img src="${e.target.result}" class="img-fluid rounded" style="width: 100%; height: 80px; object-fit: cover; border: 2px solid #334155;">
+            <span class="position-absolute top-0 start-0 badge bg-primary m-1" style="font-size: 10px;">${index + 1}</span>
+          </div>
+        `;
+        previewContainer.appendChild(col);
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    if (input.files.length > 10) {
+      alert('Maksimal 10 foto. Foto ke-11 dan seterusnya akan diabaikan.');
+    }
+  } else {
+    previewContainer.style.display = 'none';
+  }
+}
+
+// Get GPS location when modal opens
+document.addEventListener('DOMContentLoaded', function() {
+  const modals = document.querySelectorAll('[id^="resolveModal"]');
+  modals.forEach(modal => {
+    modal.addEventListener('show.bs.modal', function() {
+      const ticketId = this.id.replace('resolveModal', '');
+      const latInput = document.getElementById('gpsLat' + ticketId);
+      const lngInput = document.getElementById('gpsLng' + ticketId);
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            latInput.value = position.coords.latitude;
+            lngInput.value = position.coords.longitude;
+          },
+          function(error) {
+            console.log('GPS Error:', error.message);
+          }
+        );
+      }
+    });
+  });
+});
+</script>
+
+<%- include('partials/bottom_nav') %>

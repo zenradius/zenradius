@@ -1,0 +1,12 @@
+node_modules
+database
+logs
+backups
+auth_info_baileys
+public/uploads
+.env
+settings.json
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

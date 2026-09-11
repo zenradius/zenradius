@@ -1,0 +1,18 @@
+{
+  "watch": ["app-customer.js", "config/", "routes/", "services/", "middleware/", "utils/"],
+  "ext": "js,mjs,cjs,json",
+  "ignore": [
+    "node_modules",
+    ".git",
+    "logs/*",
+    "database/*",
+    "auth_info_baileys/*",
+    "data/*",
+    "public/uploads/*",
+    "backups/*",
+    "settings.json",
+    "*.log"
+  ],
+  "exec": "node app-customer.js",
+  "delay": 800
+}

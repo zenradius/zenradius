@@ -1,0 +1,63 @@
+{
+  "name": "Pusat Administrasi ZenRadius",
+  "short_name": "Admin ZenRadius",
+  "description": "Sistem manajemen billing dan administrasi jaringan ZenRadius",
+  "start_url": "/admin",
+  "scope": "/admin/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#173945",
+  "theme_color": "#2dd4bf",
+  "categories": ["business", "productivity"],
+  "screenshots": [
+    {
+      "src": "/img/logo.png",
+      "sizes": "540x720",
+      "form_factor": "narrow",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/logo.png",
+      "sizes": "1280x720",
+      "form_factor": "wide",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Buka dashboard admin",
+      "url": "/admin/dashboard",
+      "icons": [{ "src": "/img/icon.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }]
+    },
+    {
+      "name": "Pelanggan",
+      "short_name": "Pelanggan",
+      "description": "Manajemen pelanggan",
+      "url": "/admin/customers",
+      "icons": [{ "src": "/img/icon.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }]
+    },
+    {
+      "name": "Penagihan",
+      "short_name": "Penagihan",
+      "description": "Data penagihan",
+      "url": "/admin/billing",
+      "icons": [{ "src": "/img/icon.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }]
+    }
+  ],
+  "icons": [
+    {
+      "src": "/img/icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/logo.png",
+      "sizes": "2000x545",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

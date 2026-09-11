@@ -1,0 +1,1032 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Layanan Terisolir | <%= company %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --bg: #173945;
+      --card-bg: #173945;
+      --card-border: rgba(190, 239, 255, 0.28);
+      --text-main: #edf7f5;
+      --text-secondary: rgba(237, 250, 250, 0.72);
+      --text-muted: rgba(237, 250, 250, 0.52);
+
+      --primary: #2dd4bf;
+      --primary-hover: #14b8a6;
+      --primary-light: rgba(45, 212, 191, 0.08);
+
+      --accent-toska: #2dd4bf;
+
+      --danger-bg: rgba(248, 81, 73, 0.1);
+      --danger-border: rgba(248, 81, 73, 0.22);
+      --danger-color: #ff7b72;
+
+      --success-bg: rgba(74, 222, 128, 0.1);
+      --success-border: rgba(74, 222, 128, 0.22);
+      --success-color: #86efac;
+
+      --border-color: rgba(190, 239, 255, 0.15);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) rgba(23, 57, 69, 0.3);
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+        radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
+        linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+    }
+
+    .wrapper-container {
+      max-width: 1040px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Header / Logo ── */
+    .site-header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+    .logo-img {
+      max-height: 50px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+    }
+
+    /* ── Top summary bar (mobile-first hero) ── */
+    .status-hero {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 12px 28px rgba(3,14,20,0.28);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+    }
+    .status-hero-icon {
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .status-hero.is-success .status-hero-icon {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success-color);
+    }
+    .status-hero-copy { min-width: 0; width: 100%; }
+    .status-hero-copy h1 {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: 0.1em;
+      color: var(--danger-color);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .status-hero.is-success .status-hero-copy h1 {
+      color: var(--success-color);
+    }
+    .status-hero-copy p {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* ── Main grid ── */
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel, .card-form {
+      background-color: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--card-border);
+      padding: 30px;
+      box-shadow: 0 15px 35px rgba(3,14,20,0.3);
+    }
+    .card-form {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 20px 48px rgba(3,14,20,0.45);
+    }
+
+    .illustration-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .illustration-img-file {
+      max-width: 480px;
+      width: 100%;
+      height: auto;
+      margin: 0 auto;
+      display: block;
+      filter: drop-shadow(0 14px 30px rgba(3, 14, 20, 0.45));
+      animation: floatEffect 4s ease-in-out infinite;
+    }
+    @keyframes floatEffect {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes floatEffect {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .panel-heading {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .description {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background-color: var(--danger-bg);
+      color: var(--danger-color);
+      border: 1px solid var(--danger-border);
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 14px;
+      align-self: flex-start;
+    }
+    .status-badge.success {
+      background-color: var(--success-bg);
+      color: var(--success-color);
+      border-color: var(--success-border);
+    }
+
+    h1.section-title {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .info-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .info-item {
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .info-icon {
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex: 0 0 auto;
+    }
+    .info-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      display: block;
+    }
+    .info-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
+      word-break: break-all;
+    }
+
+    .invoice-item {
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+    .invoice-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .invoice-period { font-size: 13px; font-weight: 600; color: var(--text-main); }
+    .invoice-amount { font-size: 14px; font-weight: 700; color: var(--accent-toska); white-space: nowrap; }
+
+    .payment-methods { display: grid; gap: 8px; margin-bottom: 12px; }
+    .method-option {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background-color: rgba(255, 255, 255, 0.03);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .method-option:hover { border-color: var(--primary); background-color: var(--primary-light); }
+    .method-option input[type="radio"] { accent-color: var(--primary); width: 15px; height: 15px; flex: 0 0 auto; }
+
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 14px 0;
+      padding: 10px 12px;
+      background-color: rgba(45, 212, 191, 0.05);
+      border-radius: 10px;
+      border: 1px solid rgba(45, 212, 191, 0.12);
+    }
+    .checkbox-group input[type="checkbox"] {
+      cursor: pointer;
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent-toska);
+      margin-top: 2px;
+      flex: 0 0 auto;
+    }
+    .checkbox-group label {
+      cursor: pointer;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      user-select: none;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 18px;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 13.5px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+      line-height: 1.2;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%);
+      color: #f4fffd;
+      border: 1px solid rgba(126,231,219,.48);
+      box-shadow: 0 8px 20px rgba(10,41,50,.24);
+    }
+    .btn.primary:hover {
+      background: linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%) !important;
+      border-color: rgba(166,247,235,.72) !important;
+      transform: translateY(-1px);
+    }
+    .btn.primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+      background: rgba(255,255,255,0.05) !important;
+      color: rgba(244,255,253,0.6) !important;
+      border-color: rgba(255,255,255,0.1) !important;
+    }
+    .btn.secondary {
+      background: linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%);
+      color: #f4fffd;
+      border: 1px solid rgba(126,231,219,.48);
+      box-shadow: 0 8px 20px rgba(10,41,50,.24);
+    }
+    .btn.secondary:hover {
+      background: linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%) !important;
+      border-color: rgba(166,247,235,.72) !important;
+      transform: translateY(-1px);
+    }
+    .btn.wa {
+      background: linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%);
+      color: #f4fffd;
+      border: 1px solid rgba(126,231,219,.48);
+      box-shadow: 0 8px 20px rgba(10,41,50,.24);
+    }
+    .btn.wa:hover {
+      background: linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%) !important;
+      border-color: rgba(166,247,235,.72) !important;
+      transform: translateY(-1px);
+    }
+
+    .status-message {
+      padding: 11px;
+      border-radius: 9px;
+      margin-top: 12px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 12.5px;
+    }
+    .status-message.loading {
+      background-color: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .status-message.success { background-color: var(--success-bg); color: var(--success-color); }
+
+    .spinner {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      border: 2px solid rgba(45, 212, 191, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex: 0 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border-color);
+      margin-top: 36px;
+      padding-top: 24px;
+      font-size: 0.8rem;
+      color: rgba(237, 250, 250, 0.72);
+      text-align: center;
+      padding: 24px 8px 8px;
+    }
+    .footer a {
+      color: #7dd3fc;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── Responsive: mobile-first stacking ── */
+    @media (max-width: 860px) {
+      .grid-layout {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+      .panel, .card-form { padding: 22px; }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 16px 12px 32px; width: 100vw; overflow-x: hidden; }
+      .wrapper-container { width: 100%; max-width: 100%; box-sizing: border-box; }
+      .status-hero { padding: 20px 16px; gap: 12px; width: 100%; box-sizing: border-box; }
+      .status-hero-copy h1 { font-size: 26px; }
+      .grid-layout { width: 100%; gap: 16px; display: flex; flex-direction: column; }
+      .panel, .card-form { padding: 16px; width: 100% !important; max-width: 100%; box-sizing: border-box; }
+      h1.section-title { font-size: 18px; }
+      .illustration-img-file { max-width: 320px; }
+      .button-group { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper-container">
+
+    <!-- BRANDING LOGO -->
+    <div class="site-header">
+      <a href="/">
+        <img class="logo-img" src="/img/logo.png?v=zenradius" alt="Logo <%= company %>">
+      </a>
+    </div>
+
+    <!-- STATUS HERO: always first on mobile, gives instant context -->
+    <div class="status-hero<%= (customer && !hasUnpaidInvoices) ? ' is-success' : '' %>">
+      <div class="illustration-wrapper" style="margin-bottom: 8px;">
+        <img class="illustration-img-file" src="/img/isolir.png" alt="Layanan Terisolasi ZenRadius">
+      </div>
+      <div class="status-hero-copy">
+        <% if (customer && !hasUnpaidInvoices) { %>
+          <h1>TAGIHAN LUNAS</h1>
+          <p>Akses Internet Segera Dipulihkan</p>
+        <% } else { %>
+          <h1>TERISOLIR</h1>
+          <p>Akses internet Anda ditangguhkan sementara karena masa aktif paket telah berakhir. Segera lakukan pelunasan tagihan di bawah ini untuk memulihkan koneksi secara instan.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="grid-layout">
+
+      <!-- RIGHT PANEL (visually first): primary call to action -->
+      <div class="card-form">
+
+        <!-- CASE 1: CUSTOMER NOT IDENTIFIED -->
+        <% if (!customer) { %>
+          <div>
+            <div class="status-badge"><i class="bi bi-wallet2"></i> Menunggu Pembayaran</div>
+            <h1 class="section-title">Konfirmasi Transaksi</h1>
+            <p class="description" style="margin-bottom: 24px;">
+              Sistem tidak dapat mengidentifikasi ID pelanggan secara otomatis melalui jalur koneksi ini. Silakan periksa status tagihan Anda secara manual dengan memasukkan nomor WhatsApp terdaftar.
+            </p>
+          </div>
+
+          <div>
+            <div class="button-group" style="margin-bottom: 16px;">
+              <a href="/customer/check-billing" class="btn primary"><i class="bi bi-search"></i> Cek Tagihan</a>
+              <button type="button" id="btn-install-pwa" class="btn wa" style="margin: 0; display: inline-flex; background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(126, 231, 219, 0.38); color: #d9fffb;">
+                <i class="bi bi-download"></i> Aplikasi Pelanggan
+              </button>
+            </div>
+
+            <a href="/customer/login" class="btn secondary" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+              <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+          </div>
+        <% } %>
+
+        <!-- CASE 2: CUSTOMER IDENTIFIED & ALL PAID -->
+        <% if (customer && !hasUnpaidInvoices) { %>
+          <div>
+            <div class="status-badge success"><i class="bi bi-check-circle-fill"></i> Pembayaran Selesai</div>
+            <h1 class="section-title">Layanan Terverifikasi</h1>
+            <p class="description" style="margin-bottom: 20px;">
+              Seluruh tagihan Anda telah terlunasi secara penuh. Sistem sedang memproses pembukaan isolir untuk memulihkan koneksi internet Anda.
+            </p>
+
+            <div class="info-grid" style="margin-bottom: 20px;">
+              <div class="info-item">
+                <div class="info-icon"><i class="bi bi-person-fill"></i></div>
+                <div class="info-content" style="min-width: 0; flex: 1;">
+                  <span class="info-label">Nama Pelanggan</span>
+                  <span class="info-value"><%= customer.name %></span>
+                </div>
+              </div>
+              <div class="info-item">
+                <div class="info-icon"><i class="bi bi-phone"></i></div>
+                <div class="info-content" style="min-width: 0; flex: 1;">
+                  <span class="info-label">Kontak</span>
+                  <span class="info-value"><%= customer.phone %></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="status-message loading">
+              <div class="spinner"></div> Tagihan Lunas! Menyambungkan akses...
+            </div>
+          </div>
+
+          <div>
+            <form action="/customer/reconnect" method="POST" style="margin-bottom: 12px;" onsubmit="handleReconnect(event, this)">
+              <button type="submit" class="btn primary" id="reconnectBtn" style="box-shadow: 0 4px 12px rgba(45, 212, 191, 0.15);">
+                <i class="bi bi-arrow-repeat"></i> Aktifkan Sekarang (Re-Connect)
+              </button>
+            </form>
+            <div id="reconnectMsg" style="margin-top: 10px;"></div>
+            <p class="description" style="text-align: center; font-size: 11px; margin-top: 8px;">
+              Halaman akan mereload otomatis. Jika belum tersambung dalam 30 detik, silakan klik tombol reconnect di atas.
+            </p>
+          </div>
+
+          <script id="reconnect-script">
+            async function handleReconnect(e, form) {
+              e.preventDefault();
+              const btn = document.getElementById('reconnectBtn');
+              const msgDiv = document.getElementById('reconnectMsg');
+              if (btn) btn.disabled = true;
+              if (msgDiv) msgDiv.innerHTML = '<div class="status-message loading"><div class="spinner"></div> Sedang refresh koneksi...</div>';
+              
+              try {
+                const res = await fetch(form.action, {
+                  method: 'POST',
+                  headers: { 'Accept': 'application/json' }
+                });
+                const d = await res.json();
+                if (d.success) {
+                  if (msgDiv) msgDiv.innerHTML = '<div class="status-message success"><i class="bi bi-check-circle-fill"></i> ' + d.message + '</div>';
+                  setTimeout(() => window.location.reload(), 3000);
+                } else {
+                  throw new Error(d.message || 'Gagal merefresh koneksi.');
+                }
+              } catch (err) {
+                if (msgDiv) msgDiv.innerHTML = '<div class="status-message success" style="background-color: var(--danger-bg); color: var(--danger-color);"><i class="bi bi-exclamation-triangle-fill"></i> ' + err.message + '</div>';
+                if (btn) btn.disabled = false;
+              }
+            }
+
+            let checkCount = 0;
+            function checkStatus() {
+              fetch('/isolated/status', { method: 'GET' })
+                .then(r => r.json())
+                .then(d => {
+                  if (d.status === 'active' || d.unpaid_count === 0) {
+                    setTimeout(() => window.location.href = '/customer/dashboard', 1000);
+                  } else if (++checkCount < 10) {
+                    setTimeout(checkStatus, 3000);
+                  }
+                })
+                .catch(() => {
+                  if (++checkCount < 10) setTimeout(checkStatus, 3000);
+                });
+            }
+            setTimeout(checkStatus, 3000);
+          </script>
+        <% } %>
+
+        <!-- CASE 3: CUSTOMER HAS UNPAID INVOICES -->
+        <% if (customer && hasUnpaidInvoices) { %>
+          <div>
+            <div class="status-badge"><i class="bi bi-exclamation-triangle-fill"></i> Pembayaran Tertunda</div>
+            <h1 class="section-title">Rincian Tagihan</h1>
+            <p class="description" style="margin-bottom: 16px;">
+              Yth. Pelanggan <strong><%= customer.name %></strong>, harap lakukan pelunasan tagihan di bawah ini agar akses internet Anda dapat segera diaktifkan kembali.
+            </p>
+
+            <!-- Invoices Container -->
+            <div style="max-height: 120px; overflow-y: auto; margin-bottom: 16px; padding-right: 2px;">
+              <% invoices.forEach((inv) => { %>
+                <div class="invoice-item">
+                  <div class="invoice-header">
+                    <span class="invoice-period">
+                      <%= new Date(inv.period_year, inv.period_month - 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) %>
+                    </span>
+                    <span class="invoice-amount">Rp <%= (inv.amount || 0).toLocaleString('id-ID') %></span>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+
+            <!-- Form Section -->
+            <form id="paymentForm">
+              <div class="payment-methods" style="margin-bottom: 12px;">
+                <span class="info-label" style="margin-bottom: 6px; display: block; font-weight: 700; font-size: 10px;">Pilih Metode Pembayaran</span>
+                <% paymentChannels.forEach((chan, idx) => { %>
+                  <label class="method-option">
+                    <input type="radio" name="payment_method" value="<%= chan.code %>" <%= idx === 0 ? 'checked' : '' %>>
+                    <span><%= chan.name %></span>
+                  </label>
+                <% }) %>
+              </div>
+
+              <div class="checkbox-group">
+                <input type="checkbox" id="tosCheckbox" name="accept_tos" value="1" required />
+                <label for="tosCheckbox">Saya menyetujui detail tagihan &amp; ketentuan pembayaran otomatis</label>
+              </div>
+
+              <!-- Pass attributes securely to avoid EJS inside script blocks -->
+              <button type="button" class="btn primary" id="submitBtn" disabled
+                      data-invoice-id="<%= invoices[0].id %>"
+                      data-public-token="<%= invoices[0].publicToken %>"
+                      onclick="goToPayment(this)">
+                <i class="bi bi-wallet2"></i> BAYAR SEKARANG
+              </button>
+            </form>
+            <div id="statusMessage"></div>
+          </div>
+
+          <div>
+            <div class="button-group">
+              <a href="/customer/check-billing" class="btn secondary"><i class="bi bi-receipt"></i> Riwayat</a>
+              <form method="post" action="/customer/logout" style="margin: 0; display: contents;">
+                <button type="submit" class="btn secondary"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+              </form>
+            </div>
+          </div>
+
+          <script id="payment-script">
+            const tosCheckbox = document.getElementById('tosCheckbox');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (tosCheckbox && submitBtn) {
+              tosCheckbox.addEventListener('change', () => {
+                submitBtn.disabled = !tosCheckbox.checked;
+              });
+            }
+
+            function goToPayment(btn) {
+              const invoiceId = btn.getAttribute('data-invoice-id');
+              const publicToken = btn.getAttribute('data-public-token');
+              const method = document.querySelector('input[name="payment_method"]:checked')?.value || 'QRIS';
+              window.location.href = `/customer/payment/create/${invoiceId}?t=${encodeURIComponent(publicToken)}&method=${encodeURIComponent(method)}`;
+            }
+
+            // Polling status using dataset from script tag
+            let pollCount = 0;
+            function pollStatus() {
+              const publicToken = '<%= invoices.length > 0 ? invoices[0].publicToken : "" %>';
+              const invoiceId = '<%= invoices.length > 0 ? invoices[0].id : "" %>';
+              if (!invoiceId) return;
+
+              const url = `/customer/payment/status/${invoiceId}${publicToken ? '?t=' + encodeURIComponent(publicToken) : ''}`;
+
+              fetch(url, { method: 'GET' })
+                .then(r => r.json())
+                .then(d => {
+                  if (d.status === 'paid' || d.paid_at) {
+                    const msgBox = document.getElementById('statusMessage');
+                    if (msgBox) {
+                      msgBox.innerHTML = '<div class="status-message success"><i class="bi bi-check-circle-fill"></i> Pembayaran berhasil! Mengaktifkan akses...</div>';
+                    }
+                    setTimeout(() => window.location.href = '/customer/dashboard', 2000);
+                  } else if (++pollCount < 30) {
+                    setTimeout(pollStatus, 3000);
+                  }
+                })
+                .catch(() => {
+                  if (++pollCount < 30) setTimeout(pollStatus, 3000);
+                });
+            }
+            setTimeout(pollStatus, 4000);
+          </script>
+        <% } %>
+
+      </div>
+
+      <!-- LEFT PANEL (visually second): illustration + provider info -->
+      <div class="panel">
+        <div class="panel-heading"><i class="bi bi-info-circle"></i> Informasi Layanan</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-icon"><i class="bi bi-building"></i></div>
+            <div class="info-content" style="min-width: 0; flex: 1;">
+              <span class="info-label">Penyedia Layanan</span>
+              <span class="info-value"><%= company %></span>
+            </div>
+          </div>
+          <% if (adminPhone) { %>
+            <div class="info-item">
+              <div class="info-icon"><i class="bi bi-telephone-fill"></i></div>
+              <div class="info-content" style="min-width: 0; flex: 1;">
+                <span class="info-label">Pusat Bantuan</span>
+                <span class="info-value"><%= adminPhone %></span>
+              </div>
+            </div>
+          <% } %>
+          <% if (address) { %>
+            <div class="info-item">
+              <div class="info-icon"><i class="bi bi-geo-alt-fill"></i></div>
+              <div class="info-content" style="min-width: 0; flex: 1;">
+                <span class="info-label">Lokasi Kantor</span>
+                <span class="info-value"><%= address %></span>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- GLOBAL FOOTER -->
+    <div class="footer footer-bottom d-flex flex-wrap justify-content-center align-items-center gap-2 text-center">
+      <div>
+        &copy; <%= new Date().getFullYear() %> <%- footerInfo %>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PWA Install Modal -->
+  <div class="modal fade" id="pwaInstallModal" tabindex="-1" aria-hidden="true" style="text-align: left;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px; width: 100%;">
+      <div class="modal-content text-white shadow-2xl" style="background: linear-gradient(145deg, #173945 0%, #0f2a36 100%); border: 1px solid rgba(190, 239, 255, 0.25)!important; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <div class="modal-header border-0 pb-0" style="padding: 24px 24px 10px;">
+          <h5 class="modal-title fw-bold d-flex align-items-center gap-2" style="font-family: inherit; font-size: 1.25rem;">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 32px; height: 32px; background: rgba(45, 212, 191, 0.15); color: #2dd4bf;">
+              <i class="bi bi-phone-vibrate-fill"></i>
+            </span>
+            Pasang Aplikasi Portal
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.7; transition: opacity 0.15s;"></button>
+        </div>
+        
+        <div class="modal-body px-4 py-3" style="font-family: inherit;">
+          <p class="small mb-4" style="color: rgba(237, 250, 250, 0.85); font-size: 0.88rem; line-height: 1.6;">
+            Dapatkan akses instan, cepat, dan hemat kuota ke sistem layanan <strong style="color: #2dd4bf;"><%= company || 'ZenRadius' %></strong> langsung dari layar utama ponsel Anda tanpa harus membuka browser lagi.
+          </p>
+
+          <!-- Tab Navigation for Platforms -->
+          <ul class="nav nav-pills mb-3 gap-2" id="pwaTab" role="tablist" style="border-bottom: 0; display: flex; width: 100%;">
+            <li class="nav-item" role="presentation" style="flex: 1;">
+              <button class="nav-link active w-100 d-flex align-items-center justify-content-center gap-2 py-2.5 rounded-3 fw-bold border-0 fs-7" id="android-tab" data-bs-toggle="pill" data-bs-target="#pwa-android" type="button" role="tab" aria-controls="pwa-android" aria-selected="true" style="font-size: 0.8rem; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); outline: none;">
+                <i class="bi bi-android2 text-success"></i> ANDROID / PC
+              </button>
+            </li>
+            <li class="nav-item" role="presentation" style="flex: 1;">
+              <button class="nav-link w-100 d-flex align-items-center justify-content-center gap-2 py-2.5 rounded-3 fw-bold border-0 fs-7" id="ios-tab" data-bs-toggle="pill" data-bs-target="#pwa-ios" type="button" role="tab" aria-controls="pwa-ios" aria-selected="false" style="font-size: 0.8rem; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); outline: none;">
+                <i class="bi bi-apple text-white"></i> IPHONE / IPAD
+              </button>
+            </li>
+          </ul>
+
+          <!-- Custom style injection for active pills override -->
+          <style>
+            #pwaTab .nav-link.active {
+              background: rgba(45, 212, 191, 0.15) !important;
+              color: #2dd4bf !important;
+              box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.3) !important;
+            }
+            .step-container {
+              display: flex;
+              gap: 14px;
+              margin-bottom: 20px;
+              position: relative;
+            }
+            .step-container:not(:last-child)::after {
+              content: '';
+              position: absolute;
+              left: 14px;
+              top: 30px;
+              bottom: -15px;
+              width: 1px;
+              background: rgba(45, 212, 191, 0.1);
+            }
+            .step-number {
+              width: 30px;
+              height: 30px;
+              border-radius: 50%;
+              background: rgba(45, 212, 191, 0.08);
+              border: 1px solid rgba(45, 212, 191, 0.25);
+              color: #2dd4bf;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: 700;
+              font-size: 0.82rem;
+              flex-shrink: 0;
+            }
+            .step-content {
+              padding-top: 4px;
+            }
+            .step-title {
+              font-size: 0.88rem;
+              font-weight: 700;
+              color: #ffffff;
+              margin-bottom: 4px;
+            }
+            .step-desc {
+              font-size: 0.8rem;
+              color: rgba(237, 250, 250, 0.72);
+              line-height: 1.5;
+            }
+            
+            /* Mobile responsiveness optimizations for the PWA modal */
+            @media (max-width: 575.98px) {
+              #pwaInstallModal .modal-dialog {
+                margin: 16px;
+                max-width: calc(100% - 32px) !important;
+              }
+              #pwaInstallModal .modal-content {
+                border-radius: 16px;
+              }
+              #pwaInstallModal .modal-header {
+                padding: 20px 20px 8px !important;
+              }
+              #pwaInstallModal .modal-title {
+                font-size: 1.15rem !important;
+              }
+              #pwaInstallModal .modal-body {
+                padding: 16px 20px !important;
+              }
+              #pwaInstallModal .modal-body p.small {
+                font-size: 0.82rem !important;
+                margin-bottom: 16px !important;
+                line-height: 1.5;
+              }
+              #pwaTab .nav-link {
+                padding-top: 8px !important;
+                padding-bottom: 8px !important;
+                font-size: 0.72rem !important;
+                gap: 6px !important;
+              }
+              #pwaTabContent > div > div {
+                padding: 16px !important;
+                border-radius: 12px !important;
+              }
+              .step-container {
+                gap: 10px;
+                margin-bottom: 16px;
+              }
+              .step-number {
+                width: 26px;
+                height: 26px;
+                font-size: 0.75rem;
+              }
+              .step-container:not(:last-child)::after {
+                left: 12px;
+                top: 26px;
+                bottom: -12px;
+              }
+              .step-content {
+                padding-top: 2px;
+              }
+              .step-title {
+                font-size: 0.82rem !important;
+              }
+              .step-desc {
+                font-size: 0.75rem !important;
+              }
+              #pwaInstallModal .modal-footer {
+                padding: 0 20px 20px !important;
+                flex-direction: row !important;
+                gap: 8px !important;
+              }
+              #pwaInstallModal .modal-footer .btn {
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+                font-size: 0.8rem !important;
+              }
+              #modal-btn-install-direct i {
+                font-size: 1.05rem !important;
+              }
+            }
+          </style>
+
+          <div class="tab-content" id="pwaTabContent">
+            <!-- Android / PC Tab Content -->
+            <div class="tab-pane fade show active" id="pwa-android" role="tabpanel" aria-labelledby="android-tab">
+              <div style="background: rgba(8, 20, 26, 0.4); padding: 20px; border-radius: 14px; border: 1px solid rgba(190, 239, 255, 0.08);">
+                <div class="step-container">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    <div class="step-title">Ketuk Pasang Aplikasi</div>
+                    <div class="step-desc">Tekan tombol <strong style="color: #2dd4bf;">"Pasang Sekarang"</strong> di bawah dialog untuk mulai instalasi.</div>
+                  </div>
+                </div>
+                <div class="step-container">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    <div class="step-title">Konfirmasi Pemasangan</div>
+                    <div class="step-desc">Pilih opsi <strong style="color: #ffffff;">Instal</strong> atau <strong style="color: #ffffff;">Tambahkan</strong> ketika jendela konfimasi sistem muncul di browser.</div>
+                  </div>
+                </div>
+                <div class="step-container mb-0">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    <div class="step-title">Aplikasi Siap Digunakan</div>
+                    <div class="step-desc">Ikon aplikasi resmi akan otomatis terpasang pada layar utama perangkat Anda secara instan.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- iOS / Safari Tab Content -->
+            <div class="tab-pane fade" id="pwa-ios" role="tabpanel" aria-labelledby="ios-tab">
+              <div style="background: rgba(8, 20, 26, 0.4); padding: 20px; border-radius: 14px; border: 1px solid rgba(190, 239, 255, 0.08);">
+                <div class="step-container">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    <div class="step-title">Buka Menu Bagikan</div>
+                    <div class="step-desc">Ketuk ikon <strong style="color: #2dd4bf;">Bagikan (Share)</strong> <i class="bi bi-share text-info"></i> pada bagian panel navigasi bawah browser Safari.</div>
+                  </div>
+                </div>
+                <div class="step-container">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    <div class="step-title">Tambahkan ke Layar Utama</div>
+                    <div class="step-desc">Gulir pilihan ke bawah lalu pilih menu <strong style="color: #ffffff;">Tambah ke Layar Utama (Add to Home Screen)</strong> <i class="bi bi-plus-square text-info"></i>.</div>
+                  </div>
+                </div>
+                <div class="step-container mb-0">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    <div class="step-title">Selesaikan Pemasangan</div>
+                    <div class="step-desc">Ketuk tombol <strong style="color: #2dd4bf;">Tambah (Add)</strong> di sudut kanan atas untuk menaruh ikon aplikasi di layar beranda.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex gap-2">
+          <button type="button" id="modal-btn-install-direct" class="btn fw-bold px-4 py-2.5 rounded-3 border-0 flex-fill d-flex align-items-center justify-content-center gap-2" onclick="triggerPwaInstallDirect()" style="background: #2dd4bf; color: #071e25; font-size: 0.88rem; box-shadow: 0 10px 15px -3px rgba(45, 212, 191, 0.25); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 12px 20px -3px rgba(45, 212, 191, 0.35)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 10px 15px -3px rgba(45, 212, 191, 0.25)';">
+            <i class="bi bi-cloud-arrow-down-fill fs-5"></i> Pasang Sekarang
+          </button>
+          <button type="button" class="btn fw-bold px-4 py-2.5 rounded-3 flex-fill d-flex align-items-center justify-content-center" data-bs-dismiss="modal" style="background: rgba(255, 255, 255, 0.06); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1) !important; font-size: 0.88rem; transition: background 0.15s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.1)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.06)';">Batal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => { 
+      e.preventDefault(); 
+      deferredPwaPrompt = e; 
+    });
+    
+    // Inisialisasi BS Modal
+    const pwaInstallModalEl = document.getElementById('pwaInstallModal');
+    let pwaBsModal = null;
+    if (pwaInstallModalEl) {
+      pwaBsModal = new bootstrap.Modal(pwaInstallModalEl);
+    }
+
+    document.getElementById('btn-install-pwa')?.addEventListener('click', () => {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then(() => {
+          deferredPwaPrompt = null;
+        });
+      } else {
+        if (pwaBsModal) {
+          pwaBsModal.show();
+        }
+      }
+    });
+
+    function triggerPwaInstallDirect() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            if (pwaBsModal) pwaBsModal.hide();
+          }
+          deferredPwaPrompt = null;
+        });
+      }
+    }
+  </script>
+</body>
+</html>

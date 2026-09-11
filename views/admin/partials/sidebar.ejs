@@ -1,0 +1,193 @@
+﻿<!-- views/admin/partials/sidebar.ejs — dark theme only -->
+<script>
+document.documentElement.setAttribute('data-theme', 'dark');
+document.documentElement.classList.remove('light-theme');
+if (document.body) document.body.classList.remove('light-theme');
+try { localStorage.removeItem('app-theme'); } catch(e) {}
+</script>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand" style="flex-direction:column;align-items:center;gap:10px;padding-bottom:16px;position:relative">
+    <button class="sb-close btn btn-g btn-sm d-lg-none" onclick="toggleSidebar()" aria-label="Tutup menu" style="position:absolute;top:10px;right:10px;width:32px;height:32px;padding:0;display:none;align-items:center;justify-content:center;border-radius:50%"><i class="bi bi-x-lg"></i></button>
+    <img src="/img/logo.png?v=zenradius" alt="ZenRadius" style="width:min(176px,78%);height:auto;max-height:52px;object-fit:contain;display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+    <div class="sb-icon" style="display:none"><i class="bi bi-wifi"></i></div>
+    <div style="width:100%">
+      <div class="sb-sub" style="text-align:center"><%= t('admin.panel', 'Admin Panel') %></div>
+      <% if (typeof multiRouterMode !== 'undefined' && multiRouterMode && allActiveRouters && allActiveRouters.length > 0) { %>
+        <div style="margin-top:10px;padding:8px;background:rgba(255,255,255,0.06);border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;display:flex;align-items:center;gap:4px">
+            <i class="bi bi-router"></i> Router Filter
+          </div>
+          <select class="form-select form-select-sm" style="font-size:12px;cursor:pointer" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>>🌐 Semua Router (<%= allActiveRouters.length %>)</option>
+            <% allActiveRouters.forEach(r => { %>
+              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>>
+                🔌 <%= r.name %> (<%= r.host %>)
+              </option>
+            <% }) %>
+          </select>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <% (sidebarSections || []).forEach((section) => { %>
+      <div class="sb-section"><%= section.labelKey ? t(section.labelKey, section.labelDefault) : section.labelDefault %></div>
+      <% section.items.forEach((item) => { %>
+        <a
+          href="<%= item.hrefResolved %>"
+          class="sb-item <%= (item.activePages || []).includes(activePage) ? 'active' : '' %>"
+        >
+          <i class="<%= item.icon %>"></i>
+          <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
+          <% if (item.key === 'update') { %>
+            <span id="updateBadge" style="display:none;margin-left:auto;padding:2px 7px;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;animation:pulse 1.5s infinite">● Update</span>
+          <% } %>
+        </a>
+      <% }) %>
+    <% }) %>
+
+    <% if (typeof isMasterAdmin === 'undefined' || !isMasterAdmin) { %>
+      <!-- Lisensi dinonaktifkan -->
+    <% } %>
+
+    <a href="/admin/logout" class="sb-item logout">
+      <i class="bi bi-box-arrow-left"></i><span><%= t('common.logout', 'Logout') %></span>
+    </a>
+    <div class="mt-4 px-3 py-2 text-center" style="border-top: 1px solid rgba(255,255,255,0.1);">
+      <a href="https://github.com/zenradius/zenradius" target="_blank"
+        style="color: #94a3b8; font-size: 11px; text-decoration: none; font-weight: 600;">
+        ZENRADIUS
+      </a>
+    </div>
+  </nav>
+</aside>
+
+<div id="lockedMenuModal" class="locked-menu-modal">
+  <div class="locked-menu-dialog" role="dialog" aria-modal="true" aria-labelledby="lockedMenuTitle">
+    <div class="locked-menu-head">
+      <div class="locked-menu-title">
+        <div class="locked-menu-icon">
+          <i class="bi bi-lock-fill"></i>
+        </div>
+        <div>
+          <div id="lockedMenuTitle" class="locked-menu-heading">Menu Terkunci</div>
+          <div class="locked-menu-subtitle">Aktivasi diperlukan untuk membuka fitur ini</div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-g btn-sm" onclick="hideLockedMenuNotice()" aria-label="Tutup" style="padding:6px 10px">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="locked-menu-body">
+      <div id="lockedMenuModalMessage">
+        Menu ini sedang terkunci.
+      </div>
+      <div class="locked-menu-notice">
+        Hubungi Master Admin untuk membuka akses ke menu ini.
+      </div>
+    </div>
+    <div class="locked-menu-footer">
+      <button type="button" class="btn btn-p" onclick="hideLockedMenuNotice()">
+        <i class="bi bi-check2-circle"></i> Mengerti
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    sb.classList.toggle('open');
+    ov.classList.toggle('show');
+  }
+
+  function showLockedMenuNotice(message) {
+    const modal = document.getElementById('lockedMenuModal');
+    const messageBox = document.getElementById('lockedMenuModalMessage');
+    if (messageBox) {
+      messageBox.textContent = message || 'Menu ini sedang terkunci.';
+    }
+    if (modal) {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    return false;
+  }
+
+  function hideLockedMenuNotice() {
+    const modal = document.getElementById('lockedMenuModal');
+    if (modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Language dropdown helper
+  document.addEventListener('click', function(event) {
+    const dropdowns = document.querySelectorAll('.lang-dropdown');
+    dropdowns.forEach(function(dropdown) {
+      if (!dropdown.contains(event.target)) dropdown.classList.remove('open');
+    });
+  });
+  function toggleLangDropdown(btn) {
+    const dropdown = btn.closest('.lang-dropdown');
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.contains('open');
+    document.querySelectorAll('.lang-dropdown').forEach(function(d) { d.classList.remove('open'); });
+    if (!isOpen) dropdown.classList.add('open');
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') hideLockedMenuNotice();
+  });
+
+  // Badge "Ada update" hanya di menu Update GitHub
+  (function() {
+    const badge = document.getElementById('updateBadge');
+    if (!badge) return;
+    const url = '/admin/api/update/check';
+    let interval = null;
+    async function checkUpdate() {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.needsUpdate) {
+          badge.style.display = 'inline-flex';
+          badge.title = 'Versi baru tersedia: ' + (data.remoteVersion || '');
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch (e) {}
+    }
+    checkUpdate();
+    // Polling ringan tiap 10 menit (jangan tiap detik, hemat git fetch)
+    interval = setInterval(checkUpdate, 600000);
+    // Tambah animasi pulse
+    const style = document.createElement('style');
+    style.textContent = '@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}';
+    document.head.appendChild(style);
+  })();
+</script>
+
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="bottom-nav" id="bottomNav">
+  <% (sidebarBottomNavItems || []).slice(0, 4).forEach((item) => { %>
+    <a
+      href="<%= item.hrefResolved %>"
+      class="bn-item <%= (item.activePages || []).includes(activePage) ? 'active' : '' %>"
+      <% if (item.locked) { %>
+        onclick='return showLockedMenuNotice(<%- JSON.stringify(item.lockedMessage) %>)'
+      <% } %>
+    >
+      <i class="<%= item.icon %>"></i>
+      <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
+    </a>
+  <% }) %>
+  <button class="bn-item" onclick="toggleSidebar()">
+    <i class="bi bi-grid-3x3-gap"></i>
+    <span><%= t('common.menu', 'Menu') %></span>
+  </button>
+</nav>

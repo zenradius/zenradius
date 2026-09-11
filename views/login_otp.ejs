@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= t('customer.otp_title', 'Verifikasi OTP') %> | <%= settings.company_header || 'ZenRadius - Pusat Layanan' %></title>
+    <link rel="icon" href="/img/icon.png" type="image/png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#173945">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/img/icon.png">
+    <style>
+        :root {
+            --bg: #173945;
+            --text: #edf7f5;
+            --primary: #22D3EE;
+            --btn-bg: rgba(35, 96, 96, 1);
+            --btn-color: #f4fffd;
+            --btn-border: rgba(126, 231, 219, 0.48);
+            --btn-shadow: 0 8px 20px rgba(10, 41, 50, 0.24);
+            --success: #4ade80;
+            --danger: #f87171;
+            --warning: #fbbf24;
+            --info: #60a5fa;
+            --muted: rgba(237, 250, 250, 0.58);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bg);
+            background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+                              radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
+                              linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 24px;
+            color: var(--text);
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid rgba(190, 239, 255, 0.28);
+            border-radius: 16px;
+            padding: 38px 32px 28px;
+            box-shadow: 0 20px 48px rgba(3, 14, 20, 0.45);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo {
+            width: min(220px, 72%);
+            height: auto;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 16px;
+        }
+
+        .sub {
+            font-size: 13px;
+            color: rgba(237, 250, 250, 0.72);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .copy {
+            font-size: 12px;
+            color: rgba(237, 250, 250, 0.58);
+            text-align: center;
+            line-height: 1.6;
+            max-width: 300px;
+            margin: 0 auto 26px;
+        }
+
+        .alert {
+            width: 100%;
+            border-radius: 10px;
+            font-size: 13px;
+            padding: 11px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .alert-danger {
+            background: rgba(248, 81, 73, 0.1);
+            color: #ff7b72;
+            border: 1px solid rgba(248, 81, 73, 0.22);
+        }
+
+        form {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .fg {
+            margin-bottom: 16px;
+            width: 100%;
+        }
+
+        .fl {
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #d9fffb;
+            margin-bottom: 7px;
+            display: block;
+            text-align: left;
+        }
+
+        .field {
+            position: relative;
+            width: 100%;
+        }
+
+        .field i {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(190, 239, 255, 0.7);
+            font-size: 15px;
+            pointer-events: none;
+        }
+
+        .fc {
+            width: 100%;
+            padding: 12px 14px 12px 40px;
+            font-size: 14px;
+            color: #f0fdfa;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(190, 239, 255, 0.22);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            letter-spacing: 8px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .fc::placeholder {
+            color: rgba(237, 250, 250, 0.38);
+            letter-spacing: 4px;
+        }
+
+        .fc:focus {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(45, 212, 191, 0.55);
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14);
+            color: #fff;
+        }
+
+        .btn-p {
+            align-self: center;
+            min-width: 160px;
+            max-width: 220px;
+            padding: 10px 22px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--btn-color);
+            background: linear-gradient(135deg, var(--btn-bg) 0%, #1d5264 52%, #205b68 100%);
+            border: 1px solid var(--btn-border);
+            border-radius: 10px;
+            box-shadow: var(--btn-shadow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .btn-p:hover {
+            background: linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%) !important;
+            border-color: rgba(166, 247, 235, 0.72) !important;
+            color: #fff !important;
+            filter: brightness(1.04);
+            transform: translateY(-1px);
+        }
+
+        .back-link {
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            margin-top: 14px;
+            font-size: 12px;
+        }
+
+        .back-link a {
+            color: #7dd3fc;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .foot {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(190, 239, 255, 0.12);
+            font-size: 11px;
+            color: rgba(237, 250, 250, 0.48);
+            text-align: center;
+            width: 100%;
+        }
+
+        .foot a {
+            color: #7dd3fc;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @media (prefers-color-scheme: light) {
+            body {
+                background: var(--bg);
+                background-image: radial-gradient(circle at 8% 0%, #e0f2fe 0%, transparent 34%),
+                                  radial-gradient(circle at 100% 100%, #f0f9ff 0%, transparent 42%),
+                                  linear-gradient(135deg, #f8fafc 0%, #f1f5f9 52%, #e2e8f0 100%);
+            }
+
+            .card {
+                background: var(--bg);
+                border: 1px solid rgba(79, 70, 229, 0.2);
+                box-shadow: 0 20px 48px rgba(0, 0, 0, 0.1);
+            }
+
+            .fc {
+                background: rgba(79, 70, 229, 0.05);
+                border: 1px solid rgba(79, 70, 229, 0.2);
+            }
+
+            .fc:focus {
+                border-color: rgba(79, 70, 229, 0.55);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <img class="logo" src="/img/logo.png?v=zenradius" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.src='/img/icon.png'">
+            <p class="sub">Verifikasi OTP</p>
+            <p class="copy">Selesaikan verifikasi untuk masuk ke pusat layanan pelanggan.</p>
+
+            <% if (error) { %>
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-circle"></i> <%= error %>
+                </div>
+            <% } %>
+
+            <form action="/customer/login-otp" method="POST" onsubmit="return validateOTPForm(event)">
+                <div class="fg">
+                    <label class="fl" for="otp">Masukkan 4 Digit Kode OTP</label>
+                    <div class="field">
+                        <i class="bi bi-shield-check"></i>
+                        <input class="fc" id="otp" name="otp" type="text" maxlength="4" pattern="\d{4}" placeholder="0000" required autocomplete="one-time-code" autofocus>
+                    </div>
+                    <small id="otp-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
+                </div>
+
+                <button class="btn-p" type="submit">
+                    <i class="bi bi-check-circle"></i> Verifikasi & Masuk
+                </button>
+            </form>
+
+            <div class="back-link">
+                <a href="/customer/login"><i class="bi bi-arrow-left"></i> Kembali ke Login</a>
+            </div>
+
+            <div class="foot">
+                <p style="margin-bottom:4px">Kode verifikasi telah dikirim ke: <strong><%= phone %></strong></p>
+                <div>&copy; <%= new Date().getFullYear() %> <%- footerInfo %></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function validateOTPForm(e) {
+            e.preventDefault();
+            
+            const otp = document.getElementById('otp').value.trim();
+            const otpError = document.getElementById('otp-error');
+            
+            otpError.style.display = 'none';
+            
+            let isValid = true;
+            
+            if (!otp) {
+                otpError.textContent = 'Kode OTP wajib diisi.';
+                otpError.style.display = 'block';
+                isValid = false;
+            } else if (!/^\d{4}$/.test(otp)) {
+                otpError.textContent = 'Kode OTP harus 4 digit angka.';
+                otpError.style.display = 'block';
+                isValid = false;
+            }
+            
+            if (isValid) {
+                document.querySelector('form').submit();
+            }
+            
+            return false;
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>

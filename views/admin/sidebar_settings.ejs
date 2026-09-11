@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pengaturan Sidebar | <%= company %></title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" href="/img/pwa-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/img/pwa-icon.svg">
+  <link rel="manifest" href="/admin/manifest.webmanifest">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .sidebar-info-card .card-hd { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    .sidebar-info-title { display:flex; align-items:center; gap:10px; margin:0; font-size:14px; }
+    .sidebar-info-icon { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; background:rgba(59,130,246,.14); color:#93c5fd; }
+    .sidebar-info-icon.activation { background:rgba(59,130,246,.14); color:#93c5fd; }
+    .sidebar-info-panel { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border:1px solid rgba(59,130,246,.2); border-radius:8px; background:rgba(59,130,246,.08); color:#bfdbfe; font-size:13px; line-height:1.55; }
+    .sidebar-info-panel.activation { border-color:rgba(59,130,246,.2); background:rgba(59,130,246,.08); color:#bfdbfe; }
+    .sidebar-info-panel i { margin-top:2px; }
+    .sidebar-note-list { display:grid; gap:8px; margin:14px 0 0; padding:0; list-style:none; }
+    .sidebar-note-list li { display:flex; align-items:flex-start; gap:9px; color:#cbd5e1; font-size:13px; line-height:1.5; }
+    .sidebar-note-list i { color:#60a5fa; margin-top:2px; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'sidebar_settings', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-layout-sidebar-inset"></i> Pengaturan Sidebar
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-shield-lock"></i> Kontrol Menu</span>
+            <div class="lang-dropdown">
+        <button type="button" class="lang-btn" onclick="toggleLangDropdown(this)" aria-haspopup="true" aria-expanded="false">
+          <i class="bi bi-globe"></i> <span><%= (lang || 'id').toUpperCase() %></span> <i class="bi bi-chevron-down" style="font-size:10px"></i>
+        </button>
+        <div class="lang-menu">
+          <a href="/lang/id" class="lang-item <%= (lang || 'id') === 'id' ? 'active' : '' %>">Indonesia</a>
+          <a href="/lang/en" class="lang-item <%= (lang || 'id') === 'en' ? 'active' : '' %>">English</a>
+        </div>
+      </div>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type === 'success' ? 's' : 'd' %>">
+        <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-circle' %>"></i>
+        <%= msg.text %>
+      </div>
+    <% } %>
+
+    <div style="display:grid;gap:16px">
+
+      <div class="card sidebar-info-card">
+        <div class="card-hd">
+          <h6 class="sidebar-info-title"><span class="sidebar-info-icon"><i class="bi bi-info-circle-fill"></i></span> Catatan Pengaturan</h6>
+          <span class="badge" style="background:rgba(34,211,238,.16);color:#a5f3fc;padding:6px 10px;border-radius:999px"><i class="bi bi-sliders"></i> Manajemen Sidebar</span>
+        </div>
+        <div class="card-bd">
+          <div class="sidebar-info-panel" style="border-color:rgba(34,211,238,.2);background:rgba(34,211,238,.08);color:#cffafe">
+            <i class="bi bi-lightbulb-fill" style="color:#22d3ee"></i>
+            <span>Kelola tata letak menu navigasi utama Anda dengan mudah. Anda dapat menyembunyikan menu yang tidak digunakan atau menampilkannya kembali kapan saja.</span>
+          </div>
+          <ul class="sidebar-note-list">
+            <li><i class="bi bi-eye-slash-fill" style="color:#22d3ee"></i><span>Status <strong>Sembunyikan</strong> akan menyembunyikan menu langsung dari sidebar utama agar tampilan lebih rapi dan fokus.</span></li>
+            <li><i class="bi bi-check2-circle" style="color:#22d3ee"></i><span>Gunakan tombol <strong>Simpan Pengaturan Sidebar</strong> di bawah tabel untuk menerapkan perubahan secara instan.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <h6 style="margin:0"><i class="bi bi-grid-3x3-gap"></i> Status Semua Menu Sidebar</h6>
+          <% if (canManageSidebar) { %>
+            <span class="badge badge-success" style="background:rgba(34,197,94,.18);color:#bbf7d0;padding:6px 10px;border-radius:999px">Admin dapat mengatur tampilan menu sidebar</span>
+          <% } else { %>
+            <span class="badge badge-warning" style="background:rgba(245,158,11,.18);color:#fde68a;padding:6px 10px;border-radius:999px">Mode baca saja untuk akun ini</span>
+          <% } %>
+        </div>
+        <div class="card-bd">
+
+          <% if (canManageSidebar) { %>
+            <form method="POST" action="/admin/sidebar-settings">
+              <div class="tbl-wrap">
+                <table class="dtbl">
+                  <thead>
+                    <tr>
+                      <th>Menu</th>
+                      <th>Section</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% menuConfigs.forEach((menu) => { %>
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px">
+                            <i class="<%= menu.icon %>"></i>
+                            <div>
+                              <div style="font-weight:700"><%= menu.labelKey ? t(menu.labelKey, menu.labelDefault) : menu.labelDefault %></div>
+                              <div class="hint mono"><%= menu.href %></div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="hint"><%= menu.sectionLabelKey ? t(menu.sectionLabelKey, menu.sectionLabel) : menu.sectionLabel %></span></td>
+                        <td><span class="hint"><%= menu.roleLabel %></span></td>
+                        <td style="min-width:180px">
+                          <select class="fs" name="menu_state[<%= menu.key %>]">
+                            <option value="visible" <%= menu.state === 'visible' ? 'selected' : '' %>>Tampil</option>
+                            <option value="hidden" <%= menu.state === 'hidden' ? 'selected' : '' %>>Sembunyikan</option>
+                          </select>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap">
+                <button type="submit" class="btn btn-p">
+                  <i class="bi bi-save"></i> Simpan Pengaturan Sidebar
+                </button>
+              </div>
+            </form>
+          <% } else { %>
+            <div class="alert alert-d">
+              <i class="bi bi-lock"></i> Hanya admin utama yang dapat mengubah status menu sidebar.
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

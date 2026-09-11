@@ -1,0 +1,16 @@
+{
+  "name": "Pusat Layanan Agen ZenRadius",
+  "short_name": "Agen ZenRadius",
+  "start_url": "/agent/login",
+  "scope": "/agent/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#173945",
+  "theme_color": "#2dd4bf",
+  "icons": [{
+    "src": "/img/icon.png",
+    "sizes": "any",
+    "type": "image/png",
+    "purpose": "any maskable"
+  }]
+}

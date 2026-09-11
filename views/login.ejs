@@ -1,0 +1,3131 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZenRadius - One Platform for Your Network</title>
+
+  <!-- Preconnect to CDN for faster loading -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Premium Minimalist Corporate typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0052FF">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/img/icon.png">
+  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="stylesheet" href="/css/unified.css">
+
+    <style>    /* ── CSS Variables for Typography ── */
+    :root {
+      --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+      --font-display: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-mono: 'Space Grotesk', monospace;
+      --portal-bg: #101820;
+      --portal-panel: rgba(17, 29, 36, 0.94);
+      --portal-panel-strong: rgba(12, 23, 30, 0.98);
+      --portal-line: rgba(124, 221, 218, 0.18);
+      --portal-primary: #2dd4bf;
+      --portal-primary-strong: #22a7f0;
+      --portal-accent: #fbbf24;
+      --portal-text: #edf7f5;
+      --portal-muted: #a8bec2;
+      --landing-bg: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+            radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
+            linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      --portal-surface: linear-gradient(140deg, rgba(68, 203, 184, 0.24) 0%, rgba(46, 160, 211, 0.22) 46%, rgba(49, 184, 168, 0.17) 100%);
+    }
+
+    body {
+      background: var(--landing-bg);
+      color: var(--portal-text);
+    }
+
+    .custom-navbar {
+      background: rgba(23, 57, 69, 0.96) !important;
+      border-bottom: 1px solid rgba(190, 239, 255, 0.38);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .custom-navbar .nav-link,
+    .custom-navbar .navbar-brand,
+    .custom-navbar .btn {
+      color: var(--portal-text) !important;
+    }
+
+    .custom-navbar .navbar-nav {
+      align-items: center;
+      gap: 2px !important;
+    }
+
+    .custom-navbar .nav-link {
+      padding: 0.52rem 0.62rem !important;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .custom-navbar .nav-link:hover,
+    .custom-navbar .nav-link:focus,
+    .custom-navbar .nav-link.active {
+      background: rgba(45, 212, 191, 0.1);
+      color: #ffffff !important;
+    }
+
+    .custom-navbar .header-actions {
+      margin-left: 0.75rem;
+    }
+
+    .custom-navbar .btn-portal-access {
+      padding: 0.48rem 0.85rem;
+      border-radius: 9px;
+      white-space: nowrap;
+    }
+
+    .custom-navbar .dropdown-menu {
+      background: rgba(23, 57, 69, 0.98);
+      border: 1px solid rgba(190, 239, 255, 0.38);
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(2, 10, 14, 0.32);
+      padding: 0.5rem 0;
+    }
+
+    .custom-navbar .dropdown-item {
+      color: var(--portal-text);
+      padding: 0.7rem 1rem;
+      font-weight: 600;
+    }
+
+    .custom-navbar .dropdown-item:hover,
+    .custom-navbar .dropdown-item:focus {
+      background: rgba(45, 212, 191, 0.12);
+      color: #ffffff;
+    }
+
+    .btn-portal-access {
+      background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);
+      border: 1px solid rgba(45, 212, 191, 0.6);
+      color: #062c2a !important;
+      font-weight: 700;
+      box-shadow: 0 10px 22px rgba(45, 212, 191, 0.22);
+    }
+
+    .btn-portal-access:hover {
+      filter: brightness(1.05);
+      color: #062c2a !important;
+    }
+
+    .btn-submit-login {
+      background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);
+      border: 1px solid rgba(45, 212, 191, 0.6);
+      color: #042126;
+      font-weight: 800;
+      box-shadow: 0 10px 24px rgba(45, 212, 191, 0.22);
+    }
+
+    .btn-submit-login:hover {
+      filter: brightness(1.04);
+      color: #042126;
+    }
+
+    .password-field-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .password-field-wrapper .form-control {
+      padding-right: 42px;
+    }
+
+    .password-field-wrapper .eye-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: rgba(190, 239, 255, 0.72);
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      z-index: 2;
+      transition: all 0.2s ease;
+      box-shadow: none;
+    }
+
+    .password-field-wrapper .eye-toggle:hover {
+      background: transparent;
+      color: rgba(45, 212, 191, 0.95);
+      border: none;
+      box-shadow: none;
+    }
+
+    .password-field-wrapper .eye-toggle:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    /* ── HERO SECTION — Dark portal theme to match login/register ── */
+    .hero-section {
+      padding: 44px 0 64px;
+      background: var(--landing-bg);
+    }
+
+    .section-padding,
+    .testimonials-section,
+    .faq-section,
+    #contact-info,
+    #services,
+    #features,
+    #packages,
+    #faq,
+    #testimonials {
+      background: linear-gradient(180deg, rgba(11, 20, 26, 0.96), rgba(16, 24, 32, 0.92));
+      color: var(--portal-text);
+    }
+
+    .section-padding {
+      padding: 72px 0;
+    }
+
+    #contact-info {
+      padding-top: 78px;
+      padding-bottom: 78px;
+    }
+
+    .feature-box,
+    .pkg-card,
+    .testimonial-card,
+    .info-card,
+    .contact-info-card,
+    .pkg-simulator,
+    .sim-recommend,
+    .sim-estimate-block,
+    .faq-accordion .accordion-item,
+    .faq-accordion .accordion-button,
+    .faq-accordion .accordion-body {
+      background: rgba(12, 29, 36, 0.74) !important;
+      border-color: rgba(124, 221, 218, 0.18) !important;
+      color: var(--portal-text) !important;
+    }
+
+    .faq-accordion .accordion-button:not(.collapsed) {
+      color: #d9fffb !important;
+      background: rgba(45, 212, 191, 0.08) !important;
+    }
+
+    .faq-accordion .accordion-button::after {
+      filter: brightness(1.4);
+    }
+
+    .hero-package-simulator {
+      background: transparent;
+    }
+
+    .sim-step-btn {
+      color: var(--portal-text);
+    }
+
+    .sim-step-btn:hover {
+      border-color: rgba(45, 212, 191, 0.5);
+      color: #d9fffb;
+    }
+
+    .sim-need-btn {
+      color: var(--portal-text);
+    }
+
+    .sim-need-btn.active {
+      background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);
+      border-color: transparent;
+      color: #062c2a;
+    }
+
+    .sim-estimate,
+    .sim-rec-name,
+    .sim-step-value,
+    .sim-title {
+      color: #f8fbff !important;
+    }
+
+    .sim-label,
+    .sim-users-unit,
+    .sim-eyebrow,
+    .sim-rec-meta,
+    .sim-est-label,
+    .sim-custom-msg,
+    .sim-need-btn .sim-need-icon {
+      color: rgba(237, 250, 250, 0.78) !important;
+    }
+
+    .sim-estimate-block,
+    .sim-recommend,
+    .sim-need-btn,
+    .sim-step-btn,
+    .sim-cta.is-contact {
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(460px, 560px);
+      gap: 18px;
+      align-items: center;
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .hero-section > .container {
+      max-width: 1400px;
+    }
+
+    .hero-grid > * {
+      min-width: 0;
+    }
+
+    .hero-copy {
+      max-width: 760px;
+      width: 100%;
+      justify-self: start;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      padding-right: 10px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(45, 212, 191, 0.12);
+      border: 1px solid rgba(45, 212, 191, 0.24);
+      color: #dfeff0;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      font-family: var(--font-sans);
+    }
+
+    .hero-badge .bi { font-size: 1rem; }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3vw, 2.7rem);
+      font-weight: 800;
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+      color: #f8fbff;
+      margin-bottom: 14px;
+      max-width: 780px;
+    }
+
+    .holo-speed {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(12, 29, 36, 0.72);
+      border: 1px solid rgba(124, 221, 218, 0.22);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-family: var(--font-display);
+    }
+
+    .holo-bolt { color: #F59E0B; font-size: 1.2em; }
+
+    .holo-num {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #f8fbff;
+    }
+
+    .holo-sub {
+      font-size: 0.85rem;
+      color: #d9fffb;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      color: rgba(237, 250, 250, 0.82);
+      line-height: 1.65;
+      margin-bottom: 18px;
+      max-width: 820px;
+    }
+
+    .hero-cta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+      width: min(100%, 760px);
+    }
+
+    .hero-cta-grid .btn {
+      min-width: 0 !important;
+      width: 100%;
+      padding-top: 0.82rem !important;
+      padding-bottom: 0.82rem !important;
+    }
+
+    .cta-billing {
+      grid-column: 1 / -1;
+      background: rgba(255, 255, 255, 0.04) !important;
+      border-color: rgba(124, 221, 218, 0.2) !important;
+      color: #edf7f5 !important;
+    }
+
+    .cta-billing:hover {
+      background: rgba(45, 212, 191, 0.08) !important;
+      border-color: rgba(45, 212, 191, 0.45) !important;
+      color: #d9fffb !important;
+    }
+
+    .stats-strip {
+      background: transparent;
+      padding: 12px 0 18px;
+      margin-top: 0;
+      width: 100%;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(110px, 1fr));
+      gap: 10px;
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .stat-item {
+      min-width: 0;
+      background: rgba(12, 29, 36, 0.72);
+      border: 1px solid rgba(124, 221, 218, 0.14);
+      padding: 11px 9px;
+      border-radius: 12px;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      min-height: 78px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stat-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.2);
+    }
+
+    .stat-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: #f8fbff;
+      margin-bottom: 3px;
+      line-height: 1.2;
+    }
+
+    .stat-number .bi { font-size: 0.9em; }
+
+    .stat-label {
+      font-family: var(--font-sans);
+      font-size: 0.62rem;
+      color: #d9fffb;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+      .hero-copy { max-width: 100%; text-align: center; justify-self: stretch; align-items: center; padding-right: 0; }
+      .hero-badge { margin-left: auto; margin-right: auto; }
+      .hero-cta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-package-simulator { justify-self: center; margin-left: 0; }
+      .hero-stats {
+        max-width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .hero-section { padding: 40px 0 60px; }
+      .hero-cta-grid { grid-template-columns: 1fr; }
+      .stats-strip { padding-bottom: 12px; }
+      .hero-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+      }
+      .stat-item { min-height: 84px; }
+      .stat-number { font-size: 0.98rem; }
+      .stat-label { font-size: 0.66rem; }
+    }
+
+    /* ── GLASSMORPHISM BASE CLASS — Light Theme ── */
+    .glass-card {
+      background: rgba(12, 29, 36, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(124, 221, 218, 0.15);
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(3, 14, 20, 0.28);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    }
+
+    .glass-card:hover {
+      background: rgba(16, 30, 40, 0.85);
+      border-color: rgba(45, 212, 191, 0.45);
+      box-shadow: 0 12px 30px rgba(45, 212, 191, 0.12);
+      transform: translateY(-2px);
+    }
+
+    /* ── SECTION BASE STYLES — Light Theme ── */
+    .section-padding {
+      padding: 72px 0;
+    }
+
+    .section-title-badge {
+      display: inline-block;
+      background: rgba(45, 212, 191, 0.10);
+      border: 1px solid rgba(45, 212, 191, 0.28);
+      color: #d9fffb;
+      padding: 7px 18px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      font-family: var(--font-sans);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      font-weight: 800;
+      color: #f8fbff;
+      margin-bottom: 15px;
+    }
+
+    .section-subtitle {
+      font-family: var(--font-sans);
+      color: rgba(237, 250, 250, 0.82) !important;
+      font-size: 1.05rem;
+      max-width: 650px;
+      margin: 0 auto 45px;
+      line-height: 1.6;
+    }
+
+    /* Package Cards — Light Theme */
+    .pkg-card {
+      padding: 30px 24px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: rgba(12, 29, 36, 0.72);
+      border: 1px solid rgba(124, 221, 218, 0.15);
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .pkg-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(45, 212, 191, 0.12);
+      border-color: rgba(45, 212, 191, 0.45);
+    }
+
+    .pkg-badge-popular {
+      position: absolute;
+      top: -14px;
+      right: 20px;
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+      font-family: var(--font-sans);
+    }
+
+    .pkg-speed-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(45, 212, 191, 0.12);
+      color: #d9fffb;
+      padding: 4px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      width: fit-content;
+      font-family: var(--font-sans);
+    }
+
+    .pkg-name {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #f8fbff;
+      margin-bottom: 8px;
+    }
+
+    .pkg-price {
+      font-family: var(--font-display);
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #f8fbff;
+      margin-bottom: 4px;
+    }
+
+    .pkg-period {
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      color: rgba(237, 250, 250, 0.7);
+      margin-bottom: 20px;
+    }
+
+    .pkg-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 25px 0;
+      flex-grow: 1;
+    }
+
+    .pkg-features li {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      font-size: 0.95rem;
+      color: rgba(237, 250, 250, 0.8);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-sans);
+    }
+
+    .pkg-features li:last-child {
+      border-bottom: none;
+    }
+
+    .pkg-features li i {
+      color: #10B981;
+      font-size: 1.1rem;
+    }
+
+    .btn-pkg-action {
+      background: rgba(45, 212, 191, 0.08);
+      border: 1px solid rgba(45, 212, 191, 0.26);
+      color: #d9fffb;
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      text-align: center;
+      display: block;
+      transition: all 0.3s ease;
+      font-family: var(--font-sans);
+    }
+
+    .btn-pkg-action:hover {
+      background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);
+      border-color: transparent;
+      color: #042126;
+      box-shadow: 0 8px 20px rgba(45, 212, 191, 0.24);
+    }
+
+    /* Features Highlight Cards — Light Theme */
+    .feature-box {
+      padding: 28px 22px;
+      height: 100%;
+      border-radius: 18px;
+      background: rgba(12, 29, 36, 0.72);
+      border: 1px solid rgba(124, 221, 218, 0.15);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .feature-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(45, 212, 191, 0.12);
+      border-color: rgba(45, 212, 191, 0.45);
+    }
+
+    .feature-icon-wrapper {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(45, 212, 191, 0.18) 0%, rgba(34, 167, 240, 0.16) 100%);
+      border: 1px solid rgba(45, 212, 191, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #d9fffb;
+      margin-bottom: 20px;
+    }
+
+    .feature-title {
+      font-family: var(--font-display);
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: #f8fbff;
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      font-family: var(--font-sans);
+      color: rgba(237, 250, 250, 0.8) !important;
+      font-size: 0.94rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Contact & Quick Service Info Cards — Light Theme */
+    .info-card {
+      padding: 24px;
+      border-radius: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      height: 100%;
+      background: rgba(12, 29, 36, 0.72);
+      border: 1px solid rgba(124, 221, 218, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(45, 212, 191, 0.12);
+      border-color: rgba(45, 212, 191, 0.45);
+    }
+
+    .info-card h5 {
+      font-family: var(--font-display);
+      color: #f8fbff !important;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+
+    .info-card p, .info-card .card-text-desc {
+      font-family: var(--font-sans);
+      color: rgba(237, 250, 250, 0.8) !important;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .info-icon {
+      font-size: 1.8rem;
+      color: #d9fffb;
+      background: linear-gradient(135deg, rgba(45, 212, 191, 0.18) 0%, rgba(34, 167, 240, 0.18) 100%);
+      border: 1px solid rgba(45, 212, 191, 0.3);
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Testimonials — Light Theme */
+    .testimonials-section {
+      background: linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%);
+      padding-top: 72px;
+      padding-bottom: 72px;
+    }
+
+    .testimonials {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 22px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .testimonial-card {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid #E2E8F0;
+      border-radius: 18px;
+      padding: 24px 22px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .testimonial-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.18);
+    }
+
+    .testimonial-card p {
+      font-family: var(--font-sans);
+      color: #e6f7f5;
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .testimonial-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(151, 239, 228, 0.22);
+    }
+
+    .testimonial-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563EB 0%, #22A7F0 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      font-family: var(--font-display);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+    }
+
+    .testimonial-meta strong {
+      font-family: var(--font-display);
+      color: #ffffff;
+      font-size: 1rem;
+      display: block;
+    }
+
+    .testimonial-meta span {
+      font-family: var(--font-sans);
+      color: #c8ecea;
+      font-size: 0.85rem;
+    }
+
+    /* FAQ Section — Light Theme */
+    .faq-section {
+      background: linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%);
+      position: relative;
+    }
+
+    .faq-section .container {
+      position: relative;
+      z-index: 1;
+    }
+
+    .faq-accordion {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .faq-accordion .accordion-item {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .faq-accordion .accordion-item:first-child {
+      border-top: 1px solid #E2E8F0;
+    }
+
+    .faq-accordion .accordion-button {
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0F172A;
+      background: transparent;
+      padding: 18px 20px;
+      box-shadow: none;
+      border: none;
+      border-radius: 0;
+    }
+
+    .faq-accordion .accordion-button:not(.collapsed) {
+      color: #0F172A;
+      background: rgba(37, 99, 235, 0.04);
+      box-shadow: none;
+    }
+
+    .faq-accordion .accordion-button::after {
+      width: 1.1rem;
+      height: 1.1rem;
+      background-size: 1.1rem;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230F172A'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+      transition: transform 0.2s ease;
+    }
+
+    .faq-accordion .accordion-button:not(.collapsed)::after {
+      transform: rotate(180deg);
+    }
+
+    .faq-accordion .accordion-button:focus {
+      box-shadow: none;
+      border-color: transparent;
+    }
+
+    .faq-accordion .accordion-body {
+      font-family: var(--font-sans);
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.75;
+      padding: 0 20px 18px;
+      background: rgba(248, 250, 252, 0.7);
+    }
+
+    .faq-accordion .accordion-button strong {
+      font-family: var(--font-display);
+      color: #0F172A;
+    }
+
+    /* Contact Section — Match portal login/register theme */
+    #contact-info {
+      background: linear-gradient(180deg, rgba(11, 20, 26, 0.96), rgba(16, 24, 32, 0.92));
+    }
+
+    .company-info-card,
+    .contact-info-card {
+      background: rgba(12, 29, 36, 0.74) !important;
+      border: 1px solid rgba(124, 221, 218, 0.18) !important;
+      border-radius: 16px;
+      padding: 16px 16px 14px;
+      min-height: 150px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    }
+
+    #contact-info .row.g-4.align-items-center {
+      align-items: stretch;
+      margin-top: 0;
+      --bs-gutter-x: 0.9rem;
+      --bs-gutter-y: 0.9rem;
+    }
+
+    #contact-info .col-lg-5,
+    #contact-info .col-lg-7,
+    #contact-info .row.g-3 > .col-sm-6 {
+      display: flex;
+      align-items: stretch;
+    }
+
+    #contact-info .col-lg-5 {
+      flex: 0 0 38%;
+      max-width: 38%;
+    }
+
+    #contact-info .col-lg-7 {
+      flex: 0 0 62%;
+      max-width: 62%;
+    }
+
+    #contact-info .row.g-3 {
+      --bs-gutter-x: 1rem;
+      --bs-gutter-y: 1rem;
+      margin-top: 0;
+      width: calc(100% + 1rem);
+      margin-left: -0.5rem;
+      margin-right: -0.5rem;
+      align-items: stretch;
+      display: flex;
+      flex-wrap: wrap;
+      height: 100%;
+    }
+
+    #contact-info .row.g-3 > .col-sm-6 {
+      flex: 0 0 50%;
+      max-width: 50%;
+      height: 100%;
+      display: flex;
+    }
+
+    .company-info-card {
+      width: 100%;
+      gap: 0.6rem;
+      justify-content: flex-start;
+      min-height: 100%;
+      height: 100%;
+      padding: 18px 18px 16px;
+      box-sizing: border-box;
+    }
+
+    .company-info-card > .mb-3 {
+      margin-bottom: 0 !important;
+    }
+
+    .company-info-card img {
+      max-width: 190px !important;
+      display: block;
+      width: 100%;
+      height: auto;
+      margin: 0 auto 0.15rem;
+    }
+
+    .company-info-card p.leading-relaxed {
+      margin-bottom: 0 !important;
+      line-height: 1.55;
+      font-size: 0.94rem;
+      letter-spacing: 0.01em;
+    }
+
+    .company-info-card .mt-4.pt-3 {
+      margin-top: auto !important;
+      padding-top: 0.8rem !important;
+    }
+
+    .company-info-card .d-flex.align-items-start.gap-3 {
+      gap: 0.65rem !important;
+      margin-top: 0.25rem !important;
+      padding-top: 0.7rem !important;
+      border-top: 1px solid rgba(148, 163, 184, 0.18);
+      margin-bottom: 0 !important;
+      min-height: 72px;
+      align-items: flex-start;
+    }
+
+    .company-info-card .d-flex.align-items-start.gap-3 > i {
+      width: 34px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .company-info-card .d-flex.align-items-start.gap-3 > div {
+      width: calc(100% - 42px);
+      min-width: 0;
+    }
+
+    .contact-info-card {
+      width: 100%;
+      justify-content: flex-start;
+      align-items: flex-start;
+      min-height: 100%;
+      height: 100%;
+      padding: 14px 16px 14px;
+      box-sizing: border-box;
+      min-height: 136px;
+      padding-top: 15px;
+      padding-bottom: 15px;
+    }
+
+    .contact-info-card .bi {
+      margin-bottom: 0.35rem !important;
+      font-size: 1.55rem;
+      line-height: 1;
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: rgba(76, 128, 255, 0.06);
+      flex-shrink: 0;
+      margin-top: 0;
+    }
+
+    .contact-info-card h5,
+    .contact-info-card p,
+    .contact-info-card a {
+      width: 100%;
+      max-width: 100%;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .contact-info-card h5 {
+      font-size: 0.98rem;
+      line-height: 1.35;
+      margin-top: 0.15rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .contact-info-card p,
+    .contact-info-card a {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-top: 0.1rem;
+    }
+
+    .company-info-card p,
+    .company-info-card .small,
+    .contact-info-card p,
+    .contact-info-card .small,
+    .contact-info-card a,
+    .company-info-card h6,
+    .company-info-card h5,
+    .contact-info-card h5,
+    .contact-info-card h6 {
+      line-height: 1.5;
+    }
+
+    .contact-info-card h5,
+    .company-info-card h5,
+    .company-info-card h6 {
+      margin-bottom: 0.5rem;
+    }
+
+    .company-info-card:hover,
+    .contact-info-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(45, 212, 191, 0.12);
+      border-color: rgba(45, 212, 191, 0.45) !important;
+    }
+
+    .contact-info-card .info-icon {
+      background: linear-gradient(135deg, rgba(45, 212, 191, 0.18) 0%, rgba(34, 167, 240, 0.16) 100%);
+      border-color: rgba(45, 212, 191, 0.3);
+      color: #d9fffb;
+    }
+
+    .company-info-card p,
+    .company-info-card .small,
+    .contact-info-card p,
+    .contact-info-card .small,
+    .contact-info-card a,
+    .company-info-card h6,
+    .company-info-card h5,
+    .contact-info-card h5,
+    .contact-info-card h6 {
+      color: rgba(237, 250, 250, 0.8) !important;
+    }
+
+    .company-info-card .text-white,
+    .contact-info-card .text-white,
+    .company-info-card .fw-bold,
+    .contact-info-card .fw-bold {
+      color: #f8fbff !important;
+    }
+
+    /* Footer — Match teal palette */
+    .site-footer {
+      background: #173945;
+      border-top: 1px solid rgba(190, 239, 255, 0.32);
+      padding: 26px 0 18px;
+      margin-top: 32px;
+      box-shadow: none;
+    }
+
+    .footer-panel {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .footer-legal {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px 22px;
+    }
+
+    .footer-legal li {
+      margin: 0;
+    }
+
+    .footer-legal a {
+      font-family: var(--font-sans);
+      color: rgba(237, 250, 250, 0.7);
+      text-decoration: none;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      transition: color 0.2s ease;
+    }
+
+    .footer-legal a:hover {
+      color: #7dd3fc;
+    }
+
+    .footer-bottom {
+      border-top: none;
+      margin-top: 12px;
+      padding-top: 0;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      color: rgba(237, 250, 250, 0.72);
+    }
+
+    .footer-bottom a {
+      color: #7dd3fc;
+      text-decoration: none;
+    }
+
+    .footer-bottom a:hover {
+      text-decoration: underline;
+    }
+
+    /* PWA Install Banner — Light Theme */
+    #pwa-install-banner .glass-card {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border-color: #F59E0B !important;
+      color: #92400E !important;
+    }
+
+    #pwa-install-banner .bg-warning {
+      background: #FEF3C7 !important;
+    }
+
+    #pwa-install-banner .text-warning {
+      color: #92400E !important;
+    }
+
+    #pwa-install-banner .text-white {
+      color: #92400E !important;
+    }
+
+    #pwa-install-banner .fw-bold {
+      color: #92400E !important;
+    }
+
+    /* Responsive Improvements */
+    @media (max-width: 991.98px) {
+      .hero-title {
+        font-size: 2.2rem;
+      }
+      .hero-section {
+        padding: 30px 0 50px;
+      }
+      .section-title {
+        font-size: 1.8rem;
+      }
+      .section-padding {
+        padding: 62px 0;
+      }
+      #contact-info {
+        padding-top: 66px;
+        padding-bottom: 66px;
+      }
+      #contact-info .col-lg-5,
+      #contact-info .col-lg-7 {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+      .company-info-card,
+      .contact-info-card {
+        min-height: auto;
+      }
+      #contact-info .row.g-3 > .col-sm-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+      .contact-info-card .bi {
+        width: 38px;
+        height: 38px;
+        font-size: 1.7rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .section-padding {
+        padding: 56px 0;
+      }
+      #contact-info {
+        padding-top: 58px;
+        padding-bottom: 58px;
+      }
+      #contact-info .row.g-4.align-items-center {
+        --bs-gutter-y: 1rem;
+      }
+      #contact-info .row.g-3 > .col-sm-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+      .company-info-card,
+      .contact-info-card {
+        width: 100%;
+        padding: 18px 16px 16px;
+        align-items: flex-start;
+        text-align: left;
+      }
+      .company-info-card .d-flex.align-items-start.gap-3 {
+        min-height: 0;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .section-padding { padding: 48px 0; }
+      .testimonials { grid-template-columns: 1fr; }
+      #contact-info {
+        padding-top: 52px;
+        padding-bottom: 52px;
+      }
+      .company-info-card,
+      .contact-info-card {
+        align-items: flex-start !important;
+        text-align: left !important;
+      }
+      .company-info-card .d-flex.align-items-start.gap-3 {
+        gap: 0.6rem !important;
+      }
+      .contact-info-card .bi {
+        width: 36px;
+        height: 36px;
+        font-size: 1.5rem;
+      }
+    }
+
+    /* ── HERO PACKAGE SIMULATOR — Modern Tech Minimalist ── */
+    html { scroll-behavior: smooth; }
+    .hero-package-simulator {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      max-width: 560px;
+      width: 100%;
+      margin-left: auto;
+      justify-self: end;
+    }
+    .pkg-simulator {
+      width: 100%;
+      max-width: 560px;
+      min-width: 0;
+      padding: 20px 18px 16px;
+      border-radius: 16px;
+      border: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+      font-family: var(--font-sans);
+      min-height: 365px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .sim-header { margin-bottom: 10px; }
+    .sim-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.18);
+      color: #FFFFFF;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .sim-badge .bi { font-size: 0.8rem; }
+    .sim-title {
+      margin: 10px 0 0;
+      font-family: var(--font-display);
+      font-size: 1.38rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+    .sim-flex {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      width: 100%;
+      align-items: stretch;
+    }
+    .sim-field {
+      margin-top: 10px;
+      width: 100%;
+    }
+    .sim-label {
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 8px;
+      text-align: left;
+      width: 100%;
+    }
+    .sim-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      width: 100%;
+    }
+    .sim-step-btn {
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(15, 23, 42, 0.28);
+      color: #FFFFFF;
+      cursor: pointer;
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
+      flex-shrink: 0;
+    }
+    .sim-step-btn:hover { border-color: rgba(255, 255, 255, 0.35); color: #FFFFFF; }
+    .sim-step-btn:active { transform: scale(0.95); }
+    .sim-users-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 70px;
+      flex: 1;
+    }
+    .sim-step-value {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .sim-users-unit { font-size: 0.72rem; color: rgba(255, 255, 255, 0.75); margin-top: 2px; }
+    .sim-needs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+    .sim-need-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 76px;
+      padding: 10px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(15, 23, 42, 0.28);
+      color: #FFFFFF;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .18s ease;
+    }
+    .sim-need-btn .sim-need-icon { width: 20px; height: 20px; color: rgba(255, 255, 255, 0.82); transition: color .18s ease; }
+    .sim-need-btn:hover { border-color: rgba(255, 255, 255, 0.28); }
+    .sim-need-btn:hover .sim-need-icon { color: #FFFFFF; }
+    .sim-need-btn.active {
+      background: rgba(37, 99, 235, 0.18);
+      border-color: rgba(190, 239, 255, 0.58);
+      color: #FFFFFF;
+      box-shadow: none;
+    }
+    .sim-need-btn.active .sim-need-icon { color: #FFFFFF; }
+    .sim-result {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #E2E8F0;
+      width: 100%;
+    }
+    .sim-estimate-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 12px;
+      background: rgba(148, 163, 184, 0.08);
+      width: 100%;
+    }
+    .sim-est-text {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+    }
+    .sim-est-label { font-size: 0.75rem; font-weight: 600; color: rgba(255, 255, 255, 0.75); letter-spacing: 0.04em; text-transform: uppercase; }
+    .sim-estimate {
+      font-family: var(--font-mono);
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: -0.01em;
+    }
+    .sim-copy {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.85);
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
+    }
+    .sim-recommend {
+      margin-top: 10px;
+      padding: 12px 12px 10px;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      background: #FFFFFF;
+      width: 100%;
+    }
+    .sim-eyebrow {
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .sim-rec-name {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin: 6px 0 4px;
+    }
+    .sim-rec-meta {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .sim-rec-meta #sim-rec-speed { color: #FFFFFF; font-weight: 700; }
+    .sim-dot { color: rgba(255, 255, 255, 0.5); }
+    .sim-rec-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(22, 163, 74, 0.16);
+      color: #FFFFFF;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+    .sim-rec-check .bi { color: #FFFFFF; }
+    .sim-custom-msg {
+      margin-top: 8px;
+      font-size: 0.82rem;
+      color: #FFFFFF;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.28);
+      border-radius: 8px;
+      padding: 8px 10px;
+      line-height: 1.4;
+    }
+    .sim-cta {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.84rem;
+      color: #FFFFFF;
+      background: #2563EB;
+      transition: background .15s ease, transform .12s ease;
+    }
+    .sim-cta:hover { background: #1D4ED8; color: #FFFFFF; transform: translateY(-1px); }
+    .sim-cta.is-contact { background: #0F172A; }
+    .sim-cta.is-contact:hover { background: #1E293B; }
+    .customer-chat-widget {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      z-index: 1060;
+      font-family: var(--font-sans);
+    }
+    .customer-chat-panel {
+      width: min(320px, calc(100vw - 32px));
+      background: linear-gradient(180deg, rgba(13, 25, 30, 0.96), rgba(15, 29, 36, 0.96));
+      border: 1px solid rgba(124, 221, 218, 0.18);
+      border-radius: 18px;
+      box-shadow: 0 18px 42px rgba(3, 14, 20, 0.35);
+      padding: 16px 16px 14px;
+      color: var(--portal-text);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .customer-chat-widget.is-open .customer-chat-panel {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .customer-chat-panel-icon {
+      width: 38px;
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(34, 167, 240, 0.18));
+      border: 1px solid rgba(124, 221, 218, 0.2);
+      color: #d9fffb;
+      font-size: 1.1rem;
+    }
+    .customer-chat-panel h6 {
+      margin: 0;
+      color: #f8fbff;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+    .customer-chat-status {
+      display: inline-flex;
+      align-items: center;
+      color: rgba(237, 250, 250, 0.8);
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .customer-chat-panel p {
+      margin: 12px 0 14px;
+      color: rgba(237, 250, 250, 0.8);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+    .customer-chat-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 230px;
+      overflow-y: auto;
+      margin: 12px 0 14px;
+      padding-right: 4px;
+    }
+    .customer-chat-message {
+      max-width: 92%;
+      padding: 9px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .customer-chat-message-bot {
+      align-self: flex-start;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(124, 221, 218, 0.12);
+      color: rgba(237, 250, 250, 0.95);
+    }
+    .customer-chat-message-user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, rgba(45, 212, 191, 0.96), rgba(34, 167, 240, 0.9));
+      color: #062c2a;
+      font-weight: 700;
+    }
+    .customer-chat-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .customer-chat-input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid rgba(124, 221, 218, 0.2);
+      background: rgba(8, 20, 26, 0.65);
+      color: #f1fbff;
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+    .customer-chat-input:focus {
+      border-color: rgba(45, 212, 191, 0.65);
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+    }
+    .customer-chat-send {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 12px;
+      background: linear-gradient(135deg, var(--portal-primary), var(--portal-primary-strong));
+      color: #062c2a;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .customer-chat-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .customer-chat-suggest {
+      border: 1px solid rgba(124, 221, 218, 0.18);
+      background: rgba(15, 23, 42, 0.66);
+      color: rgba(237, 250, 250, 0.9);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .customer-chat-suggest:hover {
+      border-color: rgba(45, 212, 191, 0.38);
+      background: rgba(20, 31, 38, 0.88);
+      transform: translateY(-1px);
+    }
+    .customer-chat-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);
+      color: #062c2a;
+      text-decoration: none;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(45, 212, 191, 0.2);
+      cursor: pointer;
+    }
+    .customer-chat-link:hover {
+      color: #062c2a;
+      filter: brightness(1.04);
+    }
+    .customer-chat-fallback {
+      margin: 12px 0 0;
+      color: rgba(237, 250, 250, 0.75);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+    .customer-chat-fallback a {
+      color: #7dd3fc;
+      text-decoration: none;
+    }
+    .customer-chat-toggle {
+      width: 62px;
+      height: 62px;
+      border: 1px solid rgba(124, 221, 218, 0.3);
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);
+      color: #042126;
+      box-shadow: 0 18px 40px rgba(45, 212, 191, 0.28);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .customer-chat-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 48px rgba(45, 212, 191, 0.3);
+    }
+    .customer-chat-toggle:focus-visible {
+      outline: 3px solid rgba(45, 212, 191, 0.35);
+      outline-offset: 3px;
+    }
+    @media (max-width: 767.98px) {
+      .pkg-simulator { padding: 22px 18px; }
+      .sim-title { font-size: 1.3rem; }
+    }
+    @media (max-width: 420px) { .sim-needs { grid-template-columns: 1fr; } }
+    @media (max-width: 576px) {
+      .customer-chat-widget {
+        right: 14px;
+        bottom: 14px;
+      }
+      .customer-chat-panel {
+        width: min(290px, calc(100vw - 26px));
+      }
+      .customer-chat-toggle {
+        width: 56px;
+        height: 56px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .hero-section > .container {
+        max-width: 100%;
+        padding-left: 32px;
+        padding-right: 32px;
+      }
+
+      .hero-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(450px, 500px);
+        max-width: none;
+        gap: 40px;
+        align-items: end;
+      }
+
+      .hero-copy {
+        max-width: 756px;
+      }
+
+      .hero-title {
+        max-width: 720px;
+      }
+
+      .hero-subtitle,
+      .hero-stats {
+        max-width: 720px;
+      }
+
+      .hero-cta-grid {
+        max-width: 684px;
+      }
+
+      .hero-stats {
+        max-width: 756px;
+      }
+
+      .hero-package-simulator,
+      .pkg-simulator {
+        max-width: 500px;
+      }
+
+      .hero-package-simulator {
+        align-self: end;
+      }
+
+      #contact-info .company-info-card {
+        position: relative;
+        top: 8px;
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 991.98px) {
+      .hero-section > .container,
+      .section-padding > .container,
+      .testimonials-section > .container,
+      .faq-section > .container,
+      #contact-info > .container {
+        max-width: 720px;
+      }
+
+      .hero-section {
+        padding: 38px 0 52px;
+      }
+
+      .hero-grid {
+        gap: 28px;
+      }
+
+      .hero-package-simulator,
+      .pkg-simulator {
+        max-width: 560px;
+      }
+    }
+
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+      .custom-navbar .nav-link {
+        padding-left: 0.38rem !important;
+        padding-right: 0.38rem !important;
+        font-size: 0.75rem;
+      }
+
+      .custom-navbar .nav-link .me-1 {
+        margin-right: 0.2rem !important;
+      }
+
+      .custom-navbar .header-actions {
+        margin-left: 0.35rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .hero-section > .container,
+      .section-padding > .container,
+      .testimonials-section > .container,
+      .faq-section > .container,
+      #contact-info > .container {
+        max-width: 100%;
+      }
+
+      .hero-section {
+        padding: 28px 0 44px;
+      }
+
+      .hero-title {
+        font-size: clamp(1.8rem, 8vw, 2.2rem);
+        line-height: 1.16;
+      }
+
+      .hero-subtitle {
+        font-size: 0.94rem;
+      }
+
+      .hero-cta-grid {
+        width: 100%;
+        gap: 10px;
+      }
+
+      .hero-cta-grid .btn {
+        min-height: 52px;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        white-space: normal;
+      }
+
+      .hero-stats {
+        width: 100%;
+      }
+
+      .hero-package-simulator,
+      .pkg-simulator {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .section-title {
+        font-size: clamp(1.65rem, 7vw, 2rem);
+      }
+
+      .section-subtitle {
+        font-size: 0.94rem;
+        margin-bottom: 30px;
+      }
+
+      .pkg-card,
+      .feature-box,
+      .testimonial-card {
+        padding: 22px 18px;
+      }
+
+      .faq-accordion .accordion-button {
+        padding: 16px;
+        font-size: 0.94rem;
+      }
+
+      .faq-accordion .accordion-body {
+        padding: 0 16px 16px;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .hero-badge {
+        max-width: 100%;
+        text-align: center;
+      }
+
+      .holo-speed {
+        padding: 9px 12px;
+      }
+
+      .pkg-simulator {
+        padding: 18px 14px 16px;
+      }
+
+      .sim-needs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sim-need-btn {
+        min-height: 68px;
+      }
+    }
+
+    .section-padding,
+    .testimonials-section {
+      padding-top: 52px;
+      padding-bottom: 52px;
+    }
+
+    #contact-info {
+      padding-top: 52px;
+      padding-bottom: 52px;
+    }
+
+    .section-title-badge {
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      margin-bottom: 10px;
+    }
+
+    .section-subtitle {
+      margin-bottom: 26px;
+    }
+
+    #features .row,
+    #packages .row,
+    #services .row,
+    #contact-info .row.g-4.align-items-center {
+      --bs-gutter-x: 1rem;
+      --bs-gutter-y: 1rem;
+    }
+
+    .testimonials {
+      gap: 18px;
+    }
+
+    .faq-accordion {
+      gap: 12px;
+    }
+
+    @media (max-width: 767.98px) {
+      .section-padding,
+      .testimonials-section,
+      #contact-info {
+        padding-top: 44px;
+        padding-bottom: 44px;
+      }
+
+      .section-subtitle {
+        margin-bottom: 22px;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .section-padding,
+      .testimonials-section,
+      #contact-info {
+        padding-top: 40px;
+        padding-bottom: 40px;
+      }
+    }
+
+    .hero-cta-grid .btn,
+    .btn-pkg-action,
+    .sim-cta,
+    .btn-submit-login,
+    .btn-quick-tool,
+    .btn-portal-access {
+      background: linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%) !important;
+      border-color: rgba(126, 231, 219, 0.48) !important;
+      color: #f4fffd !important;
+      box-shadow: 0 8px 20px rgba(10, 41, 50, 0.24);
+    }
+
+    .hero-cta-grid .btn:hover,
+    .btn-pkg-action:hover,
+    .sim-cta:hover,
+    .btn-submit-login:hover,
+    .btn-quick-tool:hover,
+    .btn-portal-access:hover {
+      background: linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%) !important;
+      border-color: rgba(166, 247, 235, 0.72) !important;
+      color: #ffffff !important;
+      filter: brightness(1.04);
+    }
+
+    .feature-box,
+    .pkg-card,
+    .info-card,
+    .testimonial-card,
+    .company-info-card,
+    .contact-info-card,
+    .faq-accordion .accordion-item,
+    .faq-accordion .accordion-button,
+    .faq-accordion .accordion-body,
+    .pkg-simulator,
+    .sim-recommend,
+    .stat-item,
+    .login-card-container .glass-card {
+      background: #173945 !important;
+      border-color: rgba(190, 239, 255, 0.58) !important;
+    }
+
+    .faq-accordion .accordion-button:not(.collapsed) {
+      background: rgba(126, 231, 219, 0.18) !important;
+    }
+
+    body,
+    .hero-section,
+    .section-padding,
+    .testimonials-section,
+    .faq-section,
+    #contact-info,
+    #services,
+    #features,
+    #packages,
+    #faq,
+    #testimonials {
+      background: var(--landing-bg) !important;
+    }
+    </style>
+</head>
+
+<body class="<%= typeof landingOnly !== 'undefined' && landingOnly ? 'landing-only' : '' %>">
+
+  <!-- Header / Navbar Section -->
+  <nav class="navbar navbar-expand-lg sticky-top custom-navbar">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+        <img src="/img/logo.png" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.style.display='none'">
+      </a>
+
+      <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+        aria-controls="navbarContent" aria-expanded="false" aria-label="Buka navigasi">
+        <i class="bi bi-list fs-2"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
+          <li class="nav-item">
+            <a class="nav-link active" href="#hero"><i class="bi bi-house-door me-1"></i> Beranda</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#features"><i class="bi bi-shield-check me-1"></i> Keunggulan</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#packages"><i class="bi bi-wifi me-1"></i> Paket Layanan</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#services"><i class="bi bi-grid me-1"></i> Akses Layanan</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#faq"><i class="bi bi-question-circle me-1"></i> Tanya Jawab</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#testimonials"><i class="bi bi-chat-quote me-1"></i> Testimoni</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#contact-info"><i class="bi bi-headset me-1"></i> Informasi</a>
+          </li>
+        </ul>
+
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0 header-actions">
+          <div class="dropdown">
+            <button class="btn btn-portal-access btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle me-1"></i> Member
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="/customer/login"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a></li>
+              <li><a class="dropdown-item" href="/customer/register"><i class="bi bi-person-plus me-2"></i>Daftar</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero & Login Section -->
+  <section class="hero-section" id="hero">
+    <div class="container">
+      <div class="hero-grid">
+
+        <!-- Left Column: Company Value Proposition -->
+        <div class="hero-copy">
+          <div class="hero-badge">
+            <i class="bi bi-lightning-charge-fill text-warning"></i>
+            <span>Internet Fiber Optic Cepat, Stabil, dan Tanpa Batas</span>
+          </div>
+
+          <h1 class="hero-title">
+            Nikmati Koneksi Internet Terbaik Tanpa Batas Kuota
+          </h1>
+
+          <p class="hero-subtitle">
+            Selamat datang di pusat layanan resmi <strong><%= settings.company_header || 'ZenRadius' %></strong>. Kami menghadirkan konektivitas internet cepat, stabil, dan terjangkau untuk kebutuhan rumah tangga, bisnis, hiburan, serta aktivitas digital Anda.
+          </p>
+
+          <div class="hero-cta-grid">
+            <a href="/customer/register" class="btn btn-primary btn-lg rounded-3 fw-bold px-4 py-3 shadow-lg flex-fill d-inline-flex align-items-center justify-content-center" style="min-width: 260px;">
+              <i class="bi bi-person-plus-fill me-2 fs-5"></i> Daftar Sekarang
+            </a>
+            <button type="button" id="btn-install-pwa-hero" class="btn btn-warning btn-lg rounded-3 fw-bold px-4 py-3 shadow-lg text-dark flex-fill d-inline-flex align-items-center justify-content-center" style="min-width: 260px;" onclick="triggerPwaInstall()">
+              <i class="bi bi-download me-2 fs-5"></i> Download Aplikasi
+            </button>
+            <a href="/customer/check-billing" class="btn btn-outline-light btn-lg rounded-3 fw-bold px-4 py-3 w-100 d-inline-flex align-items-center justify-content-center cta-billing">
+              <i class="bi bi-receipt me-2 fs-5"></i> Cek Tagihan
+            </a>
+          </div>
+
+          <section class="stats-strip">
+            <div class="hero-stats">
+              <div class="stat-item">
+                <div class="stat-number"><i class="bi bi-speedometer2 text-info me-1"></i> 100%</div>
+                <div class="stat-label">Fiber Optic</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number"><i class="bi bi-infinity text-success me-1"></i> Tanpa FUP</div>
+                <div class="stat-label">Tanpa Batas Kuota</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number"><i class="bi bi-shield-lock-fill text-warning me-1"></i> 99.9%</div>
+                <div class="stat-label">Uptime SLA</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number"><i class="bi bi-headset text-primary me-1"></i> 24/7</div>
+                <div class="stat-label">Dukungan Pelanggan</div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <% if (typeof landingOnly !== 'undefined' && landingOnly) { %>
+        <div class="hero-package-simulator" id="simulator-section">
+          <%- include('partials/package-simulator') %>
+        </div>
+        <% } else { %>
+        <div class="login-card-container" id="login-section">
+          <div class="glass-card shadow-2xl">
+            <div class="login-card-header">
+              <div class="d-inline-flex align-items-center justify-content-center bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-circle p-3 mb-2" style="width:70px; height:70px;">
+                <i class="bi bi-person-circle text-white" style="font-size: 40px; line-height: 1;"></i>
+              </div>
+              <p class="small text-white opacity-75 mb-0">Masuk ke pusat layanan pelanggan untuk mengelola layanan internet Anda.</p>
+            </div>
+
+            <div class="login-card-body">
+              <form method="POST" action="/customer/login">
+                <div class="form-floating">
+                  <input type="tel" class="form-control" id="phone" name="phone" placeholder=" " required autofocus>
+                  <label for="phone">
+                    <i class="bi bi-whatsapp me-2"></i>Nomor WhatsApp
+                  </label>
+                </div>
+
+                <div class="form-floating password-field-wrapper">
+                  <input type="password" class="form-control" id="password" name="password" placeholder=" " required>
+                  <button type="button" class="eye-toggle" data-target="password" aria-label="Tampilkan password" title="Tampilkan/Sembunyikan password">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <label for="password">
+                    <i class="bi bi-key me-2"></i>Password
+                  </label>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3 small" style="color: #C8D0E0;">
+                  <span><i class="bi bi-info-circle me-1"></i>Gunakan akun pelanggan aktif.</span>
+                  <button type="submit" form="forgot-password-form" class="btn btn-link btn-sm p-0 text-decoration-none" style="color: #7dd3fc;">Lupa Password?</button>
+                </div>
+
+                <% if (settings.login_otp_enabled) { %>
+                  <div class="alert alert-info py-2 px-3 mb-3 small border-0 bg-info bg-opacity-15 text-info rounded-3 text-center fw-semibold">
+                    <i class="bi bi-whatsapp me-1"></i> <%= t('customer.otp_sent_via_wa', 'Kode OTP akan dikirim via WhatsApp') %>
+                  </div>
+                <% } %>
+
+                <button type="submit" class="btn btn-submit-login">
+                  <i class="bi bi-box-arrow-in-right me-2"></i><%= t('customer.sign_in', 'Masuk ke Portal') %>
+                </button>
+              </form>
+
+              <form id="forgot-password-form" method="POST" action="/customer/forgot-password" class="d-none">
+                <input type="hidden" name="phone" id="forgot-phone">
+              </form>
+
+              <% if (typeof success !== 'undefined' && success) { %>
+                <div class="alert alert-success mt-3 py-2 px-3 text-center small rounded-3 border-success border-opacity-25 fw-semibold">
+                  <i class="bi bi-check-circle me-2"></i>
+                  <%= success %>
+                </div>
+              <% } %>
+
+              <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger mt-3 py-2 px-3 text-center small rounded-3 border-danger border-opacity-25 fw-semibold">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  <%= error === 'Nomor HP tidak valid atau belum terdaftar.' ? 'ID/Tag tidak valid atau belum terdaftar.' : error %>
+                </div>
+              <% } %>
+
+              <!-- Fast Tool Shortcuts -->
+              <div class="quick-tools-grid">
+                <a href="/customer/check-billing" class="btn-quick-tool">
+                  <i class="bi bi-receipt text-info fs-5"></i> Cek Tagihan
+                </a>
+                <a href="/customer/voucher" class="btn-quick-tool">
+                  <i class="bi bi-ticket-perforated text-warning fs-5"></i> Dapatkan Voucher
+                </a>
+              </div>
+
+              <div class="text-center mt-4 pt-2 border-top border-secondary border-opacity-20">
+                <p class="mb-0 small" style="color: #C8D0E0;">
+                  <%= t('customer.not_subscribed', 'Belum menjadi pelanggan?') %>
+                  <a href="/customer/register" class="fw-bold text-decoration-none ms-1" style="color: #4ddbff;">
+                    <%= t('customer.register_new', 'Daftar Sekarang') %> <i class="bi bi-arrow-right"></i>
+                  </a>
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Features Highlight Section -->
+  <section class="section-padding" id="features">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-title-badge"><i class="bi bi-star me-1"></i> Keunggulan Layanan</span>
+        <h2 class="section-title">Mengapa Memilih <%= settings.company_header %>?</h2>
+        <p class="section-subtitle">
+          Kami berkomitmen menghadirkan pengalaman berinternet terbaik tanpa hambatan dengan teknologi mutakhir dan pelayanan profesional.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="glass-card feature-box feature-premium">
+            <div class="feature-icon-wrapper">
+              <i class="bi bi-lightning-charge-fill text-warning"></i>
+            </div>
+            <h4 class="feature-title">Ultra Fast Fiber</h4>
+            <p class="feature-desc">
+              Jaringan 100% Fiber Optic murni menjamin kecepatan transmisi data tinggi dan respon cepat (ping rendah).
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="glass-card feature-box">
+            <div class="feature-icon-wrapper">
+              <i class="bi bi-infinity text-success"></i>
+            </div>
+            <h4 class="feature-title">Akses Tanpa Batas</h4>
+            <p class="feature-desc">
+              Bebas akses internet sepuasnya tanpa batasan kuota (FUP) atau penurunan kecepatan di pertengahan bulan.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="glass-card feature-box">
+            <div class="feature-icon-wrapper">
+              <i class="bi bi-credit-card-2-front-fill text-info"></i>
+            </div>
+            <h4 class="feature-title">Pembayaran Instan</h4>
+            <p class="feature-desc">
+              Periksa dan bayar tagihan melalui QRIS Statis, Virtual Account Bank, atau dompet digital secara praktis.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="glass-card feature-box">
+            <div class="feature-icon-wrapper">
+              <i class="bi bi-headset text-primary"></i>
+            </div>
+            <h4 class="feature-title">Customer Care 24/7</h4>
+            <p class="feature-desc">
+              Tim dukungan teknis dan layanan pelanggan kami siap membantu kebutuhan konektivitas Anda kapan saja.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Internet Packages Section -->
+  <section class="section-padding" id="packages">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-title-badge"><i class="bi bi-wifi me-1"></i> Pilihan Paket Layanan</span>
+        <h2 class="section-title">Paket Internet <%= settings.company_header || 'ZenRadius' %></h2>
+        <p class="section-subtitle">
+          Pilih kecepatan koneksi yang sesuai dengan kebutuhan aktivitas digital Anda, dari penggunaan rumah hingga kantor.
+        </p>
+      </div>
+
+      <% const pkgs = Array.isArray(packages) ? packages.filter(p => p.is_active !== 0) : []; %>
+      <div class="row g-4 justify-content-center">
+        <% pkgs.forEach((p, index) => { %>
+          <div class="col-md-6 col-lg-4">
+            <div class="glass-card pkg-card <%= index === 1 ? 'pkg-card-featured' : '' %>" id="package-<%= p.id %>">
+              <% if (index === 1) { %>
+                <div class="pkg-badge-popular"><i class="bi bi-star-fill me-1"></i> Terpopuler</div>
+              <% } %>
+
+              <div class="pkg-speed-tag">
+                <i class="bi bi-speedometer2 me-1"></i>
+                <%= Math.round(Number(p.speed_down || 0) / 1000) %> Mbps
+              </div>
+
+              <h3 class="pkg-name"><%= p.name %></h3>
+
+              <div class="pkg-price">
+                Rp <%= Number(p.price || 0).toLocaleString('id-ID') %>
+              </div>
+              <div class="pkg-period"><%= p.billing_type === 'prepaid' ? `masa aktif ${p.duration_days || 30} hari` : 'per bulan' %><%= p.use_ppn ? ', termasuk PPN' : '' %></div>
+
+              <ul class="pkg-features">
+                <li><i class="bi bi-check-circle-fill"></i> Kecepatan download <%= Math.round(Number(p.speed_down || 0) / 1000) %> Mbps</li>
+                <% if (p.speed_up) { %><li><i class="bi bi-check-circle-fill"></i> Upload hingga <%= Math.round(Number(p.speed_up) / 1000) %> Mbps</li><% } %>
+                <li><i class="bi bi-check-circle-fill"></i> Koneksi fiber optik stabil</li>
+                <% if (p.description) { %><li><i class="bi bi-check-circle-fill"></i> <%= p.description %></li><% } %>
+                <li><i class="bi bi-check-circle-fill"></i> Dukungan teknis 24/7</li>
+              </ul>
+
+              <a href="/customer/register?package=<%= encodeURIComponent(p.id) %>" class="btn-pkg-action">
+                <i class="bi bi-person-plus me-1"></i> Daftar Sekarang
+              </a>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+      <% if (pkgs.length === 0) { %>
+        <div class="text-center text-muted py-4">Paket internet sedang diperbarui. Silakan hubungi kami untuk informasi terbaru.</div>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- Quick Services Section -->
+  <section class="section-padding" id="services">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-title-badge"><i class="bi bi-grid me-1"></i> Fitur Portal</span>
+        <h2 class="section-title">Akses Layanan Pelanggan</h2>
+        <p class="section-subtitle">
+          Nikmati kemudahan transaksi dan pengelolaan akun internet Anda secara langsung dari portal web.
+        </p>
+      </div>
+
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-6 col-lg-3">
+          <a href="/customer/check-billing" class="text-decoration-none info-card-link">
+            <div class="glass-card info-card">
+              <div class="info-icon">
+                <i class="bi bi-receipt text-info fs-3"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold text-white mb-1">Cek Tagihan</h5>
+                <p class="card-text-desc mb-0">Periksa status pembayaran & rincian tagihan bulanan Anda.</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <a href="/customer/voucher" class="text-decoration-none info-card-link">
+            <div class="glass-card info-card">
+              <div class="info-icon">
+                <i class="bi bi-ticket-perforated text-warning fs-3"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold text-white mb-1">Dapatkan Voucher</h5>
+                <p class="card-text-desc mb-0">Dapatkan voucher hotspot Wi-Fi harian atau mingguan secara praktis.</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <a href="/customer/register" class="text-decoration-none info-card-link">
+            <div class="glass-card info-card">
+              <div class="info-icon">
+                <i class="bi bi-person-plus text-success fs-3"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold text-white mb-1">Pemasangan Baru</h5>
+                <p class="card-text-desc mb-0">Daftar layanan jaringan internet untuk rumah atau lokasi usaha.</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <% if (settings.company_phone) { %>
+          <div class="col-md-6 col-lg-3">
+            <a href="https://wa.me/<%= String(settings.company_phone).replace(/\D/g,'') %>" target="_blank" rel="noopener" class="text-decoration-none info-card-link">
+              <div class="glass-card info-card">
+                <div class="info-icon">
+                  <i class="bi bi-whatsapp text-primary fs-3"></i>
+                </div>
+                <div>
+                  <h5 class="fw-bold text-white mb-1">Dukungan WhatsApp</h5>
+                  <p class="card-text-desc mb-0">Dapatkan konsultasi dan dukungan teknis melalui WhatsApp resmi.</p>
+                </div>
+              </div>
+            </a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ / Q&A Section -->
+  <section class="section-padding faq-section" id="faq">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-title-badge"><i class="bi bi-question-circle me-1"></i> Tanya Jawab</span>
+        <h2 class="section-title">Pertanyaan yang Sering Diajukan</h2>
+        <p class="section-subtitle">Temukan jawaban atas hal-hal umum seputar layanan internet <%= settings.company_header || 'ZenRadius' %>.</p>
+      </div>
+
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="accordion faq-accordion" id="faqAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="faqHeading1">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1" aria-expanded="true" aria-controls="faqCollapse1">
+                  Bagaimana cara berlangganan internet <%= settings.company_header || 'ZenRadius' %>?
+                </button>
+              </h2>
+              <div id="faqCollapse1" class="accordion-collapse collapse show" aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Anda dapat menekan tombol <strong>Daftar Sekarang</strong> di halaman ini, memilih paket yang sesuai, lalu mengisi data diri. Tim kami akan menghubungi untuk verifikasi dan menjadwalkan instalasi di lokasi Anda.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="faqHeading2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+                  Apakah layanan <%= settings.company_header || 'ZenRadius' %> menerapkan batas kuota (FUP)?
+                </button>
+              </h2>
+              <div id="faqCollapse2" class="accordion-collapse collapse" aria-labelledby="faqHeading2" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Tidak. Seluruh paket <%= settings.company_header || 'ZenRadius' %> merupakan akses tanpa batas (<em>no-FUP</em>) sehingga kecepatan tetap stabil tanpa penurunan di pertengahan bulan.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="faqHeading3">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+                  Metode pembayaran apa saja yang tersedia?
+                </button>
+              </h2>
+              <div id="faqCollapse3" class="accordion-collapse collapse" aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Kami mendukung pembayaran melalui QRIS Statis, Virtual Account berbagai bank, dan dompet digital. Tagihan dapat diperiksa langsung di portal pelanggan.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="faqHeading4">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4" aria-expanded="false" aria-controls="faqCollapse4">
+                  Berapa lama proses instalasi setelah mendaftar?
+                </button>
+              </h2>
+              <div id="faqCollapse4" class="accordion-collapse collapse" aria-labelledby="faqHeading4" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Setelah data diverifikasi, instalasi umumnya dilakukan dalam 1Ã¢â‚¬â€œ3 hari kerja tergantung ketersediaan jaringan di area Anda.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="faqHeading5">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse5" aria-expanded="false" aria-controls="faqCollapse5">
+                  Apa yang harus dilakukan jika koneksi bermasalah?
+                </button>
+              </h2>
+              <div id="faqCollapse5" class="accordion-collapse collapse" aria-labelledby="faqHeading5" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Silakan hubungi layanan pelanggan 24/7 kami melalui menu <strong>Informasi</strong> di atas, atau gunakan fitur bantuan di portal pelanggan.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="testimonials-section" id="testimonials">
+    <div class="container">
+    <div class="text-center">
+      <span class="section-title-badge"><i class="bi bi-chat-quote me-1"></i> Testimoni Pelanggan</span>
+      <h2 class="section-title">Apa kata pelanggan kami?</h2>
+      <p class="section-subtitle">Pengalaman pelanggan dengan koneksi yang stabil dan dukungan yang responsif.</p>
+    </div>
+    <div class="testimonials">
+      <div class="testimonial-card">
+        <p>"Koneksi stabil untuk kerja dan hiburan keluarga. Pelayanan cepat dan tagihan jelas tanpa ribet."</p>
+        <div class="testimonial-meta">
+          <div class="testimonial-avatar">RM</div>
+          <div>
+            <strong>Rizky M.</strong>
+            <span>Pelanggan Wi-Fi</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <p>"Jaringan konsisten untuk kebutuhan keluarga dan usaha kecil. Dukungan teknis responsif dan prosesnya sangat mudah."</p>
+        <div class="testimonial-meta">
+          <div class="testimonial-avatar">AP</div>
+          <div>
+            <strong>Ayu P.</strong>
+            <span>Pelanggan Wi-Fi</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <p>"Mulai dari pendaftaran sampai pemeliharaan, semuanya terasa rapi dan profesional. Layanan jadi lebih nyaman dan aman."</p>
+        <div class="testimonial-meta">
+          <div class="testimonial-avatar">DN</div>
+          <div>
+            <strong>Dian N.</strong>
+            <span>Pelanggan Wi-Fi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- Company Info Section -->
+  <section class="section-padding" id="contact-info">
+    <div class="container">
+      <div class="text-center mb-4">
+        <span class="section-title-badge"><i class="bi bi-info-circle me-1"></i> Kontak &amp; Informasi</span>
+        <p class="section-subtitle mt-3 mb-0">Tim kami siap membantu kebutuhan koneksi, pemasangan, dan layanan pelanggan dengan cepat dan ramah.</p>
+      </div>
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-5">
+          <div class="glass-card p-4 mb-3 company-info-card">
+            <div class="mb-3">
+              <img src="/img/logo.png" alt="<%= settings.company_header || 'ZenRadius' %>" style="max-width: 260px; width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 8px 18px rgba(56, 213, 196, 0.18));">
+            </div>
+            <p class="leading-relaxed mb-0" style="color: #C8D0E0;">
+              Solusi internet andal untuk kebutuhan rumah, keluarga, dan bisnis — koneksi stabil, dukungan responsif, dan layanan pemasangan yang terpercaya.
+            </p>
+
+            <% if (settings.company_address) { %>
+              <div class="d-flex align-items-start gap-3 mt-4 pt-3" style="border-top: 1px solid rgba(148, 163, 184, 0.18);">
+                <i class="bi bi-geo-alt fs-4" style="color: #00D4FF;"></i>
+                <div>
+                  <h6 class="fw-bold mb-1 text-white">Alamat Kantor</h6>
+                  <p class="small mb-0" style="color: #C8D0E0;"><%= settings.company_address %></p>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="glass-card p-4 h-100 contact-info-card">
+                <i class="bi bi-clock-history fs-3 text-warning mb-2 d-block"></i>
+                <h5 class="fw-bold text-white fs-6 mb-1">Jam Operasional</h5>
+                <p class="small mb-0" style="color: #C8D0E0;"><%= settings.operational_hours || 'Setiap Hari (24 Jam Online)' %></p>
+              </div>
+            </div>
+
+            <% if (settings.company_phone) { %>
+              <div class="col-sm-6">
+                <div class="glass-card p-4 h-100 contact-info-card">
+                  <i class="bi bi-whatsapp fs-3 text-success mb-2 d-block"></i>
+                  <h5 class="fw-bold text-white fs-6 mb-1">WhatsApp Customer Service</h5>
+                  <a href="https://wa.me/<%= String(settings.company_phone).replace(/\D/g,'') %>" target="_blank" rel="noopener" class="text-decoration-none fw-bold" style="color: #4ddbff;">
+                    <%= settings.company_phone %>
+                  </a>
+                </div>
+              </div>
+            <% } %>
+
+            <% if (settings.company_email) { %>
+              <div class="col-sm-6">
+                <div class="glass-card p-4 h-100 contact-info-card">
+                  <i class="bi bi-envelope-at fs-3 text-info mb-2 d-block"></i>
+                  <h5 class="fw-bold text-white fs-6 mb-1">Email Resmi</h5>
+                  <a href="mailto:<%= settings.company_email %>" class="text-decoration-none fw-bold" style="color: #4ddbff;">
+                    <%= settings.company_email %>
+                  </a>
+                </div>
+              </div>
+            <% } %>
+
+            <div class="col-sm-6">
+              <div class="glass-card p-4 h-100 contact-info-card">
+                <i class="bi bi-shield-check fs-3 text-primary mb-2 d-block"></i>
+                <h5 class="fw-bold text-white fs-6 mb-1">Jaminan Layanan</h5>
+                <p class="small mb-0" style="color: #C8D0E0;">SLA 99.9% Uptime Redundant Server</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-panel">
+        <ul class="footer-legal">
+          <li><a href="/customer/about"><%= t('customer.footer.about', 'Tentang Kami') %></a></li>
+          <li><a href="/customer/contact"><%= t('customer.footer.contact', 'Kontak Kami') %></a></li>
+          <li><a href="/customer/tos"><%= t('customer.footer.tos', 'Syarat & Ketentuan') %></a></li>
+          <li><a href="/customer/privacy"><%= t('customer.footer.privacy', 'Kebijakan Privasi') %></a></li>
+          <li><a href="/customer/tos#refund"><%= t('customer.footer.refund', 'Kebijakan Refund') %></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-bottom d-flex flex-wrap justify-content-center align-items-center gap-2 text-center">
+        <div>
+          &copy; 2026 <%- footerInfo %>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating PWA Install Banner -->
+  <div id="pwa-install-banner" class="position-fixed bottom-0 start-50 translate-middle-x p-3 mb-3" style="z-index: 9999; max-width: 92%; width: 440px; display: none;">
+    <div class="glass-card p-3 shadow-2xl border border-warning border-opacity-50 rounded-4 d-flex align-items-center justify-content-between gap-3 text-white" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px);">
+      <div class="d-flex align-items-center gap-3">
+        <div class="bg-warning bg-opacity-20 p-2 rounded-3 text-warning border border-warning border-opacity-25 d-flex align-items-center justify-content-center" style="width: 46px; height: 46px; flex-shrink: 0;">
+          <i class="bi bi-phone-vibrate fs-3"></i>
+        </div>
+        <div>
+          <h6 class="fw-bold mb-0 text-warning">Download Aplikasi</h6>
+          <small class="text-slate-300" style="font-size:12px">Akses cepat & praktis tanpa perlu buka browser!</small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-warning btn-sm fw-bold px-3 py-2 rounded-3 shadow" onclick="triggerPwaInstall()">
+          <i class="bi bi-download me-1"></i> Unduh
+        </button>
+        <button type="button" class="btn-close btn-close-white ms-1" onclick="dismissPwaBanner()"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA Install Modal -->
+  <div class="modal fade" id="pwaInstallModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+      <div class="modal-content text-white shadow-2xl" style="background: linear-gradient(145deg, #173945 0%, #0f2a36 100%); border: 1px solid rgba(190, 239, 255, 0.25)!important; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <div class="modal-header border-0 pb-0" style="padding: 24px 24px 10px;">
+          <h5 class="modal-title fw-bold d-flex align-items-center gap-2" style="font-family: var(--font-display); font-size: 1.25rem;">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 32px; height: 32px; background: rgba(45, 212, 191, 0.15); color: #2dd4bf;">
+              <i class="bi bi-phone-vibrate-fill"></i>
+            </span>
+            Pasang Aplikasi Portal
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.7; transition: opacity 0.15s;"></button>
+        </div>
+        
+        <div class="modal-body px-4 py-3" style="font-family: var(--font-sans);">
+          <p class="small mb-4" style="color: rgba(237, 250, 250, 0.85); font-size: 0.88rem; line-height: 1.6;">
+            Dapatkan akses instan, cepat, dan hemat kuota ke sistem layanan <strong style="color: #2dd4bf;"><%= settings.company_header || 'ZenRadius' %></strong> langsung dari layar utama ponsel Anda tanpa harus membuka browser lagi.
+          </p>
+
+          <!-- Tab Navigation for Platforms -->
+          <ul class="nav nav-pills mb-3 gap-2" id="pwaTab" role="tablist" style="border-bottom: 0;">
+            <li class="nav-item" role="presentation" style="flex: 1;">
+              <button class="nav-link active w-100 d-flex align-items-center justify-content-center gap-2 py-2.5 rounded-3 fw-bold border-0 fs-7" id="android-tab" data-bs-toggle="pill" data-bs-target="#pwa-android" type="button" role="tab" aria-controls="pwa-android" aria-selected="true" style="font-size: 0.8rem; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7);">
+                <i class="bi bi-android2 text-success"></i> ANDROID / PC
+              </button>
+            </li>
+            <li class="nav-item" role="presentation" style="flex: 1;">
+              <button class="nav-link w-100 d-flex align-items-center justify-content-center gap-2 py-2.5 rounded-3 fw-bold border-0 fs-7" id="ios-tab" data-bs-toggle="pill" data-bs-target="#pwa-ios" type="button" role="tab" aria-controls="pwa-ios" aria-selected="false" style="font-size: 0.8rem; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7);">
+                <i class="bi bi-apple text-white"></i> IPHONE / IPAD
+              </button>
+            </li>
+          </ul>
+
+          <!-- Custom style injection for active pills override -->
+          <style>
+            #pwaTab .nav-link.active {
+              background: rgba(45, 212, 191, 0.15) !important;
+              color: #2dd4bf !important;
+              box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.3) !important;
+            }
+            .step-container {
+              display: flex;
+              gap: 14px;
+              margin-bottom: 20px;
+              position: relative;
+            }
+            .step-container:not(:last-child)::after {
+              content: '';
+              position: absolute;
+              left: 14px;
+              top: 30px;
+              bottom: -15px;
+              width: 1px;
+              background: rgba(45, 212, 191, 0.1);
+            }
+            .step-number {
+              width: 30px;
+              height: 30px;
+              border-radius: 50%;
+              background: rgba(45, 212, 191, 0.08);
+              border: 1px solid rgba(45, 212, 191, 0.25);
+              color: #2dd4bf;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: 700;
+              font-size: 0.82rem;
+              flex-shrink: 0;
+            }
+            .step-content {
+              padding-top: 4px;
+            }
+            .step-title {
+              font-size: 0.88rem;
+              font-weight: 700;
+              color: #ffffff;
+              margin-bottom: 4px;
+            }
+            .step-desc {
+              font-size: 0.8rem;
+              color: rgba(237, 250, 250, 0.72);
+              line-height: 1.5;
+            }
+            
+            /* Mobile responsiveness optimizations for the PWA modal */
+            @media (max-width: 575.98px) {
+              #pwaInstallModal .modal-dialog {
+                margin: 16px;
+                max-width: calc(100% - 32px) !important;
+              }
+              #pwaInstallModal .modal-content {
+                border-radius: 16px;
+              }
+              #pwaInstallModal .modal-header {
+                padding: 20px 20px 8px !important;
+              }
+              #pwaInstallModal .modal-title {
+                font-size: 1.15rem !important;
+              }
+              #pwaInstallModal .modal-body {
+                padding: 16px 20px !important;
+              }
+              #pwaInstallModal .modal-body p.small {
+                font-size: 0.82rem !important;
+                margin-bottom: 16px !important;
+                line-height: 1.5;
+              }
+              #pwaTab .nav-link {
+                padding-top: 8px !important;
+                padding-bottom: 8px !important;
+                font-size: 0.72rem !important;
+                gap: 6px !important;
+              }
+              #pwaTabContent > div > div {
+                padding: 16px !important;
+                border-radius: 12px !important;
+              }
+              .step-container {
+                gap: 10px;
+                margin-bottom: 16px;
+              }
+              .step-number {
+                width: 26px;
+                height: 26px;
+                font-size: 0.75rem;
+              }
+              .step-container:not(:last-child)::after {
+                left: 12px;
+                top: 26px;
+                bottom: -12px;
+              }
+              .step-content {
+                padding-top: 2px;
+              }
+              .step-title {
+                font-size: 0.82rem !important;
+              }
+              .step-desc {
+                font-size: 0.75rem !important;
+              }
+              #pwaInstallModal .modal-footer {
+                padding: 0 20px 20px !important;
+                flex-direction: row !important;
+                gap: 8px !important;
+              }
+              #pwaInstallModal .modal-footer .btn {
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+                font-size: 0.8rem !important;
+              }
+              #modal-btn-install-direct i {
+                font-size: 1.05rem !important;
+              }
+            }
+          </style>
+
+          <div class="tab-content" id="pwaTabContent">
+            <!-- Android / PC Tab Content -->
+            <div class="tab-pane fade show active" id="pwa-android" role="tabpanel" aria-labelledby="android-tab">
+              <div style="background: rgba(8, 20, 26, 0.4); padding: 20px; border-radius: 14px; border: 1px solid rgba(190, 239, 255, 0.08);">
+                <div class="step-container">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    <div class="step-title">Ketuk Pasang Aplikasi</div>
+                    <div class="step-desc">Tekan tombol <strong style="color: #2dd4bf;">"Pasang Sekarang"</strong> di bawah dialog untuk mulai instalasi.</div>
+                  </div>
+                </div>
+                <div class="step-container">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    <div class="step-title">Konfirmasi Pemasangan</div>
+                    <div class="step-desc">Pilih opsi <strong style="color: #ffffff;">Instal</strong> atau <strong style="color: #ffffff;">Tambahkan</strong> ketika jendela konfimasi sistem muncul di browser.</div>
+                  </div>
+                </div>
+                <div class="step-container mb-0">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    <div class="step-title">Aplikasi Siap Digunakan</div>
+                    <div class="step-desc">Ikon aplikasi resmi akan otomatis terpasang pada layar utama perangkat Anda secara instan.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- iOS / Safari Tab Content -->
+            <div class="tab-pane fade" id="pwa-ios" role="tabpanel" aria-labelledby="ios-tab">
+              <div style="background: rgba(8, 20, 26, 0.4); padding: 20px; border-radius: 14px; border: 1px solid rgba(190, 239, 255, 0.08);">
+                <div class="step-container">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    <div class="step-title">Buka Menu Bagikan</div>
+                    <div class="step-desc">Ketuk ikon <strong style="color: #2dd4bf;">Bagikan (Share)</strong> <i class="bi bi-share text-info"></i> pada bagian panel navigasi bawah browser Safari.</div>
+                  </div>
+                </div>
+                <div class="step-container">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    <div class="step-title">Tambahkan ke Layar Utama</div>
+                    <div class="step-desc">Gulir pilihan ke bawah lalu pilih menu <strong style="color: #ffffff;">Tambah ke Layar Utama (Add to Home Screen)</strong> <i class="bi bi-plus-square text-info"></i>.</div>
+                  </div>
+                </div>
+                <div class="step-container mb-0">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    <div class="step-title">Selesaikan Pemasangan</div>
+                    <div class="step-desc">Ketuk tombol <strong style="color: #2dd4bf;">Tambah (Add)</strong> di sudut kanan atas untuk menaruh ikon aplikasi di layar beranda.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex gap-2">
+          <button type="button" id="modal-btn-install-direct" class="btn fw-bold px-4 py-2.5 rounded-3 border-0 flex-fill d-flex align-items-center justify-content-center gap-2" onclick="triggerPwaInstallDirect()" style="background: #2dd4bf; color: #071e25; font-size: 0.88rem; box-shadow: 0 10px 15px -3px rgba(45, 212, 191, 0.25); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 12px 20px -3px rgba(45, 212, 191, 0.35)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 10px 15px -3px rgba(45, 212, 191, 0.25)';">
+            <i class="bi bi-cloud-arrow-down-fill fs-5"></i> Pasang Sekarang
+          </button>
+          <button type="button" class="btn fw-bold px-4 py-2.5 rounded-3 flex-fill d-flex align-items-center justify-content-center" data-bs-dismiss="modal" style="background: rgba(255, 255, 255, 0.06); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1) !important; font-size: 0.88rem; transition: background 0.15s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.1)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.06)';">Batal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const forgotPhoneInput = document.getElementById('forgot-phone');
+    const phoneInput = document.getElementById('phone');
+
+    const customerChatWidget = document.querySelector('.customer-chat-widget');
+    const customerChatToggle = document.querySelector('.customer-chat-toggle');
+    const customerChatPanel = document.querySelector('.customer-chat-panel');
+    const customerChatInput = document.querySelector('.customer-chat-input');
+    const customerChatBody = document.querySelector('.customer-chat-body');
+    const customerChatSend = document.querySelector('.customer-chat-send');
+    const customerChatSuggestions = document.querySelectorAll('.customer-chat-suggest');
+    const customerChatFallback = document.querySelector('.customer-chat-fallback');
+
+    if (customerChatWidget && customerChatToggle && customerChatPanel) {
+      document.addEventListener('click', (event) => {
+        if (!customerChatWidget.contains(event.target)) {
+          customerChatWidget.classList.remove('is-open');
+          customerChatToggle.setAttribute('aria-expanded', 'false');
+          customerChatPanel.setAttribute('aria-hidden', 'true');
+        }
+      });
+    }
+
+    const sendLocalAi = async () => {
+      if (!customerChatInput || !customerChatBody) return;
+      const value = customerChatInput.value.trim();
+      if (!value) return;
+      appendChatMessage(value, true);
+      customerChatInput.value = '';
+      const reply = await sendAiApiRequest(value);
+      appendChatMessage(reply, false);
+    };
+
+    customerChatSend?.addEventListener('click', () => { sendLocalAi(); });
+    customerChatInput?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendLocalAi();
+      }
+    });
+
+    customerChatSuggestions?.forEach((button) => {
+      button.addEventListener('click', () => {
+        const prompt = button.dataset.prompt || '';
+        if (!prompt) return;
+        if (customerChatInput) {
+          customerChatInput.value = prompt;
+          sendLocalAi();
+        }
+      });
+    });
+
+    if (customerChatFallback) {
+      customerChatFallback.hidden = true;
+    }
+
+    if (phoneInput && forgotPhoneInput) {
+      phoneInput.addEventListener('input', function () {
+        forgotPhoneInput.value = this.value.trim();
+      });
+    }
+
+    // PWA Prompt Handler
+    let deferredPwaPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+
+      // Highlight install buttons
+      const navBtn = document.getElementById('btn-install-pwa-nav');
+      const heroBtn = document.getElementById('btn-install-pwa-hero');
+      if (navBtn) navBtn.classList.add('shadow-lg');
+      if (heroBtn) heroBtn.classList.add('shadow-lg');
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            dismissPwaBanner();
+          }
+          deferredPwaPrompt = null;
+        });
+      } else {
+        const modalEl = document.getElementById('pwaInstallModal');
+        if (modalEl) {
+          const bsModal = new bootstrap.Modal(modalEl);
+          bsModal.show();
+        }
+      }
+    }
+
+    function triggerPwaInstallDirect() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            dismissPwaBanner();
+            const modalEl = document.getElementById('pwaInstallModal');
+            if (modalEl) {
+              const instance = bootstrap.Modal.getInstance(modalEl);
+              if (instance) instance.hide();
+            }
+          }
+          deferredPwaPrompt = null;
+        });
+      }
+    }
+
+    function dismissPwaBanner() {
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.style.display = 'none';
+      localStorage.setItem('pwa_banner_dismissed', 'true');
+    }
+
+    window.addEventListener('appinstalled', () => {
+      dismissPwaBanner();
+      deferredPwaPrompt = null;
+    });
+
+    document.querySelectorAll('.eye-toggle').forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetId = button.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+
+        const icon = button.querySelector('i');
+        if (icon) {
+          icon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+        }
+
+        button.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Tampilkan password');
+        button.title = isPassword ? 'Sembunyikan password' : 'Tampilkan password';
+      });
+    });
+
+    // Defer service worker registration
+    if ('serviceWorker' in navigator) {
+      setTimeout(() => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).catch(() => {});
+      }, 1500);
+    }
+
+    // Auto-focus input on page load if user is near top
+    window.addEventListener('load', () => {
+      if (window.scrollY < 400) {
+        const phoneInput = document.getElementById('phone');
+        if (phoneInput && !('ontouchstart' in window)) {
+          phoneInput.focus();
+        }
+      }
+    });
+
+    // Highlight active nav item on scroll
+    const sections = document.querySelectorAll('section[id], header[id]');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        if (pageYOffset >= sectionTop) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

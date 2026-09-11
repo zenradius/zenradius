@@ -1,0 +1,16 @@
+{
+  "name": "Pusat Operasional Kolektor ZenRadius",
+  "short_name": "Kolektor ZenRadius",
+  "start_url": "/collector/login",
+  "scope": "/collector/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#173945",
+  "theme_color": "#2dd4bf",
+  "icons": [{
+    "src": "/img/icon.png",
+    "sizes": "any",
+    "type": "image/png",
+    "purpose": "any maskable"
+  }]
+}

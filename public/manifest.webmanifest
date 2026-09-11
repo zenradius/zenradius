@@ -1,0 +1,24 @@
+{
+  "name": "ZenRadius",
+  "short_name": "ZenRadius",
+  "start_url": "/customer/login?source=pwa",
+  "scope": "/customer/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#173945",
+  "theme_color": "#2dd4bf",
+  "icons": [
+    {
+      "src": "/img/icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/logo.png",
+      "sizes": "2000x545",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
