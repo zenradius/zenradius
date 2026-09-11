@@ -14,6 +14,7 @@ const fs = require('fs');
 const { uploadAttendance, removeAttendanceFile } = require('../middleware/attendanceUpload');
 const genieacsApi = require('../config/genieacs');
 const { logger } = require('../config/logger');
+const sidebarMenuSvc = require('../services/sidebarMenuService');
 const rawAxios = require('axios');
 
 const axios = {
@@ -115,6 +116,20 @@ function requireTechSession(req, res, next) {
   res.redirect('/tech/login');
 }
 
+// Guard: menu bisa disembunyikan admin dari /admin/sidebar-settings. Jika
+// disembunyikan, akses langsung via URL tetap ditolak (bukan cuma disembunyikan
+// dari navigasi) agar konsisten dengan portal Admin/Kasir.
+function requireMenuAccess(menuKey) {
+  return (req, res, next) => {
+    const access = sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session);
+    if (!access.allowed) {
+      req.session._msg = { type: 'error', text: 'Menu ini sedang dinonaktifkan oleh Admin.' };
+      return res.redirect('/tech');
+    }
+    return next();
+  };
+}
+
 function flashMsg(req) {
   const m = req.session._msg;
   delete req.session._msg;
@@ -130,6 +145,7 @@ router.use((req, res, next) => {
   res.locals.formatTimeLocal = formatTimeLocal;
   res.locals.parseDateInTimezone = parseDateInTimezone;
   res.locals.getNowLocal = getNowLocal;
+  res.locals.techBottomNav = sidebarMenuSvc.getBottomNavItems(req.session);
   next();
 });
 
@@ -197,7 +213,7 @@ router.get('/', requireTechSession, (req, res) => {
 });
 
 // --- OPEN TICKETS (Pool) ---
-router.get('/pool', requireTechSession, (req, res) => {
+router.get('/pool', requireTechSession, requireMenuAccess('tech_pool'), (req, res) => {
   const openTickets = techSvc.getOpenTickets();
   res.render('tech/pool', {
     title: 'Tiket Baru', 
@@ -222,7 +238,7 @@ router.get('/history', requireTechSession, (req, res) => {
 });
 
 // --- NETWORK MAP ---
-router.get('/map', requireTechSession, (req, res) => {
+router.get('/map', requireTechSession, requireMenuAccess('tech_map'), (req, res) => {
   const customers = customerSvc.getAllCustomers();
   const odps = odpSvc.getAllOdps();
   
@@ -355,7 +371,7 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
 });
 
 // --- MONITORING ONU ---
-router.get('/monitoring', requireTechSession, async (req, res) => {
+router.get('/monitoring', requireTechSession, requireMenuAccess('tech_monitoring'), async (req, res) => {
   const acsServers = genieacsApi.getAllACSServers();
   let pppoeProfiles = [];
   try {
@@ -690,7 +706,7 @@ router.post('/api/device/:tag/reboot', requireTechSession, async (req, res) => {
 // ─── ATTENDANCE ROUTES ───────────────────────────────────────────────────────
 
 // Get attendance page
-router.get('/attendance', requireTechSession, (req, res) => {
+router.get('/attendance', requireTechSession, requireMenuAccess('tech_attendance'), (req, res) => {
   const techId = req.session.techId;
   const todayAttendance = attendanceSvc.getTodayAttendance('technician', techId);
   const history = attendanceSvc.getAttendanceHistory('technician', techId, 10);

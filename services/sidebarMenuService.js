@@ -6,7 +6,10 @@ const STATE_VISIBLE = 'visible';
 const STATE_HIDDEN = 'hidden';
 const STATE_LOCKED = 'locked';
 const VALID_STATES = new Set([STATE_VISIBLE, STATE_HIDDEN, STATE_LOCKED]);
-const PROTECTED_MENU_KEYS = new Set(['dashboard', 'settings', 'sidebar_settings']);
+const PROTECTED_MENU_KEYS = new Set([
+  'dashboard', 'settings', 'sidebar_settings',
+  'tech_dashboard', 'agent_home', 'collector_dashboard'
+]);
 
 const MENU_DEFINITIONS = [
   { key: 'dashboard', section: 'main', href: '/admin', icon: 'bi bi-speedometer2', labelKey: 'admin.nav.dashboard', labelDefault: 'Dashboard', roles: ['admin', 'cashier'], bottomNav: true, activePages: ['dashboard'] },
@@ -59,7 +62,25 @@ const MENU_DEFINITIONS = [
   { key: 'monitoring', section: 'system', href: '/admin/monitoring', icon: 'bi bi-activity', labelKey: 'admin.nav.monitoring', labelDefault: 'Monitoring Sistem', roles: ['admin'], activePages: ['monitoring'] },
   { key: 'audit_logs', section: 'system', href: '/admin/audit-logs', icon: 'bi bi-shield-lock', labelKey: 'admin.nav.audit_logs', labelDefault: 'Log Aktivitas', roles: ['admin'], activePages: ['audit_logs'] },
   { key: 'settings', section: 'system', href: '/admin/settings', icon: 'bi bi-gear', labelKey: 'admin.nav.settings', labelDefault: 'Pengaturan', roles: ['admin'], activePages: ['settings'] },
-  { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update GitHub', roles: ['admin'], activePages: ['update'] }
+  { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update GitHub', roles: ['admin'], activePages: ['update'] },
+
+  // ── Portal Teknisi (/tech) ──────────────────────────────────────────────
+  { key: 'tech_dashboard', section: 'tech', href: '/tech', icon: 'bi bi-briefcase-fill', labelKey: 'tech.nav.my_tasks', labelDefault: 'Tugas Saya', roles: ['teknisi'], bottomNav: true, activePages: ['dashboard'] },
+  { key: 'tech_pool', section: 'tech', href: '/tech/pool', icon: 'bi bi-inbox-fill', labelKey: 'tech.nav.new_tickets', labelDefault: 'Tiket Baru', roles: ['teknisi'], bottomNav: true, activePages: ['pool'] },
+  { key: 'tech_attendance', section: 'tech', href: '/tech/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'tech.nav.attendance', labelDefault: 'Absensi', roles: ['teknisi'], bottomNav: true, activePages: ['attendance'] },
+  { key: 'tech_map', section: 'tech', href: '/tech/map', icon: 'bi bi-map-fill', labelKey: 'tech.nav.map', labelDefault: 'Peta', roles: ['teknisi'], bottomNav: true, activePages: ['map'] },
+  { key: 'tech_monitoring', section: 'tech', href: '/tech/monitoring', icon: 'bi bi-display-fill', labelKey: 'tech.nav.monitor', labelDefault: 'Monitor', roles: ['teknisi'], bottomNav: true, activePages: ['monitoring'] },
+
+  // ── Portal Reseller/Agent (/agent) — satu halaman dashboard dengan section ──
+  { key: 'agent_home', section: 'agent', href: '/agent#section-top', icon: 'bi bi-house', labelKey: 'agent.nav.home', labelDefault: 'Beranda', roles: ['reseller'], bottomNav: true, activePages: ['top'] },
+  { key: 'agent_billing', section: 'agent', href: '/agent#section-bill', icon: 'bi bi-receipt', labelKey: 'agent.nav.billing', labelDefault: 'Tagihan', roles: ['reseller'], bottomNav: true, activePages: ['bill'] },
+  { key: 'agent_voucher', section: 'agent', href: '/agent#section-voucher', icon: 'bi bi-ticket-perforated', labelKey: 'agent.nav.voucher', labelDefault: 'Voucher', roles: ['reseller'], bottomNav: true, activePages: ['voucher'] },
+  { key: 'agent_pulsa', section: 'agent', href: '/agent#section-pulsa', icon: 'bi bi-phone', labelKey: 'agent.nav.pulsa', labelDefault: 'Pulsa', roles: ['reseller'], bottomNav: true, activePages: ['pulsa'] },
+  { key: 'agent_history', section: 'agent', href: '/agent#section-history', icon: 'bi bi-clock-history', labelKey: 'agent.nav.history', labelDefault: 'Riwayat', roles: ['reseller'], bottomNav: true, activePages: ['history'] },
+
+  // ── Portal Kolektor (/collector) ────────────────────────────────────────
+  { key: 'collector_dashboard', section: 'collector', href: '/collector', icon: 'bi bi-grid-3x3-gap', labelKey: 'collector.nav.dashboard', labelDefault: 'Dashboard', roles: ['kolektor'], bottomNav: true, activePages: ['dashboard'] },
+  { key: 'collector_attendance', section: 'collector', href: '/collector/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'collector.nav.attendance', labelDefault: 'Absensi', roles: ['kolektor'], bottomNav: true, activePages: ['attendance'] }
 ];
 
 const DEFAULT_MENU_STATES = {
@@ -105,7 +126,22 @@ const DEFAULT_MENU_STATES = {
   ewallet_logs: STATE_VISIBLE,
   backup: STATE_VISIBLE,
   monitoring: STATE_VISIBLE,
-  audit_logs: STATE_VISIBLE
+  audit_logs: STATE_VISIBLE,
+
+  tech_dashboard: STATE_VISIBLE,
+  tech_pool: STATE_VISIBLE,
+  tech_attendance: STATE_VISIBLE,
+  tech_map: STATE_VISIBLE,
+  tech_monitoring: STATE_VISIBLE,
+
+  agent_home: STATE_VISIBLE,
+  agent_billing: STATE_VISIBLE,
+  agent_voucher: STATE_VISIBLE,
+  agent_pulsa: STATE_VISIBLE,
+  agent_history: STATE_VISIBLE,
+
+  collector_dashboard: STATE_VISIBLE,
+  collector_attendance: STATE_VISIBLE
 };
 
 const SECTION_DEFINITIONS = [
@@ -115,7 +151,10 @@ const SECTION_DEFINITIONS = [
   { key: 'service', labelKey: 'admin.section.service', labelDefault: 'LAYANAN' },
   { key: 'cashier', labelKey: 'admin.section.cashier', labelDefault: 'KASIR' },
   { key: 'user_management', labelKey: 'admin.section.user_management', labelDefault: 'MANAJEMEN USER' },
-  { key: 'system', labelKey: 'admin.section.system', labelDefault: 'SISTEM' }
+  { key: 'system', labelKey: 'admin.section.system', labelDefault: 'SISTEM' },
+  { key: 'tech', labelKey: 'admin.section.tech', labelDefault: 'PORTAL TEKNISI' },
+  { key: 'agent', labelKey: 'admin.section.agent', labelDefault: 'PORTAL RESELLER' },
+  { key: 'collector', labelKey: 'admin.section.collector', labelDefault: 'PORTAL KOLEKTOR' }
 ];
 
 function normalizeState(value) {
@@ -202,10 +241,20 @@ function sanitizeMenuStates(input, options = {}) {
 }
 
 function getSessionRole(session) {
-  const role = String(session?.userRole || '').trim().toLowerCase();
-  if (role === 'admin' || role === 'cashier') return role;
+  // Role canonical eksplisit (Phase 3+) selalu jadi sumber utama.
+  const explicit = String(session?.role || '').trim().toLowerCase();
+  if (['admin', 'customer_service', 'kolektor', 'teknisi', 'reseller'].includes(explicit)) {
+    return explicit === 'customer_service' ? 'cashier' : explicit;
+  }
+
+  // Compatibility layer untuk session lama (legacy boolean flags).
+  const legacyRole = String(session?.userRole || '').trim().toLowerCase();
+  if (legacyRole === 'admin' || legacyRole === 'cashier') return legacyRole;
   if (session?.isAdmin && !session?.isCashier) return 'admin';
   if (session?.isCashier) return 'cashier';
+  if (session?.isTechnician) return 'teknisi';
+  if (session?.isAgent) return 'reseller';
+  if (session?.isCollector) return 'kolektor';
   return null;
 }
 
@@ -216,10 +265,7 @@ function isMenuAllowedForSession(menu, session) {
   // Menu khusus Master Admin (tidak tampil untuk admin biasa)
   if (menu.masterOnly && !isMasterAdminUser(session)) return false;
 
-  if (role === 'admin' && roles.includes('admin')) return true;
-  if (role === 'cashier' && roles.includes('cashier')) return true;
-
-  return false;
+  return Boolean(role) && roles.includes(role);
 }
 
 function enrichMenu(menu, states) {
@@ -265,6 +311,13 @@ function getBottomNavItems(session) {
 
 function getConfigMenus() {
   const states = getStoredMenuStates();
+  const ROLE_LABELS = {
+    admin: 'Admin',
+    cashier: 'Kasir',
+    kolektor: 'Kolektor',
+    teknisi: 'Teknisi',
+    reseller: 'Reseller'
+  };
   return MENU_DEFINITIONS.map((menu) => {
     const section = SECTION_DEFINITIONS.find((s) => s.key === menu.section);
     const state = states[menu.key] || DEFAULT_MENU_STATES[menu.key] || STATE_VISIBLE;
@@ -274,11 +327,7 @@ function getConfigMenus() {
       defaultState: DEFAULT_MENU_STATES[menu.key] || STATE_VISIBLE,
       locked: state === STATE_LOCKED,
       canLock: !PROTECTED_MENU_KEYS.has(menu.key),
-      roleLabel: menu.roles.includes('admin') && menu.roles.includes('cashier')
-        ? 'Admin & Kasir'
-        : menu.roles.includes('cashier')
-          ? 'Kasir'
-          : 'Admin',
+      roleLabel: menu.roles.map((r) => ROLE_LABELS[r] || r).join(' & '),
       sectionLabel: section?.labelDefault || menu.section,
       sectionLabelKey: section?.labelKey || ''
     };

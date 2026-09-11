@@ -7,6 +7,7 @@ const customerSvc = require('../services/customerService');
 const paymentSvc = require('../services/paymentService');
 const db = require('../config/database');
 const { logger } = require('../config/logger');
+const sidebarMenuSvc = require('../services/sidebarMenuService');
 
 function isEnabledFlag(val) {
   if (val === true || val === 1) return true;
@@ -109,6 +110,7 @@ router.use((req, res, next) => {
   res.locals.settings = getSettings();
   res.locals.formatDateLocal = formatDateLocal;
   res.locals.getNowLocal = getNowLocal;
+  res.locals.agentBottomNav = sidebarMenuSvc.getBottomNavItems(req.session);
   next();
 });
 

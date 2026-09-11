@@ -97,26 +97,52 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <% menuConfigs.forEach((menu) => { %>
+                    <% 
+                      const sectionOrder = ['main','billing','finance','service','cashier','user_management','system','tech','agent','collector'];
+                      const sectionLabels = {
+                        main: 'UTAMA (Admin/Kasir)', billing: 'BILLING (Admin/Kasir)', finance: 'KEUANGAN (Admin/Kasir)',
+                        service: 'LAYANAN (Admin/Kasir)', cashier: 'KASIR', user_management: 'MANAJEMEN USER (Admin)',
+                        system: 'SISTEM (Admin)', tech: 'PORTAL TEKNISI', agent: 'PORTAL RESELLER', collector: 'PORTAL KOLEKTOR'
+                      };
+                      const grouped = {};
+                      menuConfigs.forEach((menu) => {
+                        if (!grouped[menu.section]) grouped[menu.section] = [];
+                        grouped[menu.section].push(menu);
+                      });
+                    %>
+                    <% sectionOrder.forEach((secKey) => { %>
+                      <% if (!grouped[secKey] || grouped[secKey].length === 0) return; %>
                       <tr>
-                        <td>
-                          <div style="display:flex;align-items:center;gap:10px">
-                            <i class="<%= menu.icon %>"></i>
-                            <div>
-                              <div style="font-weight:700"><%= menu.labelKey ? t(menu.labelKey, menu.labelDefault) : menu.labelDefault %></div>
-                              <div class="hint mono"><%= menu.href %></div>
-                            </div>
-                          </div>
-                        </td>
-                        <td><span class="hint"><%= menu.sectionLabelKey ? t(menu.sectionLabelKey, menu.sectionLabel) : menu.sectionLabel %></span></td>
-                        <td><span class="hint"><%= menu.roleLabel %></span></td>
-                        <td style="min-width:180px">
-                          <select class="fs" name="menu_state[<%= menu.key %>]">
-                            <option value="visible" <%= menu.state === 'visible' ? 'selected' : '' %>>Tampil</option>
-                            <option value="hidden" <%= menu.state === 'hidden' ? 'selected' : '' %>>Sembunyikan</option>
-                          </select>
+                        <td colspan="4" style="background:rgba(59,130,246,.08);font-weight:700;font-size:12px;letter-spacing:.04em;color:#93c5fd;padding:8px 12px">
+                          <%= sectionLabels[secKey] || secKey %>
                         </td>
                       </tr>
+                      <% grouped[secKey].forEach((menu) => { %>
+                        <tr>
+                          <td>
+                            <div style="display:flex;align-items:center;gap:10px">
+                              <i class="<%= menu.icon %>"></i>
+                              <div>
+                                <div style="font-weight:700"><%= menu.labelKey ? t(menu.labelKey, menu.labelDefault) : menu.labelDefault %></div>
+                                <div class="hint mono"><%= menu.href %></div>
+                              </div>
+                            </div>
+                          </td>
+                          <td><span class="hint"><%= menu.sectionLabelKey ? t(menu.sectionLabelKey, menu.sectionLabel) : menu.sectionLabel %></span></td>
+                          <td><span class="hint"><%= menu.roleLabel %></span></td>
+                          <td style="min-width:180px">
+                            <% if (menu.canLock) { %>
+                              <select class="fs" name="menu_state[<%= menu.key %>]">
+                                <option value="visible" <%= menu.state === 'visible' ? 'selected' : '' %>>Tampil</option>
+                                <option value="hidden" <%= menu.state === 'hidden' ? 'selected' : '' %>>Sembunyikan</option>
+                              </select>
+                            <% } else { %>
+                              <span class="hint"><i class="bi bi-shield-lock"></i> Selalu Tampil</span>
+                              <input type="hidden" name="menu_state[<%= menu.key %>]" value="visible">
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% }) %>
                     <% }) %>
                   </tbody>
                 </table>

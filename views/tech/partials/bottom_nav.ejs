@@ -1,26 +1,12 @@
   </div> <!-- End container -->
 
   <nav class="bottom-nav">
-    <a href="/tech" class="nav-item <%= activePage === 'dashboard' ? 'active' : '' %>">
-      <i class="bi bi-briefcase-fill"></i>
-      <span><%= t('tech.nav.my_tasks', 'Tugas Saya') %></span>
-    </a>
-    <a href="/tech/pool" class="nav-item <%= activePage === 'pool' ? 'active' : '' %>">
-      <i class="bi bi-inbox-fill"></i>
-      <span><%= t('tech.nav.new_tickets', 'Tiket Baru') %></span>
-    </a>
-    <a href="/tech/attendance" class="nav-item <%= activePage === 'attendance' ? 'active' : '' %>">
-      <i class="bi bi-calendar-check-fill"></i>
-      <span>Absensi</span>
-    </a>
-    <a href="/tech/map" class="nav-item <%= activePage === 'map' ? 'active' : '' %>">
-      <i class="bi bi-map-fill"></i>
-      <span><%= t('tech.nav.map', 'Peta') %></span>
-    </a>
-    <a href="/tech/monitoring" class="nav-item <%= activePage === 'monitoring' ? 'active' : '' %>">
-      <i class="bi bi-display-fill"></i>
-      <span><%= t('tech.nav.monitor', 'Monitor') %></span>
-    </a>
+    <% (techBottomNav || []).forEach((item) => { %>
+      <a href="<%= item.href %>" class="nav-item <%= (item.activePages || []).includes(activePage) ? 'active' : '' %>">
+        <i class="<%= item.icon %>"></i>
+        <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
+      </a>
+    <% }) %>
   </nav>
 
   <script>

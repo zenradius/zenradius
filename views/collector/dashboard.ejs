@@ -296,9 +296,11 @@
       <a class="bni <%= activeScope === 'multi' ? 'active' : '' %>" href="/collector?<%= qsMulti %>#data-tagihan">
         <i class="bi bi-layers"></i><span>&gt;1 Bln</span>
       </a>
+      <% if ((collectorBottomNav || []).some(m => m.key === 'collector_attendance')) { %>
       <a class="bni" href="/collector/attendance">
         <i class="bi bi-calendar-check-fill"></i><span>Absensi</span>
       </a>
+      <% } %>
     </div>
   </div>
 

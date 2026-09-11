@@ -517,7 +517,7 @@
             <table class="tbl">
               <tr><td><%= t('agent.time', 'Waktu') %></td><td class="fw-bold"><%= receipt.created_at ? new Date(receipt.created_at).toLocaleString('id-ID') : '-' %></td></tr>
               <tr><td><%= t('agent.customer', 'Pelanggan') %></td><td class="fw-bold"><%= receipt.customer_name || '-' %> <span style="color:var(--muted);font-size:12px"><%= receipt.customer_phone ? '('+receipt.customer_phone+')' : '' %></span></td></tr>
-              <tr><td><%= t('agent.invoice', 'Invoice') %></td><td>#<%= receipt.invoice_id %> • <%= t('agent.period', 'Periode') %> <%= receipt.period %></td></tr>
+              <tr><td><%= t('agent.invoice', 'Invoice') %></td><td>#<%= receipt.invoice_id %> ï¿½ <%= t('agent.period', 'Periode') %> <%= receipt.period %></td></tr>
               <tr><td><%= t('agent.amount', 'Nominal') %></td><td class="fw-bold">Rp <%= Number(receipt.amount||0).toLocaleString('id-ID') %></td></tr>
               <tr><td><%= t('agent.cut_balance', 'Potong Saldo') %></td><td class="fw-bold" style="color:var(--danger)">Rp <%= Number(receipt.cost||0).toLocaleString('id-ID') %></td></tr>
               <tr><td><%= t('agent.fee', 'Fee') %></td><td class="fw-bold" style="color:var(--success)">Rp <%= Number(receipt.fee||0).toLocaleString('id-ID') %></td></tr>
@@ -697,7 +697,7 @@
               <div class="itemx">
                 <div class="top">
                   <div style="min-width:0">
-                    <div class="t1"><%= inv.package_name || 'Internet' %> • <%= inv.period_month %>/<%= inv.period_year %></div>
+                    <div class="t1"><%= inv.package_name || 'Internet' %> ï¿½ <%= inv.period_month %>/<%= inv.period_year %></div>
                     <div class="t2"><%= inv.customer_name || '-' %> <%= inv.customer_phone ? '('+inv.customer_phone+')' : '' %></div>
                   </div>
                   <div class="text-end">
@@ -716,7 +716,7 @@
                   <tr><td>Tag</td><td><%= inv.genieacs_tag ? inv.genieacs_tag : '-' %></td></tr>
                   <tr><td>IP Static</td><td><%= inv.static_ip ? inv.static_ip : '-' %></td></tr>
                   <tr><td>Router</td><td><%= inv.router_name ? inv.router_name : (inv.router_id ? ('#' + inv.router_id) : '-') %></td></tr>
-                  <tr><td>Status</td><td><%= inv.customer_status ? inv.customer_status : '-' %><%= inv.isolate_day ? (' • Tgl ' + inv.isolate_day) : '' %></td></tr>
+                  <tr><td>Status</td><td><%= inv.customer_status ? inv.customer_status : '-' %><%= inv.isolate_day ? (' ï¿½ Tgl ' + inv.isolate_day) : '' %></td></tr>
                   <tr><td>Alamat</td><td><%= inv.customer_address ? inv.customer_address : '-' %></td></tr>
                 </table>
 
@@ -864,7 +864,7 @@
                         </div>
                         <div style="min-width:0">
                           <div class="t1"><%= meta.title %></div>
-                          <div class="t2"><%= info.brandCount %> Brand • <%= info.productCount %> Produk</div>
+                          <div class="t2"><%= info.brandCount %> Brand ï¿½ <%= info.productCount %> Produk</div>
                         </div>
                       </div>
                     </div>
@@ -1034,15 +1034,15 @@
                       <% } else { %>
                         <%= t('agent.tx_type.generic', 'TRANSAKSI') %>
                       <% } %>
-                      <span style="color:var(--muted);font-size:11px">• <%= tx.created_at ? new Date(tx.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-' %></span>
+                      <span style="color:var(--muted);font-size:11px">ï¿½ <%= tx.created_at ? new Date(tx.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-' %></span>
                     </div>
                     <div class="t2">
                       <% if (tx.type === 'invoice_payment') { %>
-                        Invoice #<%= tx.invoice_id %> • Rp <%= Number(tx.amount_invoice||0).toLocaleString('id-ID') %>
+                        Invoice #<%= tx.invoice_id %> ï¿½ Rp <%= Number(tx.amount_invoice||0).toLocaleString('id-ID') %>
                       <% } else if (tx.type === 'voucher_sale') { %>
-                        <%= tx.profile_name %> • <code><%= tx.voucher_code %></code>
+                        <%= tx.profile_name %> ï¿½ <code><%= tx.voucher_code %></code>
                       <% } else if (tx.type === 'pulsa') { %>
-                        <%= tx.digi_sku || '-' %> • <%= tx.digi_target || '-' %> • <%= (tx.digi_status || '-').toString().toUpperCase() %>
+                        <%= tx.digi_sku || '-' %> ï¿½ <%= tx.digi_target || '-' %> ï¿½ <%= (tx.digi_status || '-').toString().toUpperCase() %>
                       <% } else { %>
                         <%= tx.note || '-' %>
                       <% } %>
@@ -1086,11 +1086,9 @@
 
   <nav class="bottom-nav">
     <div class="bn-wrap">
-      <a href="#section-top" class="bn-item active" data-scroll="top"><i class="bi bi-house"></i><%= t('agent.nav.home', 'Beranda') %></a>
-      <a href="#section-bill" class="bn-item" data-scroll="bill"><i class="bi bi-receipt"></i><%= t('agent.nav.billing', 'Tagihan') %></a>
-      <a href="#section-voucher" class="bn-item" data-scroll="voucher"><i class="bi bi-ticket-perforated"></i><%= t('agent.nav.voucher', 'Voucher') %></a>
-      <a href="#section-pulsa" class="bn-item" data-scroll="pulsa"><i class="bi bi-phone"></i>Pulsa</a>
-      <a href="#section-history" class="bn-item" data-scroll="history"><i class="bi bi-clock-history"></i><%= t('agent.nav.history', 'Riwayat') %></a>
+      <% (agentBottomNav || []).forEach((item, idx) => { %>
+        <a href="<%= item.href %>" class="bn-item <%= idx === 0 ? 'active' : '' %>" data-scroll="<%= (item.activePages || [''])[0] %>"><i class="<%= item.icon %>"></i><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></a>
+      <% }) %>
     </div>
   </nav>
 
@@ -1358,7 +1356,7 @@
           input.setAttribute('inputmode', 'numeric');
           input.setAttribute('pattern', '\\d{9,15}');
           input.setAttribute('maxlength', '15');
-          help.textContent = 'Masukkan nomor tanpa spasi. Awali 08… atau 62….';
+          help.textContent = 'Masukkan nomor tanpa spasi. Awali 08ï¿½ atau 62ï¿½.';
           return;
         }
 
@@ -1367,7 +1365,7 @@
         input.setAttribute('inputmode', 'numeric');
         input.setAttribute('pattern', '\\d{9,15}');
         input.setAttribute('maxlength', '15');
-        help.textContent = 'Masukkan nomor tanpa spasi. Awali 08… atau 62….';
+        help.textContent = 'Masukkan nomor tanpa spasi. Awali 08ï¿½ atau 62ï¿½.';
       };
 
       const df_openOrderModal = (item) => {

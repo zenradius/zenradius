@@ -9,6 +9,7 @@ const adminSvc = require('../services/adminService');
 const attendanceSvc = require('../services/attendanceService');
 const pdfSvc = require('../services/pdfInvoiceService');
 const { uploadAttendance, removeAttendanceFile } = require('../middleware/attendanceUpload');
+const sidebarMenuSvc = require('../services/sidebarMenuService');
 
 function requireCollectorSession(req, res, next) {
   if (req.session && req.session.isCollector && req.session.collectorId) {
@@ -18,6 +19,19 @@ function requireCollectorSession(req, res, next) {
     return next();
   }
   return res.redirect('/collector/login');
+}
+
+// Guard: menu bisa disembunyikan admin dari /admin/sidebar-settings. Akses
+// langsung via URL tetap ditolak jika menu sedang disembunyikan.
+function requireMenuAccess(menuKey) {
+  return (req, res, next) => {
+    const access = sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session);
+    if (!access.allowed) {
+      req.session._msg = { type: 'error', text: 'Menu ini sedang dinonaktifkan oleh Admin.' };
+      return res.redirect('/collector');
+    }
+    return next();
+  };
 }
 
 function company() {
@@ -37,6 +51,7 @@ router.use((req, res, next) => {
   res.locals.formatTimeLocal = formatTimeLocal;
   res.locals.parseDateInTimezone = parseDateInTimezone;
   res.locals.getNowLocal = getNowLocal;
+  res.locals.collectorBottomNav = sidebarMenuSvc.getBottomNavItems(req.session);
   next();
 });
 
@@ -92,7 +107,7 @@ router.get('/logout', (req, res) => {
 });
 
 // ─── COLLECTOR ATTENDANCE ────────────────────────────────────────────────────
-router.get('/attendance', requireCollectorSession, (req, res) => {
+router.get('/attendance', requireCollectorSession, requireMenuAccess('collector_attendance'), (req, res) => {
   try {
     const collectorId = req.session.collectorId;
     const collectorName = req.session.collectorName;
