@@ -155,6 +155,12 @@ fi
 mkdir -p database data logs backups public/uploads auth_info_baileys
 ok "Folder runtime (database, data, logs, backups, public/uploads, auth_info_baileys) siap."
 
+# Skema tabel dibuat oleh config/database.js saat pertama kali di-require,
+# bukan oleh scripts/verify-database.js. Untuk instalasi baru (database masih
+# kosong), skema perlu dibuat dulu sebelum verifikasi kolom dijalankan.
+info "Menyiapkan skema database (jika belum ada)..."
+node -e "require('./config/database')" || warn "Gagal menyiapkan skema awal database — periksa log di atas."
+
 # Verifikasi database
 if [ -f scripts/verify-database.js ]; then
   info "Menjalankan verifikasi struktur database..."
