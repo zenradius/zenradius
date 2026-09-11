@@ -26,6 +26,7 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 - [Panduan Instalasi](#-panduan-instalasi)
 - [Menjalankan via Docker](#-menjalankan-via-docker-alternatif)
 - [Konfigurasi Domain & HTTPS](#-konfigurasi-domain--https)
+- [Auto-Start Setelah Reboot Server](#-auto-start-setelah-reboot-server)
 - [Update Aplikasi](#-update-aplikasi-setelah-deploy-ke-vps)
 - [Akun Akses Default](#-akun-akses-default)
 - [Lisensi](#-lisensi)
@@ -255,7 +256,53 @@ APP_URL=https://yourdomain.com
 
 ---
 
-## 🔄 Update Aplikasi (Setelah Deploy ke VPS)
+## � Auto-Start Setelah Reboot Server
+
+Agar aplikasi **otomatis kembali berjalan** saat VPS mati listrik/direstart, konfigurasi berikut wajib disiapkan sesuai metode deploy yang digunakan.
+
+| Metode Deploy | Otomatis Jalan Saat Server Reboot? |
+|---|---|
+| **Docker Compose** (`restart: unless-stopped`) | ✅ Ya, otomatis (asalkan Docker service ter-enable) |
+| **Manual (`npm start`)** | ❌ Tidak — aplikasi mati total, perlu start manual |
+| **PM2** (`pm2 startup` + `pm2 save`) | ✅ Ya, setelah setup sekali |
+
+### 🐳 Opsi A: Docker Compose (Direkomendasikan)
+`compose.yaml` sudah dikonfigurasi dengan `restart: unless-stopped`, sehingga container otomatis restart saat crash maupun saat server reboot — asalkan **Docker daemon** sendiri otomatis aktif saat boot:
+```bash
+sudo systemctl is-enabled docker
+# jika hasilnya belum "enabled":
+sudo systemctl enable docker
+```
+Tidak ada langkah tambahan lain — setelah ini, aplikasi akan otomatis hidup kembali tanpa intervensi manual.
+
+### ⚙️ Opsi B: Instalasi Manual dengan PM2
+Jika aplikasi dijalankan langsung via Node.js (bukan Docker), gunakan **PM2** sebagai process manager agar tetap hidup dan otomatis restart saat boot:
+```bash
+npm install -g pm2
+pm2 start app-customer.js --name zenradius
+pm2 save
+pm2 startup
+```
+Perintah `pm2 startup` akan menampilkan satu baris perintah `sudo` — jalankan perintah tersebut satu kali untuk mendaftarkan PM2 sebagai service sistem (systemd).
+
+### ✅ Verifikasi
+Uji dengan me-reboot server:
+```bash
+sudo reboot
+```
+Setelah server kembali online, cek status:
+```bash
+# Docker
+docker compose ps
+
+# PM2
+pm2 list
+```
+Aplikasi seharusnya berstatus **running** tanpa perlu login/start ulang secara manual.
+
+---
+
+## �🔄 Update Aplikasi (Setelah Deploy ke VPS)
 
 ZenRadius memiliki fitur **Update GitHub** bawaan di panel admin, sehingga Anda **tidak perlu SSH manual** setiap kali ada perubahan kode. Alurnya:
 
