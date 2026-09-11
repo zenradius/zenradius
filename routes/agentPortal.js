@@ -114,6 +114,20 @@ router.use((req, res, next) => {
   next();
 });
 
+// Blokir aksi jika menu terkait dinonaktifkan Admin di Pengaturan Sidebar.
+function requireMenuAccess(menuKey) {
+  return (req, res, next) => {
+    if (!sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session).allowed) {
+      if (req.is('application/json') || req.path.startsWith('/api/')) {
+        return res.status(403).json({ success: false, message: 'Menu ini sedang dinonaktifkan oleh Admin.' });
+      }
+      req.session._msg = { type: 'warning', text: 'Menu ini sedang dinonaktifkan oleh Admin.' };
+      return res.redirect('/agent');
+    }
+    return next();
+  };
+}
+
 // Phase 15: fail-closed jika modul rate limiter tidak dapat dimuat.
 let loginRateLimiter = (req, res, next) => res.status(503).send('Layanan login sementara tidak tersedia.');
 try {
@@ -140,7 +154,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
         return res.render('agent/login', { title: 'Login Agent', company: company(), error: 'Kesalahan sistem. Silakan coba lagi.' });
       }
       req.session.isAgent = true;
-      req.session.role = "reseller"; // canonical RBAC role (Phase 3) — agent = fungsi reseller resmi
+      req.session.role = "reseller"; // canonical RBAC role (Phase 3) â€” agent = fungsi reseller resmi
       req.session.agentId = agent.id;
       req.session.agentName = agent.name;
       req.session.save((err) => {
@@ -347,7 +361,7 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
   }
 });
 
-router.post('/pay-invoice', requireAgentSession, express.urlencoded({ extended: true }), async (req, res) => {
+router.post('/pay-invoice', requireAgentSession, requireMenuAccess('agent_billing'), express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const invoiceId = Number(req.body.invoice_id || 0);
     if (!invoiceId) throw new Error('Invoice ID tidak valid');
@@ -363,12 +377,12 @@ router.post('/pay-invoice', requireAgentSession, express.urlencoded({ extended: 
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
         if (whatsappStatus.connection === 'open') {
           const msg =
-            `✅ *PEMBAYARAN BERHASIL*\n\n` +
-            `👤 *Pelanggan:* ${customer.name}\n` +
-            `🧾 *Invoice:* #${result.invoice.id}\n` +
-            `📅 *Periode:* ${result.invoice.period_month}/${result.invoice.period_year}\n` +
-            `💰 *Nominal Tagihan:* Rp ${Number(result.invoice.amount || 0).toLocaleString('id-ID')}\n` +
-            `🏷️ *Dibayar Via:* Agent ${result.agent.name}\n\n` +
+            `âœ… *PEMBAYARAN BERHASIL*\n\n` +
+            `ðŸ‘¤ *Pelanggan:* ${customer.name}\n` +
+            `ðŸ§¾ *Invoice:* #${result.invoice.id}\n` +
+            `ðŸ“… *Periode:* ${result.invoice.period_month}/${result.invoice.period_year}\n` +
+            `ðŸ’° *Nominal Tagihan:* Rp ${Number(result.invoice.amount || 0).toLocaleString('id-ID')}\n` +
+            `ðŸ·ï¸ *Dibayar Via:* Agent ${result.agent.name}\n\n` +
             `Terima kasih.`;
           await sendWA(customer.phone, msg);
           waSent = true;
@@ -397,7 +411,7 @@ router.post('/pay-invoice', requireAgentSession, express.urlencoded({ extended: 
   res.redirect('/agent');
 });
 
-router.post('/sell-voucher', requireAgentSession, express.urlencoded({ extended: true }), async (req, res) => {
+router.post('/sell-voucher', requireAgentSession, requireMenuAccess('agent_voucher'), express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const priceId = Number(req.body.price_id || 0);
     if (!priceId) throw new Error('Harga voucher tidak valid');
@@ -410,12 +424,12 @@ router.post('/sell-voucher', requireAgentSession, express.urlencoded({ extended:
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
         if (whatsappStatus.connection === 'open') {
           const msg =
-            `🎫 *VOUCHER HOTSPOT*\n\n` +
-            `📦 *Paket:* ${result.receipt.profile}\n` +
-            `${result.receipt.validity ? `⏱️ *Masa Aktif:* ${result.receipt.validity}\n` : ''}` +
-            `👤 *User:* ${result.receipt.code}\n` +
-            `🔑 *Pass:* ${result.receipt.password}\n` +
-            `💰 *Harga:* Rp ${Number(result.receipt.sell_price || 0).toLocaleString('id-ID')}\n\n` +
+            `ðŸŽ« *VOUCHER HOTSPOT*\n\n` +
+            `ðŸ“¦ *Paket:* ${result.receipt.profile}\n` +
+            `${result.receipt.validity ? `â±ï¸ *Masa Aktif:* ${result.receipt.validity}\n` : ''}` +
+            `ðŸ‘¤ *User:* ${result.receipt.code}\n` +
+            `ðŸ”‘ *Pass:* ${result.receipt.password}\n` +
+            `ðŸ’° *Harga:* Rp ${Number(result.receipt.sell_price || 0).toLocaleString('id-ID')}\n\n` +
             `Simpan voucher ini.`;
           await sendWA(buyerPhone, msg);
           waSent = true;
@@ -444,7 +458,7 @@ router.post('/sell-voucher', requireAgentSession, express.urlencoded({ extended:
   res.redirect('/agent');
 });
 
-router.post('/pulsa', requireAgentSession, express.urlencoded({ extended: true }), async (req, res) => {
+router.post('/pulsa', requireAgentSession, requireMenuAccess('agent_pulsa'), express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const sku = String(req.body.sku || '').trim();
     const target = String(req.body.target || '').trim();
@@ -465,13 +479,13 @@ router.post('/pulsa', requireAgentSession, express.urlencoded({ extended: true }
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
         if (whatsappStatus.connection === 'open') {
           const msg =
-            `${isSuccess ? '✅' : isFailed ? '❌' : '⏳'} *TRANSAKSI PULSA*\n\n` +
-            `📦 *SKU:* ${sku}\n` +
-            `🎯 *Target:* ${target}\n` +
-            `🧾 *Ref ID:* ${result?.tx?.digi_ref_id || '-'}\n` +
-            `📡 *Status:* ${status.toUpperCase()}\n` +
-            `${result?.tx?.digi_sn ? `🔢 *SN:* ${result.tx.digi_sn}\n` : ''}` +
-            `${result?.tx?.digi_message ? `💬 *Pesan:* ${result.tx.digi_message}\n` : ''}` +
+            `${isSuccess ? 'âœ…' : isFailed ? 'âŒ' : 'â³'} *TRANSAKSI PULSA*\n\n` +
+            `ðŸ“¦ *SKU:* ${sku}\n` +
+            `ðŸŽ¯ *Target:* ${target}\n` +
+            `ðŸ§¾ *Ref ID:* ${result?.tx?.digi_ref_id || '-'}\n` +
+            `ðŸ“¡ *Status:* ${status.toUpperCase()}\n` +
+            `${result?.tx?.digi_sn ? `ðŸ”¢ *SN:* ${result.tx.digi_sn}\n` : ''}` +
+            `${result?.tx?.digi_message ? `ðŸ’¬ *Pesan:* ${result.tx.digi_message}\n` : ''}` +
             `\nTerima kasih.`;
           await sendWA(buyerPhone, msg);
           waSent = true;
@@ -503,7 +517,7 @@ router.post('/pulsa', requireAgentSession, express.urlencoded({ extended: true }
   res.redirect('/agent');
 });
 
-router.post('/api/pulsa/order', requireAgentSession, express.json({ limit: '50kb' }), async (req, res) => {
+router.post('/api/pulsa/order', requireAgentSession, requireMenuAccess('agent_pulsa'), express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const sku = String(req.body?.sku || '').trim();
     const target = String(req.body?.target || '').trim();
@@ -524,14 +538,14 @@ router.post('/api/pulsa/order', requireAgentSession, express.json({ limit: '50kb
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
         if (whatsappStatus.connection === 'open') {
           const msg =
-            `${isSuccess ? '✅' : isFailed ? '❌' : '⏳'} *TRANSAKSI PULSA*\n\n` +
-            `📦 *SKU:* ${sku}\n` +
-            `🎯 *Target:* ${target}\n` +
-            `💰 *Harga:* Rp ${Number(result?.tx?.amount_sell || 0).toLocaleString('id-ID')}\n` +
-            `🧾 *Ref ID:* ${result?.tx?.digi_ref_id || '-'}\n` +
-            `📡 *Status:* ${status.toUpperCase()}\n` +
-            `${result?.tx?.digi_sn ? `🔢 *SN:* ${result.tx.digi_sn}\n` : ''}` +
-            `${result?.tx?.digi_message ? `💬 *Pesan:* ${result.tx.digi_message}\n` : ''}` +
+            `${isSuccess ? 'âœ…' : isFailed ? 'âŒ' : 'â³'} *TRANSAKSI PULSA*\n\n` +
+            `ðŸ“¦ *SKU:* ${sku}\n` +
+            `ðŸŽ¯ *Target:* ${target}\n` +
+            `ðŸ’° *Harga:* Rp ${Number(result?.tx?.amount_sell || 0).toLocaleString('id-ID')}\n` +
+            `ðŸ§¾ *Ref ID:* ${result?.tx?.digi_ref_id || '-'}\n` +
+            `ðŸ“¡ *Status:* ${status.toUpperCase()}\n` +
+            `${result?.tx?.digi_sn ? `ðŸ”¢ *SN:* ${result.tx.digi_sn}\n` : ''}` +
+            `${result?.tx?.digi_message ? `ðŸ’¬ *Pesan:* ${result.tx.digi_message}\n` : ''}` +
             `\nTerima kasih.`;
           await sendWA(buyerPhone, msg);
           waSent = true;
@@ -571,7 +585,7 @@ router.post('/api/pulsa/order', requireAgentSession, express.json({ limit: '50kb
   }
 });
 
-router.post('/pulsa/check', requireAgentSession, express.urlencoded({ extended: true }), async (req, res) => {
+router.post('/pulsa/check', requireAgentSession, requireMenuAccess('agent_pulsa'), express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const txId = Number(req.body.tx_id || 0);
     if (!txId) throw new Error('ID transaksi tidak valid');

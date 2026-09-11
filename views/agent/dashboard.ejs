@@ -492,6 +492,10 @@
     </div>
   </div>
 
+  <%
+    const __navKeys = new Set((agentBottomNav || []).map((m) => m.key));
+    const menuOn = (key) => __navKeys.has(key);
+  %>
   <div class="wrap" id="section-top">
     <% if (msg) { %>
       <div class="alert alert-<%= msg.type==='error' ? 'danger' : msg.type==='warning' ? 'warning' : msg.type==='info' ? 'info' : 'success' %> py-2 rounded-4" style="background: rgba(15,23,42,0.55); border:1px solid rgba(148,163,184,0.14); color: var(--text)">
@@ -675,6 +679,7 @@
       </div>
     </div>
 
+    <% if (menuOn('agent_billing')) { %>
     <div class="cardx" id="section-bill">
       <div class="hd">
         <h6><i class="bi bi-receipt"></i> <%= t('agent.pay_invoice', 'Bayar Tagihan') %></h6>
@@ -735,7 +740,9 @@
         <% } %>
       </div>
     </div>
+    <% } %>
 
+    <% if (menuOn('agent_voucher')) { %>
     <div class="cardx" id="section-voucher">
       <div class="hd">
         <h6><i class="bi bi-ticket-perforated"></i> <%= t('agent.sell_voucher', 'Jual Voucher Hotspot') %></h6>
@@ -780,7 +787,9 @@
         <% } %>
       </div>
     </div>
+    <% } %>
 
+    <% if (menuOn('agent_pulsa')) { %>
     <div class="cardx" id="section-pulsa">
       <div class="hd">
         <h6><i class="bi bi-phone"></i> Pulsa / Produk Digital</h6>
@@ -1007,7 +1016,9 @@
         <% } %>
       </div>
     </div>
+    <% } %>
 
+    <% if (menuOn('agent_history')) { %>
     <div class="cardx" id="section-history">
       <div class="hd">
         <h6><i class="bi bi-clock-history"></i> <%= t('agent.history_title', 'Riwayat Singkat') %></h6>
@@ -1082,6 +1093,7 @@
         <% } %>
       </div>
     </div>
+    <% } %>
   </div>
 
   <nav class="bottom-nav">
