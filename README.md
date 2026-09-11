@@ -24,6 +24,7 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 - [Tumpukan Teknologi](#-tumpukan-teknologi)
 - [Persyaratan Sistem](#-persyaratan-sistem)
 - [Panduan Instalasi](#-panduan-instalasi)
+- [Instalasi Otomatis via Skrip (VPS)](#-instalasi-otomatis-via-skrip-vps)
 - [Menjalankan via Docker](#-menjalankan-via-docker-alternatif)
 - [Konfigurasi Domain & HTTPS](#-konfigurasi-domain--https)
 - [Auto-Start Setelah Reboot Server](#-auto-start-setelah-reboot-server)
@@ -135,6 +136,36 @@ npm start
 Aplikasi dapat diakses melalui: **`https://yourdomain.com`** (atau port kustom yang telah Anda tentukan).
 
 ---
+
+## ⚡ Instalasi Otomatis via Skrip (VPS)
+
+Untuk mempercepat setup awal di VPS, tersedia skrip `scripts/install-vps.sh` yang menjalankan **seluruh proses instalasi dalam satu perintah**: clone/sinkronisasi repo GitHub, pasang dependensi, siapkan `.env`, verifikasi database, hingga menjalankan aplikasi via PM2 dengan auto-start saat reboot.
+
+### Jalankan Langsung (Server Baru, Belum Ada Folder Aplikasi)
+```bash
+curl -fsSL https://raw.githubusercontent.com/zenradius/zenradius/main/scripts/install-vps.sh -o install-vps.sh
+chmod +x install-vps.sh
+./install-vps.sh
+```
+
+### Jalankan dari Repo yang Sudah Di-clone
+```bash
+cd /path/to/zenradius
+bash scripts/install-vps.sh
+```
+
+### Apa yang Dilakukan Skrip Ini?
+1. **Verifikasi/Clone Repository** — mengecek apakah folder sudah git repo; jika sudah, otomatis `git pull` (sinkron ke commit terbaru GitHub); jika belum, otomatis `git clone` dari `https://github.com/zenradius/zenradius.git`.
+2. **Validasi Remote Origin** — memastikan remote mengarah ke repository resmi ZenRadius, dan memberi peringatan jika berbeda.
+3. **Instalasi Dependensi** — otomatis `npm ci`/`npm install` mode production.
+4. **Setup `.env`** — otomatis membuat `.env` dari `.env.example` jika belum ada (tidak menimpa `.env` yang sudah dikonfigurasi).
+5. **Verifikasi Database** — menjalankan `scripts/verify-database.js`.
+6. **Auto-Start via PM2** — menjalankan aplikasi dengan PM2, menyimpan konfigurasi (`pm2 save`), dan mendaftarkan PM2 sebagai service sistem (`pm2 startup`) agar aplikasi **otomatis hidup kembali saat VPS reboot**.
+
+> 💡 **Tip:** Skrip ini aman dijalankan berulang kali (idempotent) — cocok juga dipakai untuk re-sync manual selain melalui menu **Update GitHub** di panel admin.
+
+---
+
 ## 🐳 Menjalankan via Docker (Alternatif)
 
 Selain instalasi manual di atas, ZenRadius juga sudah menyediakan `Dockerfile` dan `compose.yaml` sehingga Anda bisa menjalankan aplikasi tanpa perlu memasang Node.js secara langsung di server.
