@@ -150,6 +150,11 @@ else
   ok "File .env sudah ada, tidak diubah."
 fi
 
+# Folder runtime yang tidak ikut ter-clone dari git (lihat .gitignore) tapi
+# wajib ada sebelum aplikasi/skrip database dijalankan.
+mkdir -p database data logs backups public/uploads auth_info_baileys
+ok "Folder runtime (database, data, logs, backups, public/uploads, auth_info_baileys) siap."
+
 # Verifikasi database
 if [ -f scripts/verify-database.js ]; then
   info "Menjalankan verifikasi struktur database..."
@@ -211,12 +216,13 @@ fi
 
 pm2 save
 info "Mendaftarkan PM2 agar auto-start saat server reboot..."
-STARTUP_CMD="$(pm2 startup systemd -u "${SUDO_USER:-root}" --hp "$(eval echo ~"${SUDO_USER:-root}")" 2>/dev/null | grep -E '^sudo ' || true)"
+STARTUP_OUTPUT="$(pm2 startup systemd 2>&1 || true)"
+STARTUP_CMD="$(echo "$STARTUP_OUTPUT" | grep -E '^(sudo )?env PATH=' | head -n1)"
 if [ -n "$STARTUP_CMD" ]; then
-  eval "$STARTUP_CMD"
+  eval "${STARTUP_CMD#sudo }"
   ok "PM2 terdaftar sebagai service sistem (auto-start saat reboot)."
 else
-  warn "Tidak dapat mendeteksi perintah pm2 startup otomatis. Jalankan 'pm2 startup' secara manual jika auto-start belum aktif."
+  warn "Tidak dapat mendeteksi perintah pm2 startup otomatis. Jalankan 'pm2 startup' secara manual lalu ikuti instruksinya jika auto-start belum aktif."
 fi
 
 # Ringkasan
