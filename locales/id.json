@@ -1043,6 +1043,7 @@
       "latest": "Terbaru",
       "check": "Cek Versi",
       "run": "Update Sekarang",
+      "changelog_title": "Keterangan Update Terbaru",
       "keep_files": "File yang tidak ditimpa saat update: settings.json dan folder database. Setelah update selesai, restart aplikasi agar versi baru aktif.",
       "log_title": "Log Update",
       "confirm": "Jalankan update dari GitHub sekarang? Pastikan koneksi internet aman dan aplikasi akan direstart setelah selesai."

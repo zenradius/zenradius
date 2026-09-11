@@ -59,9 +59,9 @@
               <i class="bi bi-github"></i>
               <span style="font-weight:800"><%= info?.remoteVersion || '-' %></span>
               <% if (info?.needsUpdate) { %>
-                <span class="badge badge-d" style="margin-left:8px"><i class="bi bi-arrow-up-circle"></i> <%= t('admin.update.has_update', 'Ada update') %></span>
+                <span class="badge bd" style="margin-left:8px"><i class="bi bi-arrow-up-circle"></i> <%= t('admin.update.has_update', 'Ada update') %></span>
               <% } else { %>
-                <span class="badge badge-s" style="margin-left:8px"><i class="bi bi-check2-circle"></i> <%= t('admin.update.latest', 'Terbaru') %></span>
+                <span class="badge bs" style="margin-left:8px"><i class="bi bi-check2-circle"></i> <%= t('admin.update.latest', 'Terbaru') %></span>
               <% } %>
             </div>
           </div>
@@ -77,6 +77,29 @@
             <div class="fc" style="font-family:ui-monospace,monospace;font-size:12px;word-break:break-all"><%= info?.remoteCommit || '-' %></div>
           </div>
         </div>
+
+        <% if (info?.needsUpdate && info?.changelog && info.changelog.length > 0) { %>
+          <div class="fg" style="margin-top:14px">
+            <label class="fl"><i class="bi bi-list-ul"></i> <%= t('admin.update.changelog_title', 'Keterangan Update Terbaru') %> (<%= info.changelog.length %>)</label>
+            <div class="fc" style="max-height:260px;overflow-y:auto;padding:0">
+              <ul style="list-style:none;margin:0;padding:0">
+                <% info.changelog.forEach(function(item, idx) { %>
+                  <li style="display:flex;gap:10px;align-items:flex-start;padding:8px 12px;<%= idx < info.changelog.length - 1 ? 'border-bottom:1px solid rgba(0,0,0,0.08)' : '' %>">
+                    <span class="badge bm" style="font-family:ui-monospace,monospace;flex-shrink:0"><%= item.hash %></span>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:13px;word-break:break-word"><%= item.message %></div>
+                      <div style="font-size:11px;color:var(--muted);margin-top:2px"><i class="bi bi-person"></i> <%= item.author %> &middot; <i class="bi bi-calendar3"></i> <%= item.date %></div>
+                    </div>
+                  </li>
+                <% }); %>
+              </ul>
+            </div>
+          </div>
+        <% } else if (info?.needsUpdate) { %>
+          <div class="fg" style="margin-top:14px">
+            <div class="alert alert-w" style="margin:0"><i class="bi bi-exclamation-triangle"></i> Ada update tersedia, namun rincian perubahan tidak dapat dimuat.</div>
+          </div>
+        <% } %>
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
           <form method="GET" action="/admin/update">

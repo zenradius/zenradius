@@ -458,6 +458,28 @@ function getUpdateInfo(repoRoot) {
     (remoteVersion && remoteVersion !== '-' && remoteVersion !== localVersion) ||
     (info.localCommit !== '-' && info.remoteCommit !== '-' && info.localCommit !== info.remoteCommit)
   );
+
+  // Changelog: daftar commit yang ada di origin/<branch> tapi belum ada di
+  // HEAD lokal — supaya admin bisa melihat "apa saja yang diperbarui" sebelum
+  // menekan tombol Update Sekarang. Dibatasi 30 entri terbaru agar ringkas.
+  info.changelog = [];
+  if (info.needsUpdate && info.localCommit !== '-' && info.remoteCommit !== '-') {
+    const logFormat = '%h|%ad|%an|%s';
+    const logCmd = runCmd(
+      'git',
+      ['log', `${info.localCommit}..${info.remoteCommit}`, `--pretty=format:${logFormat}`, '--date=short', '-n', '30'],
+      repoRoot
+    );
+    if (logCmd.ok) {
+      info.changelog = String(logCmd.stdout || '')
+        .split('\n')
+        .filter((line) => line.trim().length > 0)
+        .map((line) => {
+          const [hash, date, author, ...msgParts] = line.split('|');
+          return { hash: hash || '-', date: date || '-', author: author || '-', message: msgParts.join('|') || '-' };
+        });
+    }
+  }
   return info;
 }
 
