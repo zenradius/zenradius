@@ -119,68 +119,6 @@
       </div>
     </div>
 
-    <div class="card mb16">
-      <div class="card-hd"><h6><i class="bi bi-patch-check"></i> Official Release Channel (GitHub Release)</h6></div>
-      <div class="card-bd">
-        <% if (!release || !release.configured) { %>
-          <div class="alert alert-d"><i class="bi bi-exclamation-circle"></i> Release resmi belum dikonfigurasi. Jalur update Git di atas tetap tersedia sebagai fallback.</div>
-        <% } else { %>
-          <div class="form-row" style="align-items:flex-start">
-            <div class="fg">
-              <label class="fl">Sumber Release</label>
-              <div class="fc"><%= release.source === 'github_release' ? 'GitHub Release' : (release.source === 'manifest_url' ? 'Manifest URL (override)' : '-') %></div>
-            </div>
-            <div class="fg">
-              <label class="fl">Release Public Key</label>
-              <div class="fc"><%= release.trustAnchorConfigured ? 'Terkonfigurasi' : 'Belum dikonfigurasi (fail-closed)' %></div>
-            </div>
-            <div class="fg">
-              <label class="fl">Status Terakhir</label>
-              <div class="fc"><%= release.lastRun?.state || 'idle' %></div>
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-            <button type="button" class="btn btn-g" onclick="checkRelease()"><i class="bi bi-arrow-repeat"></i> Cek Release Resmi</button>
-            <button type="button" class="btn btn-s" onclick="runRelease()" <%= release.trustAnchorConfigured ? '' : 'disabled' %>><i class="bi bi-cloud-arrow-down"></i> Update via Release Resmi</button>
-          </div>
-          <div id="releaseSummary" style="margin-top:10px;font-size:13px"></div>
-          <div id="releaseNotesBox" style="margin-top:8px;font-size:12px;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;display:none"></div>
-          <div id="releaseResult" style="margin-top:10px;font-size:12px;white-space:pre-wrap;word-break:break-word"></div>
-        <% } %>
-      </div>
-    </div>
-
-    <script>
-      async function checkRelease() {
-        const summary = document.getElementById('releaseSummary');
-        const notesBox = document.getElementById('releaseNotesBox');
-        summary.textContent = 'Memeriksa...';
-        notesBox.style.display = 'none';
-        try {
-          const res = await fetch('/admin/update/release/check');
-          const data = await res.json();
-          const r = data.result || {};
-          // Values inserted via textContent only — release notes are
-          // untrusted remote text and are NEVER rendered as HTML.
-          summary.textContent = `Versi saat ini: ${r.currentVersion || '-'} | Versi tersedia: ${r.availableVersion || '-'} | Update tersedia: ${r.updateAvailable ? 'Ya' : 'Tidak'} | Channel: ${r.channel || '-'} | Status: ${r.status || '-'}`;
-          if (r.releaseNotes) {
-            notesBox.textContent = r.releaseNotes;
-            notesBox.style.display = 'block';
-          }
-        } catch (e) { summary.textContent = 'Gagal memeriksa release.'; }
-      }
-      async function runRelease() {
-        if (!confirm('Jalankan update via release resmi sekarang?')) return;
-        const box = document.getElementById('releaseResult');
-        box.textContent = 'Menjalankan update...';
-        try {
-          const res = await fetch('/admin/update/release/run', { method: 'POST' });
-          const data = await res.json();
-          box.textContent = JSON.stringify(data, null, 2);
-        } catch (e) { box.textContent = 'Gagal menjalankan update.'; }
-      }
-    </script>
-
     <% if (log) { %>
       <div class="card mb16">
         <div class="card-hd"><h6><i class="bi bi-terminal"></i> <%= t('admin.update.log_title', 'Log Update') %></h6></div>
