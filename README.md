@@ -24,6 +24,9 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 - [Tumpukan Teknologi](#-tumpukan-teknologi)
 - [Persyaratan Sistem](#-persyaratan-sistem)
 - [Panduan Instalasi](#-panduan-instalasi)
+- [Menjalankan via Docker](#-menjalankan-via-docker-alternatif)
+- [Konfigurasi Domain & HTTPS](#-konfigurasi-domain--https)
+- [Update Aplikasi](#-update-aplikasi-setelah-deploy-ke-vps)
 - [Akun Akses Default](#-akun-akses-default)
 - [Lisensi](#-lisensi)
 
@@ -182,7 +185,77 @@ Aplikasi dapat diakses melalui **`https://yourdomain.com`** (setelah dikonfigura
 > 💡 **Tip:** Jika menggunakan fitur **Update GitHub** di panel admin saat berjalan via Docker, pastikan container memiliki akses `git` dan proses restart dilakukan melalui `docker compose restart zenradius` (bukan PM2), karena aplikasi di dalam container tidak dikelola oleh PM2.
 
 ---
-## � Update Aplikasi (Setelah Deploy ke VPS)
+
+## 🌐 Konfigurasi Domain & HTTPS
+
+Secara default aplikasi hanya berjalan di `127.0.0.1:3001` (baik mode manual maupun Docker) — **belum otomatis** dapat diakses via domain custom. Diperlukan **reverse proxy + SSL** agar aplikasi bisa diakses publik melalui `https://yourdomain.com` dan agar fitur PWA (install ke home screen) dapat berfungsi (PWA mewajibkan HTTPS).
+
+```mermaid
+flowchart LR
+    A[🌐 Domain] -->|DNS A Record| B[VPS Public IP]
+    B --> C[Nginx :80 / :443]
+    C -->|proxy_pass| D[Node.js App :3001]
+    C -->|SSL Certbot| E[HTTPS Aktif]
+```
+
+### 1️⃣ Arahkan Domain ke VPS (DNS)
+Di panel DNS domain Anda (Cloudflare, Niagahoster, dll), buat record:
+```
+Type: A
+Name: @ (atau subdomain, misal: app)
+Value: <IP_Publik_VPS_Anda>
+```
+
+### 2️⃣ Pasang & Konfigurasi Nginx (Reverse Proxy)
+```bash
+sudo apt update && sudo apt install nginx -y
+```
+
+Buat berkas konfigurasi baru `/etc/nginx/sites-available/zenradius`:
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+Aktifkan konfigurasi:
+```bash
+sudo ln -s /etc/nginx/sites-available/zenradius /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 3️⃣ Aktifkan HTTPS (SSL Gratis via Let's Encrypt)
+```bash
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+```
+Certbot otomatis memperbarui konfigurasi Nginx untuk HTTPS dan mengelola **auto-renewal** sertifikat setiap ± 60 hari.
+
+### 4️⃣ Perbarui Variabel Environment
+Pastikan nilai terkait URL aplikasi pada `.env` menggunakan domain HTTPS final, misalnya:
+```dotenv
+APP_URL=https://yourdomain.com
+```
+
+> ✅ **Setelah setup ini dilakukan satu kali**, domain akan otomatis tetap berfungsi setiap kali VPS/container restart — Nginx dan sertifikat SSL berjalan sebagai service permanen di VPS, tidak perlu diulang manual.
+
+---
+
+## 🔄 Update Aplikasi (Setelah Deploy ke VPS)
 
 ZenRadius memiliki fitur **Update GitHub** bawaan di panel admin, sehingga Anda **tidak perlu SSH manual** setiap kali ada perubahan kode. Alurnya:
 
@@ -225,7 +298,7 @@ Jika belum, clone ulang dan pindahkan folder `database/`, `.env`, `public/upload
 
 ---
 
-## �🔐 Akun Akses Default
+## 🔐 Akun Akses Default
 
 Gunakan kredensial berikut untuk login pertama kali ke **Pusat Administrasi ZenRadius**:
 
