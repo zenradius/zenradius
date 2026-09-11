@@ -11,7 +11,7 @@
  * Sumber yang DIKELOLA (create/edit/status/reset password) dari halaman ini:
  *   technicians  -> canonical role: teknisi
  *   cashiers     -> canonical role: customer_service
- *   collectors   -> canonical role: customer_service (LEGACY mapping, lihat authz.js)
+ *   collectors   -> canonical role: kolektor
  *   agents       -> canonical role: reseller
  *
  * Sumber yang HANYA VIEW (read-only) dari halaman ini, karena sudah punya
@@ -31,7 +31,7 @@ const MANAGED_SOURCES = Object.freeze(['technicians', 'cashiers', 'collectors', 
 const SOURCE_TO_ROLE = Object.freeze({
   technicians: 'teknisi',
   cashiers: 'customer_service',
-  collectors: 'customer_service',
+  collectors: 'kolektor',
   agents: 'reseller',
   customers: 'pelanggan',
   admin: 'admin'

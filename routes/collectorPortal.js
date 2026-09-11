@@ -12,7 +12,7 @@ const { uploadAttendance, removeAttendanceFile } = require('../middleware/attend
 
 function requireCollectorSession(req, res, next) {
   if (req.session && req.session.isCollector && req.session.collectorId) {
-    if (req.session.role && req.session.role !== 'customer_service') {
+    if (req.session.role && req.session.role !== 'kolektor') {
       return res.redirect('/collector/login');
     }
     return next();
@@ -66,12 +66,10 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
         return res.render('collector/login', { title: 'Login Kolektor', company: company(), error: 'Kesalahan sistem. Silakan coba lagi.' });
       }
       req.session.isCollector = true;
-      // LEGACY MAPPING (Phase 3): fungsi Collector (field-billing/collection, payment-request
-      // approval oleh admin/cashier) tidak punya equivalent 1:1 yang jelas di antara 5 role final.
-      // Dipetakan sementara ke 'customer_service' karena scope kerjanya penagihan/administrasi
-      // pelanggan lapangan, BUKAN administrasi sistem. Ini bersifat compatibility, didokumentasikan
-      // untuk audit ulang di phase cleanup berikutnya (lihat middleware/authz.js LEGACY_TO_CANONICAL).
-      req.session.role = "customer_service";
+      // Kolektor punya canonical role sendiri ('kolektor'), terpisah dari Kasir
+      // ('customer_service') meski keduanya sama-sama staff non-admin. Lihat
+      // middleware/authz.js LEGACY_TO_CANONICAL.
+      req.session.role = "kolektor";
       req.session.collectorId = collector.id;
       req.session.collectorName = collector.name;
       req.session.collectorUsername = collector.username;

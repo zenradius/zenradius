@@ -2591,12 +2591,12 @@ router.get('/invoice/:id/pdf', async (req, res) => {
     // PHASE 11: IDOR fix — sebelumnya ownership check dilewati ketika tidak
     // ada sesi customer aktif, sehingga invoice siapa pun dapat diakses hanya
     // dengan menebak ID. Sekarang WAJIB salah satu: sesi customer pemilik
-    // invoice, staff session (admin/customer_service — mis. collector portal
-    // mencetak invoice pelanggan), ATAU signed public token yang terikat ke
-    // invoice ini persis (pola sama dengan flow public_check_billing).
+    // invoice, staff session (admin/customer_service/kolektor — mis. collector
+    // portal mencetak invoice pelanggan), ATAU signed public token yang terikat
+    // ke invoice ini persis (pola sama dengan flow public_check_billing).
     const sessionCustId = req.session && req.session.customer ? Number(req.session.customer.id) : 0;
     const staffRole = getCanonicalRole(req.session);
-    let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service';
+    let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service' || staffRole === 'kolektor';
     if (!authorized) {
       const secret = getSettingsWithCache().session_secret;
       const payload = secret ? verifyPublicToken(req.query.t, secret) : null;
@@ -2632,7 +2632,7 @@ router.get('/invoice/:id/print', async (req, res) => {
     // PHASE 11: IDOR fix — lihat catatan pada /invoice/:id/pdf di atas.
     const sessionCustId = req.session && req.session.customer ? Number(req.session.customer.id) : 0;
     const staffRole = getCanonicalRole(req.session);
-    let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service';
+    let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service' || staffRole === 'kolektor';
     if (!authorized) {
       const secret = getSettingsWithCache().session_secret;
       const payload = secret ? verifyPublicToken(req.query.t, secret) : null;
@@ -2669,7 +2669,7 @@ router.get('/invoice/:id/print-thermal', async (req, res) => {
     // PHASE 11: IDOR fix — lihat catatan pada /invoice/:id/pdf di atas.
     const sessionCustId = req.session && req.session.customer ? Number(req.session.customer.id) : 0;
     const staffRole = getCanonicalRole(req.session);
-    let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service';
+    let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service' || staffRole === 'kolektor';
     if (!authorized) {
       const secret = getSettingsWithCache().session_secret;
       const payload = secret ? verifyPublicToken(req.query.t, secret) : null;

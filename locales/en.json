@@ -1,7 +1,8 @@
 {
   "roles": {
     "admin": "System Administrator",
-    "customer_service": "Customer Service",
+    "customer_service": "Cashier",
+    "kolektor": "Field Collector",
     "teknisi": "Field Technician",
     "reseller": "Authorized Reseller",
     "pelanggan": "Subscriber"

@@ -1,7 +1,8 @@
 {
   "roles": {
     "admin": "Administrator Sistem",
-    "customer_service": "Layanan Pelanggan",
+    "customer_service": "Kasir",
+    "kolektor": "Kolektor Lapangan",
     "teknisi": "Teknisi Lapangan",
     "reseller": "Reseller Resmi",
     "pelanggan": "Pelanggan"

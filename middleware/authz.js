@@ -2,9 +2,10 @@
  * middleware/authz.js — Centralized RBAC untuk ZenRadius (Phase 3)
  *
  * ARSITEKTUR: ONE ISP = ONE INSTANCE (bukan multi-tenant).
- * Lima canonical role (stable, lowercase, disimpan di session sebagai req.session.role):
+ * Enam canonical role (stable, lowercase, disimpan di session sebagai req.session.role):
  *   admin            — Administrator Sistem / System Administrator
- *   customer_service  — Layanan Pelanggan / Customer Service
+ *   customer_service  — Kasir / Cashier
+ *   kolektor          — Kolektor Lapangan / Field Collector
  *   teknisi           — Teknisi Lapangan / Field Technician
  *   reseller          — Reseller Resmi / Authorized Reseller
  *   pelanggan         — Pelanggan / Subscriber
@@ -29,6 +30,7 @@
 const CANONICAL_ROLES = Object.freeze([
   'admin',
   'customer_service',
+  'kolektor',
   'teknisi',
   'reseller',
   'pelanggan'
@@ -47,7 +49,7 @@ const LEGACY_TO_CANONICAL = Object.freeze({
   isCashier: 'customer_service',
   isTechnician: 'teknisi',
   isAgent: 'reseller',
-  isCollector: 'customer_service', // fungsi penagihan lapangan; lihat catatan LEGACY di bawah
+  isCollector: 'kolektor', // role sendiri, terpisah dari Kasir (customer_service)
   isCustomer: 'pelanggan'
 });
 
