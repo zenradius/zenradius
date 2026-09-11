@@ -57,6 +57,12 @@
     },
     "dashboard": {
       "live_update": "Live Update",
+      "checking_update": "Memeriksa update...",
+      "github_update_available": "Update GitHub tersedia",
+      "github_update_available_title": "Klik untuk melihat keterangan update terbaru",
+      "github_up_to_date": "GitHub terbaru",
+      "github_up_to_date_title": "Aplikasi sudah menggunakan versi terbaru",
+      "github_update_error": "Status update tidak tersedia",
       "portal_link": "Link Pusat Layanan Pelanggan",
       "monitoring_onu": "Monitoring ONU",
       "onu_status_title": "Status ONU",
