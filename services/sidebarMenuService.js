@@ -69,6 +69,7 @@ const MENU_DEFINITIONS = [
   { key: 'tech_attendance', section: 'tech', href: '/tech/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'tech.nav.attendance', labelDefault: 'Absensi', roles: ['teknisi'], bottomNav: true, activePages: ['attendance'] },
   { key: 'tech_map', section: 'tech', href: '/tech/map', icon: 'bi bi-map-fill', labelKey: 'tech.nav.map', labelDefault: 'Peta', roles: ['teknisi'], bottomNav: true, activePages: ['map'] },
   { key: 'tech_monitoring', section: 'tech', href: '/tech/monitoring', icon: 'bi bi-display-fill', labelKey: 'tech.nav.monitor', labelDefault: 'Monitor', roles: ['teknisi'], bottomNav: true, activePages: ['monitoring'] },
+  { key: 'tech_create_customer', section: 'tech', href: '/tech/customers/new', icon: 'bi bi-person-plus-fill', labelKey: 'tech.new_customer', labelDefault: 'Tambah Pelanggan', roles: ['teknisi'], bottomNav: false, activePages: ['create_customer'] },
 
   { key: 'agent_home', section: 'agent', href: '/agent#section-top', icon: 'bi bi-house', labelKey: 'agent.nav.home', labelDefault: 'Beranda', roles: ['reseller'], bottomNav: true, activePages: ['top'] },
   { key: 'agent_billing', section: 'agent', href: '/agent#section-bill', icon: 'bi bi-receipt', labelKey: 'agent.nav.billing', labelDefault: 'Tagihan', roles: ['reseller'], bottomNav: true, activePages: ['bill'] },
@@ -130,6 +131,7 @@ const DEFAULT_MENU_STATES = {
   tech_attendance: STATE_VISIBLE,
   tech_map: STATE_VISIBLE,
   tech_monitoring: STATE_VISIBLE,
+  tech_create_customer: STATE_VISIBLE,
 
   agent_home: STATE_VISIBLE,
   agent_billing: STATE_VISIBLE,

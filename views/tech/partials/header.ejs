@@ -172,7 +172,9 @@
     <div style="display:flex;gap:10px;align-items:center">
       <a href="/lang/id" class="top-nav-btn" title="Bahasa Indonesia" style="font-size:12px;font-weight:700">ID</a>
       <a href="/lang/en" class="top-nav-btn" title="English" style="font-size:12px;font-weight:700">EN</a>
+      <% if ((typeof techBottomNav === 'undefined') || (locals.techMenuAllowed && locals.techMenuAllowed('tech_create_customer'))) { %>
       <a href="/tech/customers/new" class="top-nav-btn" title="<%= t('tech.new_customer', 'Tambah Pelanggan') %>"><i class="bi bi-person-plus-fill"></i></a>
+      <% } %>
       <a href="/tech/logout" class="top-nav-btn" onclick="return confirm('<%= t('tech.logout_confirm', 'Apakah Anda yakin ingin logout?') %>')"><i class="bi bi-box-arrow-right"></i></a>
     </div>
   </div>

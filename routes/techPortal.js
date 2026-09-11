@@ -7,6 +7,7 @@ const { getSetting, getNowLocal, getCurrentDateInTimezone, getNowLocalISO, forma
 const mikrotikService = require('../services/mikrotikService');
 const db = require('../config/database');
 const oltSvc = require('../services/oltService');
+const areaSvc = require('../services/areaService');
 const attendanceSvc = require('../services/attendanceService');
 const multer = require('multer');
 const path = require('path');
@@ -140,6 +141,7 @@ router.use((req, res, next) => {
   res.locals.parseDateInTimezone = parseDateInTimezone;
   res.locals.getNowLocal = getNowLocal;
   res.locals.techBottomNav = sidebarMenuSvc.getBottomNavItems(req.session);
+  res.locals.techMenuAllowed = (key) => sidebarMenuSvc.evaluateMenuAccess(key, req.session).allowed;
   next();
 });
 
@@ -370,36 +372,56 @@ router.get('/monitoring', requireTechSession, requireMenuAccess('tech_monitoring
   });
 });
 
-router.get('/customers/new', requireTechSession, (req, res) => {
-  const packages = customerSvc.getAllPackages();
-  const odps = odpSvc.getAllOdps();
-  const routers = mikrotikService.getAllRouters();
-  const olts = oltSvc.getAllOlts();
+router.get('/customers/new', requireTechSession, requireMenuAccess('tech_create_customer'), (req, res) => {
+  const routers = mikrotikService.getAllRouters().filter((r) => r.is_active === undefined || Number(r.is_active) === 1);
+  const multiRouterMode = getSetting('multi_router_mode', 'disabled') === 'active';
+  const defaultRouterId = multiRouterMode ? null : customerSvc.getEffectiveRouterId(null);
   res.render('tech/create_customer', {
     title: 'Tambah Pelanggan',
     company: company(),
     activePage: 'create_customer',
-    packages,
-    odps,
+    packages: customerSvc.getAllPackages(),
+    odps: odpSvc.getAllOdps(),
     routers,
-    olts,
+    olts: oltSvc.getAllOlts(),
+    areas: areaSvc.getAllAreas(),
+    multiRouterMode,
+    defaultRouterId,
+    radiusEnabled: getSetting('radius_enabled', '0') === '1',
     msg: flashMsg(req)
   });
 });
 
-router.post('/customers', requireTechSession, express.urlencoded({ extended: true }), async (req, res) => {
+router.post('/customers', requireTechSession, requireMenuAccess('tech_create_customer'), express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const name = String(req.body.name || '').trim();
     if (!name) throw new Error('Nama pelanggan wajib diisi');
+    const phone = String(req.body.phone || '').trim();
+    if (!phone) throw new Error('No. HP wajib diisi');
+
+    const multiRouterMode = getSetting('multi_router_mode', 'disabled') === 'active';
+    const radiusEnabled = getSetting('radius_enabled', '0') === '1';
+    const isRadius = radiusEnabled && Number(req.body.is_radius) === 1 ? 1 : 0;
+    const pppoeMode = String(req.body.pppoe_input_mode || 'mikrotik') === 'manual' ? 'manual' : 'mikrotik';
+    const pppoeUsername = String(req.body.pppoe_username || '').trim();
+    const pppoePassword = String(req.body.pppoe_password || '').trim();
+
+    const routerIdRaw = req.body.router_id ? Number(req.body.router_id) : null;
+    const routerId = multiRouterMode ? routerIdRaw : (routerIdRaw || customerSvc.getEffectiveRouterId(null));
 
     const customerData = {
       name,
-      phone: String(req.body.phone || '').trim(),
+      phone,
+      nik: String(req.body.nik || '').trim(),
       email: String(req.body.email || '').trim(),
       address: String(req.body.address || '').trim(),
+      area: String(req.body.area || '').trim(),
       package_id: req.body.package_id ? Number(req.body.package_id) : null,
-      pppoe_username: String(req.body.pppoe_username || '').trim(),
-      router_id: req.body.router_id ? Number(req.body.router_id) : null,
+      connection_type: 'pppoe',
+      pppoe_username: pppoeUsername,
+      pppoe_password: pppoeMode === 'manual' ? pppoePassword : '',
+      router_id: routerId || null,
+      is_radius: isRadius,
       olt_id: req.body.olt_id ? Number(req.body.olt_id) : null,
       odp_id: req.body.odp_id ? Number(req.body.odp_id) : null,
       pon_port: String(req.body.pon_port || '').trim(),
@@ -413,41 +435,45 @@ router.post('/customers', requireTechSession, express.urlencoded({ extended: tru
       isolate_day: req.body.isolate_day !== undefined ? Number(req.body.isolate_day) : 10
     };
 
-    if (customerData.pppoe_username && !customerData.router_id) {
-      throw new Error('Router harus dipilih jika menggunakan koneksi PPPoE');
+    if (!customerData.package_id) throw new Error('Paket wajib dipilih');
+    if (!pppoeUsername) throw new Error('PPPoE Username wajib diisi');
+    if (pppoeMode === 'manual' && !pppoePassword) throw new Error('PPPoE Password wajib diisi untuk membuat user baru');
+    if (!routerId || routerId <= 0) {
+      throw new Error(multiRouterMode ? 'Router MikroTik wajib dipilih' : 'Router MikroTik belum dikonfigurasi. Hubungi Admin.');
     }
 
-    if (customerData.pppoe_username) {
-      const existing = db.prepare('SELECT id, name FROM customers WHERE router_id IS ? AND pppoe_username = ? LIMIT 1').get(customerData.router_id ?? null, customerData.pppoe_username);
-      if (existing) throw new Error(`PPPoE Username sudah dipakai pelanggan lain: ${existing.name}`);
+    const existing = db.prepare('SELECT id, name FROM customers WHERE router_id IS ? AND pppoe_username = ? LIMIT 1').get(routerId, pppoeUsername);
+    if (existing) throw new Error(`PPPoE Username sudah dipakai pelanggan lain: ${existing.name}`);
 
+    const syncToMikrotik = !radiusEnabled || !isRadius;
+
+    if (syncToMikrotik) {
       let conn = null;
       try {
-        conn = await mikrotikService.getConnection(customerData.router_id || null);
-        const results = await conn.client.menu('/ppp/secret')
-          .where('service', 'pppoe')
-          .where('name', customerData.pppoe_username)
-          .get();
-        if (!Array.isArray(results) || results.length === 0) throw new Error('PPPoE Username tidak ditemukan di MikroTik');
+        conn = await mikrotikService.getConnection(routerId);
+        const results = await conn.client.menu('/ppp/secret').where('service', 'pppoe').where('name', pppoeUsername).get();
+        const found = Array.isArray(results) && results.length > 0;
+        if (pppoeMode === 'manual' && found) throw new Error('PPPoE Username sudah ada di MikroTik. Pilih mode "Dari MikroTik" atau gunakan username lain.');
+        if (pppoeMode === 'mikrotik' && !found) throw new Error('PPPoE Username tidak ditemukan di MikroTik');
       } finally {
         if (conn && conn.api) conn.api.close();
       }
     }
 
-    const inserted = customerSvc.createCustomer(customerData);
+    const pkg = customerSvc.getPackageById(customerData.package_id);
+    const targetProfile = customerData.status === 'suspended'
+      ? (customerData.isolir_profile || 'isolir')
+      : (pkg?.name || '');
 
-    if (customerData.pppoe_username) {
-      let targetProfile = '';
-      if (customerData.status === 'suspended') {
-        targetProfile = customerData.isolir_profile || 'isolir';
-      } else if (customerData.package_id) {
-        const pkg = customerSvc.getPackageById(customerData.package_id);
-        if (pkg) targetProfile = pkg.name;
-      }
-      if (targetProfile) {
-        try {
-          await mikrotikService.setPppoeProfile(customerData.pppoe_username, targetProfile, customerData.router_id);
-        } catch (mErr) {}
+    customerSvc.createCustomer(customerData);
+
+    if (syncToMikrotik && targetProfile) {
+      if (pppoeMode === 'manual') {
+        await mikrotikService.createPppoeSecret({ username: pppoeUsername, password: pppoePassword, profile: targetProfile, remoteAddress: '', routerId });
+      } else {
+        try { await mikrotikService.setPppoeProfile(pppoeUsername, targetProfile, routerId); } catch (mErr) {
+          logger.warn(`[Tech] Gagal set profile PPPoE ${pppoeUsername}: ${mErr.message}`);
+        }
       }
     }
 

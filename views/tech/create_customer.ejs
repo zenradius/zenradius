@@ -10,17 +10,17 @@
 
   <form method="POST" action="/tech/customers">
     <div class="mb-3">
-      <label class="form-label text-secondary small">Nama Pelanggan</label>
+      <label class="form-label text-secondary small">Nama Pelanggan <span class="text-danger">*</span></label>
       <input name="name" class="form-control rounded-4" required>
     </div>
     <div class="row g-2">
       <div class="col-6">
-        <label class="form-label text-secondary small">No. HP</label>
-        <input name="phone" class="form-control rounded-4" placeholder="08xxxxxxxxxx">
+        <label class="form-label text-secondary small">No. HP <span class="text-danger">*</span></label>
+        <input name="phone" class="form-control rounded-4" placeholder="08xxxxxxxxxx" required>
       </div>
       <div class="col-6">
-        <label class="form-label text-secondary small">Paket</label>
-        <select name="package_id" class="form-select rounded-4">
+        <label class="form-label text-secondary small">Paket <span class="text-danger">*</span></label>
+        <select name="package_id" class="form-select rounded-4" required>
           <option value="">-- Pilih Paket --</option>
           <% packages.forEach(p => { %>
             <option value="<%= p.id %>"><%= p.name %> (Rp <%= Number(p.price||0).toLocaleString('id-ID') %>)</option>
@@ -28,9 +28,15 @@
         </select>
       </div>
     </div>
-    <div class="mt-3">
-      <label class="form-label text-secondary small">Email</label>
-      <input name="email" class="form-control rounded-4" type="email" placeholder="opsional">
+    <div class="row g-2 mt-1">
+      <div class="col-6">
+        <label class="form-label text-secondary small">NIK</label>
+        <input name="nik" class="form-control rounded-4" inputmode="numeric" placeholder="opsional">
+      </div>
+      <div class="col-6">
+        <label class="form-label text-secondary small">Email</label>
+        <input name="email" class="form-control rounded-4" type="email" placeholder="opsional">
+      </div>
     </div>
     <div class="mt-3">
       <label class="form-label text-secondary small">Alamat</label>
@@ -38,25 +44,66 @@
     </div>
     <div class="mt-3">
       <label class="form-label text-secondary small">Area / Wilayah</label>
-      <input name="area" class="form-control rounded-4" placeholder="Contoh: Kelurahan A, Blok B">
-    </div>
-
-    <div class="row g-2 mt-1">
-      <div class="col-6">
-        <label class="form-label text-secondary small">Router (MikroTik) <span class="text-danger">*</span></label>
-        <select id="router_id" name="router_id" class="form-select rounded-4" required onchange="loadPppoeUsers(); loadPppoeProfiles()">
-          <option value="">-- Pilih Router --</option>
-          <% (routers || []).forEach(r => { %>
-            <option value="<%= r.id %>"><%= r.name %></option>
+      <% if ((areas || []).length) { %>
+        <select name="area" class="form-select rounded-4">
+          <option value="">-- Pilih Area --</option>
+          <% areas.forEach(a => { %>
+            <option value="<%= a.name %>"><%= a.name %></option>
           <% }) %>
         </select>
-        <small class="text-muted d-block mt-1">Router harus dipilih untuk pelanggan dengan koneksi PPPoE/Hotspot</small>
+      <% } else { %>
+        <input name="area" class="form-control rounded-4" placeholder="Contoh: Kelurahan A, Blok B">
+      <% } %>
+    </div>
+
+    <div class="mt-4">
+      <div class="fw-bold mb-2" style="font-size: 13px; letter-spacing: .3px;">
+        <i class="bi bi-ethernet text-primary me-2"></i>Koneksi PPPoE
       </div>
-      <div class="col-6">
-        <label class="form-label text-secondary small">PPPoE Username</label>
-        <input id="pppoe_username" name="pppoe_username" class="form-control rounded-4" list="pppoeList" placeholder="Pilih / cari dari MikroTik">
-        <datalist id="pppoeList"></datalist>
-        <div id="pppoeHint" class="text-secondary small mt-1"></div>
+      <% if (radiusEnabled) { %>
+      <div class="mb-2">
+        <label class="form-label text-secondary small">Autentikasi</label>
+        <select name="is_radius" id="is_radius" class="form-select rounded-4" onchange="onAuthModeChanged()">
+          <option value="0">MikroTik (PPP Secret)</option>
+          <option value="1">RADIUS Built-in</option>
+        </select>
+      </div>
+      <% } else { %>
+        <input type="hidden" name="is_radius" id="is_radius" value="0">
+      <% } %>
+
+      <div class="mb-2">
+        <label class="form-label text-secondary small">Router (MikroTik) <% if (multiRouterMode) { %><span class="text-danger">*</span><% } %></label>
+        <select id="router_id" name="router_id" class="form-select rounded-4" <%= multiRouterMode ? 'required' : '' %> onchange="loadPppoeUsers(); loadPppoeProfiles()">
+          <% if (!multiRouterMode) { %><option value="">-- Router Default --</option><% } else { %><option value="">-- Pilih Router --</option><% } %>
+          <% (routers || []).forEach(r => { %>
+            <option value="<%= r.id %>" <%= (!multiRouterMode && defaultRouterId && Number(defaultRouterId) === Number(r.id)) ? 'selected' : '' %>><%= r.name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label text-secondary small">Sumber User PPPoE</label>
+        <div class="d-flex gap-3">
+          <label class="small"><input type="radio" name="pppoe_input_mode" value="mikrotik" checked onchange="onPppoeModeChanged()"> Pilih dari MikroTik</label>
+          <label class="small"><input type="radio" name="pppoe_input_mode" value="manual" onchange="onPppoeModeChanged()"> Buat user baru</label>
+        </div>
+      </div>
+
+      <div class="row g-2">
+        <div class="col-6">
+          <label class="form-label text-secondary small">PPPoE Username <span class="text-danger">*</span></label>
+          <input id="pppoe_username" name="pppoe_username" class="form-control rounded-4" list="pppoeList" placeholder="Pilih / ketik username" required autocomplete="off">
+          <datalist id="pppoeList"></datalist>
+          <div id="pppoeHint" class="text-secondary small mt-1"></div>
+        </div>
+        <div class="col-6" id="pppoePasswordWrap" style="display:none">
+          <label class="form-label text-secondary small">PPPoE Password <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input id="pppoe_password" name="pppoe_password" class="form-control rounded-start-4" placeholder="password baru" autocomplete="off">
+            <button type="button" class="btn btn-outline-secondary rounded-end-4" onclick="genPppoePassword()" title="Generate"><i class="bi bi-shuffle"></i></button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -191,6 +238,41 @@
 </div>
 
 <script>
+  function pppoeMode() {
+    return document.querySelector('input[name="pppoe_input_mode"]:checked')?.value || 'mikrotik';
+  }
+
+  function onPppoeModeChanged() {
+    const manual = pppoeMode() === 'manual';
+    const wrap = document.getElementById('pppoePasswordWrap');
+    const pw = document.getElementById('pppoe_password');
+    const user = document.getElementById('pppoe_username');
+    wrap.style.display = manual ? 'block' : 'none';
+    pw.required = manual;
+    if (!manual) pw.value = '';
+    user.placeholder = manual ? 'username baru' : 'Pilih / ketik username';
+    user.setAttribute('list', manual ? '' : 'pppoeList');
+    if (manual) { if (!pw.value) genPppoePassword(); document.getElementById('pppoeHint').innerText = 'User akan dibuat otomatis di MikroTik.'; }
+    else loadPppoeUsers();
+  }
+
+  function onAuthModeChanged() {
+    const radius = document.getElementById('is_radius')?.value === '1';
+    const hint = document.getElementById('pppoeHint');
+    if (radius) {
+      document.querySelector('input[name="pppoe_input_mode"][value="manual"]').checked = true;
+      onPppoeModeChanged();
+      hint.innerText = 'Mode RADIUS: username & password disimpan di server, tidak dibuat di MikroTik.';
+    }
+  }
+
+  function genPppoePassword() {
+    const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+    let s = '';
+    for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    document.getElementById('pppoe_password').value = s;
+  }
+
   function getLocation() {
     if (!navigator.geolocation) return alert('Geolocation tidak didukung di perangkat ini.');
     navigator.geolocation.getCurrentPosition((pos) => {
