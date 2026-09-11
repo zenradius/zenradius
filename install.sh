@@ -1,33 +1,23 @@
 #!/usr/bin/env bash
-# ═══════════════════════════════════════════════════════════════════════════
-# ZenRadius — Skrip Instalasi & Deploy Production (VPS)
-# ═══════════════════════════════════════════════════════════════════════════
-# Dijalankan SETELAH repository di-clone secara manual oleh user ke lokasi
-# pilihannya sendiri (mis. /opt/zenradius atau /opt/apps/zenradius).
+# Skrip deploy production ZenRadius untuk VPS.
+# Dijalankan dari dalam folder hasil git clone repo ini.
 #
 #   cd /opt/apps
 #   git clone https://github.com/zenradius/zenradius.git
 #   cd zenradius
 #   chmod +x install.sh
-#   sudo ./install.sh zenradius.net      # mode normal: Nginx + SSL (Certbot)
-#   sudo ./install.sh --cloudflare        # mode Cloudflare Tunnel (skip Nginx/SSL)
+#   sudo ./install.sh zenradius.net    # Nginx + SSL (Certbot)
+#   sudo ./install.sh --cloudflare     # sudah pakai Cloudflare Tunnel
 #
-# Mode --cloudflare digunakan jika VPS SUDAH memiliki Cloudflare Tunnel yang
-# terpasang dan domain yang sudah diarahkan ke tunnel tersebut. Dalam mode
-# ini, skrip TIDAK memasang/menyentuh Nginx maupun Certbot sama sekali —
-# domain & HTTPS sepenuhnya menjadi tanggung jawab Cloudflare. Skrip hanya
-# perlu memastikan aplikasi berjalan di localhost:<PORT> agar bisa diteruskan
-# oleh cloudflared.
+# Mode --cloudflare dipakai kalau VPS sudah punya Cloudflare Tunnel dan
+# domain yang diarahkan ke tunnel tersebut. Nginx & Certbot tidak disentuh
+# sama sekali di mode ini, cukup pastikan tunnel diarahkan ke localhost:<PORT>.
 #
-# Skrip ini TIDAK menjalankan "npm start" — proses production sepenuhnya
-# dikelola oleh PM2. "npm start" / "npm run dev" tetap tersedia terpisah
-# khusus untuk kebutuhan development di komputer lokal.
+# Production selalu dijalankan lewat PM2, bukan npm start. npm start/npm run
+# dev tetap ada untuk development lokal.
 #
-# Skrip ini AMAN dijalankan berulang kali (idempotent):
-#   - Tidak menimpa .env, database/, public/uploads/, auth_info_baileys/
-#   - Tidak meminta ulang sertifikat SSL jika sudah terpasang
-#   - Reload PM2 (bukan start baru) jika aplikasi sudah berjalan
-# ═══════════════════════════════════════════════════════════════════════════
+# Aman dijalankan berulang kali: tidak menimpa .env, database, uploads,
+# sesi WhatsApp, atau sertifikat SSL yang sudah ada.
 
 set -euo pipefail
 
@@ -37,11 +27,11 @@ APP_ENTRY="app-customer.js"
 USE_CLOUDFLARE=false
 DOMAIN=""
 
-# ── Parsing Argumen: --cloudflare atau domain biasa ─────────────────────
+# Parsing argumen: --cloudflare atau domain
 for arg in "$@"; do
   case "$arg" in
     --cloudflare) USE_CLOUDFLARE=true ;;
-    --*) ;; # abaikan flag tak dikenal agar tidak dianggap domain
+    --*) ;;
     *) DOMAIN="$arg" ;;
   esac
 done
@@ -53,7 +43,7 @@ fail()  { echo -e "\033[1;31m[GAGAL]\033[0m $1"; exit 1; }
 
 cd "$APP_DIR"
 
-# ── 0. Validasi Dasar ────────────────────────────────────────────────────
+# Validasi dasar
 if [ "$(id -u)" -ne 0 ]; then
   fail "Skrip ini perlu dijalankan dengan sudo/root: sudo ./install.sh <domain>"
 fi
@@ -72,7 +62,7 @@ else
   warn "Tidak dapat mendeteksi distribusi OS. Melanjutkan proses instalasi..."
 fi
 
-# ── 1. Domain: Wajib untuk Production (dilewati pada mode --cloudflare) ──
+# Domain wajib untuk mode normal, dilewati di mode --cloudflare
 if [ "$USE_CLOUDFLARE" = true ]; then
   info "Mode Cloudflare Tunnel aktif — konfigurasi Nginx & SSL akan dilewati sepenuhnya."
   info "Pastikan cloudflared di VPS ini sudah diarahkan ke http://localhost:<PORT> aplikasi."
@@ -90,7 +80,7 @@ else
   fi
 fi
 
-# ── 2. Pasang Kebutuhan Sistem (git, Node.js, Nginx, Certbot, PM2) ──────
+# Pasang kebutuhan sistem: git, Node.js, Nginx, Certbot, PM2
 apt_install_if_missing() {
   local bin="$1"; shift
   local pkgs=("$@")
@@ -113,10 +103,8 @@ else
 fi
 command -v npm >/dev/null 2>&1 || fail "npm tidak ditemukan meskipun Node.js sudah terpasang."
 
-# Build tools untuk native addon Node.js (mis. better-sqlite3) yang perlu
-# dikompilasi dari source jika tidak ada prebuilt binary untuk versi
-# Node.js/OS yang terpasang. Tanpa ini, "npm ci"/"npm install" akan gagal
-# dengan error "gyp ERR! stack Error: not found: make".
+# better-sqlite3 perlu dikompilasi dari source kalau tidak ada prebuilt
+# binary untuk kombinasi Node.js/OS ini, jadi build tools wajib ada.
 if ! command -v make >/dev/null 2>&1 || ! command -v g++ >/dev/null 2>&1; then
   info "Memasang build tools (python3, make, g++) untuk kompilasi native addon..."
   apt-get update -qq
@@ -141,7 +129,7 @@ if [ "$USE_CLOUDFLARE" = false ] && [ -n "$DOMAIN" ]; then
   fi
 fi
 
-# ── 3. Dependensi Aplikasi (Node.js) ────────────────────────────────────
+# Dependensi aplikasi
 info "Memasang dependensi Node.js (production)..."
 if [ -f package-lock.json ]; then
   npm ci --omit=dev --no-audit --no-fund
@@ -150,7 +138,7 @@ else
 fi
 ok "Dependensi terpasang."
 
-# ── 4. Environment (.env) — Tidak Menimpa yang Sudah Ada ────────────────
+# Environment (.env) — tidak menimpa yang sudah ada
 if [ ! -f .env ]; then
   if [ -f .env.example ]; then
     cp .env.example .env
@@ -162,13 +150,13 @@ else
   ok "File .env sudah ada, tidak diubah."
 fi
 
-# ── 5. Verifikasi Database ──────────────────────────────────────────────
+# Verifikasi database
 if [ -f scripts/verify-database.js ]; then
   info "Menjalankan verifikasi struktur database..."
   node scripts/verify-database.js || warn "Verifikasi database menampilkan peringatan — periksa log di atas."
 fi
 
-# ── 6. Konfigurasi Nginx + SSL (dilewati pada mode --cloudflare) ────────
+# Konfigurasi Nginx + SSL — dilewati di mode --cloudflare
 if [ "$USE_CLOUDFLARE" = true ]; then
   info "Mode Cloudflare Tunnel: konfigurasi Nginx & SSL dilewati sepenuhnya."
 elif [ -n "$DOMAIN" ]; then
@@ -200,7 +188,7 @@ EOF
     ok "Konfigurasi Nginx untuk $DOMAIN sudah ada — tidak diubah."
   fi
 
-  # Cek apakah sertifikat SSL sudah ada sebelum minta baru
+  # Sudah ada sertifikat? lewati, jangan minta ulang
   if [ -d "/etc/letsencrypt/live/${DOMAIN}" ]; then
     ok "Sertifikat SSL untuk $DOMAIN sudah terpasang — dilewati."
   else
@@ -210,7 +198,7 @@ EOF
   fi
 fi
 
-# ── 7. Jalankan Aplikasi via PM2 (BUKAN npm start) ──────────────────────
+# Jalankan aplikasi via PM2, bukan npm start
 if pm2 describe "$APP_NAME" >/dev/null 2>&1; then
   info "Aplikasi sudah dikenal PM2. Menjalankan reload..."
   pm2 reload "$APP_NAME"
@@ -231,7 +219,7 @@ else
   warn "Tidak dapat mendeteksi perintah pm2 startup otomatis. Jalankan 'pm2 startup' secara manual jika auto-start belum aktif."
 fi
 
-# ── 8. Ringkasan ─────────────────────────────────────────────────────────
+# Ringkasan
 APP_PORT="$(grep -E '^PORT=' .env 2>/dev/null | tail -n1 | cut -d'=' -f2- | tr -d '[:space:]')"
 APP_PORT="${APP_PORT:-3001}"
 
