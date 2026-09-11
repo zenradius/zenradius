@@ -131,7 +131,57 @@ npm start
 Aplikasi dapat diakses melalui: **`https://yourdomain.com`** (atau port kustom yang telah Anda tentukan).
 
 ---
+## 🐳 Menjalankan via Docker (Alternatif)
 
+Selain instalasi manual di atas, ZenRadius juga sudah menyediakan `Dockerfile` dan `compose.yaml` sehingga Anda bisa menjalankan aplikasi tanpa perlu memasang Node.js secara langsung di server.
+
+### Persyaratan
+* [Docker Engine](https://docs.docker.com/engine/install/) v20+
+* [Docker Compose](https://docs.docker.com/compose/install/) v2+ (biasanya sudah bundel dengan Docker Desktop / `docker compose` plugin)
+
+### Langkah 1: Clone Repositori
+```bash
+git clone https://github.com/zenradius/zenradius.git
+cd zenradius
+```
+
+### Langkah 2: Konfigurasi Environment
+```bash
+cp .env.example .env    # Linux/Mac
+copy .env.example .env  # Windows CMD/PowerShell
+```
+Sesuaikan nilai `.env` sesuai kebutuhan (kredensial admin, secret webhook, port, dll).
+
+### Langkah 3: Build & Jalankan Container
+```bash
+docker compose up -d --build
+```
+Perintah ini akan:
+* Build image dari `Dockerfile` (Node.js 20 + dependency native seperti `better-sqlite3`)
+* Menjalankan container `zenradius-app` di background (`-d`)
+* Mem-bind port `127.0.0.1:3001` ke container (gunakan reverse proxy Nginx/Apache untuk expose ke publik dengan HTTPS)
+* Mount volume persisten: `settings.json`, `database/`, `data/`, `public/uploads/`, `auth_info_baileys/` — sehingga data **tidak hilang** saat container di-rebuild
+* Menjalankan **health check** otomatis ke endpoint `/health` setiap 30 detik
+
+### Langkah 4: Verifikasi Container Berjalan
+```bash
+docker compose ps
+docker compose logs -f zenradius
+```
+Aplikasi dapat diakses melalui **`https://yourdomain.com`** (setelah dikonfigurasi reverse proxy) atau `http://127.0.0.1:3001` secara lokal di server.
+
+### Perintah Operasional Umum
+| Aksi | Perintah |
+|---|---|
+| Hentikan container | `docker compose down` |
+| Restart container | `docker compose restart zenradius` |
+| Lihat log real-time | `docker compose logs -f zenradius` |
+| Masuk ke shell container | `docker compose exec zenradius sh` |
+| Update ke versi terbaru | `git pull && docker compose up -d --build` |
+
+> 💡 **Tip:** Jika menggunakan fitur **Update GitHub** di panel admin saat berjalan via Docker, pastikan container memiliki akses `git` dan proses restart dilakukan melalui `docker compose restart zenradius` (bukan PM2), karena aplikasi di dalam container tidak dikelola oleh PM2.
+
+---
 ## � Update Aplikasi (Setelah Deploy ke VPS)
 
 ZenRadius memiliki fitur **Update GitHub** bawaan di panel admin, sehingga Anda **tidak perlu SSH manual** setiap kali ada perubahan kode. Alurnya:
