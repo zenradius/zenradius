@@ -24,7 +24,7 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 - [Tumpukan Teknologi](#-tumpukan-teknologi)
 - [Persyaratan Sistem](#-persyaratan-sistem)
 - [Panduan Instalasi](#-panduan-instalasi)
-- [Instalasi Otomatis via Skrip (VPS)](#-instalasi-otomatis-via-skrip-vps)
+- [Instalasi Otomatis via Skrip (VPS)](#-instalasi-otomatis-via-skrip-vpsproduction)
 - [Menjalankan via Docker](#-menjalankan-via-docker-alternatif)
 - [Konfigurasi Domain & HTTPS](#-konfigurasi-domain--https)
 - [Auto-Start Setelah Reboot Server](#-auto-start-setelah-reboot-server)
@@ -124,45 +124,65 @@ PORT=3001
 node scripts/verify-database.js
 ```
 
-### 5️⃣ Jalankan Aplikasi
+### 5️⃣ Jalankan Aplikasi (Development Lokal)
 ```bash
 # Mode Development (hot-reload)
 npm run dev
 
-# Mode Production
+# Mode Production (lokal/testing tanpa PM2)
 npm start
 ```
 
-Aplikasi dapat diakses melalui: **`https://yourdomain.com`** (atau port kustom yang telah Anda tentukan).
+> ℹ️ **Catatan:** `npm start` / `npm run dev` ditujukan untuk **development di komputer lokal**. Untuk deploy production di VPS, gunakan `install.sh` (lihat bagian berikut) — bukan `npm start`, karena proses produksi dikelola sepenuhnya oleh PM2 agar auto-restart saat crash/reboot.
+
+Aplikasi dapat diakses melalui: **`http://localhost:3001`** (atau port kustom yang telah Anda tentukan).
 
 ---
 
-## ⚡ Instalasi Otomatis via Skrip (VPS)
+## ⚡ Instalasi Otomatis via Skrip (VPS/Production)
 
-Untuk mempercepat setup awal di VPS, tersedia skrip `scripts/install-vps.sh` yang menjalankan **seluruh proses instalasi dalam satu perintah**: clone/sinkronisasi repo GitHub, pasang dependensi, siapkan `.env`, verifikasi database, hingga menjalankan aplikasi via PM2 dengan auto-start saat reboot.
+Untuk deploy production di VPS, gunakan `install.sh` yang tersedia di root repository. Skrip ini menjalankan **seluruh proses instalasi dalam satu perintah**: pasang dependensi sistem (Node.js, Nginx, Certbot, PM2), pasang dependensi aplikasi, siapkan `.env`, verifikasi database, konfigurasi domain + HTTPS, hingga menjalankan aplikasi via **PM2** dengan auto-start saat reboot.
 
-### Jalankan Langsung (Server Baru, Belum Ada Folder Aplikasi)
+> ⚠️ **`install.sh` TIDAK menjalankan `npm start`.** Proses production sepenuhnya dikelola oleh PM2 — ini memastikan aplikasi otomatis restart jika crash atau server reboot, sesuatu yang tidak bisa dilakukan `npm start` biasa.
+
+### Langkah 1: Clone Repository ke Lokasi Pilihan Anda
+Anda bebas menentukan lokasi instalasi (disarankan di dalam `/opt`):
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zenradius/zenradius/main/scripts/install-vps.sh -o install-vps.sh
-chmod +x install-vps.sh
-./install-vps.sh
+# Contoh: langsung di /opt
+cd /opt
+git clone https://github.com/zenradius/zenradius.git
+cd zenradius
+
+# Atau jika ingin memisahkan beberapa aplikasi dalam satu server:
+# mkdir -p /opt/apps && cd /opt/apps
+# git clone https://github.com/zenradius/zenradius.git
+# cd zenradius
 ```
 
-### Jalankan dari Repo yang Sudah Di-clone
+### Langkah 2: Jalankan Skrip Instalasi
 ```bash
-cd /path/to/zenradius
-bash scripts/install-vps.sh
+chmod +x install.sh
+sudo ./install.sh zenradius.net
 ```
+Ganti `zenradius.net` dengan domain Anda sendiri. Jika argumen domain tidak disertakan, skrip akan **menanyakan domain secara interaktif** (atau bisa dikosongkan untuk mode tanpa domain/HTTPS).
 
 ### Apa yang Dilakukan Skrip Ini?
-1. **Verifikasi/Clone Repository** — mengecek apakah folder sudah git repo; jika sudah, otomatis `git pull` (sinkron ke commit terbaru GitHub); jika belum, otomatis `git clone` dari `https://github.com/zenradius/zenradius.git`.
-2. **Validasi Remote Origin** — memastikan remote mengarah ke repository resmi ZenRadius, dan memberi peringatan jika berbeda.
-3. **Instalasi Dependensi** — otomatis `npm ci`/`npm install` mode production.
-4. **Setup `.env`** — otomatis membuat `.env` dari `.env.example` jika belum ada (tidak menimpa `.env` yang sudah dikonfigurasi).
-5. **Verifikasi Database** — menjalankan `scripts/verify-database.js`.
-6. **Auto-Start via PM2** — menjalankan aplikasi dengan PM2, menyimpan konfigurasi (`pm2 save`), dan mendaftarkan PM2 sebagai service sistem (`pm2 startup`) agar aplikasi **otomatis hidup kembali saat VPS reboot**.
+1. **Validasi Lingkungan** — memastikan dijalankan dengan `sudo`, dari dalam folder hasil clone repository yang benar, dan sistem operasi Ubuntu/Debian.
+2. **Domain Wajib untuk Production** — jika kosong, skrip meminta input interaktif; validasi format domain (menolak URL lengkap).
+3. **Pasang Dependensi Sistem Otomatis** — Node.js 20 LTS, Nginx, Certbot, dan PM2 (hanya jika belum terpasang).
+4. **Pasang Dependensi Aplikasi** — `npm ci`/`npm install` mode production.
+5. **Setup `.env`** — otomatis dibuat dari `.env.example` jika belum ada (tidak menimpa `.env` yang sudah dikonfigurasi sebelumnya).
+6. **Verifikasi Database** — menjalankan `scripts/verify-database.js`.
+7. **Konfigurasi Nginx + SSL Otomatis** (hanya jika domain diisi) — membuat reverse proxy dan meminta sertifikat via Certbot. Jika konfigurasi/sertifikat sudah ada dari instalasi sebelumnya, langkah ini **dilewati** (tidak menimpa).
+8. **Jalankan via PM2** — `pm2 start`/`pm2 reload` (bukan `npm start`), lalu `pm2 save` + `pm2 startup` agar aplikasi **otomatis hidup kembali saat VPS reboot**.
 
-> 💡 **Tip:** Skrip ini aman dijalankan berulang kali (idempotent) — cocok juga dipakai untuk re-sync manual selain melalui menu **Update GitHub** di panel admin.
+### Sifat Idempotent (Aman Dijalankan Berulang Kali)
+Skrip ini **tidak akan menimpa** data yang sudah ada saat dijalankan ulang:
+* `.env`, `database/`, `public/uploads/`, `auth_info_baileys/` (sesi WhatsApp) — dibiarkan apa adanya
+* Konfigurasi Nginx & sertifikat SSL yang sudah ada — dilewati, tidak dibuat ulang
+* Aplikasi yang sudah dikenal PM2 — di-**reload**, bukan dijalankan sebagai proses baru
+
+> 💡 **Update kode selanjutnya** cukup dilakukan lewat menu **Update GitHub** di panel admin (`/admin/update`) — bukan menjalankan ulang `install.sh` maupun `git pull` manual tanpa restart PM2.
 
 ---
 
@@ -287,15 +307,15 @@ APP_URL=https://yourdomain.com
 
 ---
 
-## � Auto-Start Setelah Reboot Server
+## 🔁 Auto-Start Setelah Reboot Server
 
 Agar aplikasi **otomatis kembali berjalan** saat VPS mati listrik/direstart, konfigurasi berikut wajib disiapkan sesuai metode deploy yang digunakan.
 
 | Metode Deploy | Otomatis Jalan Saat Server Reboot? |
 |---|---|
 | **Docker Compose** (`restart: unless-stopped`) | ✅ Ya, otomatis (asalkan Docker service ter-enable) |
-| **Manual (`npm start`)** | ❌ Tidak — aplikasi mati total, perlu start manual |
-| **PM2** (`pm2 startup` + `pm2 save`) | ✅ Ya, setelah setup sekali |
+| **`install.sh`** (PM2 dikonfigurasi otomatis) | ✅ Ya, otomatis — tidak perlu setup tambahan |
+| **Manual (`npm start`, tanpa PM2)** | ❌ Tidak — aplikasi mati total, perlu start manual |
 
 ### 🐳 Opsi A: Docker Compose (Direkomendasikan)
 `compose.yaml` sudah dikonfigurasi dengan `restart: unless-stopped`, sehingga container otomatis restart saat crash maupun saat server reboot — asalkan **Docker daemon** sendiri otomatis aktif saat boot:
@@ -306,8 +326,10 @@ sudo systemctl enable docker
 ```
 Tidak ada langkah tambahan lain — setelah ini, aplikasi akan otomatis hidup kembali tanpa intervensi manual.
 
-### ⚙️ Opsi B: Instalasi Manual dengan PM2
-Jika aplikasi dijalankan langsung via Node.js (bukan Docker), gunakan **PM2** sebagai process manager agar tetap hidup dan otomatis restart saat boot:
+### ⚙️ Opsi B: `install.sh` (Sudah Otomatis)
+Jika Anda men-deploy menggunakan `install.sh` (lihat bagian [Instalasi Otomatis via Skrip](#-instalasi-otomatis-via-skrip-vpsproduction)), **PM2 sudah otomatis dikonfigurasi** untuk auto-start saat reboot — tidak ada langkah tambahan yang perlu dilakukan.
+
+Jika Anda menjalankan aplikasi secara manual di luar `install.sh` (langsung `node app-customer.js`), pasang PM2 sendiri:
 ```bash
 npm install -g pm2
 pm2 start app-customer.js --name zenradius
