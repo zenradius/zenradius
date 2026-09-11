@@ -1,0 +1,5 @@
+# Pastikan skrip shell (.sh) selalu menggunakan line ending LF (Unix),
+# meskipun repository di-clone/di-commit dari Windows. Tanpa ini, skrip
+# bisa gagal dijalankan di VPS Linux dengan error "bad interpreter" akibat
+# karakter CRLF yang tidak dikenali oleh shell.
+*.sh text eol=lf
