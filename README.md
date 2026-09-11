@@ -132,7 +132,50 @@ Aplikasi dapat diakses melalui: **`https://yourdomain.com`** (atau port kustom y
 
 ---
 
-## 🔐 Akun Akses Default
+## � Update Aplikasi (Setelah Deploy ke VPS)
+
+ZenRadius memiliki fitur **Update GitHub** bawaan di panel admin, sehingga Anda **tidak perlu SSH manual** setiap kali ada perubahan kode. Alurnya:
+
+```mermaid
+flowchart LR
+    A[💻 Edit Kode di Lokal] --> B[git push ke GitHub]
+    B --> C[🖥️ VPS: Buka Menu Admin ➡ Update GitHub]
+    C --> D[Klik 'Cek Versi']
+    D --> E[Klik 'Update Sekarang']
+    E --> F[Klik 'Restart Aplikasi']
+    F --> G[✅ Aplikasi VPS Ter-update]
+```
+
+### Syarat Awal di VPS (Sekali Setup)
+Pastikan aplikasi di VPS berjalan dari hasil `git clone`, **bukan** hasil upload manual/zip:
+```bash
+cd /path/to/zenradius
+git remote -v   # pastikan menunjuk ke https://github.com/zenradius/zenradius.git
+```
+Jika belum, clone ulang dan pindahkan folder `database/`, `.env`, `public/uploads`, serta `auth_info_baileys` (sesi WhatsApp) ke lokasi hasil clone.
+
+### Langkah Update via Panel Admin
+1. **Di lokal:** selesaikan perubahan, lalu jalankan:
+   ```bash
+   git add .
+   git commit -m "deskripsi perubahan"
+   git push
+   ```
+2. **Login ke Panel Admin VPS** → buka menu **☁️ Update GitHub** (`/admin/update`).
+3. Klik **Cek Versi** — sistem akan membandingkan `version.txt` lokal VPS dengan `origin/<branch>` di GitHub.
+4. Jika status menunjukkan **"Ada update"**, klik **Update Sekarang**.
+   * Sistem otomatis **backup** file penting (`settings.json`, `.env`, `database/`, `public/uploads`, `public/img`, `data`, sesi WhatsApp) sebelum menarik kode terbaru.
+   * Kode ditarik via `git reset --hard origin/<branch>`, lalu file yang di-backup dikembalikan.
+   * Jika `package.json` berubah, `npm install` otomatis dijalankan.
+5. Setelah proses selesai, klik **Restart Aplikasi** agar perubahan diterapkan (proses PM2/Node di-restart otomatis oleh sistem).
+
+> 💡 **Tip:** Gunakan bagian **Official Release Channel** di halaman yang sama jika ingin proses update yang lebih ketat (verifikasi checksum/signature rilis resmi) dengan restart otomatis + health check pasca-update.
+
+> ⚠️ **Catatan:** Pastikan koneksi internet VPS stabil selama proses update berlangsung, dan hindari menutup halaman sebelum status menunjukkan selesai.
+
+---
+
+## �🔐 Akun Akses Default
 
 Gunakan kredensial berikut untuk login pertama kali ke **Pusat Administrasi ZenRadius**:
 
