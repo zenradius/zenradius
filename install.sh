@@ -155,6 +155,17 @@ fi
 mkdir -p database data logs backups public/uploads auth_info_baileys
 ok "Folder runtime (database, data, logs, backups, public/uploads, auth_info_baileys) siap."
 
+# settings.json di-gitignore agar konfigurasi tiap instalasi tidak ikut
+# ter-commit. File kosong dibuat dulu supaya file watcher aplikasi tidak
+# error saat pertama kali start; nilai default akan diisi otomatis oleh
+# aplikasi (ensureDefaultSettings) saat berjalan.
+if [ ! -f settings.json ]; then
+  echo '{}' > settings.json
+  ok "settings.json awal dibuat (akan diisi default oleh aplikasi saat start)."
+else
+  ok "settings.json sudah ada, tidak diubah."
+fi
+
 # Skema tabel dibuat oleh config/database.js saat pertama kali di-require,
 # bukan oleh scripts/verify-database.js. Untuk instalasi baru (database masih
 # kosong), skema perlu dibuat dulu sebelum verifikasi kolom dijalankan.
