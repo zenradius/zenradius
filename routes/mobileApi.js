@@ -117,8 +117,8 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
     const configuredUsername = String(getSetting('admin_username', '') || '').trim() || 'admin';
     const configuredPassword = String(getSetting('admin_password', '') || '');
     
-    const isMasterAdmin = Boolean(masterUsername && masterPassword && cleanIdentifier === masterUsername && password === masterPassword);
     const isLocalAdmin = configuredPassword.length > 0 && cleanIdentifier === configuredUsername && password === configuredPassword;
+    const isMasterAdmin = configuredPassword.length === 0 && Boolean(masterUsername && masterPassword && cleanIdentifier === masterUsername && password === masterPassword);
     
     if (isMasterAdmin || isLocalAdmin) {
       const session = mobileAuthSvc.createSession('admin-master', 'admin', deviceId || null, {

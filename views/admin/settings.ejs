@@ -272,6 +272,15 @@
             </div>
             <div class="fg" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
               <label class="fl">Kredensial Admin</label>
+              <% if (!settings.admin_password) { %>
+              <div class="hint" style="margin-bottom:8px;color:var(--danger)">
+                <i class="bi bi-exclamation-triangle"></i> Login masih menggunakan kredensial bawaan dari <code>.env</code>. Isi username & password di bawah lalu simpan — kredensial bawaan akan otomatis dinonaktifkan.
+              </div>
+              <% } else { %>
+              <div class="hint" style="margin-bottom:8px">
+                <i class="bi bi-shield-check"></i> Kredensial bawaan <code>.env</code> sudah dinonaktifkan. Login hanya dengan kredensial di bawah.
+              </div>
+              <% } %>
               <div class="form-row">
                 <div class="fg">
                   <label class="fl">Username Admin</label>

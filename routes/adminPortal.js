@@ -618,8 +618,11 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   
   const configuredPassword = String(getSetting('admin_password', '') || '');
   const localAdminEnabled = configuredPassword.length > 0;
-  const isMasterLogin = Boolean(masterUsername && masterPassword && username === masterUsername && password === masterPassword);
-  if (isMasterLogin || (localAdminEnabled && username === configuredUsername && password === configuredPassword)) {
+  // Kredensial .env hanya berlaku sebagai bootstrap sebelum admin menyimpan kredensial sendiri di panel.
+  const bootstrapEnabled = !localAdminEnabled && Boolean(masterUsername && masterPassword);
+  const isMasterLogin = bootstrapEnabled && username === masterUsername && password === masterPassword;
+  const isLocalLogin = localAdminEnabled && username === configuredUsername && password === configuredPassword;
+  if (isMasterLogin || isLocalLogin) {
     return req.session.regenerate((err) => {
       if (err) {
         logger.error('[LOGIN] Session regeneration failed:', err);
@@ -629,7 +632,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
       req.session.userRole = "admin";
       req.session.role = "admin"; 
       req.session.adminUser = username;
-      req.session.isMasterAdmin = isMasterLogin;
+      req.session.isMasterAdmin = true;
       req.session.save((err) => {
         if (err) {
           logger.error('[LOGIN] Session save failed:', err);
