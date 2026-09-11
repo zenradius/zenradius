@@ -113,6 +113,18 @@ else
 fi
 command -v npm >/dev/null 2>&1 || fail "npm tidak ditemukan meskipun Node.js sudah terpasang."
 
+# Build tools untuk native addon Node.js (mis. better-sqlite3) yang perlu
+# dikompilasi dari source jika tidak ada prebuilt binary untuk versi
+# Node.js/OS yang terpasang. Tanpa ini, "npm ci"/"npm install" akan gagal
+# dengan error "gyp ERR! stack Error: not found: make".
+if ! command -v make >/dev/null 2>&1 || ! command -v g++ >/dev/null 2>&1; then
+  info "Memasang build tools (python3, make, g++) untuk kompilasi native addon..."
+  apt-get update -qq
+  apt-get install -y python3 make g++
+else
+  ok "Build tools (make, g++) sudah tersedia."
+fi
+
 if ! command -v pm2 >/dev/null 2>&1; then
   info "Memasang PM2 secara global..."
   npm install -g pm2
