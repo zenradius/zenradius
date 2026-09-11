@@ -94,6 +94,7 @@ apt_install_if_missing() {
 }
 
 apt_install_if_missing git git
+apt_install_if_missing curl curl ca-certificates
 if ! command -v node >/dev/null 2>&1; then
   info "Node.js belum terpasang. Memasang Node.js 20.x LTS via NodeSource..."
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -142,7 +143,7 @@ ok "Dependensi terpasang."
 if [ ! -f .env ]; then
   if [ -f .env.example ]; then
     cp .env.example .env
-    warn "File .env dibuat dari .env.example. SEGERA edit kredensial di .env sebelum digunakan produksi!"
+    ok "File .env dibuat dari .env.example."
   else
     warn ".env.example tidak ditemukan — buat .env secara manual sebelum menjalankan aplikasi."
   fi
@@ -150,21 +151,53 @@ else
   ok "File .env sudah ada, tidak diubah."
 fi
 
+# Isi otomatis secret yang masih kosong/placeholder. Nilai yang sudah diisi
+# tidak pernah ditimpa. NODE_ENV=production menolak start bila SESSION_SECRET
+# masih placeholder, jadi ini wajib untuk instalasi baru.
+gen_secret() { node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"; }
+ensure_env_secret() {
+  local key="$1" placeholder_regex="$2"
+  local current
+  current="$(grep -E "^${key}=" .env 2>/dev/null | tail -n1 | cut -d'=' -f2- | tr -d '[:space:]' || true)"
+  if [ -z "$current" ] || [[ "$current" =~ $placeholder_regex ]]; then
+    local value; value="$(gen_secret)"
+    if grep -qE "^${key}=" .env 2>/dev/null; then
+      sed -i "s|^${key}=.*|${key}=${value}|" .env
+    else
+      printf '\n%s=%s\n' "$key" "$value" >> .env
+    fi
+    ok "$key dibuat otomatis (acak)."
+  fi
+}
+if [ -f .env ]; then
+  ensure_env_secret SESSION_SECRET '^(ganti|change|secret|default|example)'
+  ensure_env_secret MY_WEBHOOK_SECRET '^(ganti|change|secret|default|example)'
+  ensure_env_secret SETTINGS_MASTER_KEY '^(ganti|change|secret|default|example)'
+  chmod 600 .env
+fi
+
 # Folder runtime yang tidak ikut ter-clone dari git (lihat .gitignore) tapi
 # wajib ada sebelum aplikasi/skrip database dijalankan.
 mkdir -p database data logs backups public/uploads auth_info_baileys
 ok "Folder runtime (database, data, logs, backups, public/uploads, auth_info_baileys) siap."
 
-# settings.json di-gitignore agar konfigurasi tiap instalasi tidak ikut
-# ter-commit. File awal dibuat dengan server_port eksplisit karena aplikasi
-# membaca port dari settings.json (server_port), BUKAN dari PORT di .env.
-# Tanpa ini, aplikasi jatuh ke default 4555 yang tidak sesuai asumsi Nginx/
-# Cloudflare Tunnel yang mengarah ke 3001.
+# Port aplikasi: diambil dari PORT di .env (default 3001) dan dipakai konsisten
+# untuk settings.json (server_port) serta Nginx. Aplikasi membaca port dari
+# settings.json, BUKAN dari .env, jadi keduanya harus sinkron.
+APP_PORT="$(grep -E '^PORT=' .env 2>/dev/null | tail -n1 | cut -d'=' -f2- | tr -d '[:space:]' || true)"
+APP_PORT="${APP_PORT:-3001}"
+[[ "$APP_PORT" =~ ^[0-9]+$ ]] || fail "Nilai PORT di .env tidak valid: '$APP_PORT'"
+
 if [ ! -f settings.json ]; then
-  echo '{"server_port": 3001}' > settings.json
-  ok "settings.json awal dibuat dengan server_port=3001 (sisanya diisi default oleh aplikasi saat start)."
+  echo "{\"server_port\": ${APP_PORT}}" > settings.json
+  ok "settings.json awal dibuat dengan server_port=${APP_PORT} (sisanya diisi default oleh aplikasi saat start)."
 else
   ok "settings.json sudah ada, tidak diubah."
+  SETTINGS_PORT="$(node -e "try{const s=require('./settings.json');console.log(s.server_port??'')}catch(e){console.log('')}" 2>/dev/null || true)"
+  if [ -n "$SETTINGS_PORT" ] && [ "$SETTINGS_PORT" != "$APP_PORT" ]; then
+    warn "server_port di settings.json (${SETTINGS_PORT}) berbeda dengan PORT di .env (${APP_PORT}). Nginx akan diarahkan ke ${SETTINGS_PORT}."
+    APP_PORT="$SETTINGS_PORT"
+  fi
 fi
 
 # Skema tabel dibuat oleh config/database.js saat pertama kali di-require,
@@ -192,7 +225,7 @@ server {
     server_name ${DOMAIN} www.${DOMAIN};
 
     location / {
-        proxy_pass http://127.0.0.1:3001;
+        proxy_pass http://127.0.0.1:${APP_PORT};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -222,30 +255,45 @@ EOF
 fi
 
 # Jalankan aplikasi via PM2, bukan npm start
+export NODE_ENV=production
 if pm2 describe "$APP_NAME" >/dev/null 2>&1; then
   info "Aplikasi sudah dikenal PM2. Menjalankan reload..."
-  pm2 reload "$APP_NAME"
+  pm2 reload "$APP_NAME" --update-env
   ok "Aplikasi '$APP_NAME' berhasil di-reload."
 else
   info "Menjalankan aplikasi pertama kali via PM2..."
-  pm2 start "$APP_ENTRY" --name "$APP_NAME"
+  pm2 start "$APP_ENTRY" --name "$APP_NAME" --cwd "$APP_DIR" --time
   ok "Aplikasi '$APP_NAME' berhasil dijalankan."
 fi
 
 pm2 save
 info "Mendaftarkan PM2 agar auto-start saat server reboot..."
-STARTUP_OUTPUT="$(pm2 startup systemd 2>&1 || true)"
+STARTUP_OUTPUT="$(pm2 startup systemd -u root --hp /root 2>&1 || true)"
 STARTUP_CMD="$(echo "$STARTUP_OUTPUT" | grep -E '^(sudo )?env PATH=' | head -n1)"
 if [ -n "$STARTUP_CMD" ]; then
   eval "${STARTUP_CMD#sudo }"
+  pm2 save
   ok "PM2 terdaftar sebagai service sistem (auto-start saat reboot)."
+elif systemctl is-enabled pm2-root >/dev/null 2>&1; then
+  ok "Service PM2 sudah terdaftar sebelumnya."
 else
   warn "Tidak dapat mendeteksi perintah pm2 startup otomatis. Jalankan 'pm2 startup' secara manual lalu ikuti instruksinya jika auto-start belum aktif."
 fi
 
+# Cek kesehatan: pastikan aplikasi benar-benar menjawab di port yang diharapkan
+info "Menunggu aplikasi siap..."
+HEALTH_OK=false
+for _ in $(seq 1 15); do
+  if curl -fsS -o /dev/null "http://127.0.0.1:${APP_PORT}/admin/login" 2>/dev/null; then HEALTH_OK=true; break; fi
+  sleep 2
+done
+if [ "$HEALTH_OK" = true ]; then
+  ok "Aplikasi merespons di http://127.0.0.1:${APP_PORT}."
+else
+  warn "Aplikasi belum merespons di port ${APP_PORT}. Periksa: pm2 logs $APP_NAME --lines 50"
+fi
+
 # Ringkasan
-APP_PORT="$(grep -E '^PORT=' .env 2>/dev/null | tail -n1 | cut -d'=' -f2- | tr -d '[:space:]')"
-APP_PORT="${APP_PORT:-3001}"
 
 echo ""
 ok "═══════════════════════════════════════════════════════════════"
