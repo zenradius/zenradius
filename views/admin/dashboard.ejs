@@ -53,10 +53,6 @@
       <span id="page-title"><%= t('admin.nav.dashboard', 'Dashboard') %></span>
     </div>
     <div class="tb-right">
-      <a href="/admin/update" id="githubUpdateIndicator" class="realtime-bar" style="text-decoration:none;cursor:pointer" title="Cek status update aplikasi">
-        <span class="live-dot" id="githubUpdateDot" style="background:var(--muted);animation:none"></span>
-        <span id="githubUpdateText"><%= t('admin.dashboard.checking_update', 'Memeriksa update...') %></span>
-      </a>
       <span class="adm-badge">
         <i class="bi bi-person-fill"></i> 
         <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
@@ -982,41 +978,6 @@ loadDevices();
 // setInterval(refreshAll, 30000);
 // NOTE: AUTO-REFRESH HAS BEEN COMPLETELY DISABLED
 // Users must manually click the "Refresh" button to update device list
-
-// ── GITHUB UPDATE NOTIFICATION ──
-// Cek ringan saat halaman dibuka, kemudian tiap 10 menit. API di server
-// menggunakan cache 5 menit agar tidak menjalankan git fetch berulang kali.
-async function checkGithubUpdate() {
-  const indicator = document.getElementById('githubUpdateIndicator');
-  const dot = document.getElementById('githubUpdateDot');
-  const text = document.getElementById('githubUpdateText');
-  if (!indicator || !dot || !text) return;
-  try {
-    const res = await fetch('/admin/api/update/check', { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (data.needsUpdate) {
-      dot.style.background = 'var(--danger)';
-      dot.style.animation = 'pulse 1.5s infinite';
-      text.textContent = '<%= t('admin.dashboard.github_update_available', 'Update GitHub tersedia') %>';
-      indicator.style.color = 'var(--danger)';
-      indicator.title = '<%= t('admin.dashboard.github_update_available_title', 'Klik untuk melihat keterangan update terbaru') %>';
-    } else {
-      dot.style.background = 'var(--success)';
-      dot.style.animation = 'none';
-      text.textContent = '<%= t('admin.dashboard.github_up_to_date', 'GitHub terbaru') %>';
-      indicator.style.color = 'var(--muted)';
-      indicator.title = '<%= t('admin.dashboard.github_up_to_date_title', 'Aplikasi sudah menggunakan versi terbaru') %>';
-    }
-  } catch (e) {
-    dot.style.background = 'var(--warning)';
-    dot.style.animation = 'none';
-    text.textContent = '<%= t('admin.dashboard.github_update_error', 'Status update tidak tersedia') %>';
-    indicator.style.color = 'var(--warning)';
-  }
-}
-checkGithubUpdate();
-setInterval(checkGithubUpdate, 600000);
 
 // ── CHECK IF SHOULD GO TO MONITORING TAB (from sidebar link) ──
 if (window.location.hash === '#monitoring') showTab('monitoring');
