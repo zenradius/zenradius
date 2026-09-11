@@ -52,7 +52,6 @@ const axios = {
   }
 };
 
-// Configure multer for photo uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, '../public/uploads/tickets');
@@ -69,7 +68,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: function (req, file, cb) {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -105,9 +104,7 @@ function shouldSendWa(key, ttlMs = 15000) {
 
 function requireTechSession(req, res, next) {
   if (req.session && req.session.isTechnician && req.session.techId) {
-    // Phase 3: jika session sudah punya canonical role, wajib cocok dengan 'teknisi'.
-    // Session lama (pre-Phase 3) belum punya field ini — tetap diizinkan via legacy flag
-    // sampai user login ulang dan mendapat role canonical.
+
     if (req.session.role && req.session.role !== 'teknisi') {
       return res.redirect('/tech/login');
     }
@@ -116,9 +113,6 @@ function requireTechSession(req, res, next) {
   res.redirect('/tech/login');
 }
 
-// Guard: menu bisa disembunyikan admin dari /admin/sidebar-settings. Jika
-// disembunyikan, akses langsung via URL tetap ditolak (bukan cuma disembunyikan
-// dari navigasi) agar konsisten dengan portal Admin/Kasir.
 function requireMenuAccess(menuKey) {
   return (req, res, next) => {
     const access = sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session);
@@ -149,7 +143,6 @@ router.use((req, res, next) => {
   next();
 });
 
-// Phase 15: fail-closed jika modul rate limiter tidak dapat dimuat.
 let loginRateLimiter = (req, res, next) => res.status(503).send('Layanan login sementara tidak tersedia.');
 try {
   const rlMod = require('../middleware/rateLimiter');
@@ -158,7 +151,6 @@ try {
   }
 } catch (e) {}
 
-// --- AUTH ---
 router.get('/login', (req, res) => {
   if (req.session && req.session.isTechnician) return res.redirect('/tech');
   res.render('tech/login', { title: 'Teknisi Login', company: company(), error: null });
@@ -168,14 +160,14 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   const { username, password } = req.body;
   const tech = techSvc.authenticate(username, password);
   if (tech) {
-    // SECURITY: Regenerate session after authentication to prevent session fixation
+
     return req.session.regenerate((err) => {
       if (err) {
         logger.error('[TECH LOGIN] Session regeneration failed:', err);
         return res.render('tech/login', { title: 'Teknisi Login', company: company(), error: 'Kesalahan sistem. Silakan coba lagi.' });
       }
       req.session.isTechnician = true;
-      req.session.role = "teknisi"; // canonical RBAC role (Phase 3)
+      req.session.role = "teknisi";
       req.session.techId = tech.id;
       req.session.techName = tech.name;
       req.session.save((err) => {
@@ -195,15 +187,14 @@ router.get('/logout', (req, res) => {
   res.redirect('/tech/login');
 });
 
-// --- DASHBOARD (My Tickets) ---
 router.get('/', requireTechSession, (req, res) => {
   const techId = req.session.techId;
   const stats = techSvc.getTechStats(techId);
   const myTickets = techSvc.getAssignedTickets(techId);
-  
+
   res.render('tech/dashboard', {
-    title: 'Dashboard Teknisi', 
-    company: company(), 
+    title: 'Dashboard Teknisi',
+    company: company(),
     techName: req.session.techName,
     activePage: 'dashboard',
     stats,
@@ -212,48 +203,44 @@ router.get('/', requireTechSession, (req, res) => {
   });
 });
 
-// --- OPEN TICKETS (Pool) ---
 router.get('/pool', requireTechSession, requireMenuAccess('tech_pool'), (req, res) => {
   const openTickets = techSvc.getOpenTickets();
   res.render('tech/pool', {
-    title: 'Tiket Baru', 
-    company: company(), 
+    title: 'Tiket Baru',
+    company: company(),
     activePage: 'pool',
     tickets: openTickets,
     msg: flashMsg(req)
   });
 });
 
-// --- HISTORY TICKETS ---
 router.get('/history', requireTechSession, (req, res) => {
   const techId = req.session.techId;
   const historyTickets = techSvc.getResolvedTickets(techId);
   res.render('tech/history', {
-    title: 'Riwayat Tiket', 
-    company: company(), 
+    title: 'Riwayat Tiket',
+    company: company(),
     activePage: 'history',
     tickets: historyTickets,
     msg: flashMsg(req)
   });
 });
 
-// --- NETWORK MAP ---
 router.get('/map', requireTechSession, requireMenuAccess('tech_map'), (req, res) => {
   const customers = customerSvc.getAllCustomers();
   const odps = odpSvc.getAllOdps();
-  
-  res.render('tech/map', { 
-    title: 'Peta Jaringan', 
-    company: company(), 
-    activePage: 'map', 
-    customers, 
+
+  res.render('tech/map', {
+    title: 'Peta Jaringan',
+    company: company(),
+    activePage: 'map',
+    customers,
     odps,
     msg: flashMsg(req),
     settings: getSetting('office_lat') ? { office_lat: getSetting('office_lat'), office_lng: getSetting('office_lng') } : {}
   });
 });
 
-// --- ACTIONS ---
 router.post('/tickets/:id/take', requireTechSession, (req, res) => {
   try {
     techSvc.takeTicket(req.params.id, req.session.techId);
@@ -269,11 +256,10 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
     const { status, notes } = req.body;
     const ticketId = req.params.id;
     const techId = req.session.techId;
-    
-    // Prepare photo data
+
     let photoPaths = [];
     let photoMetadata = [];
-    
+
     if (req.files && req.files.length > 0) {
       photoPaths = req.files.map(f => '/uploads/tickets/' + f.filename);
       photoMetadata = req.files.map((f, idx) => ({
@@ -285,17 +271,15 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
         lng: req.body.gps_lng || ''
       }));
     }
-    
-    // Update ticket with photos and notes
+
     techSvc.updateTicketStatus(ticketId, techId, status, {
       notes: notes || '',
       photos: JSON.stringify(photoPaths),
       photoMetadata: JSON.stringify(photoMetadata)
     });
-    
+
     req.session._msg = { type: 'success', text: 'Status keluhan berhasil diperbarui.' };
 
-    // Phase 17 — mobile push signal to the customer (fire-and-forget).
     try {
       const t = require('../services/ticketService').getTicketById(ticketId);
       if (t) {
@@ -305,21 +289,20 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
       }
     } catch (_) {}
 
-    // --- WHATSAPP NOTIFICATION FOR RESOLVED TICKET ---
     if (status === 'resolved') {
       try {
         const { getSettingsWithCache } = require('../config/settingsManager');
         const settings = getSettingsWithCache();
-        
+
         if (settings.whatsapp_enabled) {
           const { sendWA } = await import('../services/whatsappBot.mjs');
           const ticketSvc = require('../services/ticketService');
           const ticket = ticketSvc.getTicketById(ticketId);
-          
+
           if (ticket) {
             const photoCount = photoPaths.length;
             const photoText = photoCount > 0 ? `\n📸 *Foto Pekerjaan:* ${photoCount} foto terlampir` : '';
-            
+
             const waMsg = `✅ *TIKET KELUHAN SELESAI*\n\n` +
                          `🎫 *ID Tiket:* #${ticket.id}\n` +
                          `👤 *Pelanggan:* ${ticket.customer_name}\n` +
@@ -327,7 +310,6 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
                          `🛠️ *Teknisi:* ${req.session.techName}${photoText}\n\n` +
                          `Keluhan Anda telah selesai dikerjakan. Terima kasih atas kesabarannya.`;
 
-            // Kirim ke Pelanggan
             if (ticket.customer_phone) {
               const digits = normalizeWaDigits(ticket.customer_phone);
               if (digits) {
@@ -336,7 +318,6 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
               }
             }
 
-            // Kirim ke Admin dengan info foto
             if (settings.whatsapp_admin_numbers && settings.whatsapp_admin_numbers.length > 0) {
               const notesText = notes ? `\n💬 *Catatan:* ${notes}` : '';
               const adminMsg = `✅ *LAPORAN TIKET SELESAI*\n\n` +
@@ -362,7 +343,6 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
         console.error(`[TechPortal] WA Notification Error: ${waErr.message}`);
       }
     }
-    // -------------------------------------------------
 
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal update keluhan: ' + e.message };
@@ -370,12 +350,11 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
   res.redirect('/tech');
 });
 
-// --- MONITORING ONU ---
 router.get('/monitoring', requireTechSession, requireMenuAccess('tech_monitoring'), async (req, res) => {
   const acsServers = genieacsApi.getAllACSServers();
   let pppoeProfiles = [];
   try {
-      // Support multi-router: get routerId from query parameter if provided
+
       const selectedRouterId = req.query.router_id ? Number(req.query.router_id) : null;
       pppoeProfiles = await mikrotikService.getPppoeProfiles(selectedRouterId);
   } catch (e) {
@@ -391,7 +370,6 @@ router.get('/monitoring', requireTechSession, requireMenuAccess('tech_monitoring
   });
 });
 
-// --- CREATE CUSTOMER (Technician) ---
 router.get('/customers/new', requireTechSession, (req, res) => {
   const packages = customerSvc.getAllPackages();
   const odps = odpSvc.getAllOdps();
@@ -435,7 +413,6 @@ router.post('/customers', requireTechSession, express.urlencoded({ extended: tru
       isolate_day: req.body.isolate_day !== undefined ? Number(req.body.isolate_day) : 10
     };
 
-    // VALIDATION: If customer has PPPoE connection, router_id is REQUIRED
     if (customerData.pppoe_username && !customerData.router_id) {
       throw new Error('Router harus dipilih jika menggunakan koneksi PPPoE');
     }
@@ -505,7 +482,6 @@ router.post('/customers', requireTechSession, express.urlencoded({ extended: tru
   }
 });
 
-// API Endpoints for Technician
 const customerDevice = require('../services/customerDeviceService');
 
 router.get('/api/mikrotik/pppoe-users', requireTechSession, async (req, res) => {
@@ -558,7 +534,7 @@ router.get('/api/devices', requireTechSession, async (req, res) => {
 
     const result = await customerDevice.listAllDevices(999999, acs);
     if (!result.ok) return res.json({ error: result.message });
-    
+
     const activeSessionsMap = await mikrotikService.getActivePppoeSessionsMap().catch(() => new Map());
     let devices = result.devices.map(d => {
       const pppoeUser = customerDevice.extractPppoeUser(d);
@@ -574,7 +550,7 @@ router.get('/api/devices', requireTechSession, async (req, res) => {
         }
       }
       return {
-        id: d._id, 
+        id: d._id,
         tags: d._tags || [],
         serialNumber: mapped.serialNumber,
         lastInform: d._lastInform,
@@ -598,10 +574,10 @@ router.get('/api/devices', requireTechSession, async (req, res) => {
 
     if (search) {
       const s = search.toLowerCase();
-      devices = devices.filter(d => 
+      devices = devices.filter(d =>
         d.id.toLowerCase().includes(s) ||
-        d.tags.some(t => t.toLowerCase().includes(s)) || 
-        d.serialNumber.toLowerCase().includes(s) || 
+        d.tags.some(t => t.toLowerCase().includes(s)) ||
+        d.serialNumber.toLowerCase().includes(s) ||
         (d.pppoeUsername && d.pppoeUsername !== 'N/A' && d.pppoeUsername.toLowerCase().includes(s)) ||
         (d.customerName && d.customerName.toLowerCase().includes(s)) ||
         (d.customerPhone && d.customerPhone.toLowerCase().includes(s))
@@ -613,7 +589,7 @@ router.get('/api/devices', requireTechSession, async (req, res) => {
     }
 
     if (status && status !== 'all') devices = devices.filter(d => d.status === status);
-    
+
     res.json({ devices: devices, total: devices.length });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -637,7 +613,7 @@ router.post('/api/device/:tag/ssid', requireTechSession, express.json(), async (
   }
   const actor = { type: 'technician', id: req.session.techId, name: req.session.techName, ip: req.ip, userAgent: req.get('user-agent') };
   const ok = await customerDevice.updateSSID(req.params.tag, ssid, actor);
-  // Kirim notifikasi WhatsApp ke pelanggan
+
   if (ok) {
     try {
       const { getSettingsWithCache } = require('../config/settingsManager');
@@ -660,7 +636,7 @@ router.post('/api/device/:tag/ssid', requireTechSession, express.json(), async (
           }
         }
       }
-    } catch (e) { /* ignore WA notification errors */ }
+    } catch (e) {  }
   }
   res.json({ success: ok });
 });
@@ -670,7 +646,7 @@ router.post('/api/device/:tag/password', requireTechSession, express.json(), asy
   if (password.length < 8 || password.length > 63) return res.status(400).json({ error: 'Password harus 8-63 karakter' });
   const actor = { type: 'technician', id: req.session.techId, name: req.session.techName, ip: req.ip, userAgent: req.get('user-agent') };
   const ok = await customerDevice.updatePassword(req.params.tag, password, actor);
-  // Kirim notifikasi WhatsApp ke pelanggan
+
   if (ok) {
     try {
       const { getSettingsWithCache } = require('../config/settingsManager');
@@ -693,7 +669,7 @@ router.post('/api/device/:tag/password', requireTechSession, express.json(), asy
           }
         }
       }
-    } catch (e) { /* ignore WA notification errors */ }
+    } catch (e) {  }
   }
   res.json({ success: ok });
 });
@@ -703,15 +679,11 @@ router.post('/api/device/:tag/reboot', requireTechSession, async (req, res) => {
   res.json(result);
 });
 
-// ─── ATTENDANCE ROUTES ───────────────────────────────────────────────────────
-
-// Get attendance page
 router.get('/attendance', requireTechSession, requireMenuAccess('tech_attendance'), (req, res) => {
   const techId = req.session.techId;
   const todayAttendance = attendanceSvc.getTodayAttendance('technician', techId);
   const history = attendanceSvc.getAttendanceHistory('technician', techId, 10);
-  
-  // Get monthly summary
+
   const now = getCurrentDateInTimezone();
   const summary = attendanceSvc.getMonthlyAttendanceSummary(
     'technician',
@@ -719,7 +691,7 @@ router.get('/attendance', requireTechSession, requireMenuAccess('tech_attendance
     now.getFullYear(),
     now.getMonth() + 1
   );
-  
+
   res.render('tech/attendance', {
     title: 'Absensi',
     company: company(),
@@ -732,7 +704,6 @@ router.get('/attendance', requireTechSession, requireMenuAccess('tech_attendance
   });
 });
 
-// Check-in
 router.post('/attendance/checkin', requireTechSession, uploadAttendance.single('photo'), (req, res) => {
   try {
     const techId = req.session.techId;
@@ -741,20 +712,18 @@ router.post('/attendance/checkin', requireTechSession, uploadAttendance.single('
     if (!req.file) {
       return res.json({ success: false, message: 'Foto check-in wajib diunggah' });
     }
-    
-    // Check if already checked in today
+
     const today = attendanceSvc.getTodayAttendance('technician', techId);
     if (today) {
       removeAttendanceFile(req.file);
       return res.json({ success: false, message: 'Anda sudah melakukan check-in hari ini' });
     }
-    
-    // Prepare photo path
+
     let photoPath = '';
     if (req.file) {
       photoPath = '/uploads/attendance/' + req.file.filename;
     }
-    
+
     const result = attendanceSvc.checkIn({
       employee_type: 'technician',
       employee_id: techId,
@@ -764,7 +733,7 @@ router.post('/attendance/checkin', requireTechSession, uploadAttendance.single('
       note: req.body.note || '',
       photo: photoPath
     });
-    
+
     res.json({ success: true, message: 'Check-in berhasil!', id: result.lastInsertRowid });
   } catch (e) {
     removeAttendanceFile(req.file);
@@ -772,7 +741,6 @@ router.post('/attendance/checkin', requireTechSession, uploadAttendance.single('
   }
 });
 
-// Check-out
 router.post('/attendance/checkout', requireTechSession, uploadAttendance.single('photo'), (req, res) => {
   try {
     const techId = req.session.techId;
@@ -780,32 +748,30 @@ router.post('/attendance/checkout', requireTechSession, uploadAttendance.single(
     if (!req.file) {
       return res.json({ success: false, message: 'Foto check-out wajib diunggah' });
     }
-    
-    // Get today's attendance
+
     const today = attendanceSvc.getTodayAttendance('technician', techId);
     if (!today) {
       removeAttendanceFile(req.file);
       return res.json({ success: false, message: 'Anda belum check-in hari ini' });
     }
-    
+
     if (today.status === 'checked_out') {
       removeAttendanceFile(req.file);
       return res.json({ success: false, message: 'Anda sudah check-out hari ini' });
     }
-    
-    // Prepare photo path
+
     let photoPath = '';
     if (req.file) {
       photoPath = '/uploads/attendance/' + req.file.filename;
     }
-    
+
     attendanceSvc.checkOut(today.id, {
       lat: req.body.lat || '',
       lng: req.body.lng || '',
       note: req.body.note || '',
       photo: photoPath
     });
-    
+
     res.json({ success: true, message: 'Check-out berhasil!' });
   } catch (e) {
     removeAttendanceFile(req.file);
@@ -813,7 +779,6 @@ router.post('/attendance/checkout', requireTechSession, uploadAttendance.single(
   }
 });
 
-// Get attendance history (API)
 router.get('/api/attendance/history', requireTechSession, (req, res) => {
   try {
     const techId = req.session.techId;
@@ -825,7 +790,6 @@ router.get('/api/attendance/history', requireTechSession, (req, res) => {
   }
 });
 
-// Helpers for GenieACS Server DB access inside Technician Portal
 function getACSServers(id = null) {
     if (genieacsApi.isBuiltinAcsEnabled()) {
         const builtinServer = {
@@ -841,12 +805,12 @@ function getACSServers(id = null) {
     }
 
     const legacyACS = getLegacyACS();
-    const legacyServer = legacyACS.acs_url ? { 
-        id: 'legacy', 
-        name: 'Default ACS', 
-        url: legacyACS.acs_url, 
-        username: legacyACS.acs_user, 
-        password: legacyACS.acs_pass 
+    const legacyServer = legacyACS.acs_url ? {
+        id: 'legacy',
+        name: 'Default ACS',
+        url: legacyACS.acs_url,
+        username: legacyACS.acs_user,
+        password: legacyACS.acs_pass
     } : null;
 
     if (id === 'legacy') return legacyServer ? [legacyServer] : [];
@@ -859,7 +823,7 @@ function getACSServers(id = null) {
         const row = db.prepare(query).get(params);
         return row ? [row] : [];
     }
-    
+
     const rows = db.prepare(query).all(params);
     return legacyServer ? [legacyServer, ...rows] : rows;
 }
@@ -1077,17 +1041,16 @@ function getNestedValue(obj, path) {
     }
 }
 
-// GET /tech/api/wifi-settings/:deviceId
 router.get('/api/wifi-settings/:deviceId', requireTechSession, async (req, res) => {
     try {
         const { deviceId } = req.params;
         const { acsId } = req.query;
         const servers = getACSServers(acsId);
         if (servers.length === 0) return res.status(404).json({ success: false, message: 'ACS Server not found' });
-        
+
         const server = servers[0];
         const baseUrl = normalizeUrl(server.url);
-        
+
         const response = await axios.get(`${baseUrl}/devices`, {
             ...getAxiosConfig(server),
             params: {
@@ -1095,14 +1058,13 @@ router.get('/api/wifi-settings/:deviceId', requireTechSession, async (req, res) 
                 projection: 'InternetGatewayDevice.LANDevice.1.WLANConfiguration'
             }
         });
-        
+
         const deviceData = Array.isArray(response.data) && response.data.length > 0 ? response.data[0] : null;
         if (!deviceData) return res.status(404).json({ success: false, message: 'Device not found' });
-        
+
         const wlanConfig = deviceData.InternetGatewayDevice?.LANDevice?.['1']?.WLANConfiguration || {};
         const bands = [];
-        
-        // Return all SSID indices (1 to 8) that exist on the ONU
+
         for (let i = 1; i <= 8; i++) {
             if (wlanConfig[String(i)]) {
                 bands.push({
@@ -1112,14 +1074,13 @@ router.get('/api/wifi-settings/:deviceId', requireTechSession, async (req, res) 
                 });
             }
         }
-        
+
         res.json({ success: true, bands });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// POST /tech/api/add-wan/:deviceId
 router.post('/api/add-wan/:deviceId', requireTechSession, async (req, res) => {
     try {
         const { deviceId } = req.params;
@@ -1140,8 +1101,7 @@ router.post('/api/add-wan/:deviceId', requireTechSession, async (req, res) => {
             wifiPass5,
             dhcp
         } = req.body;
-        
-        // 1. Validasi awal
+
         const normalizedMode = String(mode || '').trim().toLowerCase();
         if (!['pppoe', 'bridge'].includes(normalizedMode)) {
             return res.json({ success: false, message: 'Mode WAN tidak valid' });
@@ -1151,21 +1111,20 @@ router.post('/api/add-wan/:deviceId', requireTechSession, async (req, res) => {
         if (isNaN(parsedVlan) || parsedVlan < 1 || parsedVlan > 4094) {
             return res.json({ success: false, message: 'VLAN ID tidak valid (harus 1-4094)' });
         }
-        
+
         const trimmedPppoeUser = String(pppoeUser || '').trim();
         const trimmedPppoePass = String(pppoePass || '').trim();
         if (normalizedMode === 'pppoe' && (!trimmedPppoeUser || !trimmedPppoePass)) {
             return res.json({ success: false, message: 'Username dan password PPPoE wajib diisi untuk mode PPPoE' });
         }
-        
+
         const servers = getACSServers(acsId);
         if (servers.length === 0) return res.json({ success: false, message: 'ACS Server tidak ditemukan' });
-        
+
         const server = servers[0];
         const baseUrl = normalizeUrl(server.url);
         const config = getAxiosConfig(server);
-        
-        // 2. Jika Auto-create MikroTik diaktifkan
+
         if (normalizedMode === 'pppoe' && toBool(autoCreateMikrotik)) {
             try {
                 await mikrotikService.createPppoeSecret({
@@ -1178,8 +1137,7 @@ router.post('/api/add-wan/:deviceId', requireTechSession, async (req, res) => {
                 return res.json({ success: false, message: `Gagal membuat akun PPPoE di MikroTik: ${mErr.message}` });
             }
         }
-        
-        // 3. Ambil data instansi WANConnectionDevice saat ini untuk menghitung nextInstance
+
         const getDeviceRes = await axios.get(`${baseUrl}/devices`, {
             ...config,
             params: {
@@ -1187,10 +1145,10 @@ router.post('/api/add-wan/:deviceId', requireTechSession, async (req, res) => {
                 projection: '_id,_deviceId.Manufacturer,_deviceId._Manufacturer,InternetGatewayDevice.WANDevice.1.WANConnectionDevice,InternetGatewayDevice.LANDevice.1.WLANConfiguration'
             }
         });
-        
+
         const deviceData = Array.isArray(getDeviceRes.data) && getDeviceRes.data.length > 0 ? getDeviceRes.data[0] : null;
         if (!deviceData) return res.json({ success: false, message: 'CPE/Device tidak ditemukan di GenieACS' });
-        
+
         const manufacturer = (deviceData._deviceId?._Manufacturer || deviceData._deviceId?.Manufacturer || '').toLowerCase();
         const wlanConfig = deviceData.InternetGatewayDevice?.LANDevice?.['1']?.WLANConfiguration || {};
         const isBuiltinServer = String(server.id || '').trim() === 'builtin' || baseUrl === 'local';
@@ -1328,7 +1286,7 @@ router.post('/api/add-wan/:deviceId', requireTechSession, async (req, res) => {
             name: 'refreshObject',
             objectName: ''
         }, config).catch(() => {});
-        
+
         res.json({ success: true, message: 'Semua antrean tugas Add WAN (dan Wi-Fi) berhasil dikirimkan ke GenieACS.' });
     } catch (err) {
         res.json({ success: false, message: err.message });

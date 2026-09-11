@@ -1,7 +1,4 @@
-/**
- * Encoder & Decoder RADIUS Protocol (RFC 2865 & RFC 2866)
- * Zero-dependency, menggunakan modul bawaan Node.js (crypto & buffer)
- */
+/** Encoder & Decoder RADIUS Protocol (RFC 2865 & RFC 2866) */
 const crypto = require('crypto');
 
 const CODES = {
@@ -167,7 +164,6 @@ function decryptPapPassword(encryptedBuf, authenticator, secret) {
     lastBlock = encChunk;
   }
 
-  // Hilangkan NULL padding (0x00)
   let nullIdx = decrypted.indexOf(0x00);
   if (nullIdx !== -1) {
     decrypted = decrypted.slice(0, nullIdx);
@@ -181,11 +177,10 @@ function decryptPapPassword(encryptedBuf, authenticator, secret) {
 function encodeResponsePacket({ code, identifier, requestAuthenticator, attributes = [], secret }) {
   const secretBuf = Buffer.from(secret, 'utf8');
 
-  // Hitung total panjang atribut
   let attrBufList = [];
   for (const attr of attributes) {
     if (attr.type === ATTR_TYPES.VENDOR_SPECIFIC && attr.vendorId === MIKROTIK_VENDOR_ID) {
-      // Encode MikroTik VSA
+
       const vsaValBuf = Buffer.from(attr.value);
       const vsaHeader = Buffer.alloc(6);
       vsaHeader.writeUInt32BE(MIKROTIK_VENDOR_ID, 0);
@@ -226,7 +221,6 @@ function encodeResponsePacket({ code, identifier, requestAuthenticator, attribut
   headerBuf.writeUInt16BE(packetLen, 2);
   requestAuthenticator.copy(headerBuf, 4, 0, 16);
 
-  // MD5 Authenticator = MD5(Code + Id + Length + RequestAuth + Attributes + Secret)
   const md5Hash = crypto.createHash('md5')
     .update(headerBuf)
     .update(allAttrsBuf)

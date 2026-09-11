@@ -1,12 +1,7 @@
-/**
- * Settings Encryption & Decryption
- * Untuk encrypt/decrypt sensitive fields di settings.json
- */
+/** Settings Encryption & Decryption */
 const crypto = require('crypto');
 const { logger } = require('./logger');
 
-// Master key untuk encryption (bisa dari environment variable)
-// PENTING: Ganti dengan key yang aman di production
 const MASTER_KEY = process.env.SETTINGS_MASTER_KEY || '';
 
 function getMasterKeyForString(keyStr) {
@@ -15,7 +10,6 @@ function getMasterKeyForString(keyStr) {
   return hash.digest();
 }
 
-// Normalize master key ke 32 bytes untuk AES-256
 function getMasterKey() {
   if (!MASTER_KEY && process.env.NODE_ENV === 'production') {
     throw new Error('SETTINGS_MASTER_KEY wajib dikonfigurasi pada production');
@@ -23,7 +17,6 @@ function getMasterKey() {
   return getMasterKeyForString(MASTER_KEY);
 }
 
-// List field yang harus di-encrypt
 const SENSITIVE_FIELDS = [
   'genieacs_password',
   'admin_password',
@@ -60,7 +53,6 @@ function encryptValue(value) {
     
     const authTag = cipher.getAuthTag();
     
-    // Format: iv:authTag:encrypted
     return `enc:${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
   } catch (error) {
     logger.error(`[encryption] Error encrypting value: ${error.message}`);
@@ -93,7 +85,7 @@ function decryptWithKey(encryptedValue, key) {
  */
 function decryptValue(encryptedValue) {
   if (!encryptedValue || typeof encryptedValue !== 'string') return encryptedValue;
-  if (!encryptedValue.startsWith('enc:')) return encryptedValue; // Belum di-encrypt
+  if (!encryptedValue.startsWith('enc:')) return encryptedValue; 
   
   const primaryKey = getMasterKey();
   try {

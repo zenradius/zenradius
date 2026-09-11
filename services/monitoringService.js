@@ -1,17 +1,12 @@
-/**
- * Service: Performance Monitoring System
- * Memantau kesehatan sistem dan performa aplikasi
- */
+/** Service: Performance Monitoring System */
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const { logger } = require('../config/logger');
 
-// Store metrics history
 const metricsHistory = new Map();
 const MAX_HISTORY_SIZE = 100;
 
-// Track CPU time deltas for accurate percentage calculation
 let previousCpuTimes = null;
 
 function getCpuUsagePercent() {
@@ -30,7 +25,7 @@ function getCpuUsagePercent() {
 
   if (!previousCpuTimes) {
     previousCpuTimes = { user, nice, sys, idle, irq, total };
-    return '5.00'; // Default safe initial value
+    return '5.00';
   }
 
   const totalDelta = total - previousCpuTimes.total;
@@ -50,20 +45,16 @@ function getSystemMetrics() {
   const totalMemory = os.totalmem();
   const freeMemory = os.freemem();
   const usedMemory = totalMemory - freeMemory;
-  
-  // Calculate real CPU usage percentage
+
   const cpuPercent = getCpuUsagePercent();
-  
-  // Calculate memory usage percentage
+
   const memoryPercent = (usedMemory / totalMemory) * 100;
-  
-  // Get uptime
+
   const uptime = process.uptime();
   const uptimeHours = Math.floor(uptime / 3600);
   const uptimeMinutes = Math.floor((uptime % 3600) / 60);
   const uptimeSeconds = Math.floor(uptime % 60);
-  
-  // Get load average (Fallback for Windows where loadavg is [0, 0, 0])
+
   const loadAverage = os.loadavg();
   let load1 = loadAverage[0];
   let load5 = loadAverage[1];
@@ -75,7 +66,7 @@ function getSystemMetrics() {
     load5 = parseFloat(estLoad);
     load15 = parseFloat(estLoad);
   }
-  
+
   return {
     timestamp: new Date().toISOString(),
     cpu: {
@@ -110,7 +101,7 @@ function getSystemMetrics() {
  */
 function getAppMetrics() {
   const memoryUsage = process.memoryUsage();
-  
+
   return {
     pid: process.pid,
     memory: {
@@ -131,7 +122,7 @@ function getAppMetrics() {
 function getDiskUsage() {
   try {
     const targetPath = os.platform() === 'win32' ? 'C:\\' : '/';
-    
+
     if (typeof fs.statfsSync === 'function') {
       const stat = fs.statfsSync(targetPath);
       const total = stat.bsize * stat.blocks;
@@ -146,8 +137,7 @@ function getDiskUsage() {
         timestamp: new Date().toISOString()
       };
     }
-    
-    // Unix fallback
+
     if (os.platform() !== 'win32') {
       const { execSync } = require('child_process');
       const output = execSync(`df -h ${targetPath}`).toString();
@@ -163,7 +153,7 @@ function getDiskUsage() {
         };
       }
     }
-    
+
     return {
       total: 'N/A',
       free: 'N/A',
@@ -195,11 +185,10 @@ function getDatabaseMetrics() {
       const stats = fs.statSync(dbPath);
       statsSize = stats.size;
     } catch {}
-    
-    // Get table counts
+
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
     const tableCounts = {};
-    
+
     for (const table of tables) {
       try {
         const count = db.prepare(`SELECT COUNT(*) as count FROM ${table.name}`).get();
@@ -208,7 +197,7 @@ function getDatabaseMetrics() {
         tableCounts[table.name] = 'N/A';
       }
     }
-    
+
     return {
       size: formatBytes(statsSize),
       path: dbPath,
@@ -236,7 +225,7 @@ function getAllMetrics() {
   const app = getAppMetrics();
   const disk = getDiskUsage();
   const database = getDatabaseMetrics();
-  
+
   const allMetrics = {
     system,
     app,
@@ -244,10 +233,9 @@ function getAllMetrics() {
     database,
     timestamp: new Date().toISOString()
   };
-  
-  // Store in history
+
   storeMetricsHistory(allMetrics);
-  
+
   return allMetrics;
 }
 
@@ -257,8 +245,7 @@ function getAllMetrics() {
 function storeMetricsHistory(metrics) {
   const key = metrics.timestamp;
   metricsHistory.set(key, metrics);
-  
-  // Keep only the last MAX_HISTORY_SIZE entries
+
   if (metricsHistory.size > MAX_HISTORY_SIZE) {
     const oldestKey = metricsHistory.keys().next().value;
     metricsHistory.delete(oldestKey);
@@ -270,12 +257,12 @@ function storeMetricsHistory(metrics) {
  */
 function getMetricsHistory(limit = 10) {
   if (metricsHistory.size < 2) {
-    getAllMetrics(); // Guarantee at least 1 sample if history is thin
+    getAllMetrics();
   }
   const history = Array.from(metricsHistory.values())
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     .slice(0, limit);
-  
+
   return history;
 }
 
@@ -286,24 +273,21 @@ function getHealthStatus() {
   const metrics = getAllMetrics();
   const issues = [];
   const warnings = [];
-  
-  // Check CPU usage
+
   const cpuUsage = parseFloat(metrics.system.cpu.usage);
   if (cpuUsage > 85) {
     issues.push(`Penggunaan CPU tinggi: ${cpuUsage}%`);
   } else if (cpuUsage > 65) {
     warnings.push(`Penggunaan CPU agak tinggi: ${cpuUsage}%`);
   }
-  
-  // Check memory usage
+
   const memoryUsage = parseFloat(metrics.system.memory.percentage);
   if (memoryUsage > 85) {
     issues.push(`Penggunaan RAM tinggi: ${memoryUsage}%`);
   } else if (memoryUsage > 70) {
     warnings.push(`Penggunaan RAM agak tinggi: ${memoryUsage}%`);
   }
-  
-  // Check load average
+
   const load1 = parseFloat(metrics.system.loadAverage['1min']);
   const cores = metrics.system.cpu.cores;
   if (load1 > cores * 2) {
@@ -311,8 +295,7 @@ function getHealthStatus() {
   } else if (load1 > cores) {
     warnings.push(`Beban sistem (Load Average) agak tinggi: ${load1} (${cores} cores)`);
   }
-  
-  // Check disk usage
+
   const diskPercentage = metrics.disk.percentage;
   if (diskPercentage !== 'N/A') {
     const diskPercent = parseFloat(diskPercentage.replace('%', ''));
@@ -322,15 +305,14 @@ function getHealthStatus() {
       warnings.push(`Kapasitas Penyimpanan (Disk) Terpakai: ${diskPercentage}`);
     }
   }
-  
-  // Determine overall health status
+
   let status = 'healthy';
   if (issues.length > 0) {
     status = 'critical';
   } else if (warnings.length > 0) {
     status = 'warning';
   }
-  
+
   return {
     status,
     issues,
@@ -345,11 +327,11 @@ function getHealthStatus() {
  */
 function formatBytes(bytes) {
   if (typeof bytes !== 'number' || isNaN(bytes) || bytes <= 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
@@ -358,24 +340,22 @@ function formatBytes(bytes) {
  */
 function getPerformanceSummary() {
   const history = getMetricsHistory(10);
-  
+
   if (history.length === 0) {
     return {
       timestamp: new Date().toISOString(),
       summary: 'No historical data available'
     };
   }
-  
-  // Calculate averages
+
   const avgCpu = history.reduce((sum, m) => sum + parseFloat(m.system.cpu.usage || 0), 0) / history.length;
   const avgMemory = history.reduce((sum, m) => sum + parseFloat(m.system.memory.percentage || 0), 0) / history.length;
   const avgLoad1 = history.reduce((sum, m) => sum + parseFloat(m.system.loadAverage['1min'] || 0), 0) / history.length;
-  
-  // Find max values
+
   const maxCpu = Math.max(...history.map(m => parseFloat(m.system.cpu.usage || 0)));
   const maxMemory = Math.max(...history.map(m => parseFloat(m.system.memory.percentage || 0)));
   const maxLoad1 = Math.max(...history.map(m => parseFloat(m.system.loadAverage['1min'] || 0)));
-  
+
   return {
     timestamp: new Date().toISOString(),
     period: {
@@ -404,7 +384,6 @@ function clearMetricsHistory() {
   logger.info('[Monitoring] Metrics history cleared');
 }
 
-// Populate initial sample on module load
 try {
   getAllMetrics();
 } catch {}

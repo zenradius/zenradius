@@ -60,10 +60,9 @@ async function processWebhookEvent(req, res) {
         const value = change.value;
         if (!value) continue;
 
-        // 1. Tangani Pesan Masuk dari Pelanggan
         if (value.messages && value.messages.length > 0) {
           for (const msg of value.messages) {
-            const senderPhone = msg.from; // format: 628123456789
+            const senderPhone = msg.from;
             const msgId = msg.id;
             let msgText = '';
 
@@ -79,7 +78,6 @@ async function processWebhookEvent(req, res) {
 
             logger.info(`[Meta WA Webhook] Pesan masuk dari ${senderPhone}: "${msgText}"`);
 
-            // Cari nama pelanggan dari DB jika ada
             let customerName = 'Pelanggan';
             let customerId = null;
             try {
@@ -90,10 +88,9 @@ async function processWebhookEvent(req, res) {
               }
             } catch (e) {}
 
-            // Simpan ke tabel wa_chat_messages
             try {
               db.prepare(`
-                INSERT INTO wa_chat_messages 
+                INSERT INTO wa_chat_messages
                 (direction, gateway, sender_phone, recipient_phone, customer_id, customer_name, message_text, status, meta_message_id)
                 VALUES ('inbound', 'meta', ?, ?, ?, ?, ?, 'read', ?)
               `).run(senderPhone, getSetting('meta_business_phone', ''), customerId, customerName, msgText, msgId);
@@ -103,11 +100,10 @@ async function processWebhookEvent(req, res) {
           }
         }
 
-        // 2. Tangani Update Status Pengiriman (Sent, Delivered, Read, Failed)
         if (value.statuses && value.statuses.length > 0) {
           for (const statusObj of value.statuses) {
             const statusId = statusObj.id;
-            const newStatus = statusObj.status; // sent, delivered, read, failed
+            const newStatus = statusObj.status;
 
             try {
               db.prepare(`UPDATE wa_chat_messages SET status = ? WHERE meta_message_id = ?`).run(newStatus, statusId);
@@ -170,7 +166,6 @@ async function sendMetaTextMessage(toPhone, messageText) {
 
   const metaMsgId = resData?.messages?.[0]?.id || '';
 
-  // Simpan ke DB Chat Log
   try {
     let custName = 'Pelanggan';
     let custId = null;
@@ -181,7 +176,7 @@ async function sendMetaTextMessage(toPhone, messageText) {
     }
 
     db.prepare(`
-      INSERT INTO wa_chat_messages 
+      INSERT INTO wa_chat_messages
       (direction, gateway, sender_phone, recipient_phone, customer_id, customer_name, message_text, status, meta_message_id)
       VALUES ('outbound', 'meta', ?, ?, ?, ?, ?, 'sent', ?)
     `).run(getSetting('meta_business_phone', ''), phone, custId, custName, messageText, metaMsgId);
@@ -190,13 +185,7 @@ async function sendMetaTextMessage(toPhone, messageText) {
   return { success: true, messageId: metaMsgId, raw: resData };
 }
 
-/**
- * Kirim Pesan Template Resmi via Meta Cloud API
- * @param {string} toPhone 
- * @param {string} templateName Nama template terdaftar di Meta
- * @param {string} languageCode Kode bahasa, misal 'id'
- * @param {Array} parameters Array parameter string misal ["Budi", "Rp 150.000", "10 Aug"]
- */
+/** Kirim Pesan Template Resmi via Meta Cloud API */
 async function sendMetaTemplateMessage(toPhone, templateName, languageCode = 'id', parameters = []) {
   const phone = normalizePhone(toPhone);
   if (!phone) throw new Error('Nomor tujuan tidak valid.');
@@ -253,7 +242,6 @@ async function sendMetaTemplateMessage(toPhone, templateName, languageCode = 'id
 
   const metaMsgId = resData?.messages?.[0]?.id || '';
 
-  // Simpan ke DB Chat Log
   try {
     let custName = 'Pelanggan';
     let custId = null;
@@ -265,7 +253,7 @@ async function sendMetaTemplateMessage(toPhone, templateName, languageCode = 'id
 
     const summaryText = `[Template Meta: ${templateName}] Parameter: ${parameters.join(', ')}`;
     db.prepare(`
-      INSERT INTO wa_chat_messages 
+      INSERT INTO wa_chat_messages
       (direction, gateway, sender_phone, recipient_phone, customer_id, customer_name, message_text, status, meta_message_id)
       VALUES ('outbound', 'meta', ?, ?, ?, ?, ?, 'sent', ?)
     `).run(getSetting('meta_business_phone', ''), phone, custId, custName, summaryText, metaMsgId);

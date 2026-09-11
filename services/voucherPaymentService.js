@@ -1,7 +1,4 @@
-/**
- * Service: Voucher Payment Gateway Integration
- * Otomatis mengambil payment methods dari payment gateway yang aktif
- */
+/** Service: Voucher Payment Gateway Integration */
 const axios = require('axios');
 const { getSettingsWithCache } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
@@ -15,25 +12,22 @@ async function getAvailablePaymentMethods() {
   const methods = [];
 
   try {
-    // Tripay methods
+
     if (settings.tripay_enabled && settings.tripay_api_key && settings.tripay_private_key && settings.tripay_merchant_code) {
       const tripayMethods = await getTripayPaymentMethods(settings);
       methods.push(...tripayMethods);
     }
 
-    // Midtrans methods (Snap)
     if (settings.midtrans_enabled && settings.midtrans_server_key) {
       const midtransMethods = await getMidtransPaymentMethods(settings);
       methods.push(...midtransMethods);
     }
 
-    // Xendit methods
     if (settings.xendit_enabled && settings.xendit_api_key) {
       const xenditMethods = await getXenditPaymentMethods(settings);
       methods.push(...xenditMethods);
     }
 
-    // Duitku methods
     if (settings.duitku_enabled && settings.duitku_api_key && settings.duitku_merchant_code) {
       const duitkuMethods = await getDuitkuPaymentMethods(settings);
       methods.push(...duitkuMethods);
@@ -188,7 +182,6 @@ async function createVoucherPayment(voucherOrder, paymentMethod, appUrl = '') {
 
   const gateway = paymentMethod.gateway.toLowerCase();
 
-  // Prepare invoice object
   const invoice = {
     id: voucherOrder.id,
     amount: voucherOrder.price,
@@ -196,14 +189,12 @@ async function createVoucherPayment(voucherOrder, paymentMethod, appUrl = '') {
     sku: `VOUCHER-${voucherOrder.id}`
   };
 
-  // Prepare customer object
   const customer = {
     name: 'Pembeli Voucher',
     phone: voucherOrder.buyer_phone,
     email: ''
   };
 
-  // Prepare options with explicit VOUCHER orderPrefix
   const opts = {
     orderPrefix: 'VOUCHER',
     itemName: `Voucher Hotspot ${voucherOrder.profile_name}`,

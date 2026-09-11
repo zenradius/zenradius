@@ -1,7 +1,4 @@
-/**
- * Script untuk memverifikasi dan memperbaiki struktur database
- * Menambahkan kolom yang hilang jika diperlukan
- */
+/** Script untuk memverifikasi dan memperbaiki struktur database */
 const Database = require('better-sqlite3');
 const path = require('path');
 
@@ -11,13 +8,11 @@ console.log('Memeriksa database:', dbPath);
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
-// Fungsi untuk cek apakah kolom ada
 function columnExists(tableName, columnName) {
   const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
   return columns.some(col => col.name === columnName);
 }
 
-// Daftar kolom yang harus ada di tabel customers
 const requiredColumns = [
   { name: 'hotspot_username', type: 'TEXT DEFAULT \'\'', description: 'Username Hotspot' },
   { name: 'hotspot_password', type: 'TEXT DEFAULT \'\'', description: 'Password Hotspot' },

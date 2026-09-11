@@ -1,15 +1,12 @@
 const db = require('../config/database');
 
-/**
- * ODP SERVICE
- * Mengelola data Optical Distribution Point (ODP)
- */
+/** ODP SERVICE */
 
 function getAllOdps() {
   return db.prepare(`
-    SELECT o.*, olt.name as olt_name 
-    FROM odps o 
-    LEFT JOIN olts olt ON o.olt_id = olt.id 
+    SELECT o.*, olt.name as olt_name
+    FROM odps o
+    LEFT JOIN olts olt ON o.olt_id = olt.id
     ORDER BY o.name ASC
   `).all();
 }
@@ -36,7 +33,7 @@ function createOdp(data) {
 
 function updateOdp(id, data) {
   const stmt = db.prepare(`
-    UPDATE odps 
+    UPDATE odps
     SET name = ?, olt_id = ?, pon_port = ?, port_capacity = ?, lat = ?, lng = ?, description = ?
     WHERE id = ?
   `);

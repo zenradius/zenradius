@@ -64,21 +64,18 @@ const MENU_DEFINITIONS = [
   { key: 'settings', section: 'system', href: '/admin/settings', icon: 'bi bi-gear', labelKey: 'admin.nav.settings', labelDefault: 'Pengaturan', roles: ['admin'], activePages: ['settings'] },
   { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update GitHub', roles: ['admin'], activePages: ['update'] },
 
-  // ── Portal Teknisi (/tech) ──────────────────────────────────────────────
   { key: 'tech_dashboard', section: 'tech', href: '/tech', icon: 'bi bi-briefcase-fill', labelKey: 'tech.nav.my_tasks', labelDefault: 'Tugas Saya', roles: ['teknisi'], bottomNav: true, activePages: ['dashboard'] },
   { key: 'tech_pool', section: 'tech', href: '/tech/pool', icon: 'bi bi-inbox-fill', labelKey: 'tech.nav.new_tickets', labelDefault: 'Tiket Baru', roles: ['teknisi'], bottomNav: true, activePages: ['pool'] },
   { key: 'tech_attendance', section: 'tech', href: '/tech/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'tech.nav.attendance', labelDefault: 'Absensi', roles: ['teknisi'], bottomNav: true, activePages: ['attendance'] },
   { key: 'tech_map', section: 'tech', href: '/tech/map', icon: 'bi bi-map-fill', labelKey: 'tech.nav.map', labelDefault: 'Peta', roles: ['teknisi'], bottomNav: true, activePages: ['map'] },
   { key: 'tech_monitoring', section: 'tech', href: '/tech/monitoring', icon: 'bi bi-display-fill', labelKey: 'tech.nav.monitor', labelDefault: 'Monitor', roles: ['teknisi'], bottomNav: true, activePages: ['monitoring'] },
 
-  // ── Portal Reseller/Agent (/agent) — satu halaman dashboard dengan section ──
   { key: 'agent_home', section: 'agent', href: '/agent#section-top', icon: 'bi bi-house', labelKey: 'agent.nav.home', labelDefault: 'Beranda', roles: ['reseller'], bottomNav: true, activePages: ['top'] },
   { key: 'agent_billing', section: 'agent', href: '/agent#section-bill', icon: 'bi bi-receipt', labelKey: 'agent.nav.billing', labelDefault: 'Tagihan', roles: ['reseller'], bottomNav: true, activePages: ['bill'] },
   { key: 'agent_voucher', section: 'agent', href: '/agent#section-voucher', icon: 'bi bi-ticket-perforated', labelKey: 'agent.nav.voucher', labelDefault: 'Voucher', roles: ['reseller'], bottomNav: true, activePages: ['voucher'] },
   { key: 'agent_pulsa', section: 'agent', href: '/agent#section-pulsa', icon: 'bi bi-phone', labelKey: 'agent.nav.pulsa', labelDefault: 'Pulsa', roles: ['reseller'], bottomNav: true, activePages: ['pulsa'] },
   { key: 'agent_history', section: 'agent', href: '/agent#section-history', icon: 'bi bi-clock-history', labelKey: 'agent.nav.history', labelDefault: 'Riwayat', roles: ['reseller'], bottomNav: true, activePages: ['history'] },
 
-  // ── Portal Kolektor (/collector) ────────────────────────────────────────
   { key: 'collector_dashboard', section: 'collector', href: '/collector', icon: 'bi bi-grid-3x3-gap', labelKey: 'collector.nav.dashboard', labelDefault: 'Dashboard', roles: ['kolektor'], bottomNav: true, activePages: ['dashboard'] },
   { key: 'collector_attendance', section: 'collector', href: '/collector/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'collector.nav.attendance', labelDefault: 'Absensi', roles: ['kolektor'], bottomNav: true, activePages: ['attendance'] }
 ];
@@ -163,13 +160,12 @@ function normalizeState(value) {
 }
 
 function getStoredMenuStates() {
-  // Coba ambil dari Database dulu (Lebih Aman)
+  
   let raw = getAppSetting(SETTINGS_KEY, null);
 
-  // Fallback ke settings.json jika di DB masih kosong (Migration)
   if (raw === null) {
     raw = getSetting(SETTINGS_KEY, {});
-    // Langsung migrasi ke DB agar kedepannya pakai DB
+    
     if (Object.keys(raw).length > 0) {
       saveAppSetting(SETTINGS_KEY, raw);
     }
@@ -187,7 +183,6 @@ function getStoredMenuStates() {
   return stateMap;
 }
 
-// Fungsi untuk cek apakah user adalah Master Admin
 function isMasterAdminUser(session) {
   return Boolean(session?.isMasterAdmin);
 }
@@ -210,13 +205,12 @@ function markDonationCodeUsed(code) {
     const db = require('../config/database');
     db.prepare('UPDATE public_donation_orders SET activation_code_used = 1 WHERE activation_code = ?').run(code);
   } catch (e) {
-    // ignore
+    
   }
 }
 
 function saveMenuStates(stateMap) {
-  // Simpan ke Database (Utama). Menu visibility murni preferensi admin (RBAC),
-  // tidak ada lagi mekanisme activation-key/lisensi.
+  
   saveAppSetting(SETTINGS_KEY, sanitizeMenuStates(stateMap));
   return true;
 }
@@ -241,13 +235,12 @@ function sanitizeMenuStates(input, options = {}) {
 }
 
 function getSessionRole(session) {
-  // Role canonical eksplisit (Phase 3+) selalu jadi sumber utama.
+  
   const explicit = String(session?.role || '').trim().toLowerCase();
   if (['admin', 'customer_service', 'kolektor', 'teknisi', 'reseller'].includes(explicit)) {
     return explicit === 'customer_service' ? 'cashier' : explicit;
   }
 
-  // Compatibility layer untuk session lama (legacy boolean flags).
   const legacyRole = String(session?.userRole || '').trim().toLowerCase();
   if (legacyRole === 'admin' || legacyRole === 'cashier') return legacyRole;
   if (session?.isAdmin && !session?.isCashier) return 'admin';
@@ -262,7 +255,6 @@ function isMenuAllowedForSession(menu, session) {
   const role = getSessionRole(session);
   const roles = Array.isArray(menu.roles) ? menu.roles : ['admin'];
 
-  // Menu khusus Master Admin (tidak tampil untuk admin biasa)
   if (menu.masterOnly && !isMasterAdminUser(session)) return false;
 
   return Boolean(role) && roles.includes(role);
@@ -344,7 +336,6 @@ function evaluateMenuAccess(menuKey, session) {
     return { allowed: true, state: STATE_VISIBLE, menu: null };
   }
 
-  // Admin full-access: tidak ada pengecekan permission/policy lagi
   if (!isMenuAllowedForSession(menu, session)) {
     return { allowed: false, state: 'forbidden', menu, reason: 'forbidden' };
   }

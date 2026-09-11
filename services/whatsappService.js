@@ -4,19 +4,11 @@ const db = require('../config/database');
 const metaWAService = require('./metaWhatsappService');
 const httpWAService = require('./httpWhatsappService');
 
-/**
- * Unified WhatsApp Gateway Service
- * Menangani routing pengiriman pesan baik via Baileys (Unofficial Web) maupun Meta Cloud API (Official Meta).
- */
+/** Unified WhatsApp Gateway Service */
 
-/**
- * Kirim pesan WhatsApp universal
- * @param {string} toPhone Nomor HP tujuan
- * @param {string} messageText Teks pesan
- * @param {object} options Opsi tambahan: { templateName, parameters, langCode }
- */
+/** Kirim pesan WhatsApp universal */
 async function sendWhatsAppMessage(toPhone, messageText, options = {}) {
-  const gatewayType = getSetting('wa_gateway_type', 'baileys'); // 'baileys' | 'meta' | 'fonnte' | 'wablas' | 'http'
+  const gatewayType = getSetting('wa_gateway_type', 'baileys'); 
 
   if (gatewayType === 'meta') {
     if (options.templateName) {
@@ -28,7 +20,7 @@ async function sendWhatsAppMessage(toPhone, messageText, options = {}) {
 
   if (['fonnte', 'wablas', 'http'].includes(gatewayType)) {
     const ok = await httpWAService.sendHttpWhatsApp(toPhone, messageText);
-    // Logging ke wa_chat_messages
+    
     try {
       const phone = metaWAService.normalizePhone(toPhone);
       let custName = 'Pelanggan';
@@ -43,7 +35,7 @@ async function sendWhatsAppMessage(toPhone, messageText, options = {}) {
     } catch (e) {}
     return ok;
   } else {
-    // Mode BAILEYS WEB (Default Existing)
+    
     const { sendWA, whatsappStatus } = await import('./whatsappBot.mjs');
 
     if (!whatsappStatus || whatsappStatus.connection !== 'open') {
@@ -56,7 +48,6 @@ async function sendWhatsAppMessage(toPhone, messageText, options = {}) {
       throw new Error('Gagal mengirim pesan via Baileys. Pastikan nomor HP tujuan terdaftar di WhatsApp.');
     }
 
-    // Logging ke wa_chat_messages untuk Inbox / Live Chat
     try {
       const phone = metaWAService.normalizePhone(toPhone);
       let custName = 'Pelanggan';
@@ -125,7 +116,7 @@ function getRecentConversations(limit = 30) {
 
 module.exports = {
   sendWhatsAppMessage,
-  sendWA: sendWhatsAppMessage, // Alias untuk kompatibilitas fungsi lama
+  sendWA: sendWhatsAppMessage, 
   getChatHistory,
   getRecentConversations
 };

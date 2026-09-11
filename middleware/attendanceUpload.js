@@ -45,7 +45,7 @@ function removeAttendanceFile(file) {
       fs.unlinkSync(targetPath);
     }
   } catch (err) {
-    // Ignore cleanup failures so the main request can finish.
+
   }
 }
 

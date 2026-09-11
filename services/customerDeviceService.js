@@ -1,7 +1,4 @@
-/**
- * Logika GenieACS yang dipakai portal web dan bot WhatsApp.
- * Updated to support multi-server GenieACS setup.
- */
+/** Logika GenieACS yang dipakai portal web dan bot WhatsApp. */
 const axios = require('axios');
 const db = require('../config/database');
 const { getSettingsWithCache } = require('../config/settingsManager');
@@ -10,19 +7,17 @@ const { logger } = require('../config/logger');
 const genieacsApi = require('../config/genieacs');
 const mikrotikService = require('./mikrotikService');
 
-// Helper: Search device across all servers (always get full data)
 async function searchDeviceAcrossServers(query, fullData = true) {
   try {
     const servers = genieacsApi.getAllACSServers();
-    
+
     for (const server of servers) {
       try {
         const instance = genieacsApi.createAxiosInstance(server);
         const params = {
           query: JSON.stringify(query)
         };
-        
-        // Only add projection if explicitly requesting minimal data
+
         if (!fullData) {
           params.projection = '_id,_tags';
         }
@@ -39,7 +34,7 @@ async function searchDeviceAcrossServers(query, fullData = true) {
             timeout: 2000
           });
         }
-        
+
         if (response.data && response.data.length > 0) {
           const device = response.data[0];
           device._acs_server_id = server.id;
@@ -51,7 +46,7 @@ async function searchDeviceAcrossServers(query, fullData = true) {
         logger.debug(`[CustomerDevice] Device not found on ${server.name}: ${error.message}`);
       }
     }
-    
+
     return null;
   } catch (error) {
     logger.error(`[CustomerDevice] Error searching device: ${error.message}`);
@@ -62,7 +57,7 @@ async function searchDeviceAcrossServers(query, fullData = true) {
 async function findDeviceByTag(tag) {
   try {
     const query = { $or: [{ _id: tag }, { _tags: tag }] };
-    // Get full data by default
+
     return await searchDeviceAcrossServers(query, true);
   } catch (e) {
     logger.error(`[CustomerDevice] Error finding device by tag: ${e.message}`);
@@ -80,7 +75,7 @@ async function findDeviceByPppoe(pppoeUser) {
       ...PPPOE_USER_KEYS
     ];
     const query = { $or: keys.map(k => ({ [k]: user })) };
-    // Get full data by default
+
     return await searchDeviceAcrossServers(query, true);
   } catch (e) {
     logger.error(`[CustomerDevice] Error finding device by PPPoE: ${e.message}`);
@@ -91,7 +86,7 @@ async function findDeviceByPppoe(pppoeUser) {
 async function fetchFullDevice(tag) {
   try {
     const query = { $or: [{ _id: tag }, { _tags: tag }] };
-    // Always get full data
+
     return await searchDeviceAcrossServers(query, true);
   } catch (e) {
     logger.error(`[CustomerDevice] Error fetching full device: ${e.message}`);
@@ -207,7 +202,6 @@ const parameterPaths = {
   ]
 };
 
-// PPPoE IP search keys matching user's template
 const PPPOE_IP_KEYS = [
   'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress',
   'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANPPPConnection.2.ExternalIPAddress',
@@ -221,7 +215,6 @@ const PPPOE_IP_KEYS = [
   'Device.IP.Interface.1.IPv4Address.1.IPAddress'
 ];
 
-// PPPoE Username search keys matching user's template
 const PPPOE_USER_KEYS = [
   'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username',
   'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANPPPConnection.2.Username',
@@ -264,7 +257,7 @@ function getWildcardMatches(device, path) {
 
   function recurse(current, index, currentPathParts) {
     if (current === undefined || current === null) return;
-    
+
     if (index === parts.length) {
       let val = current;
       if (typeof current === 'object' && '_value' in current) {
@@ -321,7 +314,7 @@ function getDeviceParameterValue(device, keys, filterFn) {
 function extractPppoeIp(d) {
   const ip = getDeviceParameterValue(d, PPPOE_IP_KEYS, (matchedPath, value, device) => {
     if (!value || value === '0.0.0.0' || value === '-') return false;
-    
+
     if (matchedPath.includes('WANPPPConnection.')) {
       const connectionTypePath = matchedPath.replace('ExternalIPAddress', 'ConnectionType');
       const connTypeMatches = getWildcardMatches(device, connectionTypePath);
@@ -331,7 +324,7 @@ function extractPppoeIp(d) {
     }
     return true;
   });
-  
+
   if (ip) return ip;
   if (d._ip && d._ip !== '-' && d._ip !== '0.0.0.0') return d._ip;
   return 'N/A';
@@ -340,7 +333,7 @@ function extractPppoeIp(d) {
 function extractPppoeUser(d) {
   const user = getDeviceParameterValue(d, PPPOE_USER_KEYS, (matchedPath, value, device) => {
     if (!value || value === '-') return false;
-    
+
     if (matchedPath.includes('WANPPPConnection.')) {
       const connectionTypePath = matchedPath.replace('Username', 'ConnectionType');
       const connTypeMatches = getWildcardMatches(device, connectionTypePath);
@@ -350,7 +343,7 @@ function extractPppoeUser(d) {
     }
     return true;
   });
-  
+
   return user || 'N/A';
 }
 
@@ -401,7 +394,7 @@ function collectRefreshObjects(device) {
   const isTr181 = !!device?.Device;
 
   if (isTr181) {
-    // TR-181 Device - validate before pushing
+
     if (device?.Device?.Hosts?.Host) {
       objects.push('Device.Hosts.Host');
     }
@@ -412,9 +405,7 @@ function collectRefreshObjects(device) {
       objects.push('Device.WiFi.AccessPoint.2.AssociatedDevice');
     }
   } else {
-    // TR-098 Device (InternetGatewayDevice) - validate before pushing
-    // FIX for Error 9005: Only query objects that exist in device cache
-    // Some devices (e.g. ZTE GM220-S XPON) don't have LANDevice/WiFi support
+
     if (device?.InternetGatewayDevice?.LANDevice?.['1']?.Hosts?.Host) {
       objects.push('InternetGatewayDevice.LANDevice.1.Hosts.Host');
     }
@@ -478,7 +469,7 @@ const PPPOE_UPTIME_KEYS = [
 function extractPppoeUptime(d) {
   let uptimeVal = getDeviceParameterValue(d, PPPOE_UPTIME_KEYS, (matchedPath, value, device) => {
     if (value === undefined || value === null || value === '' || value === '-') return false;
-    
+
     if (matchedPath.toLowerCase().includes('wanpppconnection')) {
       const connTypePath = matchedPath.substring(0, matchedPath.toLowerCase().lastIndexOf('.uptime')) + '.ConnectionType';
       const connTypeMatches = getWildcardMatches(device, connTypePath);
@@ -529,30 +520,30 @@ function getParameterWithPaths(device, paths) {
       if (isIpPath && String(value) === '0.0.0.0') {
         continue;
       }
-      const isCountParam = p.includes('TotalAssociations') || 
-                           p.includes('AssociatedDeviceNumberOfEntries') || 
+      const isCountParam = p.includes('TotalAssociations') ||
+                           p.includes('AssociatedDeviceNumberOfEntries') ||
                            p.includes('HostNumberOfEntries');
-                           
+
       if (isCountParam) {
-        // Ensure we push a number
+
         const val = (typeof value === 'object' && value._value !== undefined) ? value._value : value;
         values.push(parseInt(val) || 0);
       } else {
-        // If it's still an object, try to get _value or stringify it
+
         if (typeof value === 'object') {
           if (value._value !== undefined) return String(value._value);
-          return 'N/A'; // Don't return raw object
+          return 'N/A';
         }
         return String(value);
       }
     }
   }
-  
+
   if (values.length > 0) {
-    // If it's a count parameter, sum them up (for dual band)
+
     return values.reduce((a, b) => a + b, 0);
   }
-  
+
   return 'N/A';
 }
 
@@ -628,12 +619,12 @@ function mapDeviceData(device, tag, isPppoeActive = false) {
             mac: typeof entry?.MACAddress === 'object' ? entry?.MACAddress?._value || '-' : entry?.MACAddress || '-',
             iface: typeof entry?.InterfaceType === 'object' ? entry?.InterfaceType?._value || '-' : entry?.InterfaceType || entry?.Interface || '-',
             status: (
-              entry?.Active?._value === 'true' || 
-              entry?.Active?._value === '1' || 
-              entry?.Active?._value === 1 || 
-              entry?.Active === true || 
-              entry?.Active === '1' || 
-              entry?.Active === 1 || 
+              entry?.Active?._value === 'true' ||
+              entry?.Active?._value === '1' ||
+              entry?.Active?._value === 1 ||
+              entry?.Active === true ||
+              entry?.Active === '1' ||
+              entry?.Active === 1 ||
               String(entry?.Active || '').toLowerCase() === 'online'
             ) ? 'Online' : 'Offline'
           });
@@ -707,7 +698,6 @@ function mapDeviceData(device, tag, isPppoeActive = false) {
   const uptimeRaw = getParameterWithPaths(device, parameterPaths.uptime);
   let totalAssociations = getParameterWithPaths(device, parameterPaths.userConnected);
 
-  // Fallback: If N/A or 0, count from connectedUsers list (LAN + WLAN)
   if ((totalAssociations === 'N/A' || totalAssociations === 0 || totalAssociations === '0') && connectedUsers.length > 0) {
     totalAssociations = connectedUsers.filter(u => u.status === 'Online').length;
   }
@@ -727,17 +717,17 @@ function mapDeviceData(device, tag, isPppoeActive = false) {
     if (isNaN(totalSecs)) return seconds || 'N/A';
     const days = Math.floor(totalSecs / 86400);
     const rem = totalSecs % 86400;
-    
+
     let hrs = Math.floor(rem / 3600);
     if (hrs < 10) hrs = "0" + hrs;
-    
+
     const rem2 = rem % 3600;
     let mins = Math.floor(rem2 / 60);
     if (mins < 10) mins = "0" + mins;
-    
+
     let secs = rem2 % 60;
     if (secs < 10) secs = "0" + secs;
-    
+
     return days + "d " + hrs + ":" + mins + ":" + secs;
   }
   const uptime = formatUptime(uptimeRaw);
@@ -785,7 +775,7 @@ async function getCustomerDeviceData(tag) {
   const base = await resolveDeviceToken(tag);
   if (!base || !base._id) return null;
   const device = await fetchFullDevice(base._id);
-  
+
   let isPppoeActive = false;
   try {
     const pppoeUser = extractPppoeUser(device);
@@ -833,23 +823,21 @@ async function updateSSID(tag, newSSID, actor = null) {
     const device = await resolveDeviceToken(tag);
     if (!device) return false;
     const deviceId = encodeURIComponent(device._id);
-    
-    // Gunakan server yang sesuai
+
     const server = device._acs_server_id ? genieacsApi.getACSServer(device._acs_server_id) : genieacsApi.getACSServer('legacy');
     if (!server) return false;
-    
+
     const instance = genieacsApi.createAxiosInstance(server);
     const tasksUrl = `/devices/${deviceId}/tasks`;
 
     const parameterValues = [];
-    
-    // Check supported paths in DB
+
     const db = require('../config/database');
     const row = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(device._id);
     const flatParams = row && row.params ? JSON.parse(row.params) : null;
-    
+
     if (flatParams) {
-      // SSID 2.4G paths
+
       const paths24G = [
         'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID',
         'Device.WiFi.SSID.1.SSID'
@@ -859,8 +847,7 @@ async function updateSSID(tag, newSSID, actor = null) {
           parameterValues.push([p, newSSID, 'xsd:string']);
         }
       });
-      
-      // SSID 5G paths
+
       const paths5G = [
         'Device.WiFi.SSID.2.SSID'
       ];
@@ -873,8 +860,7 @@ async function updateSSID(tag, newSSID, actor = null) {
         }
       });
     }
-    
-    // Fallback if no parameters match or device not bootstrapped yet
+
     if (parameterValues.length === 0) {
       parameterValues.push(
         ['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID', newSSID, 'xsd:string'],
@@ -893,13 +879,10 @@ async function updateSSID(tag, newSSID, actor = null) {
       logger.error(`[updateSSID] Failed to set SSID: ${e.message}`);
     }
 
-    // Refresh objects untuk trigger inform dari ONU
     try {
       await instance.post(tasksUrl, { name: 'refreshObject', objectName: 'InternetGatewayDevice.LANDevice.1.WLANConfiguration' }, { timeout: 15000 });
     } catch (e) {}
-    // Skip Device.WiFi.SSID refresh karena tidak semua ONU support (CIOT tidak support)
 
-    // Trigger inform untuk force ONU komunikasi dengan ACS
     if (ok) {
       try {
         await instance.post(tasksUrl, { name: 'inform' }, { timeout: 15000 });
@@ -907,12 +890,10 @@ async function updateSSID(tag, newSSID, actor = null) {
       } catch (e) {
         logger.warn(`[updateSSID] Failed to trigger inform: ${e.message}`);
       }
-      
-      // Wait untuk ACS mendapat data terbaru dari ONU (jangan terlalu lama, cukup 3 detik)
+
       await new Promise(resolve => setTimeout(resolve, 3000));
     }
 
-    // Catat audit trail jika berhasil
     if (ok && actor) {
       auditTrail.logAuditTrail({
         action: 'UPDATE_SSID',
@@ -950,25 +931,23 @@ async function updatePassword(tag, newPassword, actor = null) {
       return false;
     }
     const deviceId = encodeURIComponent(device._id);
-    
-    // Gunakan server yang sesuai
+
     const server = device._acs_server_id ? genieacsApi.getACSServer(device._acs_server_id) : genieacsApi.getACSServer('legacy');
     if (!server) return false;
-    
+
     const instance = genieacsApi.createAxiosInstance(server);
     const tasksUrl = `/devices/${deviceId}/tasks`;
 
     logger.info(`[updatePassword] Setting password for device ${deviceId}, tag ${tag}`);
 
     const parameterValues = [];
-    
-    // Check supported paths in DB
+
     const db = require('../config/database');
     const row = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(device._id);
     const flatParams = row && row.params ? JSON.parse(row.params) : null;
-    
+
     if (flatParams) {
-      // 2.4G password paths
+
       const paths24G = [
         'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase',
         'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase',
@@ -981,8 +960,7 @@ async function updatePassword(tag, newPassword, actor = null) {
           parameterValues.push([p, pw, 'xsd:string']);
         }
       });
-      
-      // 5G password paths
+
       const paths5G = [
         'Device.WiFi.AccessPoint.2.Security.KeyPassphrase',
         'Device.WiFi.AccessPoint.2.Security.PreSharedKey'
@@ -1000,8 +978,7 @@ async function updatePassword(tag, newPassword, actor = null) {
         }
       });
     }
-    
-    // Fallback if no parameters match or device not bootstrapped yet
+
     if (parameterValues.length === 0) {
       parameterValues.push(
         ['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase', pw, 'xsd:string'],
@@ -1022,13 +999,10 @@ async function updatePassword(tag, newPassword, actor = null) {
       logger.error(`[updatePassword] Failed to set password: ${e.message}`);
     }
 
-    // Refresh object - only refresh InternetGatewayDevice path yang lebih universal
     try {
       await instance.post(tasksUrl, { name: 'refreshObject', objectName: 'InternetGatewayDevice.LANDevice.1.WLANConfiguration' }, { timeout: 15000 });
     } catch (e) {}
-    // Skip Device.WiFi.AccessPoint refresh karena tidak semua ONU support (CIOT tidak support)
 
-    // Catat audit trail jika berhasil
     if (ok && actor) {
       auditTrail.logAuditTrail({
         action: 'UPDATE_PASSWORD',
@@ -1123,19 +1097,18 @@ async function requestRefresh(tag, actor = null) {
 async function requestReboot(tag, actor = null) {
   const device = await resolveDeviceToken(tag);
   if (!device || !device._id) return { ok: false, message: 'Perangkat tidak ditemukan.' };
-  
+
   const server = device._acs_server_id ? genieacsApi.getACSServer(device._acs_server_id) : genieacsApi.getACSServer('legacy');
   if (!server) return { ok: false, message: 'Server ACS tidak ditemukan.' };
-  
+
   const instance = genieacsApi.createAxiosInstance(server);
-  
+
   try {
     await instance.post(
       `/devices/${encodeURIComponent(device._id)}/tasks`,
       { name: 'reboot', timestamp: new Date().toISOString() }
     );
 
-    // Catat audit trail jika berhasil
     if (actor) {
       auditTrail.logAuditTrail({
         action: 'REBOOT_DEVICE',
@@ -1216,15 +1189,15 @@ async function listDevicesWithTags(limit = 250) {
           break;
         }
       } catch (e) {
-        /* coba query alternatif */
+
       }
     }
   }
-  
+
   if (allDevices.length > 0) {
     return { ok: true, devices: allDevices.slice(0, limit) };
   }
-  
+
   return { ok: false, devices: [], message: 'Gagal mengambil daftar dari GenieACS.' };
 }
 
@@ -1234,11 +1207,10 @@ async function listAllDevices(limit = 999999, acsId = null) {
   if (acsId && acsId !== 'all') {
     servers = servers.filter(s => String(s.id) === String(acsId));
   }
-  
+
   let allDevices = [];
   let lastError = null;
 
-  // Query servers in parallel using Promise.allSettled
   const promises = servers.map(async (server) => {
     try {
       const instance = genieacsApi.createAxiosInstance(server);
@@ -1272,11 +1244,11 @@ async function listAllDevices(limit = 999999, acsId = null) {
       lastError = r.reason;
     }
   });
-  
+
   if (allDevices.length > 0 || !lastError) {
     return { ok: true, devices: allDevices.slice(0, limit) };
   }
-  
+
   return { ok: false, devices: [], message: 'Gagal mengambil daftar dari GenieACS: ' + (lastError ? lastError.message : 'Unknown error') };
 }
 
@@ -1295,12 +1267,12 @@ async function updateCustomerTag(oldTag, newTag) {
   if (existingDevice && existingDevice._id && existingDevice._id !== device._id) {
     return { ok: false, message: 'Tag tersebut sudah digunakan perangkat lain.' };
   }
-  
+
   const server = device._acs_server_id ? genieacsApi.getACSServer(device._acs_server_id) : genieacsApi.getACSServer('legacy');
   if (!server) return { ok: false, message: 'Server ACS tidak ditemukan.' };
-  
+
   const instance = genieacsApi.createAxiosInstance(server);
-  
+
   try {
     const tags = Array.isArray(device._tags) ? device._tags.filter((t) => t !== cleanOldTag) : [];
     if (!tags.includes(cleanNewTag)) tags.push(cleanNewTag);

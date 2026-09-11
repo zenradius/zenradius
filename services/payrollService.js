@@ -1,14 +1,9 @@
-/**
- * Service: Payroll / Gaji Karyawan
- * Mengelola pengaturan gaji, generate slip gaji, dan kalkulasi otomatis
- */
+/** Service: Payroll / Gaji Karyawan */
 const db = require('../config/database');
 const { logger } = require('../config/logger');
 const attendanceSvc = require('./attendanceService');
 
 const EMPLOYEE_TYPES = ['technician', 'cashier', 'collector'];
-
-// ─── PAYROLL SETTINGS ────────────────────────────────────────────────────────
 
 function getPayrollSetting(employeeType, employeeId) {
   return db.prepare(
@@ -77,8 +72,6 @@ function deletePayrollSetting(employeeType, employeeId) {
   ).run(employeeType, employeeId);
 }
 
-// ─── EMPLOYEE LIST ───────────────────────────────────────────────────────────
-
 function getAllEmployees() {
   const employees = [];
 
@@ -120,8 +113,6 @@ function getEmployeePhone(employeeType, employeeId) {
   const row = db.prepare(`SELECT phone FROM ${table} WHERE id = ?`).get(employeeId);
   return row ? (row.phone || '') : '';
 }
-
-// ─── PERFORMANCE DATA ────────────────────────────────────────────────────────
 
 function getTicketsResolvedCount(technicianId, month, year) {
   const monthStr = String(month).padStart(2, '0');
@@ -173,15 +164,12 @@ function getAttendanceData(employeeType, employeeId, month, year) {
   };
 }
 
-// ─── PAYROLL SLIP GENERATION ─────────────────────────────────────────────────
-
 function generateSlip(employeeType, employeeId, month, year) {
   const setting = getPayrollSetting(employeeType, employeeId);
   if (!setting) {
     throw new Error(`Pengaturan gaji belum diset untuk ${employeeType} ID ${employeeId}`);
   }
 
-  // Cek apakah slip sudah ada
   const existing = db.prepare(`
     SELECT id FROM payroll_slips
     WHERE employee_type = ? AND employee_id = ? AND period_month = ? AND period_year = ?
@@ -194,10 +182,8 @@ function generateSlip(employeeType, employeeId, month, year) {
   const employeeName = getEmployeeName(employeeType, employeeId);
   const attendance = getAttendanceData(employeeType, employeeId, month, year);
 
-  // Hitung hari absen
   const absentDays = Math.max(0, setting.working_days_per_month - attendance.workingDays);
 
-  // Hitung bonus performa
   let ticketsResolved = 0;
   let ticketBonus = 0;
   if (employeeType === 'technician' && setting.bonus_per_ticket > 0) {
@@ -212,15 +198,12 @@ function generateSlip(employeeType, employeeId, month, year) {
     collectionCommission = Math.round(collectionAmount * (setting.commission_percentage / 100));
   }
 
-  // Hitung overtime bonus (Rp 15.000 per jam lembur)
   const overtimeHours = Math.round((attendance.overtimeMinutes / 60) * 10) / 10;
   const overtimeBonus = Math.round(overtimeHours * 15000);
 
-  // Hitung potongan
   const absenceDeduction = absentDays * setting.absence_deduction_per_day;
-  const lateDeduction = attendance.lateDays * Math.round(setting.absence_deduction_per_day * 0.25); // 25% potongan per hari terlambat
+  const lateDeduction = attendance.lateDays * Math.round(setting.absence_deduction_per_day * 0.25);
 
-  // Total pendapatan
   const grossSalary = setting.base_salary
     + setting.transport_allowance
     + setting.meal_allowance
@@ -230,10 +213,8 @@ function generateSlip(employeeType, employeeId, month, year) {
     + collectionCommission
     + overtimeBonus;
 
-  // Total potongan
   const totalDeductions = absenceDeduction + lateDeduction;
 
-  // Gaji bersih
   const netSalary = Math.max(0, grossSalary - totalDeductions);
 
   const result = db.prepare(`
@@ -286,8 +267,6 @@ function generateAllSlips(month, year) {
 
   return { generated, skipped, errors };
 }
-
-// ─── PAYROLL SLIP CRUD ───────────────────────────────────────────────────────
 
 function getSlipById(id) {
   return db.prepare('SELECT * FROM payroll_slips WHERE id = ?').get(id);
@@ -345,7 +324,6 @@ function markSlipPaid(id) {
     UPDATE payroll_slips SET status = 'paid', paid_at = CURRENT_TIMESTAMP WHERE id = ?
   `).run(id);
 
-  // Auto Insert ke Tabel Pengeluaran (Expenses)
   try {
     db.prepare(`
       INSERT INTO expenses (date, category, amount, description, payment_method, recorded_by_name)
@@ -367,19 +345,18 @@ function bulkApprove(month, year) {
 
 function bulkMarkPaid(month, year) {
   const slipsToPay = db.prepare(`SELECT * FROM payroll_slips WHERE period_month = ? AND period_year = ? AND status = 'approved'`).all(month, year);
-  
+
   const result = db.prepare(`
     UPDATE payroll_slips SET status = 'paid', paid_at = CURRENT_TIMESTAMP
     WHERE period_month = ? AND period_year = ? AND status = 'approved'
   `).run(month, year);
 
-  // Auto Insert ke Tabel Pengeluaran (Expenses) untuk semua slip
   try {
     const stmt = db.prepare(`
       INSERT INTO expenses (date, category, amount, description, payment_method, recorded_by_name)
       VALUES (date('now', 'localtime'), 'Gaji & Tunjangan', ?, ?, 'transfer', 'Sistem (Payroll)')
     `);
-    
+
     for (const slip of slipsToPay) {
       stmt.run(slip.net_salary, `Gaji ${slip.employee_name} (Periode ${slip.period_month}/${slip.period_year})`);
     }
@@ -403,8 +380,6 @@ function deleteSlipsByPeriod(month, year) {
     WHERE period_month = ? AND period_year = ? AND status = 'draft'
   `).run(month, year);
 }
-
-// ─── STATISTICS ──────────────────────────────────────────────────────────────
 
 function getPayrollSummary(month, year) {
   const result = db.prepare(`

@@ -18,15 +18,7 @@ function sanitizeParams(params) {
   return clean;
 }
 
-/**
- * ONU Provision Service
- * Support untuk:
- * - ZTE C300/C320
- * - Huawei MA5800 Series
- * - Fiberhome AN5516 Series
- * - VSOL V1600/V2400 Series
- * - C-Data FD1600/FD1800 Series
- */
+/** ONU Provision Service */
 
 class ONUProvisionService {
   constructor() {
@@ -85,7 +77,7 @@ class ONUProvisionService {
         const writeNext = () => {
           if (cmdIndex < cmdList.length) {
             const rawCmd = cmdList[cmdIndex++];
-            // Defense-in-depth: strip newlines from commands to make sure no multiline command gets injected
+
             const cmd = sanitizeCliInput(rawCmd);
             logger.info(`SSH command sent: ${cmd}`);
             stream.write(cmd + '\n');
@@ -104,7 +96,6 @@ class ONUProvisionService {
           const lines = buffer.split('\n');
           const lastLine = lines[lines.length - 1].trim();
 
-          // If the last line matches the OLT prompt pattern, send the next command
           if (promptPattern.test(lastLine)) {
             buffer = '';
             setTimeout(writeNext, 50);
@@ -131,16 +122,16 @@ class ONUProvisionService {
     try {
       conn = await this.connectSSH(oltConfig);
       const cleanPon = sanitizeCliInput(pon);
-      
+
       const commands = [
         'enable',
         `show gpon onu uncfg gpon-olt_${cleanPon}`
       ];
-      
+
       const output = await this.executeCommands(conn, commands);
       const onus = this.parseZTEUnconfiguredONUs(output);
       conn.end();
-      
+
       return onus;
     } catch (error) {
       if (conn) conn.end();
@@ -155,20 +146,20 @@ class ONUProvisionService {
   parseZTEUnconfiguredONUs(output) {
     const onus = [];
     const lines = output.split('\n');
-    
+
     for (const line of lines) {
       const match = line.match(/gpon-onu_(\d+\/\d+\/\d+):(\d+)\s+(.+)/);
       if (match) {
         const pon = match[1];
         const onuId = match[2];
         const rest = match[3].trim().split(/\s+/);
-        
+
         let sn = '';
         let model = 'Unknown';
-        
+
         if (rest.length >= 2) {
           const isSn = (str) => /^[A-Z]{4}[0-9A-F]{8}$/i.test(str) || /^[0-9A-F]{12}$/i.test(str);
-          
+
           if (isSn(rest[0])) {
             sn = rest[0];
             model = rest[1] || 'Unknown';
@@ -182,7 +173,7 @@ class ONUProvisionService {
         } else if (rest.length === 1) {
           sn = rest[0];
         }
-        
+
         if (sn && sn.toLowerCase() !== 'sn-auth') {
           onus.push({
             pon,
@@ -194,7 +185,7 @@ class ONUProvisionService {
         }
       }
     }
-    
+
     return onus;
   }
 
@@ -206,9 +197,9 @@ class ONUProvisionService {
     try {
       conn = await this.connectSSH(oltConfig);
       params = sanitizeParams(params);
-      
+
       const { pon, onuId, sn, name, vlan, bandwidth, wifiSsid, wifiPassword, lanMode, pppoeUsername, pppoePassword, tr069AcsUrl, tr069AcsUsername, tr069AcsPassword, tr069PeriodicInform } = params;
-      
+
       const cmds = [
         'enable',
         'configure terminal',
@@ -220,21 +211,21 @@ class ONUProvisionService {
         `tcont 1 profile ${bandwidth || 'default'}`,
         'gemport 1 tcont 1'
       ];
-      
+
       if (wifiSsid && wifiPassword) {
         cmds.push(`ssid 1 ${wifiSsid}`);
         cmds.push(`security 1 wpa2-psk AES ${wifiPassword}`);
         cmds.push('wifi enable 1');
       }
-      
+
       if (lanMode) {
         cmds.push(`lan-mode ${lanMode}`);
       }
-      
+
       if (lanMode === 'router' && pppoeUsername && pppoePassword) {
         cmds.push(`wan-ip pppoe username ${pppoeUsername} password ${pppoePassword}`);
       }
-      
+
       if (tr069AcsUrl) {
         cmds.push('tr069 enable');
         cmds.push(`tr069 acs url ${tr069AcsUrl}`);
@@ -247,22 +238,22 @@ class ONUProvisionService {
           cmds.push('tr069 periodic-inform enable');
         }
       }
-      
+
       cmds.push('exit');
       cmds.push(`pon-onu-mng gpon-onu_${pon}:${onuId}`);
       cmds.push(`service 1 gemport 1 vlan ${vlan}`);
       cmds.push(`vlan port eth_0/1 mode tag vlan ${vlan}`);
       cmds.push('exit');
       cmds.push('write');
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       const features = [];
       if (wifiSsid) features.push('WiFi');
       if (lanMode) features.push(`LAN Mode: ${lanMode}`);
       if (tr069AcsUrl) features.push('TR069');
-      
+
       return {
         success: true,
         message: `ONU provisioned successfully${features.length > 0 ? ' with ' + features.join(', ') : ''}`
@@ -284,7 +275,7 @@ class ONUProvisionService {
       const cleanPon = sanitizeCliInput(pon);
       const ponLower = String(cleanPon || '').toLowerCase();
       const isEpon = ponLower.includes('epon');
-      
+
       const commands = ['enable'];
       if (isEpon) {
         commands.push(`show onu unregister`);
@@ -292,11 +283,11 @@ class ONUProvisionService {
         const ponInterface = ponLower.includes('gpon') ? cleanPon : `gpon-olt_${cleanPon}`;
         commands.push(`show gpon onu uncfg ${ponInterface}`);
       }
-      
+
       const output = await this.executeCommands(conn, commands);
       const onus = this.parseHSGQUnconfiguredONUs(output, cleanPon, oltConfig.vendor);
       conn.end();
-      
+
       return onus;
     } catch (error) {
       if (conn) conn.end();
@@ -311,16 +302,16 @@ class ONUProvisionService {
   parseHSGQUnconfiguredONUs(output, pon, vendor) {
     const onus = [];
     const lines = output.split('\n');
-    
+
     for (const line of lines) {
       const macMatch = line.match(/([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})|([0-9A-Fa-f]{12})/);
       const snMatch = line.match(/([A-Z]{4}[0-9A-F]{8})/i);
-      
+
       if (macMatch || snMatch) {
         const sn = snMatch ? snMatch[1] : macMatch[0];
         const onuIdMatch = line.match(/(?:onu|index)\s*(\d+)/i) || line.match(/^\s*(\d+)/);
         const onuId = onuIdMatch ? onuIdMatch[1] : (onus.length + 1).toString();
-        
+
         onus.push({
           pon,
           onuId,
@@ -330,7 +321,7 @@ class ONUProvisionService {
         });
       }
     }
-    
+
     return onus;
   }
 
@@ -342,12 +333,12 @@ class ONUProvisionService {
     try {
       conn = await this.connectSSH(oltConfig);
       params = sanitizeParams(params);
-      
+
       const { pon, onuId, sn, name, vlan, bandwidth, wifiSsid, wifiPassword, lanMode, pppoeUsername, pppoePassword, tr069AcsUrl, tr069AcsUsername, tr069AcsPassword, tr069PeriodicInform } = params;
-      
+
       const ponLower = String(pon || '').toLowerCase();
       const isEpon = ponLower.includes('epon');
-      
+
       const cmds = [
         'enable',
         'config'
@@ -376,20 +367,20 @@ class ONUProvisionService {
         cmds.push(`vlan port eth_0/1 mode tag vlan ${vlan}`);
         cmds.push('exit');
       }
-      
+
       cmds.push('write');
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       const features = [];
       if (wifiSsid) features.push('WiFi');
       if (lanMode) features.push(`LAN Mode: ${lanMode}`);
       if (tr069AcsUrl) features.push('TR069');
-      
-      return { 
-        success: true, 
-        message: `ONU provisioned successfully on HSGQ${features.length > 0 ? ' with ' + features.join(', ') : ''}` 
+
+      return {
+        success: true,
+        message: `ONU provisioned successfully on HSGQ${features.length > 0 ? ' with ' + features.join(', ') : ''}`
       };
     } catch (error) {
       if (conn) conn.end();
@@ -406,12 +397,12 @@ class ONUProvisionService {
     try {
       conn = await this.connectSSH(oltConfig);
       params = sanitizeParams(params);
-      
+
       const { pon, onuId, sn, name, vlan, bandwidth, wifiSsid, wifiPassword, lanMode, pppoeUsername, pppoePassword, tr069AcsUrl, tr069AcsUsername, tr069AcsPassword, tr069PeriodicInform } = params;
-      
+
       const ponLower = String(pon || '').toLowerCase();
       const isEpon = ponLower.includes('epon') || (!ponLower.includes('gpon'));
-      
+
       const cmds = [
         'enable',
         'config'
@@ -441,20 +432,20 @@ class ONUProvisionService {
         cmds.push(`vlan port eth_0/1 mode tag vlan ${vlan}`);
         cmds.push('exit');
       }
-      
+
       cmds.push('write');
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       const features = [];
       if (wifiSsid) features.push('WiFi');
       if (lanMode) features.push(`LAN Mode: ${lanMode}`);
       if (tr069AcsUrl) features.push('TR069');
-      
-      return { 
-        success: true, 
-        message: `ONU provisioned successfully on HIOSO${features.length > 0 ? ' with ' + features.join(', ') : ''}` 
+
+      return {
+        success: true,
+        message: `ONU provisioned successfully on HIOSO${features.length > 0 ? ' with ' + features.join(', ') : ''}`
       };
     } catch (error) {
       if (conn) conn.end();
@@ -473,16 +464,16 @@ class ONUProvisionService {
       const cleanFrame = sanitizeCliInput(frame);
       const cleanSlot = sanitizeCliInput(slot);
       const cleanPon = sanitizeCliInput(pon);
-      
+
       const commands = [
         'enable',
         `display ont autofind ${cleanFrame}/${cleanSlot}/${cleanPon}`
       ];
-      
+
       const output = await this.executeCommands(conn, commands);
       const onus = this.parseHuaweiUnconfiguredONUs(output, cleanFrame, cleanSlot, cleanPon);
       conn.end();
-      
+
       return onus;
     } catch (error) {
       if (conn) conn.end();
@@ -496,7 +487,7 @@ class ONUProvisionService {
    */
   parseHuaweiUnconfiguredONUs(output, frame, slot, pon) {
     const onus = [];
-    
+
     if (output.includes('Ont SN') || output.includes('Slot/Port')) {
       const blocks = output.split(/----------------------------------------------------------------------/);
       for (const block of blocks) {
@@ -504,12 +495,12 @@ class ONUProvisionService {
         if (snMatch) {
           let sn = snMatch[1];
           sn = sn.split('(')[0].trim();
-          
+
           const portMatch = block.match(/Slot\/Port\s*:\s*(\d+\/\d+\/\d+)/i) || block.match(/Slot\/Port\s*:\s*(\d+\/\d+)/i);
           let blockPon = pon;
           let blockSlot = slot;
           let blockFrame = frame;
-          
+
           if (portMatch) {
             const parts = portMatch[1].split('/');
             if (parts.length === 3) {
@@ -521,10 +512,10 @@ class ONUProvisionService {
               blockPon = parts[1];
             }
           }
-          
+
           const modelMatch = block.match(/Ont\s+EquipmentID\s*:\s*(\S+)/i) || block.match(/Ont\s+Type\s*:\s*(\S+)/i);
           const model = modelMatch ? modelMatch[1] : 'Unknown';
-          
+
           onus.push({
             frame: blockFrame,
             slot: blockSlot,
@@ -556,7 +547,7 @@ class ONUProvisionService {
               blockPon = p[1];
             }
           }
-          
+
           onus.push({
             frame: blockFrame,
             slot: blockSlot,
@@ -569,7 +560,7 @@ class ONUProvisionService {
         }
       }
     }
-    
+
     return onus;
   }
 
@@ -581,28 +572,28 @@ class ONUProvisionService {
     try {
       conn = await this.connectSSH(oltConfig);
       params = sanitizeParams(params);
-      
+
       const { frame, slot, pon, onuId, sn, name, vlan, bandwidth, lineProfile, srvProfile, wifiSsid, wifiPassword, lanMode, pppoeUsername, pppoePassword, tr069AcsUrl, tr069AcsUsername, tr069AcsPassword, tr069PeriodicInform } = params;
-      
+
       const cmds = [
         'enable',
         'config',
         `interface gpon ${frame}/${slot}`,
         `ont add ${pon} ${onuId} sn-auth ${sn} omci ont-lineprofile-id ${lineProfile || 1} ont-srvprofile-id ${srvProfile || 1} desc ${name}`
       ];
-      
+
       if (wifiSsid && wifiPassword) {
         cmds.push(`ont wifi-config ${pon} ${onuId} ssid ${wifiSsid} wpa-psk ${wifiPassword}`);
       }
-      
+
       if (lanMode) {
         cmds.push(`ont port native-vlan ${pon} ${onuId} eth 1 vlan ${vlan} priority 0`);
       }
-      
+
       if (lanMode === 'router' && pppoeUsername && pppoePassword) {
         cmds.push(`ont wan-config ${pon} ${onuId} pppoe username ${pppoeUsername} password ${pppoePassword}`);
       }
-      
+
       if (tr069AcsUrl) {
         cmds.push(`ont tr069-server ${pon} ${onuId} url ${tr069AcsUrl}`);
         if (tr069AcsUsername && tr069AcsPassword) {
@@ -614,19 +605,19 @@ class ONUProvisionService {
         }
         cmds.push(`ont tr069-server ${pon} ${onuId} enable`);
       }
-      
+
       cmds.push('quit');
       cmds.push(`service-port vlan ${vlan} gpon ${frame}/${slot}/${pon} ont ${onuId} gemport 1 multi-service user-vlan ${vlan}`);
       cmds.push('save');
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       const features = [];
       if (wifiSsid) features.push('WiFi');
       if (lanMode) features.push(`LAN Mode: ${lanMode}`);
       if (tr069AcsUrl) features.push('TR069');
-      
+
       return {
         success: true,
         message: `ONU provisioned successfully${features.length > 0 ? ' with ' + features.join(', ') : ''}`
@@ -646,30 +637,30 @@ class ONUProvisionService {
     try {
       conn = await this.connectSSH(oltConfig);
       params = sanitizeParams(params);
-      
+
       const { frame, slot, pon, onuId, sn, name, vlan, lineProfile, srvProfile, wifiSsid, wifiPassword, lanMode, pppoeUsername, pppoePassword, tr069AcsUrl, tr069AcsUsername, tr069AcsPassword, tr069PeriodicInform } = params;
-      
+
       const cmds = [
         'enable',
         'config',
         `interface gpon ${frame}/${slot}`,
         `ont add ${pon} ${onuId} sn-auth ${sn} ont-lineprofile-id ${lineProfile || 1} ont-srvprofile-id ${srvProfile || 1} desc ${name}`
       ];
-      
+
       if (wifiSsid && wifiPassword) {
         cmds.push(`ont wlan ssid ${pon} ${onuId} 1 ${wifiSsid}`);
         cmds.push(`ont wlan security ${pon} ${onuId} 1 wpa2-psk aes ${wifiPassword}`);
         cmds.push(`ont wlan enable ${pon} ${onuId} 1`);
       }
-      
+
       if (lanMode) {
         cmds.push(`ont port vlan ${pon} ${onuId} eth 1 mode tag vlan ${vlan}`);
       }
-      
+
       if (lanMode === 'router' && pppoeUsername && pppoePassword) {
         cmds.push(`ont wan ${pon} ${onuId} pppoe username ${pppoeUsername} password ${pppoePassword}`);
       }
-      
+
       if (tr069AcsUrl) {
         cmds.push(`ont cwmp ${pon} ${onuId} acs-url ${tr069AcsUrl}`);
         if (tr069AcsUsername && tr069AcsPassword) {
@@ -682,21 +673,21 @@ class ONUProvisionService {
         }
         cmds.push(`ont cwmp ${pon} ${onuId} enable`);
       }
-      
+
       cmds.push('quit');
       cmds.push(`service-port ${vlan} vlan ${vlan} gpon ${frame}/${slot}/${pon} ont ${onuId} gemport 1 multi-service user-vlan ${vlan}`);
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       const features = [];
       if (wifiSsid) features.push('WiFi');
       if (lanMode) features.push(`LAN Mode: ${lanMode}`);
       if (tr069AcsUrl) features.push('TR069');
-      
-      return { 
-        success: true, 
-        message: `ONU provisioned successfully${features.length > 0 ? ' with ' + features.join(', ') : ''}` 
+
+      return {
+        success: true,
+        message: `ONU provisioned successfully${features.length > 0 ? ' with ' + features.join(', ') : ''}`
       };
     } catch (error) {
       if (conn) conn.end();
@@ -713,9 +704,9 @@ class ONUProvisionService {
     try {
       conn = await this.connectSSH(oltConfig);
       params = sanitizeParams(params);
-      
+
       const { pon, onuId, sn, name, vlan, bandwidth, wifiSsid, wifiPassword, lanMode, pppoeUsername, pppoePassword, tr069AcsUrl, tr069AcsUsername, tr069AcsPassword, tr069PeriodicInform } = params;
-      
+
       const cmds = [
         'enable',
         'configure terminal',
@@ -727,21 +718,21 @@ class ONUProvisionService {
         `tcont 1 profile ${bandwidth || 'default'}`,
         'gemport 1 tcont 1'
       ];
-      
+
       if (wifiSsid && wifiPassword) {
         cmds.push(`ssid 1 ${wifiSsid}`);
         cmds.push(`security 1 wpa2-psk AES ${wifiPassword}`);
         cmds.push('wifi enable 1');
       }
-      
+
       if (lanMode) {
         cmds.push(`lan-mode ${lanMode}`);
       }
-      
+
       if (lanMode === 'router' && pppoeUsername && pppoePassword) {
         cmds.push(`wan-ip pppoe username ${pppoeUsername} password ${pppoePassword}`);
       }
-      
+
       if (tr069AcsUrl) {
         cmds.push('tr069 enable');
         cmds.push(`tr069 acs url ${tr069AcsUrl}`);
@@ -754,24 +745,24 @@ class ONUProvisionService {
           cmds.push('tr069 periodic-inform enable');
         }
       }
-      
+
       cmds.push('exit');
       cmds.push(`pon-onu-mng gpon-onu_${pon}:${onuId}`);
       cmds.push(`service 1 gemport 1 vlan ${vlan}`);
       cmds.push(`vlan port eth_0/1 mode tag vlan ${vlan}`);
       cmds.push('exit');
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       const features = [];
       if (wifiSsid) features.push('WiFi');
       if (lanMode) features.push(`LAN Mode: ${lanMode}`);
       if (tr069AcsUrl) features.push('TR069');
-      
-      return { 
-        success: true, 
-        message: `ONU provisioned successfully${features.length > 0 ? ' with ' + features.join(', ') : ''}` 
+
+      return {
+        success: true,
+        message: `ONU provisioned successfully${features.length > 0 ? ' with ' + features.join(', ') : ''}`
       };
     } catch (error) {
       if (conn) conn.end();
@@ -788,9 +779,9 @@ class ONUProvisionService {
     try {
       conn = await this.connectSSH(oltConfig);
       params = sanitizeParams(params);
-      
+
       const { pon, onuId, sn, name, vlan, bandwidth, wifiSsid, wifiPassword, lanMode, pppoeUsername, pppoePassword, tr069AcsUrl, tr069AcsUsername, tr069AcsPassword, tr069PeriodicInform } = params;
-      
+
       const cmds = [
         'enable',
         'configure terminal',
@@ -802,21 +793,21 @@ class ONUProvisionService {
         `tcont 1 profile ${bandwidth || 'default'}`,
         'gemport 1 tcont 1'
       ];
-      
+
       if (wifiSsid && wifiPassword) {
         cmds.push(`ssid 1 ${wifiSsid}`);
         cmds.push(`security 1 wpa2-psk AES ${wifiPassword}`);
         cmds.push('wifi enable 1');
       }
-      
+
       if (lanMode) {
         cmds.push(`lan-mode ${lanMode}`);
       }
-      
+
       if (lanMode === 'router' && pppoeUsername && pppoePassword) {
         cmds.push(`wan-ip pppoe username ${pppoeUsername} password ${pppoePassword}`);
       }
-      
+
       if (tr069AcsUrl) {
         cmds.push('cwmp enable');
         cmds.push(`cwmp acs url ${tr069AcsUrl}`);
@@ -829,24 +820,24 @@ class ONUProvisionService {
           cmds.push('cwmp periodic-inform enable');
         }
       }
-      
+
       cmds.push('exit');
       cmds.push(`pon-onu-mng gpon-onu_${pon}:${onuId}`);
       cmds.push(`service 1 gemport 1 vlan ${vlan}`);
       cmds.push(`vlan port eth_0/1 mode tag vlan ${vlan}`);
       cmds.push('exit');
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       const features = [];
       if (wifiSsid) features.push('WiFi');
       if (lanMode) features.push(`LAN Mode: ${lanMode}`);
       if (tr069AcsUrl) features.push('TR069');
-      
-      return { 
-        success: true, 
-        message: `ONU provisioned successfully${features.length > 0 ? ' with ' + features.join(', ') : ''}` 
+
+      return {
+        success: true,
+        message: `ONU provisioned successfully${features.length > 0 ? ' with ' + features.join(', ') : ''}`
       };
     } catch (error) {
       if (conn) conn.end();
@@ -881,7 +872,7 @@ class ONUProvisionService {
       ];
       const output = await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       return this.parseZTEONUDetails(output);
     } catch (error) {
       if (conn) conn.end();
@@ -895,7 +886,7 @@ class ONUProvisionService {
   parseZTEONUDetails(output) {
     const details = {};
     const lines = output.split('\n');
-    
+
     for (const line of lines) {
       if (line.includes('Name:')) {
         details.name = line.split(':')[1]?.trim();
@@ -910,7 +901,7 @@ class ONUProvisionService {
         details.rxPower = line.split(':')[1]?.trim();
       }
     }
-    
+
     return details;
   }
 
@@ -928,7 +919,7 @@ class ONUProvisionService {
       ];
       const output = await this.executeCommands(conn, cmds);
       conn.end();
-      
+
       return this.parseHuaweiONUDetails(output);
     } catch (error) {
       if (conn) conn.end();
@@ -942,7 +933,7 @@ class ONUProvisionService {
   parseHuaweiONUDetails(output) {
     const details = {};
     const lines = output.split('\n');
-    
+
     for (const line of lines) {
       if (line.includes('Description')) {
         details.name = line.split(':')[1]?.trim();
@@ -957,7 +948,7 @@ class ONUProvisionService {
         details.rxPower = line.split(':')[1]?.trim();
       }
     }
-    
+
     return details;
   }
 
@@ -1123,12 +1114,12 @@ class ONUProvisionService {
       const { pon, onuId } = params;
       const ponLower = String(pon || '').toLowerCase();
       const isEpon = ponLower.includes('epon');
-      
+
       const cmds = [
         'enable',
         'config'
       ];
-      
+
       if (isEpon) {
         cmds.push(`interface ${pon}`);
         cmds.push(`no onu ${onuId}`);
@@ -1139,7 +1130,7 @@ class ONUProvisionService {
       }
       cmds.push('exit');
       cmds.push('write');
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
       return { success: true, message: 'ONU deleted successfully on HSGQ' };
@@ -1160,12 +1151,12 @@ class ONUProvisionService {
       const { pon, onuId } = params;
       const ponLower = String(pon || '').toLowerCase();
       const isEpon = ponLower.includes('epon') || (!ponLower.includes('gpon'));
-      
+
       const cmds = [
         'enable',
         'config'
       ];
-      
+
       if (isEpon) {
         const epInterface = ponLower.includes('epon') ? pon : `epon 0/${pon}`;
         cmds.push(`interface ${epInterface}`);
@@ -1177,7 +1168,7 @@ class ONUProvisionService {
       }
       cmds.push('exit');
       cmds.push('write');
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
       return { success: true, message: 'ONU deleted successfully on HIOSO' };
@@ -1192,31 +1183,31 @@ class ONUProvisionService {
    */
   async createMikrotikPPPoE(mikrotikConfig, params) {
     const mikrotikService = require('./mikrotikService');
-    
+
     try {
       const { username, password, profile, comment, localAddress, remoteAddress } = params;
-      
+
       const secretData = {
         name: username,
         password: password,
         service: 'pppoe',
         profile: profile || 'default'
       };
-      
+
       if (comment) {
         secretData.comment = comment;
       }
-      
+
       if (localAddress) {
         secretData['local-address'] = localAddress;
       }
-      
+
       if (remoteAddress) {
         secretData['remote-address'] = remoteAddress;
       }
-      
+
       await mikrotikService.addPppoeSecret(secretData, null);
-      
+
       logger.info(`PPPoE secret created in MikroTik: ${username}`);
       return { success: true, message: 'PPPoE secret created successfully' };
     } catch (error) {
@@ -1230,20 +1221,20 @@ class ONUProvisionService {
    */
   async deleteMikrotikPPPoE(mikrotikConfig, username) {
     const mikrotikService = require('./mikrotikService');
-    
+
     try {
       const conn = await mikrotikService.connect(mikrotikConfig);
-      
+
       const secrets = await conn.write('/ppp/secret/print', [`?name=${username}`]);
-      
+
       if (secrets && secrets.length > 0) {
         const secretId = secrets[0]['.id'];
         await conn.write('/ppp/secret/remove', [`=.id=${secretId}`]);
         logger.info(`PPPoE secret deleted from MikroTik: ${username}`);
       }
-      
+
       conn.close();
-      
+
       return { success: true, message: 'PPPoE secret deleted successfully' };
     } catch (error) {
       logger.error('Delete MikroTik PPPoE error:', error);
@@ -1260,10 +1251,10 @@ class ONUProvisionService {
       pppoe: null,
       errors: []
     };
-    
+
     try {
       const { vendor } = params;
-      
+
       if (vendor === 'ZTE') {
         results.onu = await this.zteProvisionONU(oltConfig, params);
       } else if (vendor === 'Huawei') {
@@ -1281,9 +1272,9 @@ class ONUProvisionService {
       } else {
         throw new Error(`Unsupported vendor: ${vendor}`);
       }
-      
+
       logger.info(`ONU provisioned: ${params.name} (${vendor})`);
-      
+
       if (params.pppoeUsername && params.pppoePassword && mikrotikConfig) {
         try {
           results.pppoe = await this.createMikrotikPPPoE(mikrotikConfig, {
@@ -1293,14 +1284,14 @@ class ONUProvisionService {
             comment: `${params.name} - Auto-provisioned`,
             remoteAddress: params.remoteAddress
           });
-          
+
           logger.info(`PPPoE created: ${params.pppoeUsername}`);
         } catch (pppoeError) {
           results.errors.push(`PPPoE creation failed: ${pppoeError.message}`);
           logger.error('PPPoE creation failed:', pppoeError);
         }
       }
-      
+
       return {
         success: true,
         message: 'Full provisioning completed',
@@ -1323,7 +1314,7 @@ class ONUProvisionService {
       params = sanitizeParams(params);
       const { frame, board, port, onuId } = params;
       const cmds = [];
-      
+
       if (vendor === 'ZTE') {
         cmds.push('enable');
         cmds.push('configure terminal');
@@ -1339,7 +1330,7 @@ class ONUProvisionService {
       } else {
         throw new Error('Unsupported vendor for SSH reboot');
       }
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
       return { success: true, message: 'ONU rebooted successfully' };
@@ -1359,7 +1350,7 @@ class ONUProvisionService {
       params = sanitizeParams(params);
       const { frame, board, port, onuId, newName } = params;
       const cmds = [];
-      
+
       if (vendor === 'ZTE') {
         cmds.push('enable');
         cmds.push('configure terminal');
@@ -1377,7 +1368,7 @@ class ONUProvisionService {
       } else {
         throw new Error('Unsupported vendor for SSH rename');
       }
-      
+
       await this.executeCommands(conn, cmds);
       conn.end();
       return { success: true, message: 'ONU renamed successfully' };
@@ -1389,5 +1380,3 @@ class ONUProvisionService {
 }
 
 module.exports = new ONUProvisionService();
-
-// Made with Bob

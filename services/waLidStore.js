@@ -1,10 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-/**
- * Menyimpan pemetaan JID (@lid atau @s.whatsapp.net) → tag GenieACS yang dipakai API.
- * Diperlukan karena pengirim sering tampil sebagai …@lid, bukan nomor.
- */
+/** Menyimpan pemetaan JID (@lid atau @s.whatsapp.net) → tag GenieACS yang dipakai API. */
 class WaLidStore {
   constructor(filePath) {
     this.filePath = filePath;

@@ -1,7 +1,4 @@
-/**
- * Service RADIUS Server (Authentication & Accounting UDP Service)
- * Menggunakan SQLite database zenradius.db & modul radiusPacket
- */
+/** Service RADIUS Server (Authentication & Accounting UDP Service) */
 const dgram = require('dgram');
 const db = require('../config/database');
 const { getSetting } = require('../config/settingsManager');
@@ -47,7 +44,6 @@ function findUserCredentials(username) {
   const cleanUsername = String(username || '').trim();
   if (!cleanUsername) return null;
 
-  // 1. Cek tabel customers (pppoe_username atau name atau phone)
   try {
     const cust = db.prepare(`
       SELECT c.id, c.name, c.pppoe_username, c.pppoe_password, c.status, c.static_ip, c.package_id,
@@ -59,7 +55,7 @@ function findUserCredentials(username) {
     `).get(cleanUsername, cleanUsername, cleanUsername);
 
     if (cust) {
-      // Prioritaskan pppoe_password, fallback ke pppoe_users table — JANGAN gunakan username sebagai password
+
       let secret = cust.pppoe_password || '';
       if (!secret) {
         try {
@@ -86,7 +82,6 @@ function findUserCredentials(username) {
     logger.error(`[RADIUS] Error findUserCredentials customers: ${err.message}`);
   }
 
-  // 2. Cek tabel pppoe_users (jika ada)
   try {
     const pppoe = db.prepare(`
       SELECT pu.id, pu.customer_id, pu.username, pu.secret, pu.status, pu.profile_name,
@@ -115,10 +110,9 @@ function findUserCredentials(username) {
       };
     }
   } catch (err) {
-    // Tabel pppoe_users mungkin tidak ada di skema tertentu
+
   }
 
-  // 3. Cek tabel vouchers (Voucher Hotspot/PPPoE)
   try {
     const voucher = db.prepare(`
       SELECT code, password, profile_name, status FROM vouchers WHERE code = ? LIMIT 1
@@ -176,10 +170,8 @@ function handleAuthMessage(msg, rinfo) {
     return;
   }
 
-  // Verifikasi Password
   if (inputPassword !== '' && user.secret != null && user.secret !== '' && user.secret !== inputPassword) {
-    // Phase 15: JANGAN mencetak password input maupun password tersimpan ke log.
-    // Log tetap berguna untuk diagnosa (siapa & kenapa ditolak) tanpa membocorkan kredensial.
+
     logger.warn(`[RADIUS Auth] Reject '${username}' - Password salah`);
     sendAuthResponse(CODES.ACCESS_REJECT, reqPacket, [], secret, rinfo);
     return;
@@ -188,7 +180,6 @@ function handleAuthMessage(msg, rinfo) {
   const isolirAction = getSetting('radius_isolir_action', 'pool');
   const isolirPool = getSetting('radius_isolir_pool', 'isolir');
 
-  // Penanganan Status Terisolir / Non-Aktif
   if (user.status === 'suspended' || user.status === 'isolir' || user.status === 'inactive') {
     if (isolirAction === 'reject') {
       logger.warn(`[RADIUS Auth] Reject '${username}' - Status terisolir`);
@@ -234,7 +225,6 @@ function handleAuthMessage(msg, rinfo) {
     }
   }
 
-  // Hapus dummy auth-* session untuk user ini agar re-dial / re-connect tidak terblokir
   try {
     db.prepare(`
       DELETE FROM radius_accounting
@@ -242,7 +232,6 @@ function handleAuthMessage(msg, rinfo) {
     `).run(username);
   } catch (e) {}
 
-  // 3. Cek Batasan Sesi Login Ganda (Simultaneous-Use / Multi-Login)
   const limitSimultaneous = getSetting('radius_limit_simultaneous', '1') === '1';
   if (limitSimultaneous) {
     const activeSession = db.prepare(`
@@ -259,13 +248,11 @@ function handleAuthMessage(msg, rinfo) {
     }
   }
 
-  // Status Aktif -> Access-Accept dengan Atribut Kuota/Speed Limit
   const responseAttrs = [
     { type: ATTR_TYPES.SERVICE_TYPE, value: 2 },
     { type: ATTR_TYPES.FRAMED_PROTOCOL, value: 1 }
   ];
 
-  // Dynamic IP Pool & Static IP Allocation
   const ipPoolEnabled = getSetting('radius_ip_pool_enabled', '1') === '1';
   const ipPoolStart = getSetting('radius_ip_pool_start', '10.10.10.2');
   const ipPoolEnd = getSetting('radius_ip_pool_end', '10.10.10.254');
@@ -288,7 +275,6 @@ function handleAuthMessage(msg, rinfo) {
     responseAttrs.push({ type: ATTR_TYPES.FRAMED_POOL, value: framedPool });
   }
 
-  // Atribut Rate Limit (Mikrotik-Rate-Limit) & Mikrotik-Group (Profile)
   const defaultRateLimit = getSetting('radius_default_rate_limit', '5M/10M');
   const rateLimitStr = formatRateLimit(user.speedUp, user.speedDown, defaultRateLimit, user.speedUpUpto || 0, user.speedDownUpto || 0);
   if (rateLimitStr) {
@@ -301,7 +287,6 @@ function handleAuthMessage(msg, rinfo) {
     logger.info(`[RADIUS Auth] Rate-limit '${rateLimitStr}' dikirim untuk '${username}'`);
   }
 
-  // Kirimkan nama paket / profile ke MikroTik via Mikrotik-Group hanya jika diset & valid
   const sendGroup = getSetting('radius_send_group', '0') === '1';
   if (sendGroup && user.packageName) {
     responseAttrs.push({
@@ -314,7 +299,6 @@ function handleAuthMessage(msg, rinfo) {
 
   logger.info(`[RADIUS Auth] Accept '${username}' - Berhasil diautentikasi`);
 
-  // Record instant online session entry upon Access-Accept
   try {
     const authSessionId = reqPacket.parsedAttrs.acctSessionId || `auth-${Date.now()}-${username}`;
     db.prepare(`
@@ -402,7 +386,6 @@ function handleAcctMessage(msg, rinfo) {
         }
       }
 
-      // Upsert ke radius_accounting
       const stmt = db.prepare(`
         INSERT INTO radius_accounting (
           username, nas_ip, framed_ip, session_id, status_type,
@@ -412,7 +395,6 @@ function handleAcctMessage(msg, rinfo) {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW_LOCAL())
       `);
 
-      // Cek apakah session_id sudah ada
       const existing = db.prepare(`SELECT id FROM radius_accounting WHERE session_id = ? LIMIT 1`).get(acctSessionId);
       if (existing) {
         db.prepare(`
@@ -439,7 +421,7 @@ function handleAcctMessage(msg, rinfo) {
           acctSessionId
         );
       } else {
-        // Hapus entri auth-* lama untuk user ini ketika sesi accounting asli dimulai
+
         try {
           db.prepare(`DELETE FROM radius_accounting WHERE username = ? AND session_id LIKE 'auth-%'`).run(username);
         } catch (e) {}
@@ -451,11 +433,9 @@ function handleAcctMessage(msg, rinfo) {
         );
       }
 
-      // Hitung total bytes termasuk Gigawords (untuk sesi > 4GB)
       const totalBytesIn = (acctInputGigawords * 4294967296) + acctInputOctets;
       const totalBytesOut = (acctOutputGigawords * 4294967296) + acctOutputOctets;
 
-      // Catat sampel trafik ke pppoe_traffic_samples jika tabel pppoe_users ada
       try {
         const pppoeUser = db.prepare(`SELECT id FROM pppoe_users WHERE username = ? LIMIT 1`).get(username);
         if (pppoeUser) {
@@ -466,7 +446,6 @@ function handleAcctMessage(msg, rinfo) {
         }
       } catch (e) {}
 
-      // Catat sampel pemakaian ke customer_usage jika terdaftar di customers
       try {
         const cust = db.prepare(`SELECT id FROM customers WHERE pppoe_username = ? OR name = ? LIMIT 1`).get(username, username);
         if (cust) {
@@ -488,7 +467,6 @@ function handleAcctMessage(msg, rinfo) {
     }
   }
 
-  // Kirim Accounting-Response
   try {
     const resBuf = encodeResponsePacket({
       code: CODES.ACCOUNTING_RESPONSE,
@@ -550,17 +528,17 @@ function stop() {
 
 /**
  * Format Mikrotik-Rate-Limit string dari nilai kecepatan paket.
- * 
+ *
  * PENTING: Format MikroTik Rate-Limit menggunakan perspektif CLIENT:
  * - RX (Receive) = Download = Data yang DITERIMA client dari internet
  * - TX (Transmit) = Upload = Data yang DIKIRIM client ke internet
- * 
+ *
  * Format standar: "rx-rate/tx-rate" atau lebih lengkap dengan burst:
  * "rx-rate/tx-rate rx-burst/tx-burst rx-threshold/tx-threshold burst-time"
- * 
+ *
  * Contoh: "10M/5M" = Download 10Mbps / Upload 5Mbps
  * Contoh burst: "10M/5M 20M/10M 10M/5M 8" = CIR 10M/5M, Burst 20M/10M, Threshold 10M/5M, Time 8s
- * 
+ *
  * @param {number} upVal - Kecepatan UPLOAD dalam Kbps (TX)
  * @param {number} downVal - Kecepatan DOWNLOAD dalam Kbps (RX)
  * @param {string} defaultVal - Nilai default jika speed tidak valid
@@ -572,7 +550,7 @@ function formatRateLimit(upVal, downVal, defaultVal = '5M/10M', uptoUp = 0, upto
   function parseSpeed(v) {
     if (!v) return 0;
     const str = String(v).trim().toLowerCase();
-    // Jika sudah dalam Kbps mentah (angka tanpa satuan — dari DB yang menyimpan dalam Kbps)
+
     if (str.endsWith('m')) return Math.round(parseFloat(str) * 1000);
     if (str.endsWith('k')) return Math.round(parseFloat(str));
     const num = parseFloat(str) || 0;
@@ -585,34 +563,29 @@ function formatRateLimit(upVal, downVal, defaultVal = '5M/10M', uptoUp = 0, upto
     return `${kbps}k`;
   }
 
-  const upKbps = parseSpeed(upVal);      // TX (Upload)
-  const downKbps = parseSpeed(downVal);  // RX (Download)
+  const upKbps = parseSpeed(upVal);
+  const downKbps = parseSpeed(downVal);
 
   if (upKbps <= 0 || downKbps <= 0) {
     return defaultVal;
   }
 
-  // MikroTik format: RX/TX (Download/Upload)
-  const rxStr = kbpsToStr(downKbps);  // RX = Download
-  const txStr = kbpsToStr(upKbps);    // TX = Upload
+  const rxStr = kbpsToStr(downKbps);
+  const txStr = kbpsToStr(upKbps);
 
-  // Tambahkan burst rate jika tersedia (Mikrotik-Rate-Limit format: rx/tx rx-burst/tx-burst rx-threshold/tx-threshold burst-time)
-  const uptoUpKbps = parseSpeed(uptoUp);      // TX-burst
-  const uptoDownKbps = parseSpeed(uptoDown);  // RX-burst
+  const uptoUpKbps = parseSpeed(uptoUp);
+  const uptoDownKbps = parseSpeed(uptoDown);
 
   if (uptoUpKbps > 0 && uptoDownKbps > 0 && (uptoUpKbps > upKbps || uptoDownKbps > downKbps)) {
-    const rxBurstStr = kbpsToStr(uptoDownKbps);  // RX-burst = Download burst
-    const txBurstStr = kbpsToStr(uptoUpKbps);    // TX-burst = Upload burst
-    
-    // Format MikroTik: "rx/tx rx-burst/tx-burst rx-threshold/tx-threshold burst-time"
-    // Threshold default 50% dari burst, waktu burst 8 detik
+    const rxBurstStr = kbpsToStr(uptoDownKbps);
+    const txBurstStr = kbpsToStr(uptoUpKbps);
+
     const rxThresholdStr = kbpsToStr(Math.round(uptoDownKbps * 0.5));
     const txThresholdStr = kbpsToStr(Math.round(uptoUpKbps * 0.5));
-    
+
     return `${rxStr}/${txStr} ${rxBurstStr}/${txBurstStr} ${rxThresholdStr}/${txThresholdStr} 8`;
   }
 
-  // Format standar: rx/tx (Download/Upload)
   return `${rxStr}/${txStr}`;
 }
 
@@ -636,7 +609,6 @@ function allocateDynamicIp(username, startIpStr, endIpStr, nasIp) {
     const endInt = ipToInt(endIpStr);
     if (!startInt || !endInt || startInt > endInt) return null;
 
-    // Direct check if user has active session with framed_ip
     const userSession = db.prepare(`
       SELECT framed_ip FROM radius_accounting
       WHERE username = ? AND status_type IN (1, 3) AND framed_ip IS NOT NULL AND framed_ip != ''
@@ -726,8 +698,7 @@ function getAccountingLogs(limit = 100) {
 async function disconnectSession(username, sessionId, nasIp) {
   try {
     const mikrotikSvc = require('./mikrotikService');
-    
-    // 1. Clear session entry from radius_accounting database table
+
     if (sessionId) {
       db.prepare(`
         UPDATE radius_accounting
@@ -742,13 +713,12 @@ async function disconnectSession(username, sessionId, nasIp) {
       `).run(username);
     }
 
-    // 2. Disconnect active session from MikroTik via API
     let routerId = null;
     if (nasIp) {
       const r = db.prepare('SELECT id FROM routers WHERE host = ?').get(nasIp);
       if (r) routerId = r.id;
     }
-    
+
     await mikrotikSvc.kickPppoeUser(username, routerId);
     return true;
   } catch (err) {

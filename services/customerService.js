@@ -1,16 +1,10 @@
-/**
- * Service: CRUD Pelanggan & Paket
- */
+/** Service: CRUD Pelanggan & Paket */
 const db = require('../config/database');
 const { logger } = require('../config/logger');
 const { getCurrentDateInTimezone, getSetting } = require('../config/settingsManager');
 const { hashPassword, verifyPassword, isPasswordHash } = require('./adminService');
 
-/**
- * Verifikasi portal_password milik customer.
- * Mendukung transisi aman: password lama (plaintext, hasil generate WA) otomatis
- * di-hash ulang (PBKDF2) begitu berhasil login, tanpa mengubah nilai yang dikirim ke customer.
- */
+/** Verifikasi portal_password milik customer. */
 function verifyCustomerPortalPassword(customer, inputPassword) {
   const stored = String(customer?.portal_password || '').trim();
   const input = String(inputPassword || '').trim();
@@ -20,7 +14,6 @@ function verifyCustomerPortalPassword(customer, inputPassword) {
     return verifyPassword(input, stored);
   }
 
-  // Legacy plaintext — bandingkan langsung, lalu migrasikan ke hash jika cocok
   if (input !== stored) return false;
   try {
     const hashed = hashPassword(input);
@@ -38,17 +31,7 @@ function generatePortalPassword(length = 8) {
   return out;
 }
 
-// ─── HELPER FUNCTIONS ─────────────────────────────────────────
-/**
- * Get effective router_id for a customer
- * Respects multi-router mode setting:
- * - If mode is 'active': returns customer's router_id if set.
- *   For legacy single-router customers with NULL router_id, it falls back to
- *   explicit default_router_id or the only active router (if exactly one exists).
- * - If mode is 'disabled': returns customer's router_id if set, else auto-detect
- *   - First tries explicit default_router_id setting
- *   - If not set, auto-detects first (smallest ID) available router
- */
+/** Get effective router_id for a customer */
 function getEffectiveRouterId(customerRouterId) {
   const mode = getSetting('multi_router_mode', 'disabled');
 
@@ -66,7 +49,7 @@ function getEffectiveRouterId(customerRouterId) {
 
   try {
     if (mode === 'active') {
-      // In multi-router mode, only fall back automatically if there is exactly one active router.
+
       const routers = db.prepare('SELECT id FROM routers WHERE is_active = 1 ORDER BY id ASC LIMIT 2').all();
       if (routers.length === 1 && routers[0].id > 0) {
         logger.warn(`[getEffectiveRouterId] router_id pelanggan kosong saat multi-router aktif. Fallback ke satu-satunya router aktif: ${routers[0].id}`);
@@ -75,7 +58,6 @@ function getEffectiveRouterId(customerRouterId) {
       return null;
     }
 
-    // Mode: disabled (single router with fallback) - auto-detect first active router
     const router = db.prepare('SELECT id FROM routers WHERE is_active = 1 ORDER BY id ASC LIMIT 1').get();
     if (router && router.id > 0) {
       return router.id;
@@ -83,13 +65,12 @@ function getEffectiveRouterId(customerRouterId) {
   }
 
   catch (e) {
-    // Ignore if routers table doesn't exist or query fails
+
   }
 
   return null;
 }
 
-// ─── CUSTOMERS ───────────────────────────────────────────────
 function calculateExpiredAt(startDateStr, durationDays = 30) {
   const d = startDateStr ? new Date(startDateStr) : new Date();
   if (isNaN(d.getTime())) return null;
@@ -188,8 +169,8 @@ function getCustomerById(id) {
            p.promo_cycles as package_promo_cycles,
            p.prorate_first_invoice as package_prorate_first_invoice,
            r.name as router_name, o.name as olt_name, odp.name as odp_name
-    FROM customers c 
-    LEFT JOIN packages p ON c.package_id = p.id 
+    FROM customers c
+    LEFT JOIN packages p ON c.package_id = p.id
     LEFT JOIN routers r ON c.router_id = r.id
     LEFT JOIN olts o ON c.olt_id = o.id
     LEFT JOIN odps odp ON c.odp_id = odp.id
@@ -309,19 +290,17 @@ function updateCustomerCablePath(id, path) {
 async function deleteCustomer(id) {
   const customer = getCustomerById(id);
   const mikrotikSvc = require('./mikrotikService');
-  
-  // WARNING: Check if customer has MikroTik connections without router_id
+
   const hasMikrotikConnection = customer && (
     customer.connection_type === 'pppoe' && customer.pppoe_username
     || customer.connection_type === 'static' && customer.static_ip
     || customer.connection_type === 'hotspot' && customer.hotspot_username
   );
-  
+
   if (hasMikrotikConnection && !customer.router_id) {
     logger.warn(`[deleteCustomer] Pelanggan "${customer.name}" (ID: ${id}) memiliki koneksi ${customer.connection_type} tapi router_id NULL. Akun tidak akan dihapus dari MikroTik.`);
   }
-  
-  // Remove static IP if connection type is static
+
   if (customer && customer.connection_type === 'static' && customer.static_ip && customer.router_id) {
     try {
       await mikrotikSvc.removeStaticIp(customer.static_ip, customer.router_id);
@@ -329,30 +308,26 @@ async function deleteCustomer(id) {
       console.error('Failed to remove static IP from MikroTik during customer deletion:', e);
     }
   }
-  
-  // Remove PPPoE secret if connection type is pppoe and username exists
+
   if (customer && customer.connection_type === 'pppoe' && customer.pppoe_username && customer.router_id) {
     try {
       console.log(`[DELETE] Attempting to remove PPPoE secret: ${customer.pppoe_username} from router ${customer.router_id}`);
-      
-      // Get PPPoE secrets to find the ID
+
       const secrets = await mikrotikSvc.getPppoeSecrets(customer.router_id);
       console.log(`[DELETE] Found ${secrets.length} PPPoE secrets in MikroTik`);
-      
-      // Try to find by exact name match
+
       let secret = secrets.find(s => s.name === customer.pppoe_username);
-      
-      // If not found, try case-insensitive match
+
       if (!secret) {
         const username = String(customer.pppoe_username || '').toLowerCase();
         secret = secrets.find(s => String(s.name || '').toLowerCase() === username);
       }
-      
+
       if (secret) {
-        // Check both .id and id fields
+
         const secretId = secret['.id'] || secret.id;
         console.log(`[DELETE] Found secret with ID: ${secretId}, name: ${secret.name}`);
-        
+
         if (secretId) {
           await mikrotikSvc.deletePppoeSecret(secretId, customer.router_id);
           console.log(`[DELETE] Successfully removed PPPoE secret for ${customer.pppoe_username} from MikroTik`);
@@ -367,13 +342,12 @@ async function deleteCustomer(id) {
       console.error('[DELETE] Failed to remove PPPoE secret from MikroTik during customer deletion:', e);
     }
   }
-  
-  // Remove Hotspot user if connection type is hotspot and username exists
+
   if (customer && customer.connection_type === 'hotspot' && customer.hotspot_username && customer.router_id) {
     try {
-      // Get hotspot user to find the ID
+
       const hotspotUser = await mikrotikSvc.getHotspotUserByName(customer.hotspot_username, customer.router_id);
-      
+
       if (hotspotUser && hotspotUser.id) {
         await mikrotikSvc.deleteHotspotUser(hotspotUser.id, customer.router_id);
         console.log(`Successfully removed Hotspot user ${customer.hotspot_username} from MikroTik`);
@@ -384,7 +358,7 @@ async function deleteCustomer(id) {
       console.error('Failed to remove Hotspot user from MikroTik during customer deletion:', e);
     }
   }
-  
+
   return db.prepare('DELETE FROM customers WHERE id=?').run(id);
 }
 
@@ -397,14 +371,13 @@ function getCustomerStats() {
   };
 }
 
-// ─── PACKAGES ────────────────────────────────────────────────
 function getAllPackages(routerId = null) {
   const rId = routerId ? Number(routerId) : null;
   try {
     if (rId && rId > 0) {
       return db.prepare(`
         SELECT p.*, r.name as router_name, COUNT(c.id) as customer_count
-        FROM packages p 
+        FROM packages p
         LEFT JOIN customers c ON c.package_id = p.id
         LEFT JOIN routers r ON p.router_id = r.id
         WHERE p.router_id IS NULL OR p.router_id = ?
@@ -413,7 +386,7 @@ function getAllPackages(routerId = null) {
     }
     return db.prepare(`
       SELECT p.*, r.name as router_name, COUNT(c.id) as customer_count
-      FROM packages p 
+      FROM packages p
       LEFT JOIN customers c ON c.package_id = p.id
       LEFT JOIN routers r ON p.router_id = r.id
       GROUP BY p.id ORDER BY p.price ASC
@@ -422,7 +395,7 @@ function getAllPackages(routerId = null) {
     if (String(e?.message || '').includes('no such column')) {
       return db.prepare(`
         SELECT p.*, NULL as router_name, COUNT(c.id) as customer_count
-        FROM packages p 
+        FROM packages p
         LEFT JOIN customers c ON c.package_id = p.id
         GROUP BY p.id ORDER BY p.price ASC
       `).all();
@@ -460,8 +433,8 @@ function createPackage(data) {
     INSERT INTO packages (
       name, price, promo_price, promo_cycles, prorate_first_invoice,
       speed_down, speed_up, speed_down_upto, speed_up_upto,
-      use_night_speed, night_profile_name, night_speed_down, night_speed_up, 
-      use_fup, fup_profile_name, fup_limit_gb, fup_speed_down, 
+      use_night_speed, night_profile_name, night_speed_down, night_speed_up,
+      use_fup, fup_profile_name, fup_limit_gb, fup_speed_down,
       description,
       billing_type, duration_days,
       use_ppn, ppn_percentage, use_uso, uso_percentage, router_id
@@ -505,11 +478,11 @@ function updatePackage(id, data) {
   const durationDays = Math.max(1, parseInt(data.duration_days, 10) || 30);
 
   return db.prepare(`
-    UPDATE packages 
+    UPDATE packages
     SET name=?, price=?, promo_price=?, promo_cycles=?, prorate_first_invoice=?,
         speed_down=?, speed_up=?, speed_down_upto=?, speed_up_upto=?,
-        use_night_speed=?, night_profile_name=?, night_speed_down=?, night_speed_up=?, 
-        use_fup=?, fup_profile_name=?, fup_limit_gb=?, fup_speed_down=?, 
+        use_night_speed=?, night_profile_name=?, night_speed_down=?, night_speed_up=?,
+        use_fup=?, fup_profile_name=?, fup_limit_gb=?, fup_speed_down=?,
         description=?, is_active=?,
         billing_type=?, duration_days=?,
         use_ppn=?, ppn_percentage=?, use_uso=?, uso_percentage=?, router_id=?
@@ -533,36 +506,29 @@ function deletePackage(id) {
 function findCustomerByAny(val) {
   if (!val) return null;
   const cleanVal = val.toString().trim();
-  
-  // 1. Try Phone (Priority for Login)
+
   const phoneDigits = cleanVal.replace(/\D/g, '');
   if (phoneDigits.length >= 8) {
-    // Cari yang 8-10 digit terakhirnya sama (lebih akurat untuk 08 vs 62)
+
     const suffix = phoneDigits.slice(-9);
     const p1 = db.prepare('SELECT id FROM customers WHERE phone LIKE ?').get(`%${suffix}`);
     if (p1) return getCustomerById(p1.id);
   }
 
-  // 1b. Try Email (Mobile API login contract — Phase 15A: identifier can be phone or email)
   if (cleanVal.includes('@')) {
     const byEmail = db.prepare('SELECT id FROM customers WHERE email = ? AND email != \'\'').get(cleanVal.toLowerCase());
     if (byEmail) return getCustomerById(byEmail.id);
   }
 
-  // 2. Try GenieACS Tag (Exact Match)
   const byTag = db.prepare('SELECT id FROM customers WHERE genieacs_tag = ?').get(cleanVal);
   if (byTag) return getCustomerById(byTag.id);
 
-  // 3. Try PPPoE Username (Exact Match)
   const byPppoe = db.prepare('SELECT id FROM customers WHERE pppoe_username = ?').get(cleanVal);
   if (byPppoe) return getCustomerById(byPppoe.id);
 
-  // 4. Try MAC Address (Exact Match or Partial Match for ONU MAC format)
-  // Handle ONU MAC format like: F4B5AA-ZXHN%20F477-01FFFFFFFF011FFF23F4B5AA7D806FBA
   const byMac = db.prepare('SELECT id FROM customers WHERE mac_address = ?').get(cleanVal);
   if (byMac) return getCustomerById(byMac.id);
-  
-  // Try partial MAC match (first part before dash for ONU format)
+
   if (cleanVal.includes('-')) {
     const macPrefix = cleanVal.split('-')[0];
     if (macPrefix.length >= 6) {
@@ -571,36 +537,32 @@ function findCustomerByAny(val) {
     }
   }
 
-  // 5. Try ID if numeric
   if (/^\d+$/.test(cleanVal) && cleanVal.length < 8) {
     const c = getCustomerById(parseInt(cleanVal));
     if (c) return c;
   }
-  
+
   return null;
 }
 
 async function suspendCustomer(id) {
   const customer = getCustomerById(id);
   if (!customer) throw new Error('Pelanggan tidak ditemukan');
-  
+
   const mikrotikSvc = require('./mikrotikService');
 
-  // Get effective router_id (respects multi-router mode setting)
   const effectiveRouterId = getEffectiveRouterId(customer.router_id);
 
-  // Validate router_id is present if customer has MikroTik connection
   const hasMikrotikConnection = customer.connection_type === 'pppoe' && customer.pppoe_username
     || customer.connection_type === 'static' && customer.static_ip
     || customer.connection_type === 'hotspot' && customer.hotspot_username;
-  
+
   if (hasMikrotikConnection && !effectiveRouterId) {
     logger.warn(`[suspendCustomer] Pelanggan "${customer.name}" (ID: ${id}) memiliki koneksi ${customer.connection_type} tapi router_id NULL dan tidak ada default router. Isolir lokal hanya, MikroTik tidak diupdate.`);
     updateCustomer(id, { ...customer, status: 'suspended' });
     return;
   }
 
-  // UPDATE MIKROTIK DULU sebelum update database status (priority: network change)
   try {
     if (customer.connection_type === 'static' && customer.static_ip) {
       const pkg = getPackageById(customer.package_id);
@@ -633,16 +595,13 @@ async function suspendCustomer(id) {
     }
   } catch (mikrotikErr) {
     logger.error(`[suspendCustomer] GAGAL ubah profil di MikroTik: ${mikrotikErr.message}. Tetap update status ke database.`);
-    // Continue execution - update database status despite MikroTik error (graceful degradation)
+
   }
 
-  // Update database status SETELAH MikroTik berhasil (atau gagal tapi continue)
   updateCustomer(id, { ...customer, status: 'suspended' });
 
-  // Phase 17 — mobile push signal (gangguan/isolir). Fire-and-forget.
   try { require('./pushNotificationService').notifyServiceSuspended({ customerId: id }); } catch (_) {}
 
-  // WhatsApp Notification
   if (customer.phone) {
     try {
       const { getSetting } = require('../config/settingsManager');
@@ -652,12 +611,10 @@ async function suspendCustomer(id) {
           const defaultIsolir = `Yth. Pelanggan {{nama}},\n\nLayanan internet Anda (Paket {{paket}}) saat ini ditangguhkan (Terisolir) karena belum melunasi tagihan sebesar *Rp {{tagihan}}*.\n\nSilakan lakukan pembayaran segera melalui portal pelanggan: {{link}}\n\nTerima kasih.`;
           const template = db.getAppSetting('whatsapp_isolir_message', defaultIsolir);
 
-          // Get unpaid invoices & calculate total amount
           const billingSvc = require('./billingService');
           const unpaidInvoices = billingSvc.getUnpaidInvoicesByCustomerId(customer.id);
           const totalTagihan = unpaidInvoices.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
 
-          // Generate Login Link
           const explicitBaseUrl = String(getSetting('public_base_url', '') || '').trim();
           let baseUrl = explicitBaseUrl.replace(/\/+$/, '');
           if (!baseUrl) {
@@ -689,15 +646,13 @@ async function suspendCustomer(id) {
 async function activateCustomer(id) {
   const customer = getCustomerById(id);
   if (!customer) throw new Error('Pelanggan tidak ditemukan');
-  
-  // Get effective router_id (respects multi-router mode setting)
+
   const effectiveRouterId = getEffectiveRouterId(customer.router_id);
 
-  // Validate router_id is present if customer has MikroTik connection
   const hasMikrotikConnection = customer.connection_type === 'pppoe' && customer.pppoe_username
     || customer.connection_type === 'static' && customer.static_ip
     || customer.connection_type === 'hotspot' && customer.hotspot_username;
-  
+
   if (hasMikrotikConnection && !effectiveRouterId) {
     logger.warn(`[activateCustomer] Pelanggan "${customer.name}" (ID: ${id}) memiliki koneksi ${customer.connection_type} tapi router_id NULL dan tidak ada default router. Aktivasi lokal hanya, MikroTik tidak diupdate.`);
     updateCustomer(id, { ...customer, status: 'active' });
@@ -706,7 +661,6 @@ async function activateCustomer(id) {
 
   const mikrotikSvc = require('./mikrotikService');
 
-  // UPDATE MIKROTIK DULU sebelum update database status (priority: network change)
   try {
     if (customer.connection_type === 'static' && customer.static_ip) {
       const pkg = getPackageById(customer.package_id);
@@ -727,12 +681,11 @@ async function activateCustomer(id) {
     } else if (customer.pppoe_username) {
       const pkg = getPackageById(customer.package_id);
       const targetProfile = pkg ? pkg.name : 'default';
-      
-      // Validasi profile tidak kosong
+
       if (!targetProfile || String(targetProfile).trim() === '') {
         logger.warn(`[activateCustomer] Profile kosong untuk PPPoE user "${customer.pppoe_username}". Gunakan profile 'default'.`);
       }
-      
+
       await mikrotikSvc.setPppoeProfile(customer.pppoe_username, targetProfile, effectiveRouterId);
     } else if (customer.connection_type === 'hotspot' && customer.hotspot_username) {
       const pkg = getPackageById(customer.package_id);
@@ -747,12 +700,11 @@ async function activateCustomer(id) {
     }
   } catch (mikrotikErr) {
     logger.error(`[activateCustomer] GAGAL ubah profil di MikroTik: ${mikrotikErr.message}. Tetap update status ke database.`);
-    // Continue execution - update database status despite MikroTik error (graceful degradation)
+
   }
 
-  // Update database status SETELAH MikroTik berhasil (atau gagal tapi continue)
   updateCustomer(id, { ...customer, status: 'active' });
-  // Phase 17 — only signal a real transition (suspended → active).
+
   if (String(customer.status) === 'suspended') {
     try { require('./pushNotificationService').notifyServiceRestored({ customerId: id }); } catch (_) {}
   }

@@ -1,26 +1,4 @@
-/**
- * services/userManagementService.js — Phase 5: Centralized Admin User Management
- *
- * ARSITEKTUR: TIDAK ada generic `users` table (keputusan Phase 3, tetap berlaku).
- * Modul ini adalah PRESENTATION/AGGREGATION LAYER murni di atas tabel kredensial
- * yang sudah ada (technicians, cashiers, collectors, agents). Tidak ada data yang
- * disimpan ke tabel baru — setiap operasi delegasi ke service asli masing-masing
- * sumber (adminService / agentService), yang sudah menggunakan PBKDF2 hashing
- * (Phase 2) dan tervalidasi aman.
- *
- * Sumber yang DIKELOLA (create/edit/status/reset password) dari halaman ini:
- *   technicians  -> canonical role: teknisi
- *   cashiers     -> canonical role: customer_service
- *   collectors   -> canonical role: kolektor
- *   agents       -> canonical role: reseller
- *
- * Sumber yang HANYA VIEW (read-only) dari halaman ini, karena sudah punya
- * halaman CRUD khusus yang lebih lengkap (package, billing, OTP, dsb) dan
- * di luar scope Phase 5 (DO NOT TOUCH customer portal/business logic):
- *   customers    -> canonical role: pelanggan (read-only summary)
- *   admin        -> canonical role: admin (read-only; admin account management
- *                   tetap AS-IS, lihat middleware/authz.js & Step 7 Phase 5)
- */
+/** Modul ini adalah PRESENTATION/AGGREGATION LAYER murni di atas tabel kredensial */
 
 const db = require('../config/database');
 const adminSvc = require('./adminService');
@@ -41,10 +19,7 @@ function safeStr(v) {
   return v === null || v === undefined ? '' : String(v);
 }
 
-/**
- * Unified read model: { source, id, name, username, phone, role, active, extra }
- * TIDAK PERNAH menyertakan password/hash.
- */
+/** Unified read model: { source, id, name, username, phone, role, active, extra } */
 function listUnifiedUsers() {
   const rows = [];
 
@@ -52,7 +27,7 @@ function listUnifiedUsers() {
     for (const t of adminSvc.getAllTechnicians()) {
       rows.push({ source: 'technicians', id: t.id, name: t.name, username: t.username, phone: t.phone || '', area: t.area || '', role: SOURCE_TO_ROLE.technicians, active: !!t.is_active });
     }
-  } catch (e) { /* tabel selalu ada; abaikan jika gagal baca */ }
+  } catch (e) {  }
 
   try {
     for (const c of adminSvc.getAllCashiers()) {
@@ -123,15 +98,12 @@ function updateUser(source, id, data) {
 
 function setUserActive(source, id, active) {
   getManagedTable(source);
-  const table = source; // technicians|cashiers|collectors|agents — nama identik dengan tabel SQL
+  const table = source; 
   const isActive = active ? 1 : 0;
   return db.prepare(`UPDATE ${table} SET is_active = ? WHERE id = ?`).run(isActive, id);
 }
 
-/**
- * Reset password: WAJIB melalui hashPassword (PBKDF2), tidak pernah plaintext.
- * Tidak mengembalikan password ke caller (Step 3/10: no display after save).
- */
+/** Reset password: WAJIB melalui hashPassword (PBKDF2), tidak pernah plaintext. */
 function resetPassword(source, id, newPassword) {
   getManagedTable(source);
   const pw = safeStr(newPassword);

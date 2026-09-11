@@ -10,7 +10,6 @@ const fs = require('fs');
 const path = require('path');
 const { createAxiosInstance, isBuiltinAcsEnabled } = require('../config/genieacs');
 
-// Proxy axios to support local built-in ACS proxy
 const axios = {
     get: async (url, config = {}) => {
         if (isBuiltinAcsEnabled() && (url.startsWith('local/') || url === 'local')) {
@@ -46,7 +45,6 @@ const axios = {
     }
 };
 
-// Helper for DB queries (using better-sqlite3)
 function getACSServers(id = null) {
     if (isBuiltinAcsEnabled()) {
         const builtinServer = {
@@ -62,12 +60,12 @@ function getACSServers(id = null) {
     }
 
     const legacyACS = getLegacyACS();
-    const legacyServer = legacyACS.acs_url ? { 
-        id: 'legacy', 
-        name: 'Default ACS', 
-        url: legacyACS.acs_url, 
-        username: legacyACS.acs_user, 
-        password: legacyACS.acs_pass 
+    const legacyServer = legacyACS.acs_url ? {
+        id: 'legacy',
+        name: 'Default ACS',
+        url: legacyACS.acs_url,
+        username: legacyACS.acs_user,
+        password: legacyACS.acs_pass
     } : null;
 
     if (id === 'legacy') return legacyServer ? [legacyServer] : [];
@@ -80,7 +78,7 @@ function getACSServers(id = null) {
         const row = db.prepare(query).get(params);
         return row ? [row] : [];
     }
-    
+
     const rows = db.prepare(query).all(params);
     return legacyServer ? [legacyServer, ...rows] : rows;
 }
@@ -90,7 +88,7 @@ function getLegacyACS() {
         acs_url: getSetting('genieacs_url', ''),
         acs_user: getSetting('genieacs_username', ''),
         acs_pass: getSetting('genieacs_password', ''),
-        acs_vparams: '', // Default empty for now
+        acs_vparams: '',
         acs_path_pppoe: 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username',
         acs_path_ip: 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress'
     };
@@ -113,7 +111,6 @@ function getAxiosConfig(server) {
     return config;
 }
 
-// Helper to normalize URL
 function normalizeUrl(url) {
     if (!url) return '';
     return url.endsWith('/') ? url.slice(0, -1) : url;
@@ -345,7 +342,6 @@ function buildBuiltinAddWanWorkflow({
     }, workflowMeta);
 }
 
-// Helper to get nested value like genieacs.js
 function getNestedValue(obj, path) {
     try {
         const parts = path.split('.');
@@ -366,7 +362,6 @@ function getNestedValue(obj, path) {
     }
 }
 
-// Standard paths for RX Power
 const RX_POWER_PATHS = [
     'VirtualParameters.RXPower',
     'VirtualParameters.RXpower',
@@ -394,10 +389,9 @@ const RX_POWER_PATHS = [
     'InternetGatewayDevice.WANDevice.1.X_CU_WANEPONInterfaceConfig.OpticalTransceiver.RXPower',
     'Device.Optical.Interface.1.OpticalSignalLevel',
     'Device.XPON.Interface.1.Stats.RXPower',
-    'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANDSLDiagnostics.FECOutput' // some devices
+    'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANDSLDiagnostics.FECOutput'
 ];
 
-// PPPoE IP search keys matching user's template
 const PPPOE_IP_KEYS = [
     'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress',
     'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANPPPConnection.2.ExternalIPAddress',
@@ -411,7 +405,6 @@ const PPPOE_IP_KEYS = [
     'Device.IP.Interface.1.IPv4Address.1.IPAddress'
 ];
 
-// PPPoE Username search keys matching user's template
 const PPPOE_USER_KEYS = [
     'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username',
     'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANPPPConnection.2.Username',
@@ -434,7 +427,7 @@ function getWildcardMatches(device, path) {
 
     function recurse(current, index, currentPathParts) {
         if (current === undefined || current === null) return;
-        
+
         if (index === parts.length) {
             let val = current;
             if (typeof current === 'object' && '_value' in current) {
@@ -491,7 +484,7 @@ function getDeviceParameterValue(device, keys, filterFn) {
 function extractPppoeIp(d) {
     const ip = getDeviceParameterValue(d, PPPOE_IP_KEYS, (matchedPath, value, device) => {
         if (!value || value === '0.0.0.0' || value === '-') return false;
-        
+
         if (matchedPath.includes('WANPPPConnection.')) {
             const connectionTypePath = matchedPath.replace('ExternalIPAddress', 'ConnectionType');
             const connTypeMatches = getWildcardMatches(device, connectionTypePath);
@@ -501,7 +494,7 @@ function extractPppoeIp(d) {
         }
         return true;
     });
-    
+
     if (ip) return ip;
     if (d._ip && d._ip !== '-' && d._ip !== '0.0.0.0') return d._ip;
     return '-';
@@ -510,7 +503,7 @@ function extractPppoeIp(d) {
 function extractPppoeUser(d) {
     const user = getDeviceParameterValue(d, PPPOE_USER_KEYS, (matchedPath, value, device) => {
         if (!value || value === '-') return false;
-        
+
         if (matchedPath.includes('WANPPPConnection.')) {
             const connectionTypePath = matchedPath.replace('Username', 'ConnectionType');
             const connTypeMatches = getWildcardMatches(device, connectionTypePath);
@@ -520,7 +513,7 @@ function extractPppoeUser(d) {
         }
         return true;
     });
-    
+
     return user || '-';
 }
 
@@ -558,7 +551,7 @@ const PPPOE_UPTIME_KEYS = [
 function extractPppoeUptime(d) {
     let uptimeVal = getDeviceParameterValue(d, PPPOE_UPTIME_KEYS, (matchedPath, value, device) => {
         if (value === undefined || value === null || value === '' || value === '-') return false;
-        
+
         if (matchedPath.toLowerCase().includes('wanpppconnection')) {
             const connTypePath = matchedPath.substring(0, matchedPath.toLowerCase().lastIndexOf('.uptime')) + '.ConnectionType';
             const connTypeMatches = getWildcardMatches(device, connTypePath);
@@ -654,24 +647,23 @@ function extractUptime(d) {
             if (isNaN(totalSecs)) return val;
             const days = Math.floor(totalSecs / 86400);
             const rem = totalSecs % 86400;
-            
+
             let hrs = Math.floor(rem / 3600);
             if (hrs < 10) hrs = "0" + hrs;
-            
+
             const rem2 = rem % 3600;
             let mins = Math.floor(rem2 / 60);
             if (mins < 10) mins = "0" + mins;
-            
+
             let secs = rem2 % 60;
             if (secs < 10) secs = "0" + secs;
-            
+
             return days + "d " + hrs + ":" + mins + ":" + secs;
         }
     }
     return '-';
 }
 
-// Middleware: Require Admin Session
 const requireAdmin = (req, res, next) => {
     if (req.session && req.session.isAdmin) {
         return next();
@@ -796,7 +788,7 @@ async function getLANHosts(deviceId, serverConfig) {
             const activeRaw = getHostVal('Active');
             const interfaceType = getHostVal('InterfaceType') || '';
             const layer2Interface = getHostVal('Layer2Interface') || '';
-            
+
             let bytesReceived = 0;
             let bytesSent = 0;
             const stats = host['X_HW_Stats'];
@@ -807,7 +799,7 @@ async function getLANHosts(deviceId, serverConfig) {
 
             const l2Str = layer2Interface.toString().toLowerCase();
             const isWiFi = interfaceType.toString().toLowerCase().includes('802.11') || l2Str.includes('wlan') || l2Str.includes('wifi');
-            
+
             let finalRssi = null;
             let band = l2Str.includes('5') ? '5GHz' : '2.4GHz';
             const macLower = mac.toString().toLowerCase();
@@ -832,17 +824,13 @@ async function getLANHosts(deviceId, serverConfig) {
     }
 }
 
-// ============================================
-// DEVICE FETCH HELPERS
-// ============================================
-
 async function fetchDevicesFromACS(server, vParams = [], paths = {}, options = {}) {
     const { page = 1, limit = null, activeSessionsMap = null } = options;
     try {
         const baseUrl = normalizeUrl(server.url);
-        // Gabungkan proyeksi dasar dengan path pencarian
+
         let projection = '_id,_lastInform,_ip,_deviceId._Manufacturer,_deviceId._ProductClass,_deviceId._SerialNumber,VirtualParameters,InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1';
-        
+
         const params = { projection };
         if (limit !== null) {
             params.limit = limit + 1;
@@ -862,18 +850,15 @@ async function fetchDevicesFromACS(server, vParams = [], paths = {}, options = {
         const sessionsMap = activeSessionsMap || (await mikrotikSvc.getActivePppoeSessionsMap().catch(() => new Map()));
 
         const devices = devicesData.map(d => {
-            // Fallback PPPoE
+
             let pppoeUser = extractPppoeUser(d);
 
-            // Fallback RX Power
             let rxPower = extractRxPower(d);
 
-            // Fallback IP
             let ip = extractPppoeIp(d);
 
-            // Customer Name
-            const customerName = getNestedValue(d, 'VirtualParameters.CustomerName') || 
-                                getNestedValue(d, 'VirtualParameters.customer_name') || 
+            const customerName = getNestedValue(d, 'VirtualParameters.CustomerName') ||
+                                getNestedValue(d, 'VirtualParameters.customer_name') ||
                                 '-';
 
             const isOnline = (d._lastInform && (Date.now() - new Date(d._lastInform).getTime() < 900000)) ||
@@ -933,13 +918,11 @@ function enrichDevicesWithCustomerNames(devices) {
     return devices.map(d => {
         let matchedName = null;
 
-        // 1. PPPoE Username Match
         const pppUser = String(d.pppoe_user || d.pppoeUser || d.pppoeUsername || '').trim().toLowerCase();
         if (pppUser && pppUser !== '-' && pppUser !== 'n/a' && byPppoe.has(pppUser)) {
             matchedName = byPppoe.get(pppUser);
         }
 
-        // 2. Serial Number, Device ID, or Tags Match
         if (!matchedName) {
             const sn = String(d.sn || d.serialNumber || '').trim().toLowerCase();
             const devId = String(d.id || d.phone || '').trim().toLowerCase();
@@ -956,12 +939,10 @@ function enrichDevicesWithCustomerNames(devices) {
             }
         }
 
-        // 3. Hotspot Username Match
         if (!matchedName && pppUser && byHotspot.has(pppUser)) {
             matchedName = byHotspot.get(pppUser);
         }
 
-        // 4. IP Address Match
         if (!matchedName) {
             const ip = String(d.ip || d.pppoe_ip || d.pppoeIP || '').trim().toLowerCase();
             if (ip && ip !== '-' && byIp.has(ip)) {
@@ -979,17 +960,13 @@ function enrichDevicesWithCustomerNames(devices) {
     });
 }
 
-// ============================================
-// ROUTES
-// ============================================
-
 router.get('/', async (req, res) => {
     try {
         const searchQuery = String(req.query.q || '').trim() || null;
         const acsServers = getACSServers();
         const legacyACS = getLegacyACS();
         const activeSessionsMap = await mikrotikSvc.getActivePppoeSessionsMap().catch(() => new Map());
-        
+
         const activeServers = acsServers.length > 0 ? acsServers :
             (legacyACS.acs_url ? [{ id: 'legacy', name: 'Default ACS', url: legacyACS.acs_url, username: legacyACS.acs_user, password: legacyACS.acs_pass }] : []);
 
@@ -999,7 +976,7 @@ router.get('/', async (req, res) => {
         let allDevices = [];
         if (targetServers.length > 0) {
             if (searchQuery) {
-                // Search mode: query devices with search filter
+
                 const query = JSON.stringify({
                     $or: [
                         { '_deviceId._SerialNumber': { $regex: searchQuery, $options: 'i' } },
@@ -1009,7 +986,7 @@ router.get('/', async (req, res) => {
                         { '_tags': searchQuery }
                     ]
                 });
-                
+
                 for (const server of targetServers) {
                     try {
                         const baseUrl = normalizeUrl(server.url);
@@ -1017,21 +994,21 @@ router.get('/', async (req, res) => {
                             ...getAxiosConfig(server),
                             params: { query }
                         });
-                        
+
                         if (Array.isArray(response.data)) {
                             const devices = response.data.map(d => {
                                  let rxPower = extractRxPower(d);
-                                
+
                                 let pppoeUser = extractPppoeUser(d);
-                                
+
                                 let ip = extractPppoeIp(d);
-                                
+
                                 const customerName = getNestedValue(d, 'VirtualParameters.CustomerName') ||
                                                     getNestedValue(d, 'VirtualParameters.customer_name') || '-';
-                                
+
                                 const isOnline = (d._lastInform && (Date.now() - new Date(d._lastInform).getTime() < 900000)) ||
                                                  (pppoeUser && pppoeUser !== '-' && activeSessionsMap.has(pppoeUser.toLowerCase()));
-                                
+
                                 return {
                                     id: d._id,
                                     sn: d._deviceId?._SerialNumber || d._id,
@@ -1054,18 +1031,17 @@ router.get('/', async (req, res) => {
                     }
                 }
             } else {
-                // Normal mode: fetch all devices
+
                 const results = await Promise.allSettled(targetServers.map(s => fetchDevicesFromACS(s, [], legacyACS, { activeSessionsMap })));
                 results.forEach(r => { if (r.status === 'fulfilled') allDevices = allDevices.concat(r.value.devices); });
             }
         }
 
-        // Enrich devices with matching customer names from Billing DB
         allDevices = enrichDevicesWithCustomerNames(allDevices);
 
         if (searchQuery) {
             const qLower = searchQuery.toLowerCase();
-            allDevices = allDevices.filter(d => 
+            allDevices = allDevices.filter(d =>
                 String(d.sn || '').toLowerCase().includes(qLower) ||
                 String(d.id || '').toLowerCase().includes(qLower) ||
                 String(d.customer_name || '').toLowerCase().includes(qLower) ||
@@ -1076,7 +1052,7 @@ router.get('/', async (req, res) => {
 
         let pppoeProfiles = [];
         try {
-            // Get routerId dari query parameter jika ada (untuk multi-router support)
+
             const selectedRouterId = req.query.router_id ? Number(req.query.router_id) : null;
             pppoeProfiles = await mikrotikSvc.getPppoeProfiles(selectedRouterId);
         } catch (e) {
@@ -1148,11 +1124,10 @@ router.get('/device/:deviceId', async (req, res) => {
         const isOnline = (lastInform && (Date.now() - new Date(lastInform).getTime() < 900000)) ||
                          (pppoeUser && pppoeUser !== '-' && activeSessionsMap.has(pppoeUser.toLowerCase()));
 
-        // Fallbacks for detail page using the same logic as listing
         let rxPower = extractRxPower(deviceData);
 
-        const customerName = getNestedValue(deviceData, 'VirtualParameters.CustomerName') || 
-                            getNestedValue(deviceData, 'VirtualParameters.customer_name') || 
+        const customerName = getNestedValue(deviceData, 'VirtualParameters.CustomerName') ||
+                            getNestedValue(deviceData, 'VirtualParameters.customer_name') ||
                             '-';
 
         let ip = extractPppoeIp(deviceData);
@@ -1194,7 +1169,6 @@ router.get('/device/:deviceId', async (req, res) => {
     }
 });
 
-// POST /admin/acs/api/servers
 router.post('/api/servers', requireAdmin, async (req, res) => {
     const { name, url, username, password, location } = req.body;
     try {
@@ -1207,7 +1181,6 @@ router.post('/api/servers', requireAdmin, async (req, res) => {
     }
 });
 
-// PUT /admin/acs/api/servers/legacy (Default ACS)
 router.put('/api/servers/legacy', requireAdmin, express.json(), async (req, res) => {
     try {
         const url = String(req.body?.url || '').trim();
@@ -1237,7 +1210,6 @@ router.put('/api/servers/legacy', requireAdmin, express.json(), async (req, res)
     }
 });
 
-// PUT /admin/acs/api/servers/:id
 router.put('/api/servers/:id', requireAdmin, async (req, res) => {
     try {
         const id = String(req.params.id || '').trim();
@@ -1273,7 +1245,6 @@ router.put('/api/servers/:id', requireAdmin, async (req, res) => {
     }
 });
 
-// DELETE /admin/acs/api/servers/:id
 router.delete('/api/servers/:id', requireAdmin, async (req, res) => {
     try {
         db.prepare('DELETE FROM genieacs_servers WHERE id = ?').run(req.params.id);
@@ -1283,17 +1254,16 @@ router.delete('/api/servers/:id', requireAdmin, async (req, res) => {
     }
 });
 
-// DELETE /admin/acs/api/device/:deviceId
 router.delete('/api/device/:deviceId', requireAdmin, async (req, res) => {
     try {
         const { acsId } = req.body;
         const servers = getACSServers(acsId);
         if (servers.length === 0) return res.json({ success: false, message: 'ACS not found' });
-        
+
         const server = servers[0];
         const baseUrl = normalizeUrl(server.url);
         const deviceId = String(req.params.deviceId || '');
-        
+
         await axios.delete(
             `${baseUrl}/devices/${encodeURIComponent(deviceId)}`,
             getAxiosConfig(server)
@@ -1304,20 +1274,19 @@ router.delete('/api/device/:deviceId', requireAdmin, async (req, res) => {
     }
 });
 
-// POST /admin/acs/api/remote-enable/:deviceId
 router.post('/api/remote-enable/:deviceId', requireAdmin, async (req, res) => {
     try {
         const { acsId } = req.body;
         const servers = getACSServers(acsId);
         if (servers.length === 0) return res.json({ success: false, message: 'ACS not found' });
-        
+
         const server = servers[0];
         const baseUrl = normalizeUrl(server.url);
         const deviceId = String(req.params.deviceId || '');
-        
+
         await axios.post(
             `${baseUrl}/devices/${encodeURIComponent(deviceId)}/tasks`,
-            { 
+            {
                 name: 'setParameterValues',
                 parameterValues: [['InternetGatewayDevice.X_HW_Security.AclServices.HTTPWanEnable', true, 'xsd:boolean']]
             },
@@ -1329,17 +1298,16 @@ router.post('/api/remote-enable/:deviceId', requireAdmin, async (req, res) => {
     }
 });
 
-// POST /admin/acs/api/reboot/:deviceId
 router.post('/api/reboot/:deviceId', requireAdmin, async (req, res) => {
     try {
         const { acsId } = req.body;
         const servers = getACSServers(acsId);
         if (servers.length === 0) return res.json({ success: false, message: 'ACS not found' });
-        
+
         const server = servers[0];
         const baseUrl = normalizeUrl(server.url);
         const deviceId = String(req.params.deviceId || '');
-        
+
         await axios.post(
             `${baseUrl}/devices/${encodeURIComponent(deviceId)}/tasks`,
             { name: 'reboot' },
@@ -1351,7 +1319,6 @@ router.post('/api/reboot/:deviceId', requireAdmin, async (req, res) => {
     }
 });
 
-// POST /admin/acs/api/refresh/:deviceId
 router.post('/api/refresh/:deviceId', requireAdmin, async (req, res) => {
     try {
         const deviceId = String(req.params.deviceId || '');
@@ -1368,14 +1335,13 @@ router.post('/api/refresh/:deviceId', requireAdmin, async (req, res) => {
     }
 });
 
-// POST /admin/acs/api/bulk/refresh
 router.post('/api/bulk/refresh', requireAdmin, async (req, res) => {
     try {
         const { devices } = req.body;
         if (!Array.isArray(devices) || devices.length === 0) {
             return res.status(400).json({ success: false, message: 'Daftar perangkat wajib diisi' });
         }
-        
+
         const promises = devices.map(async (d) => {
             const deviceId = String(d.id || '');
             const result = await customerDevice.requestRefresh(deviceId, {
@@ -1387,7 +1353,7 @@ router.post('/api/bulk/refresh', requireAdmin, async (req, res) => {
             });
             return { id: deviceId, success: !!result.ok, message: result.message };
         });
-        
+
         await Promise.allSettled(promises);
         res.json({ success: true, message: `Berhasil mengirim perintah summon untuk ${devices.length} perangkat.` });
     } catch (e) {
@@ -1395,14 +1361,13 @@ router.post('/api/bulk/refresh', requireAdmin, async (req, res) => {
     }
 });
 
-// POST /admin/acs/api/bulk/delete
 router.post('/api/bulk/delete', requireAdmin, async (req, res) => {
     try {
         const { devices } = req.body;
         if (!Array.isArray(devices) || devices.length === 0) {
             return res.status(400).json({ success: false, message: 'Daftar perangkat wajib diisi' });
         }
-        
+
         const promises = devices.map(async (d) => {
             const deviceId = String(d.id || '');
             const acsId = String(d.acsId || '');
@@ -1410,14 +1375,14 @@ router.post('/api/bulk/delete', requireAdmin, async (req, res) => {
             if (servers.length === 0) return { id: deviceId, success: false, message: 'ACS tidak ditemukan' };
             const server = servers[0];
             const baseUrl = normalizeUrl(server.url);
-            
+
             await axios.delete(
                 `${baseUrl}/devices/${encodeURIComponent(deviceId)}`,
                 getAxiosConfig(server)
             );
             return { id: deviceId, success: true };
         });
-        
+
         await Promise.allSettled(promises);
         res.json({ success: true, message: `Berhasil menghapus ${devices.length} perangkat.` });
     } catch (e) {
@@ -1425,13 +1390,11 @@ router.post('/api/bulk/delete', requireAdmin, async (req, res) => {
     }
 });
 
-
-// POST /admin/acs/api/sync/all
 router.post('/api/sync/all', requireAdmin, async (req, res) => {
     try {
         const servers = getACSServers();
         if (servers.length === 0) return res.json({ success: true, message: 'No servers to sync' });
-        
+
         let total = 0;
         for (const s of servers) {
             const result = await fetchDevicesFromACS(s, [], {});
@@ -1444,7 +1407,6 @@ router.post('/api/sync/all', requireAdmin, async (req, res) => {
     }
 });
 
-// GET /api/clients/:deviceId
 router.get('/api/clients/:deviceId', requireAdmin, async (req, res) => {
     try {
         const { deviceId } = req.params;
@@ -1459,17 +1421,16 @@ router.get('/api/clients/:deviceId', requireAdmin, async (req, res) => {
     }
 });
 
-// GET /admin/acs/api/wifi-settings/:deviceId
 router.get('/api/wifi-settings/:deviceId', requireAdmin, async (req, res) => {
     try {
         const { deviceId } = req.params;
         const { acsId } = req.query;
         const servers = getACSServers(acsId);
         if (servers.length === 0) return res.status(404).json({ success: false, message: 'ACS Server not found' });
-        
+
         const server = servers[0];
         const baseUrl = normalizeUrl(server.url);
-        
+
         const response = await axios.get(`${baseUrl}/devices`, {
             ...getAxiosConfig(server),
             params: {
@@ -1477,14 +1438,13 @@ router.get('/api/wifi-settings/:deviceId', requireAdmin, async (req, res) => {
                 projection: 'InternetGatewayDevice.LANDevice.1.WLANConfiguration'
             }
         });
-        
+
         const deviceData = Array.isArray(response.data) && response.data.length > 0 ? response.data[0] : null;
         if (!deviceData) return res.status(404).json({ success: false, message: 'Device not found' });
-        
+
         const wlanConfig = deviceData.InternetGatewayDevice?.LANDevice?.['1']?.WLANConfiguration || {};
         const bands = [];
-        
-        // Return all SSID indices (1 to 8) that exist on the ONU
+
         for (let i = 1; i <= 8; i++) {
             if (wlanConfig[String(i)]) {
                 bands.push({
@@ -1494,7 +1454,7 @@ router.get('/api/wifi-settings/:deviceId', requireAdmin, async (req, res) => {
                 });
             }
         }
-        
+
         res.json({ success: true, bands });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -1579,7 +1539,6 @@ router.get('/api/add-wan-status/:deviceId', requireAdmin, async (req, res) => {
     }
 });
 
-// POST /admin/acs/api/add-wan/:deviceId
 router.post('/api/add-wan/:deviceId', requireAdmin, async (req, res) => {
     try {
         const { deviceId } = req.params;
@@ -1600,8 +1559,7 @@ router.post('/api/add-wan/:deviceId', requireAdmin, async (req, res) => {
             wifiPass5,
             dhcp
         } = req.body;
-        
-        // 1. Validasi awal
+
         const normalizedMode = String(mode || '').trim().toLowerCase();
         if (!['pppoe', 'bridge'].includes(normalizedMode)) {
             return res.json({ success: false, message: 'Mode WAN tidak valid' });
@@ -1611,21 +1569,20 @@ router.post('/api/add-wan/:deviceId', requireAdmin, async (req, res) => {
         if (isNaN(parsedVlan) || parsedVlan < 1 || parsedVlan > 4094) {
             return res.json({ success: false, message: 'VLAN ID tidak valid (harus 1-4094)' });
         }
-        
+
         const trimmedPppoeUser = String(pppoeUser || '').trim();
         const trimmedPppoePass = String(pppoePass || '').trim();
         if (normalizedMode === 'pppoe' && (!trimmedPppoeUser || !trimmedPppoePass)) {
             return res.json({ success: false, message: 'Username dan password PPPoE wajib diisi untuk mode PPPoE' });
         }
-        
+
         const servers = getACSServers(acsId);
         if (servers.length === 0) return res.json({ success: false, message: 'ACS Server tidak ditemukan' });
-        
+
         const server = servers[0];
         const baseUrl = normalizeUrl(server.url);
         const config = getAxiosConfig(server);
-        
-        // 2. Jika Auto-create MikroTik diaktifkan
+
         if (normalizedMode === 'pppoe' && toBool(autoCreateMikrotik)) {
             try {
                 await mikrotikSvc.createPppoeSecret({
@@ -1638,8 +1595,7 @@ router.post('/api/add-wan/:deviceId', requireAdmin, async (req, res) => {
                 return res.json({ success: false, message: `Gagal membuat akun PPPoE di MikroTik: ${mErr.message}` });
             }
         }
-        
-        // 3. Ambil data instansi WANConnectionDevice saat ini untuk menghitung nextInstance
+
         const getDeviceRes = await axios.get(`${baseUrl}/devices`, {
             ...config,
             params: {
@@ -1647,10 +1603,10 @@ router.post('/api/add-wan/:deviceId', requireAdmin, async (req, res) => {
                 projection: '_id,_deviceId.Manufacturer,_deviceId._Manufacturer,InternetGatewayDevice.WANDevice.1.WANConnectionDevice,InternetGatewayDevice.LANDevice.1.WLANConfiguration'
             }
         });
-        
+
         const deviceData = Array.isArray(getDeviceRes.data) && getDeviceRes.data.length > 0 ? getDeviceRes.data[0] : null;
         if (!deviceData) return res.json({ success: false, message: 'CPE/Device tidak ditemukan di GenieACS' });
-        
+
         const manufacturer = (deviceData._deviceId?._Manufacturer || deviceData._deviceId?.Manufacturer || '').toLowerCase();
         const wlanConfig = deviceData.InternetGatewayDevice?.LANDevice?.['1']?.WLANConfiguration || {};
         const isBuiltinServer = String(server.id || '').trim() === 'builtin' || baseUrl === 'local';
@@ -1801,7 +1757,7 @@ router.post('/api/add-wan/:deviceId', requireAdmin, async (req, res) => {
             name: 'refreshObject',
             objectName: ''
         }, config).catch(() => {});
-        
+
         res.json({
             success: true,
             message: 'Semua antrean tugas Add WAN (dan Wi-Fi) berhasil dikirimkan ke GenieACS.',
@@ -1812,7 +1768,6 @@ router.post('/api/add-wan/:deviceId', requireAdmin, async (req, res) => {
     }
 });
 
-// GET /admin/acs/search - Redirect to main page with query params
 router.get('/search', requireAdminSession, async (req, res) => {
     const { q, acs } = req.query;
     const params = new URLSearchParams();

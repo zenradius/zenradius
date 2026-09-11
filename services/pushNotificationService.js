@@ -1,30 +1,4 @@
-/**
- * services/pushNotificationService.js — Phase 17
- *
- * Server-side push notification pipeline for the native Android app.
- *
- *   ZenRadius server  →  Firebase Cloud Messaging (HTTP v1)  →  Android device
- *
- * DESIGN RULES
- * ------------
- * 1. The server is the ONLY holder of the FCM service-account credential. It is
- *    read from a file path stored in settings (`fcm_service_account_path`),
- *    never embedded in the APK and never returned by any API.
- * 2. Device tokens are bound to the authenticated identity that registered them
- *    (userId + canonical role from the mobile session). The client never
- *    supplies userId/role.
- * 3. Payloads are SIGNALS ONLY. They carry a title, a short body, an event
- *    type and an object reference (e.g. invoiceId). They never carry
- *    passwords, tokens, secrets, or payment credentials. The app fetches
- *    details through the authenticated Mobile API.
- * 4. Sending is fire-and-forget from the caller's perspective. A push failure
- *    can never fail or roll back the business transaction that triggered it.
- * 5. Invalid / unregistered tokens reported by FCM are deactivated.
- *
- * No `firebase-admin` dependency: the OAuth2 service-account flow and the
- * FCM HTTP v1 call are done with Node's built-in `crypto` and `axios`, which
- * are already project dependencies.
- */
+/** Server-side push notification pipeline for the native Android app. */
 
 const fs = require('fs');
 const path = require('path');
@@ -34,10 +8,6 @@ const db = require('../config/database');
 const { logger } = require('../config/logger');
 const { getSetting } = require('../config/settingsManager');
 const { CANONICAL_ROLES } = require('../middleware/authz');
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Schema (idempotent)
-// ─────────────────────────────────────────────────────────────────────────────
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS mobile_push_tokens (
@@ -76,31 +46,18 @@ db.exec(`
     ON notification_events(role, user_id, created_at DESC);
 `);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Channels — mirror the Android NotificationChannel ids exactly.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const CHANNELS = Object.freeze({
-  SERVICE: 'zr_service',       // Gangguan / Layanan
-  BILLING: 'zr_billing',       // Pembayaran / Tagihan
-  SUPPORT: 'zr_support',       // Tiket / Komplain
-  ASSIGNMENT: 'zr_assignment', // Pekerjaan / Penugasan
-  SYSTEM: 'zr_system'          // Sistem / Pengumuman
+  SERVICE: 'zr_service',       
+  BILLING: 'zr_billing',       
+  SUPPORT: 'zr_support',       
+  ASSIGNMENT: 'zr_assignment', 
+  SYSTEM: 'zr_system'          
 });
 
 /** Keys that must never appear in a push payload, whatever the caller passes. */
 const FORBIDDEN_PAYLOAD_KEYS = /pass|token|secret|key|hash|credential|otp|pin/i;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Device token registry
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Register (or refresh) a device token for an authenticated identity.
- * Idempotent on fcm_token. If the same token was previously owned by a
- * different user (device handed over / re-login), ownership moves — a token
- * physically identifies one installed app instance.
- */
+/** Register (or refresh) a device token for an authenticated identity. */
 function registerDevice({ userId, role, deviceId = null, fcmToken, appVersion = null }) {
   if (!userId || !role || !CANONICAL_ROLES.includes(role)) {
     throw new Error('registerDevice: invalid identity');
@@ -127,10 +84,7 @@ function registerDevice({ userId, role, deviceId = null, fcmToken, appVersion = 
   return true;
 }
 
-/**
- * Deactivate one token for the given identity (logout on one device).
- * Scoped by owner so a user cannot unregister another user's device.
- */
+/** Deactivate one token for the given identity (logout on one device). */
 function unregisterDevice({ userId, role, fcmToken }) {
   const r = db.prepare(`
     UPDATE mobile_push_tokens
@@ -233,10 +187,6 @@ function markEventFailed(eventId, error) {
   `).run(String(error || 'provider request failed').slice(0, 200), eventId);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FCM credential + OAuth2 (service account, no external SDK)
-// ─────────────────────────────────────────────────────────────────────────────
-
 let cachedServiceAccount = null;
 let cachedServiceAccountPath = null;
 let cachedAccessToken = null;
@@ -312,14 +262,7 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Sending
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Strip anything that must never travel in a push payload and coerce all
- * values to strings (FCM `data` requires string values).
- */
+/** Strip anything that must never travel in a push payload and coerce all */
 function sanitizeData(data = {}) {
   const out = {};
   for (const [k, v] of Object.entries(data || {})) {
@@ -358,7 +301,6 @@ async function sendToTokens(tokens, { title, body, channel = CHANNELS.SYSTEM, da
   let sent = 0;
   let failed = 0;
 
-  // FCM v1 has no multicast; send sequentially with bounded concurrency.
   const CONCURRENCY = 5;
   for (let i = 0; i < unique.length; i += CONCURRENCY) {
     const slice = unique.slice(i, i + CONCURRENCY);
@@ -367,8 +309,7 @@ async function sendToTokens(tokens, { title, body, channel = CHANNELS.SYSTEM, da
         await axios.post(url, {
           message: {
             token,
-            // notification block lets the OS render even when the app is killed;
-            // data block lets the app route to the correct native screen.
+            
             notification: { title: safeData.title, body: safeData.body },
             android: {
               priority: 'high',
@@ -388,7 +329,7 @@ async function sendToTokens(tokens, { title, body, channel = CHANNELS.SYSTEM, da
         const code = e?.response?.data?.error?.details?.[0]?.errorCode
           || e?.response?.data?.error?.status
           || '';
-        // UNREGISTERED / NOT_FOUND / INVALID_ARGUMENT on token → dead token.
+        
         if (/UNREGISTERED|NOT_FOUND|INVALID_ARGUMENT/i.test(String(code))) {
           deactivateToken(token, String(code));
         } else {
@@ -402,10 +343,7 @@ async function sendToTokens(tokens, { title, body, channel = CHANNELS.SYSTEM, da
   return { attempted: unique.length, sent, failed, configured: true };
 }
 
-/**
- * Send to every active device of one identity.
- * Never throws — callers treat push as best-effort.
- */
+/** Send to every active device of one identity. */
 async function sendToUser(userId, role, message) {
   try {
     if (!CANONICAL_ROLES.includes(role)) return { attempted: 0, sent: 0, failed: 0 };
@@ -438,20 +376,12 @@ async function sendToRole(role, message) {
   }
 }
 
-/**
- * Fire-and-forget wrapper. Use this from business-transaction paths so a
- * push failure can never propagate into the transaction's error handling.
- */
+/** Fire-and-forget wrapper. Use this from business-transaction paths so a */
 function notifyAsync(fn) {
   Promise.resolve()
     .then(fn)
     .catch(e => logger.warn(`[push] async notify error: ${e.message}`));
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Domain event helpers — the ONLY payload shapes the app needs to understand.
-// Each maps to a native deep-link target in the Android app.
-// ─────────────────────────────────────────────────────────────────────────────
 
 const EVENTS = Object.freeze({
   PAYMENT_SUCCESS: 'payment_success',
@@ -474,7 +404,7 @@ function notifyPaymentSuccess({ customerId, invoiceId, periodText, amountText })
       data: { event: EVENTS.PAYMENT_SUCCESS, invoiceId }
     };
     await sendToUser(customerId, 'pelanggan', msg);
-    // Operational signal to staff — no personal details in payload.
+    
     const staffMsg = {
       channel: CHANNELS.BILLING,
       title: 'Pembayaran diterima',

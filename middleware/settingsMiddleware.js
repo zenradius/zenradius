@@ -1,7 +1,4 @@
-/**
- * Settings Middleware
- * Untuk access control & validation pada settings endpoints
- */
+/** Settings Middleware */
 const { logger } = require('../config/logger');
 const { validateSettings } = require('../config/settingsValidator');
 const { getMaskedSettings } = require('../config/settingsEncryption');
@@ -27,7 +24,6 @@ function validateSettingsMiddleware(req, res, next) {
   try {
     let settings = req.body;
 
-    // Normalize boolean fields dari form submission
     const booleanFields = [
       'whatsapp_enabled',
       'telegram_enabled',
@@ -50,7 +46,6 @@ function validateSettingsMiddleware(req, res, next) {
       }
     });
 
-    // Trim string fields yang sensitive terhadap whitespace
     const stringTrimFields = ['office_lat', 'office_lng', 'company_phone', 'company_email'];
     stringTrimFields.forEach(field => {
       if (field in settings && typeof settings[field] === 'string') {
@@ -58,7 +53,6 @@ function validateSettingsMiddleware(req, res, next) {
       }
     });
 
-    // Validate
     const validation = validateSettings(settings);
     if (!validation.valid) {
       return res.status(400).json({
@@ -67,7 +61,6 @@ function validateSettingsMiddleware(req, res, next) {
       });
     }
 
-    // Attach validated settings ke request
     req.validatedSettings = settings;
     next();
   } catch (error) {
@@ -82,7 +75,7 @@ function validateSettingsMiddleware(req, res, next) {
  * Mask sensitive values dalam response
  */
 function maskSensitiveValues(req, res, next) {
-  // Override res.json untuk mask sensitive values
+  
   const originalJson = res.json.bind(res);
 
   res.json = function(data) {
@@ -118,7 +111,7 @@ function logSettingsAccess(req, res, next) {
  * Rate limiting untuk settings endpoints
  */
 function rateLimitSettings(req, res, next) {
-  // Simple rate limiting: max 10 requests per minute per IP
+  
   const key = `settings:${req.ip}`;
   const store = req.app.locals.rateLimitStore || new Map();
 

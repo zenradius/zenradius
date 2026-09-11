@@ -1,6 +1,4 @@
-/**
- * Route Admin Dashboard — termasuk Billing System
- */
+/** Route Admin Dashboard — termasuk Billing System */
 const express = require('express');
 const router = express.Router();
 const { getSetting, getSettings, saveSettings, getNowLocal, getCurrentDateInTimezone, getCurrentTimeInfo, getNowLocalISO, formatDateLocal, formatTimeLocal, parseDateInTimezone } = require('../config/settingsManager');
@@ -26,18 +24,17 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const qrisUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 
-// Promo slides upload storage
 const promoSlidesStorage = multer.diskStorage({
   destination: function(req, file, cb) {
     const uploadDir = path.resolve(__dirname, '..', 'public', 'uploads', 'promo_slides');
-    // Ensure directory exists
+    
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
   },
   filename: function(req, file, cb) {
-    // Generate unique filename
+    
     const ext = path.extname(file.originalname);
     const name = 'slide-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + ext;
     cb(null, name);
@@ -46,7 +43,7 @@ const promoSlidesStorage = multer.diskStorage({
 
 const promoUpload = multer({
   storage: promoSlidesStorage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max
+  limits: { fileSize: 2 * 1024 * 1024 }, 
   fileFilter: function(req, file, cb) {
     const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (allowedMimes.includes(file.mimetype)) {
@@ -167,7 +164,6 @@ async function invokeRouterOsMenuCommand(menu, command, args) {
   return null;
 }
 
-// ─── AUTH ──────────────────────────────────────────────────────────────────
 function getSessionRole(session) {
   const role = String(session?.userRole || '').trim().toLowerCase();
   if (role === 'admin' || role === 'cashier') return role;
@@ -179,7 +175,7 @@ function getSessionRole(session) {
 function hasFeaturePermission(session, featureKey) {
   const role = getSessionRole(session);
   if (!role) return false;
-  // Admin full-access: semua fitur diizinkan. Kasir tetap dibatasi via isMenuAllowedForSession.
+  
   if (role === 'admin') return true;
   return false;
 }
@@ -196,7 +192,7 @@ function requireAdmin(req, res, next) {
 function requireAdminSession(req, res, next) {
   const role = getSessionRole(req.session);
   if (role === 'admin' || role === 'cashier') {
-    // Phase 3: verifikasi tambahan terhadap canonical role bila sudah tersedia di session.
+    
     const canonical = req.session?.role;
     if (canonical && role === 'admin' && canonical !== 'admin') return res.redirect('/admin/login');
     if (canonical && role === 'cashier' && canonical !== 'customer_service') return res.redirect('/admin/login');
@@ -304,7 +300,6 @@ async function sendPaymentSuccessWA(customerPhone, customerName, periodText, amo
   }
 }
 
-// Middleware strictly for Admin
 function restrictToAdmin(req, res, next) {
   const role = getSessionRole(req.session);
   if (role === 'admin') {
@@ -356,9 +351,6 @@ function popUpdateLog(req) {
   return l || '';
 }
 
-// PHASE 10A: proses-lokal lock untuk mencegah dua eksekusi /update/run
-// berjalan bersamaan. Cukup untuk single-process (PM2 fork/exec biasa);
-// didokumentasikan sebagai gap untuk multi-instance di Phase 10B jika perlu.
 let updateRunLock = false;
 
 function readTextFileSafe(filePath) {
@@ -459,9 +451,6 @@ function getUpdateInfo(repoRoot) {
     (info.localCommit !== '-' && info.remoteCommit !== '-' && info.localCommit !== info.remoteCommit)
   );
 
-  // Changelog: daftar commit yang ada di origin/<branch> tapi belum ada di
-  // HEAD lokal — supaya admin bisa melihat "apa saja yang diperbarui" sebelum
-  // menekan tombol Update Sekarang. Dibatasi 30 entri terbaru agar ringkas.
   info.changelog = [];
   if (info.needsUpdate && info.localCommit !== '-' && info.remoteCommit !== '-') {
     const logFormat = '%h|%ad|%an|%s';
@@ -483,7 +472,6 @@ function getUpdateInfo(repoRoot) {
   return info;
 }
 
-
 function genCode(len, charset) {
   const n = Math.max(4, Math.min(16, Number(len) || 6));
   let chars = '0123456789';
@@ -493,7 +481,7 @@ function genCode(len, charset) {
   for (let i = 0; i < n; i++) {
     out += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  // Avoid starting with 0 if it's only numbers
+  
   if (charset === 'numbers' && out[0] === '0') out = '1' + out.slice(1);
   return out;
 }
@@ -591,13 +579,10 @@ async function createVoucherBatchAsync(batchId) {
   else setBatchStatus.run('failed', batchId);
 }
 
-// Global locals middleware
 router.use((req, res, next) => {
   res.locals.session = req.session;
   res.locals.isMasterAdmin = isMasterAdmin(req);
 
-  // Sidebar menu visibility dikontrol oleh RBAC (role & sidebar menu config),
-  // bukan oleh sistem lisensi.
   res.locals.sidebarSections = sidebarMenuSvc.getSidebarSections(req.session);
   res.locals.sidebarBottomNavItems = sidebarMenuSvc.getBottomNavItems(req.session);
   res.locals.settings = getSettings();
@@ -610,7 +595,6 @@ router.use((req, res, next) => {
   next();
 });
 
-// Phase 15: fail-closed jika modul rate limiter tidak dapat dimuat.
 let loginRateLimiter = (req, res, next) => res.status(503).send('Layanan login sementara tidak tersedia.');
 try {
   const rlMod = require('../middleware/rateLimiter');
@@ -619,7 +603,6 @@ try {
   }
 } catch (e) {}
 
-// ─── AUTH ROUTES ───────────────────────────────────────────────────────────
 router.get('/login', (req, res) => {
   if (req.session?.isAdmin || req.session?.isCashier) return res.redirect('/admin');
   res.render('admin/login', { title: 'Admin Login', company: company(), error: null, loginAction: '/admin/login' });
@@ -632,9 +615,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   const masterUsername = String(process.env.MASTER_ADMIN_USERNAME || '').trim();
   const masterPassword = String(process.env.MASTER_ADMIN_PASSWORD || '');
   const configuredUsername = String(getSetting('admin_username', '') || '').trim() || 'admin';
-  // Phase 12: JANGAN memakai fallback password hardcoded. Bila admin_password
-  // belum dikonfigurasi, login admin bawaan HARUS fail-closed, agar instalasi
-  // yang belum di-setup tidak bisa dimasuki dengan kredensial default publik.
+  
   const configuredPassword = String(getSetting('admin_password', '') || '');
   const localAdminEnabled = configuredPassword.length > 0;
   const isMasterLogin = Boolean(masterUsername && masterPassword && username === masterUsername && password === masterPassword);
@@ -646,7 +627,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
       }
       req.session.isAdmin = true;
       req.session.userRole = "admin";
-      req.session.role = "admin"; // canonical RBAC role (Phase 3)
+      req.session.role = "admin"; 
       req.session.adminUser = username;
       req.session.isMasterAdmin = isMasterLogin;
       req.session.save((err) => {
@@ -659,7 +640,6 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
     });
   }
 
-  // Check Cashier
   const cashier = adminSvc.authenticateCashier(username, password);
   if (cashier) {
     return req.session.regenerate((err) => {
@@ -669,7 +649,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
       }
       req.session.isCashier = true;
       req.session.userRole = "cashier";
-      req.session.role = "customer_service"; // canonical RBAC role (Phase 3)
+      req.session.role = "customer_service"; 
       req.session.cashierId = cashier.id;
       req.session.cashierName = cashier.name;
       req.session.cashierUsername = cashier.username;
@@ -690,7 +670,6 @@ router.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
 
-// ─── ADMIN PROFILE & SETTINGS ──────────────────────────────────────────────
 router.get('/profile', requireAdminSession, (req, res) => {
   req.session._msg = { type: 'info', text: 'Fitur profil admin telah dinonaktifkan.' };
   return res.redirect('/admin');
@@ -706,7 +685,6 @@ router.post('/profile/topup', requireAdminSession, express.urlencoded({ extended
   return res.redirect('/admin');
 });
 
-// ─── OLT MANAGEMENT ────────────────────────────────────────────────────────
 router.get('/olts', requireAdminSession, async (req, res) => {
   const olts = oltSvc.getAllOlts();
   
@@ -811,7 +789,6 @@ router.post('/olts/:id/delete', requireAdminSession, restrictToAdmin, (req, res)
   res.redirect('/admin/olts');
 });
 
-// ─── ODP & MAP MANAGEMENT ───────────────────────────────────────────────────
 router.get('/map', requireAdminSession, requireSidebarMenuAccess('map'), (req, res) => {
   const customers = customerSvc.getAllCustomers();
   const odps = odpSvc.getAllOdps();
@@ -1036,7 +1013,6 @@ router.post('/odps/:id/delete', requireAdminSession, restrictToAdmin, (req, res)
   res.redirect('/admin/map');
 });
 
-// --- TECHNICIAN MANAGEMENT ---
 router.get('/technicians', requireAdminSession, requireSidebarMenuAccess('technicians'), restrictToAdmin, (req, res) => {
   const technicians = adminSvc.getAllTechnicians();
   res.render('admin/technicians', { title: 'Manajemen Teknisi', company: company(), activePage: 'technicians', technicians, msg: flashMsg(req) });
@@ -1068,7 +1044,6 @@ router.post('/technicians/:id/delete', requireAdminSession, restrictToAdmin, (re
   res.redirect('/admin/technicians');
 });
 
-// --- CASHIER MANAGEMENT ---
 router.get('/cashiers', requireAdminSession, requireSidebarMenuAccess('cashiers'), restrictToAdmin, (req, res) => {
   const cashiers = adminSvc.getAllCashiers();
   res.render('admin/cashiers', { title: 'Manajemen Kasir', company: company(), activePage: 'cashiers', cashiers, msg: flashMsg(req) });
@@ -1100,7 +1075,6 @@ router.post('/cashiers/:id/delete', requireAdminSession, restrictToAdmin, (req, 
   res.redirect('/admin/cashiers');
 });
 
-// --- COLLECTOR MANAGEMENT ---
 router.get('/collectors', requireAdminSession, requireSidebarMenuAccess('collectors'), restrictToAdmin, (req, res) => {
   const collectors = adminSvc.getAllCollectors();
   const masterAreas = areaSvc.getAllAreas();
@@ -1133,9 +1107,6 @@ router.post('/collectors/:id/delete', requireAdminSession, restrictToAdmin, (req
   res.redirect('/admin/collectors');
 });
 
-// --- CENTRALIZED USER MANAGEMENT (Phase 5) ---
-// Admin-only. Authorization SATU-SATUNYA via middleware/authz.js (requireAuth + requireRole).
-// Tidak membuat generic `users` table — aggregasi read-only di atas tabel existing.
 router.get('/users', requireAuth, requireRole('admin', { redirectTo: '/admin' }), requireSidebarMenuAccess('user_management'), (req, res) => {
   const q = String(req.query.q || '').trim().toLowerCase();
   const roleFilter = String(req.query.role || '').trim().toLowerCase();
@@ -1209,7 +1180,6 @@ router.post('/users/:source/:id/reset-password', requireAuth, requireRole('admin
   res.redirect('/admin/users');
 });
 
-// --- AREA MANAGEMENT ---
 router.get('/areas', requireAdminSession, requireSidebarMenuAccess('areas'), (req, res) => {
   const areas = areaSvc.getAllAreas();  res.render('admin/areas', { title: 'Area Layanan', company: company(), activePage: 'areas', areas, msg: flashMsg(req) });
 });
@@ -1362,7 +1332,7 @@ router.post('/collector-payments/:id/reject', requireAdminSession, express.urlen
   }
   res.redirect('back');
 });
-// ─── CASHIER ATTENDANCE ──────────────────────────────────────────────────────
+
 router.get('/cashiers/attendance', requireAdminSession, requireSidebarMenuAccess('cashier_attendance'), (req, res) => {
   try {
     const cashierId = req.session.cashierId || null;
@@ -1474,7 +1444,6 @@ router.post('/cashiers/attendance/checkout', requireAdminSession, uploadAttendan
     res.json({ success: false, message: 'Gagal check-out: ' + e.message });
   }
 });
-
 
 router.get('/cashiers/reports', requireAdminSession, requireSidebarMenuAccess('cashiers_reports'), (req, res) => {
   const allCashiers = adminSvc.getAllCashiers();
@@ -1621,7 +1590,6 @@ router.get('/cashiers/reports', requireAdminSession, requireSidebarMenuAccess('c
   });
 });
 
-// --- AGENT MANAGEMENT ---
 router.get('/agents', requireAdminSession, requireSidebarMenuAccess('agents'), (req, res) => {
   const agents = agentSvc.getAllAgents();
   const routers = mikrotikService.getAllRouters();
@@ -1723,12 +1691,11 @@ router.post('/api/agents/:id/prices/:priceId/delete', requireAdmin, restrictToAd
   }
 });
 
-// ─── DASHBOARD ─────────────────────────────────────────────────────────────
 router.get('/', requireAdminSession, requireSidebarMenuAccess('dashboard'), async (req, res) => {
   try {
     const billing = billingSvc.getDashboardStats();
     const custStats = customerSvc.getCustomerStats();
-    const settings = getSettings(); // Get current settings
+    const settings = getSettings(); 
     res.render('admin/dashboard', {
       title: 'Dashboard', company: company(), version: '2.0.0',
       activePage: 'dashboard', billing, custStats, settings
@@ -1739,7 +1706,6 @@ router.get('/', requireAdminSession, requireSidebarMenuAccess('dashboard'), asyn
   }
 });
 
-// ─── DEVICE ROUTES (existing) ───────────────────────────────────────────────
 router.get('/devices', requireAdminSession, (req, res) => {
   const settings = getSettings();
   res.render('admin/dashboard', { title: 'Monitoring ONU', company: company(), version: '2.0.0', activePage: 'devices', billing: null, custStats: null, settings });
@@ -1750,7 +1716,6 @@ router.get('/bulk', requireAdminSession, (req, res) => {
   res.render('admin/dashboard', { title: 'Konfigurasi Massal', company: company(), version: '2.0.0', activePage: 'bulk', billing: null, custStats: null, settings });
 });
 
-// ─── CUSTOMERS ─────────────────────────────────────────────────────────────
 router.get('/customers', requireAdminSession, requireSidebarMenuAccess('customers'), async (req, res) => {
   const { search = '', status: filterStatus = '', area: filterArea = '' } = req.query;
   const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
@@ -1806,7 +1771,6 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
       
       if (!username) throw new Error('PPPoE Username tidak boleh kosong');
       
-      // Router validation - required only if multi-router mode is active
       const effectiveRouterId = multiRouterMode ? routerId : (routerId || customerSvc.getEffectiveRouterId(null));
       if (!effectiveRouterId || effectiveRouterId <= 0) {
         if (multiRouterMode) {
@@ -1819,7 +1783,6 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
       const existing = db.prepare('SELECT id, name FROM customers WHERE router_id IS ? AND pppoe_username = ? LIMIT 1').get(effectiveRouterId, username);
       if (existing) throw new Error(`PPPoE Username sudah dipakai pelanggan lain: ${existing.name}`);
 
-      // Only validate against MikroTik if password is not provided (meaning it's from MikroTik list)
       if (!password) {
         let conn = null;
         try {
@@ -1834,7 +1797,6 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
         }
       }
       
-      // Set effective router ID
       req.body.router_id = effectiveRouterId;
     }
 
@@ -1844,7 +1806,6 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
       req.body.static_ip = staticIp;
       if (!staticIp) throw new Error('Static IP tidak boleh kosong');
       
-      // Router validation - required only if multi-router mode is active
       const effectiveRouterId = multiRouterMode ? routerId : (routerId || customerSvc.getEffectiveRouterId(null));
       if (!effectiveRouterId || effectiveRouterId <= 0) {
         if (multiRouterMode) {
@@ -1857,7 +1818,6 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
       const existing = db.prepare('SELECT id, name FROM customers WHERE router_id IS ? AND static_ip = ? LIMIT 1').get(effectiveRouterId, staticIp);
       if (existing) throw new Error(`Static IP sudah dipakai pelanggan lain: ${existing.name}`);
       
-      // Set effective router ID
       req.body.router_id = effectiveRouterId;
     }
 
@@ -1867,7 +1827,6 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
       req.body.hotspot_username = username;
       if (!username) throw new Error('Hotspot Username tidak boleh kosong');
       
-      // Router validation - required only if multi-router mode is active
       const effectiveRouterId = multiRouterMode ? routerId : (routerId || customerSvc.getEffectiveRouterId(null));
       if (!effectiveRouterId || effectiveRouterId <= 0) {
         if (multiRouterMode) {
@@ -1895,34 +1854,21 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
       const ok = Array.isArray(profs) && profs.some(p => String(p?.name || '').trim() === profile);
       if (!ok) throw new Error(`Hotspot User Profile "${profile}" tidak ditemukan di MikroTik`);
       
-      // Set effective router ID
       req.body.router_id = effectiveRouterId;
     }
 
     const radiusEnabled = getSetting('radius_enabled', '0') === '1';
-    // Ketika RADIUS offline, paksa is_radius = 0 (MikroTik mode) agar secret SELALU dibuat ke MikroTik
+    
     const isRadius = radiusEnabled ? (req.body.is_radius !== undefined ? (Number(req.body.is_radius) === 1 ? 1 : 0) : 0) : 0;
     req.body.is_radius = isRadius;
 
     customerSvc.createCustomer(req.body);
     
-    // ========================================================================
-    // SYNC KE MIKROTIK - PENTING: SECRET TIDAK PERNAH DIHAPUS!
-    // ========================================================================
-    // Logika:
-    // - Jika RADIUS OFFLINE: SELALU create/update secret ke MikroTik
-    // - Jika RADIUS AKTIF tapi is_radius=0: Hybrid mode, tetap ke MikroTik
-    // - Jika RADIUS AKTIF dan is_radius=1: Full RADIUS mode, skip MikroTik
-    // 
-    // CATATAN: Kode ini TIDAK PERNAH menghapus secret dari MikroTik!
-    //          Hanya CREATE (jika belum ada) atau UPDATE PROFILE (jika sudah ada)
-    // ========================================================================
     const shouldSyncToMikrotik = !radiusEnabled || !isRadius;
     if (connectionType === 'pppoe' && req.body.pppoe_username && shouldSyncToMikrotik) {
       const password = String(req.body.pppoe_password || '').trim();
       const remoteAddress = String(req.body.pppoe_remote_address || '').trim();
       
-      // If manual input (password provided), create PPPoE secret in MikroTik
       if (password) {
         let targetProfile = '';
         if (req.body.status === 'suspended') {
@@ -1947,7 +1893,7 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
           }
         }
       } else {
-        // If from MikroTik list (no password input), just update profile
+        
         let targetProfile = '';
         if (req.body.status === 'suspended') {
           targetProfile = req.body.isolir_profile || 'isolir';
@@ -2010,7 +1956,6 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
       req.body.pppoe_username = username;
       if (!username) throw new Error('PPPoE Username tidak boleh kosong');
       
-      // Router validation - required only if multi-router mode is active
       const effectiveRouterId = multiRouterMode ? routerId : (routerId || customerSvc.getEffectiveRouterId(null));
       if (!effectiveRouterId || effectiveRouterId <= 0) {
         if (multiRouterMode) {
@@ -2035,7 +1980,6 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
         if (conn && conn.api) conn.api.close();
       }
       
-      // Set effective router ID
       req.body.router_id = effectiveRouterId;
     }
 
@@ -2045,7 +1989,6 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
       req.body.static_ip = staticIp;
       if (!staticIp) throw new Error('Static IP tidak boleh kosong');
       
-      // Router validation - required only if multi-router mode is active
       const effectiveRouterId = multiRouterMode ? routerId : (routerId || customerSvc.getEffectiveRouterId(null));
       if (!effectiveRouterId || effectiveRouterId <= 0) {
         if (multiRouterMode) {
@@ -2058,7 +2001,6 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
       const existing = db.prepare('SELECT id, name FROM customers WHERE router_id IS ? AND static_ip = ? AND id != ? LIMIT 1').get(effectiveRouterId, staticIp, customerId);
       if (existing) throw new Error(`Static IP sudah dipakai pelanggan lain: ${existing.name}`);
       
-      // Set effective router ID
       req.body.router_id = effectiveRouterId;
     }
 
@@ -2068,7 +2010,6 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
       req.body.hotspot_username = username;
       if (!username) throw new Error('Hotspot Username tidak boleh kosong');
       
-      // Router validation - required only if multi-router mode is active
       const effectiveRouterId = multiRouterMode ? routerId : (routerId || customerSvc.getEffectiveRouterId(null));
       if (!effectiveRouterId || effectiveRouterId <= 0) {
         if (multiRouterMode) {
@@ -2096,35 +2037,18 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
       const ok = Array.isArray(profs) && profs.some(p => String(p?.name || '').trim() === profile);
       if (!ok) throw new Error(`Hotspot User Profile "${profile}" tidak ditemukan di MikroTik`);
       
-      // Set effective router ID
       req.body.router_id = effectiveRouterId;
     }
 
     const radiusEnabled = getSetting('radius_enabled', '0') === '1';
-    // Ketika RADIUS offline, paksa is_radius = 0 (MikroTik mode) agar secret SELALU ada di MikroTik
+    
     const isRadius = radiusEnabled ? (req.body.is_radius !== undefined ? (Number(req.body.is_radius) === 1 ? 1 : 0) : 0) : 0;
     req.body.is_radius = isRadius;
 
-    // Get old customer data to detect username changes
     const oldCustomer = customerSvc.getCustomerById(customerId);
     
     customerSvc.updateCustomer(req.params.id, req.body);
     
-    // ========================================================================
-    // SYNC KE MIKROTIK SAAT EDIT - PENTING: SECRET TIDAK PERNAH DIHAPUS!
-    // ========================================================================
-    // Logika:
-    // - Jika RADIUS OFFLINE: SELALU sync ke MikroTik
-    // - Jika RADIUS AKTIF tapi is_radius=0: Hybrid mode, tetap sync ke MikroTik  
-    // - Jika RADIUS AKTIF dan is_radius=1: Full RADIUS mode, skip MikroTik
-    //
-    // Proses:
-    // 1. Cek apakah secret sudah ada di MikroTik
-    // 2. Jika sudah ada: UPDATE PROFILE saja (TIDAK HAPUS!)
-    // 3. Jika belum ada: CREATE secret baru (jika ada password)
-    // 
-    // CATATAN: Kode ini TIDAK PERNAH menghapus secret dari MikroTik!
-    // ========================================================================
     const shouldSyncToMikrotik = !radiusEnabled || !isRadius;
     if (connectionType === 'pppoe' && req.body.pppoe_username && shouldSyncToMikrotik) {
       try {
@@ -2142,16 +2066,16 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
         
         if (targetProfile) {
           try {
-            // Cek apakah secret sudah ada di MikroTik
+            
             const secrets = await mikrotikService.getPppoeSecrets(req.body.router_id);
             const existingSecret = secrets.find(s => String(s.name || '').trim() === newUsername);
             
             if (existingSecret) {
-              // Secret sudah ada, hanya update profile
+              
               await mikrotikService.setPppoeProfile(newUsername, targetProfile, req.body.router_id);
               logger.info(`[Edit Customer] Updated PPPoE profile for "${newUsername}" to "${targetProfile}"`);
             } else if (newPassword) {
-              // Secret belum ada DAN ada password, create secret baru ke MikroTik
+              
               await mikrotikService.createPppoeSecret({
                 username: newUsername,
                 password: newPassword,
@@ -2178,7 +2102,6 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
         const oldRouterIdForOldUser = oldCustomer ? oldCustomer.router_id : null;
         const oldEffectiveRouterId = oldCustomer ? customerSvc.getEffectiveRouterId(oldRouterIdForOldUser) : null;
         
-        // If username changed, handle old one first
         if (oldUsername && oldUsername !== newUsername && oldEffectiveRouterId) {
           try {
             logger.info(`[Update] Hotspot username changed: "${oldUsername}" → "${newUsername}" for customer ${customerId}`);
@@ -2193,7 +2116,6 @@ router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ e
           }
         }
         
-        // Now handle new username
         const disabled = String(req.body.status || 'active').toLowerCase() !== 'active';
         await mikrotikService.upsertHotspotUser({
           username: newUsername,
@@ -2254,7 +2176,6 @@ router.post('/customers/:id/disconnect', requireAdminSession, async (req, res) =
   res.redirect('/admin/customers');
 });
 
-// ─── EXPORT/IMPORT CUSTOMERS ──────────────────────────────────────
 router.get('/customers/export', requireAdminSession, (req, res) => {
   try {
     const customers = customerSvc.getAllCustomers();
@@ -2312,7 +2233,7 @@ router.post('/customers/import', requireAdminSession, upload.single('file'), asy
     let count = 0;
 
     for (let row of rows) {
-      // Normalize row keys (trim whitespace)
+      
       const cleanRow = {};
       Object.keys(row).forEach(key => {
         cleanRow[key.trim()] = row[key];
@@ -2330,11 +2251,9 @@ router.post('/customers/import', requireAdminSession, upload.single('file'), asy
       const odpName = cleanRow['ODP'] || cleanRow['odp'] || cleanRow['ODP Name'];
       const odp = odps.find(o => o.name === odpName);
       
-      // ✅ Handle Router field
       const routerName = cleanRow['Router'] || cleanRow['router'] || cleanRow['Router Name'];
       const router = routers.find(r => r.name === routerName);
       
-      // ✅ NEW: Handle Connection Type
       const connType = String(cleanRow['Tipe Koneksi'] || cleanRow['connection_type'] || cleanRow['Connection Type'] || 'pppoe').trim().toLowerCase() || 'pppoe';
       
       const data = {
@@ -2506,7 +2425,6 @@ router.post('/customers/:id/billing/pay', requireAdminSession, express.urlencode
   res.redirect('back');
 });
 
-// ─── PACKAGES ──────────────────────────────────────────────────────────────
 router.get('/packages', requireAdminSession, requireSidebarMenuAccess('packages'), (req, res) => {
   const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
   const routers = mikrotikService.getAllRouters();
@@ -2547,7 +2465,6 @@ router.post('/packages/:id/delete', requireAdminSession, (req, res) => {
   res.redirect('/admin/packages');
 });
 
-// ─── VOUCHER PACKAGES (ON-DEMAND REAL-TIME CONFIGURATION) ────────────────────
 router.get('/vouchers/packages', requireAdminSession, requireSidebarMenuAccess('voucher_packages'), (req, res) => {
   const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
   const routers = db.prepare('SELECT id, name FROM routers WHERE is_active = 1').all();
@@ -2587,10 +2504,8 @@ router.post('/api/vouchers/packages', requireAdminSession, express.json(), (req,
   try {
     const { router_id, profile_name, price, validity, prefix, code_length, charset, is_active } = req.body;
     
-    // VALIDATION: router_id is REQUIRED for voucher packages
     if (!router_id || Number(router_id) <= 0) return res.status(400).json({ ok: false, error: 'Router harus dipilih' });
     
-    // Verify router exists
     const router = db.prepare('SELECT id FROM routers WHERE id = ? LIMIT 1').get(Number(router_id));
     if (!router) return res.status(400).json({ ok: false, error: 'Router tidak ditemukan di database' });
     
@@ -2632,7 +2547,6 @@ router.post('/api/vouchers/packages/:id/delete', requireAdminSession, (req, res)
   }
 });
 
-// ─── BILLING ───────────────────────────────────────────────────────────────
 router.get('/billing', requireAdminSession, requireSidebarMenuAccess('billing'), (req, res) => {
   const timeInfo = getCurrentTimeInfo();
   const { month: filterMonth, year: filterYear = timeInfo.year, status: filterStatus = 'all', search = '' } = req.query;
@@ -2891,7 +2805,6 @@ router.post('/billing/:id/pay', requireAdminSession, express.urlencoded({ extend
     const wasPaid = String(inv.status || '').toLowerCase() === 'paid';
     billingSvc.markAsPaid(req.params.id, paidBy, req.body.notes);
     
-    // Check if customer is currently suspended and has no more unpaid invoices
     const customer = customerSvc.getCustomerById(inv.customer_id);
     if (!wasPaid && customer && customer.phone) {
       await sendPaymentSuccessWA(
@@ -3214,7 +3127,6 @@ router.post('/billing/:id/whatsapp', requireAdminSession, async (req, res) => {
       return await decodeQrisPayloadFromUploadedQr();
     };
 
-    // Generate Link Login
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     const host = req.get('host');
     let baseUrl = String(getSetting('app_url', '') || `${protocol}://${host}`).replace(/\/+$/, '');
@@ -3302,7 +3214,6 @@ router.post('/billing/:id/delete', requireAdminSession, (req, res) => {
   res.redirect('back');
 });
 
-// ─── TICKETS ───────────────────────────────────────────────────────────────
 const ticketSvc = require('../services/ticketService');
 
 router.get('/tickets', requireAdminSession, requireSidebarMenuAccess('tickets'), (req, res) => {
@@ -3339,7 +3250,6 @@ router.post('/tickets/create', requireAdminSession, express.urlencoded({ extende
     const ticketId = result.lastInsertRowid;
     req.session._msg = { type: 'success', text: 'Tiket/tugas baru berhasil dibuat!' };
 
-    // --- WHATSAPP NOTIFICATION FOR NEW ADMIN CREATED TICKET ---
     try {
       const settings = getSettings();
       if (settings.whatsapp_enabled) {
@@ -3361,7 +3271,6 @@ router.post('/tickets/create', requireAdminSession, express.urlencoded({ extende
                      `💬 *Detail Pesan:* ${message}\n\n` +
                      `Silakan cek di portal teknisi/admin untuk menindaklanjuti.`;
 
-        // Send to assigned technician or broadcast to all active technicians if not assigned
         if (tech && tech.phone) {
           let digits = String(tech.phone).replace(/\D/g, '');
           if (digits.startsWith('0')) digits = '62' + digits.slice(1);
@@ -3394,7 +3303,6 @@ router.post('/tickets/:id/update', requireAdminSession, express.urlencoded({ ext
     ticketSvc.updateTicketStatus(ticketId, status, techId);
     req.session._msg = { type: 'success', text: 'Status & penugasan keluhan berhasil diperbarui.' };
 
-    // Phase 17 — mobile push signal (customer status update + technician assignment).
     try {
       const after = ticketSvc.getTicketById(ticketId);
       if (after) {
@@ -3406,7 +3314,6 @@ router.post('/tickets/:id/update', requireAdminSession, express.urlencoded({ ext
       }
     } catch (_) {}
 
-    // --- WHATSAPP NOTIFICATION IF TECHNICIAN IS ASSIGNED / CHANGED ---
     if (techId && (!oldTicket || Number(oldTicket.technician_id) !== techId)) {
       try {
         const settings = getSettings();
@@ -3437,7 +3344,6 @@ router.post('/tickets/:id/update', requireAdminSession, express.urlencoded({ ext
       }
     }
 
-    // --- WHATSAPP NOTIFICATION FOR RESOLVED TICKET (BY ADMIN) ---
     if (status === 'resolved') {
       try {
         const settings = getSettings();
@@ -3453,12 +3359,10 @@ router.post('/tickets/:id/update', requireAdminSession, express.urlencoded({ ext
                          `🛠️ *Petugas:* Admin\n\n` +
                          `Keluhan Anda telah selesai dikerjakan. Terima kasih atas kesabarannya.`;
 
-            // Kirim ke Pelanggan
             if (ticket.customer_phone) {
               await sendWA(ticket.customer_phone, waMsg);
             }
 
-            // Kirim ke Admin Numbers
             if (settings.whatsapp_admin_numbers && settings.whatsapp_admin_numbers.length > 0) {
               const adminMsg = `✅ *LAPORAN TIKET SELESAI (OLEH ADMIN)*\n\n` +
                                `🎫 *ID Tiket:* #${ticket.id}\n` +
@@ -3481,8 +3385,7 @@ router.post('/tickets/:id/update', requireAdminSession, express.urlencoded({ ext
         console.error(`[AdminPortal] WA Notification Error: ${waErr.message}`);
       }
     }
-    // -------------------------------------------------------------
-
+    
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal update keluhan: ' + e.message };
   }
@@ -3499,7 +3402,6 @@ router.post('/tickets/:id/delete', requireAdminSession, (req, res) => {
   res.redirect('back');
 });
 
-// ─── REPORTS ───────────────────────────────────────────────────────────────
 router.get('/reports', requireAdminSession, requireSidebarMenuAccess('reports'), (req, res) => {
   const filterYear = parseInt(req.query.year) || new Date().getFullYear();
   const now = new Date();
@@ -3602,7 +3504,6 @@ router.get('/reports/print', requireAdminSession, requireSidebarMenuAccess('repo
   const nowYearStr = String(new Date().getFullYear());
   const nowMonthStr = String(new Date().getMonth() + 1).padStart(2, '0');
 
-  // Kalkulasi sama seperti laporan utama
   const revenueYearDirect = Number(db.prepare("SELECT SUM(amount) as t FROM invoices WHERE status='paid' AND strftime('%Y', paid_at) = ? AND (paid_by_name IS NULL OR paid_by_name NOT LIKE 'Agent %')").get(yStr)?.t || 0);
   const agentDepositYear = Number(db.prepare("SELECT SUM(amount_buy) as t FROM agent_transactions WHERE type='topup' AND strftime('%Y', created_at) = ?").get(yStr)?.t || 0);
   const customCashInYear = Number(db.prepare("SELECT SUM(amount) as t FROM cash_in WHERE strftime('%Y', date) = ?").get(yStr)?.t || 0);
@@ -3635,7 +3536,6 @@ router.get('/reports/export-csv', requireAdminSession, requireSidebarMenuAccess(
   const filterYear = parseInt(req.query.year) || new Date().getFullYear();
   const yStr = String(filterYear);
 
-  // Ambil data detail pengeluaran & pemasukan
   const expenses = db.prepare("SELECT date, category, amount, description FROM expenses WHERE strftime('%Y', date) = ? ORDER BY date ASC").all(yStr);
   const cashIn = db.prepare("SELECT date, category, amount, description FROM cash_in WHERE strftime('%Y', date) = ? ORDER BY date ASC").all(yStr);
 
@@ -3656,7 +3556,6 @@ router.get('/reports/export-csv', requireAdminSession, requireSidebarMenuAccess(
   res.send(csvContent);
 });
 
-// ─── SETTINGS ──────────────────────────────────────────────────────────────
 router.get('/sidebar-settings', requireAdminSession, (req, res) => {
   res.render('admin/sidebar_settings', {
     title: 'Pengaturan Sidebar',
@@ -3670,8 +3569,7 @@ router.get('/sidebar-settings', requireAdminSession, (req, res) => {
 
 router.post('/sidebar-settings', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
   try {
-    // Menu state adalah preferensi tampilan sidebar per instalasi, dikontrol
-    // penuh oleh Master Admin (RBAC).
+    
     const menuStates = sidebarMenuSvc.sanitizeMenuStates(req.body.menu_state || {}, {
       allowLocked: true,
       currentStates: sidebarMenuSvc.getStoredMenuStates()
@@ -4041,11 +3939,6 @@ router.get('/update', requireAdminSession, requireSidebarMenuAccess('update'), r
   });
 });
 
-// PHASE 10B/10C: official release channel (GitHub Release, signed,
-// checksummed). Read-only check — never downloads/installs/restarts/migrates.
-// Response is intentionally minimal: no raw metadata, no filesystem paths,
-// no secrets. Release notes (untrusted remote text) truncated; rendering is
-// escaped in the view (no raw HTML).
 router.get('/update/release/check', requireAdminSession, restrictToAdmin, async (req, res) => {
   try {
     const releaseMgr = require('../services/releaseManagerService');
@@ -4071,11 +3964,6 @@ router.get('/update/release/check', requireAdminSession, restrictToAdmin, async 
   }
 });
 
-// PHASE 10B/10C: official release channel install. Admin-only, centralized
-// authz via requireAdminSession + restrictToAdmin (canonical role, no
-// API-key/role bypass). Uses the same in-process updateRunLock as the legacy
-// git path so only one update mechanism can run at any time. Response never
-// includes credentials/secrets/filesystem internals.
 router.post('/update/release/run', requireAdminSession, restrictToAdmin, async (req, res) => {
   if (updateRunLock) {
     return res.status(409).json({ success: false, error: 'UPDATE_IN_PROGRESS', message: 'Update lain sedang berjalan. Silakan tunggu hingga selesai.' });
@@ -4085,8 +3973,7 @@ router.post('/update/release/run', requireAdminSession, restrictToAdmin, async (
     const releaseMgr = require('../services/releaseManagerService');
     const result = await releaseMgr.runUpdate();
     const actor = req.session?.adminUsername || req.session?.username || 'admin';
-    // Audit trail: actor, timestamp, from/target version, result, failure stage.
-    // Never logs secrets/tokens/headers.
+    
     logger.info(`[Release Update Audit] actor=${actor} time=${new Date().toISOString()} from=${result.fromVersion || '-'} to=${result.targetVersion || '-'} result=${result.ok ? 'success' : 'failed'} error=${result.error || ''}`);
     return res.status(result.ok ? 200 : 400).json({
       success: result.ok,
@@ -4109,8 +3996,7 @@ router.post('/update/release/run', requireAdminSession, restrictToAdmin, async (
 });
 
 router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
-  // PHASE 10A: update lock — cegah dua eksekusi update berjalan bersamaan
-  // (race condition pada git reset/clean/checkout, potensi korupsi working tree).
+  
   if (updateRunLock) {
     req.session._msg = { type: 'error', text: 'Update lain sedang berjalan. Silakan tunggu hingga selesai.' };
     return res.redirect('/admin/update');
@@ -4239,7 +4125,6 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
 
     restorePreservedFiles('post-update');
 
-    // Cek apakah package.json berubah sebelum install
     const pkgDiff = runCmd('git', ['diff', 'HEAD@{1}', 'HEAD', '--', 'package.json'], repoRoot);
     const pkgChanged = pkgDiff.ok && String(pkgDiff.stdout || '').trim().length > 0;
 
@@ -4292,11 +4177,10 @@ function findPm2AppName(repoRoot) {
   }
 }
 
-// Badge update: polling ringan dari sidebar (tanpa fetch berat tiap klik)
 let updateCheckCache = { at: 0, data: null };
 router.get('/api/update/check', requireAdminSession, (req, res) => {
   const now = Date.now();
-  // Cache 5 menit agar tidak git fetch tiap detik
+  
   if (updateCheckCache.data && (now - updateCheckCache.at) < 300000) {
     return res.json(updateCheckCache.data);
   }
@@ -4338,7 +4222,7 @@ router.post('/api/telegram/sync', requireAdminSession, async (req, res) => {
 router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
   const redirectTo = (() => {
     const raw = String(req.body?._redirect || '').trim();
-    // hanya izinkan path internal admin
+    
     if (/^\/admin\/[a-z0-9\-\/]*$/i.test(raw)) return raw;
     return '/admin/settings';
   })();
@@ -4365,7 +4249,7 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
 
     if (newSettings.default_gateway) {
       newSettings.default_gateway = newSettings.default_gateway.toLowerCase();
-      // Otomatis aktifkan gateway yang dipilih sebagai default (halaman Payment Gateway hanya punya 1 dropdown pilihan)
+      
       const gw = newSettings.default_gateway;
       if (['tripay', 'midtrans', 'xendit', 'duitku'].includes(gw)) {
         newSettings[gw + '_enabled'] = true;
@@ -4375,7 +4259,7 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
     if (typeof newSettings.whatsapp_admin_numbers === 'string') {
       newSettings.whatsapp_admin_numbers = newSettings.whatsapp_admin_numbers.split(',').map(n => n.trim()).filter(Boolean);
     }
-    // whatsapp_tech_numbers removed - now automatically fetched from technicians table
+    
     if (newSettings.server_port) newSettings.server_port = parseInt(newSettings.server_port);
     if (newSettings.mikrotik_port) newSettings.mikrotik_port = parseInt(newSettings.mikrotik_port);
     if (newSettings.whatsapp_broadcast_delay) newSettings.whatsapp_broadcast_delay = parseInt(newSettings.whatsapp_broadcast_delay);
@@ -4385,30 +4269,28 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
     if (newSettings.telegram_enabled !== undefined) newSettings.telegram_enabled = (newSettings.telegram_enabled === 'true');
     if (newSettings.auto_backup_enabled !== undefined) newSettings.auto_backup_enabled = (newSettings.auto_backup_enabled === 'true');
     if (newSettings.use_builtin_acs !== undefined) newSettings.use_builtin_acs = (newSettings.use_builtin_acs === 'true' || newSettings.use_builtin_acs === true);
-    // Form GenieACS (checkbox tidak terkirim saat tidak dicentang)
+    
     if (newSettings._acs_form) {
       newSettings.use_builtin_acs = (req.body.use_builtin_acs === 'true' || req.body.use_builtin_acs === true);
       delete newSettings._acs_form;
     }
 
-    // Multi-Router Mode settings (hanya jika form mengirim field-nya)
     const hasMultiRouterField = ('multi_router_mode' in req.body);
     if (hasMultiRouterField && !newSettings.multi_router_mode) newSettings.multi_router_mode = 'disabled';
     if (newSettings.default_router_id) newSettings.default_router_id = parseInt(newSettings.default_router_id) || null;
 
-    // ✅ NEW: Jika switching dari disabled ke active, auto-assign default router ke pelanggan NULL
     const oldMode = getSetting('multi_router_mode', 'disabled');
     if (oldMode === 'disabled' && newSettings.multi_router_mode === 'active') {
       try {
         const defaultRouterId = newSettings.default_router_id;
         if (defaultRouterId && defaultRouterId > 0) {
-          // Auto-assign default router to customers with NULL router_id
+          
           const result = db.prepare(
             "UPDATE customers SET router_id = ? WHERE router_id IS NULL AND (pppoe_username != '' OR hotspot_username != '' OR static_ip != '')"
           ).run(defaultRouterId);
           logger.info(`[Settings] Auto-assigned router ${defaultRouterId} to ${result.changes} customers with NULL router_id`);
         } else {
-          // Jika tidak ada default router, cari router pertama yang aktif
+          
           const router = db.prepare('SELECT id FROM routers WHERE is_active = 1 ORDER BY id ASC LIMIT 1').get();
           if (router) {
             const result = db.prepare(
@@ -4418,18 +4300,18 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
           }
         }
       } catch (dbError) {
-        // Silently skip if columns don't exist or DB error occurs
+        
         logger.warn(`[Settings] Could not auto-assign routers: ${dbError.message}`);
       }
     }
 
     const success = saveSettings(newSettings);
     if (success) {
-      // Re-init services if needed
+      
       if (newSettings.telegram_enabled) {
         require('../services/telegramBot').initTelegram();
       } else {
-        require('../services/telegramBot').initTelegram(); // This will stop it if it was running
+        require('../services/telegramBot').initTelegram(); 
       }
       req.session._msg = { type: 'success', text: 'Pengaturan berhasil disimpan.' };
     } else {
@@ -4441,7 +4323,6 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
   res.redirect(redirectTo);
 });
 
-// ─── BACKUP & RECOVERY ──────────────────────────────────────────────────────
 router.get('/backup', requireAdminSession, requireSidebarMenuAccess('backup'), (req, res) => {
   const result = backupSvc.listBackups();
   res.render('admin/backup', {
@@ -4562,7 +4443,6 @@ router.post('/backup/upload-restore', requireAdminSession, restrictToAdmin, uplo
       const savePath = path.join(backupDir, savedFileName);
       fs.writeFileSync(savePath, file.buffer);
 
-      // Verify JSON validity before restoring settings
       try {
         JSON.parse(file.buffer.toString('utf8'));
       } catch (jsonErr) {
@@ -4596,10 +4476,7 @@ router.post('/backup/delete', requireAdminSession, restrictToAdmin, express.urle
     const fs = require('fs');
     const path = require('path');
     const backupDir = path.join(__dirname, '../backups');
-    // Phase 14: fileName berasal dari request body. Tanpa normalisasi, nilai
-    // seperti "../settings.json" keluar dari backupDir dan menghapus file lain.
-    // Samakan dengan pola aman /backup/download: basename + verifikasi bahwa
-    // path final benar-benar berada di dalam backupDir (fail-closed).
+    
     const safeName = path.basename(String(fileName || ''));
     const backupFilePath = path.resolve(backupDir, safeName);
     if (!safeName || path.dirname(backupFilePath) !== path.resolve(backupDir)) {
@@ -4637,7 +4514,6 @@ router.post('/backup/cleanup', requireAdminSession, restrictToAdmin, express.url
   res.redirect('/admin/backup');
 });
 
-// ─── INVENTORY / WAREHOUSE ──────────────────────────────────────────────────
 router.get('/inventory', requireAdminSession, requireSidebarMenuAccess('inventory'), (req, res) => {
   const items = inventorySvc.getAllItems(req.query.q);
   const categories = inventorySvc.getAllCategories();
@@ -4723,13 +4599,12 @@ router.get('/audit-logs', requireAdminSession, requireSidebarMenuAccess('audit_l
   });
 });
 
-// ─── MONITORING ──────────────────────────────────────────────────────────────
 router.get('/monitoring', requireAdminSession, requireSidebarMenuAccess('monitoring'), restrictToAdmin, async (req, res) => {
   const healthStatus = monitoringSvc.getHealthStatus();
   const performanceSummary = monitoringSvc.getPerformanceSummary();
   const dependencies = await diagnosticsSvc.checkDependencies();
   const recentErrors = diagnosticsSvc.getRecentErrors(10);
-  const settings = getSettings(); // Get current settings
+  const settings = getSettings(); 
 
   res.render('admin/monitoring', {
       title: 'Monitoring Sistem',
@@ -4739,7 +4614,7 @@ router.get('/monitoring', requireAdminSession, requireSidebarMenuAccess('monitor
       performanceSummary,
       dependencies,
       recentErrors,
-      settings // Pass settings to view
+      settings 
     });
 });
 
@@ -4759,12 +4634,10 @@ router.get('/api/metrics/history', requireAdmin, (req, res) => {
   res.json(history);
 });
 
-// ─── GENIEACS SETTINGS API ──────────────────────────────────────────────────
 router.post('/api/genieacs/settings', requireAdmin, async (req, res) => {
   try {
     const { genieacs_timeout, genieacs_rxpower_threshold, genieacs_monitoring_interval, genieacs_monitoring_enabled } = req.body;
     
-    // Validate input
     if (genieacs_timeout < 5000 || genieacs_timeout > 120000) {
       return res.json({ success: false, message: 'Timeout harus antara 5000-120000 ms' });
     }
@@ -4775,20 +4648,17 @@ router.post('/api/genieacs/settings', requireAdmin, async (req, res) => {
       return res.json({ success: false, message: 'Monitoring interval harus antara 1-24 jam' });
     }
 
-    // Update settings
     const currentSettings = getSettings();
     currentSettings.genieacs_timeout = parseInt(genieacs_timeout);
     currentSettings.genieacs_rxpower_threshold = parseFloat(genieacs_rxpower_threshold);
     currentSettings.genieacs_monitoring_interval = parseInt(genieacs_monitoring_interval);
     currentSettings.genieacs_monitoring_enabled = Boolean(genieacs_monitoring_enabled);
 
-    // Save to file
     const fs = require('fs');
     const path = require('path');
     const settingsPath = path.join(__dirname, '../settings.json');
     fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2), 'utf8');
 
-    // Log audit
     try {
       if (auditSvc && typeof auditSvc.logAuditTrail === 'function') {
         auditSvc.logAuditTrail({
@@ -4843,7 +4713,6 @@ router.get('/api/genieacs/test', requireAdmin, async (req, res) => {
   }
 });
 
-// ─── API ROUTES (existing) ──────────────────────────────────────────────────
 router.get('/api/stats', requireAdmin, async (req, res) => {
   try {
     const result = await customerDevice.listAllDevices(999999);
@@ -4947,7 +4816,7 @@ router.post('/api/device/:tag/ssid', requireAdmin, express.json(), async (req, r
   const { ssid } = req.body;
   if (!ssid) return res.status(400).json({ error: 'SSID required' });
   const ok = await customerDevice.updateSSID(req.params.tag, ssid);
-  // Kirim notifikasi WhatsApp ke pelanggan
+  
   if (ok) {
     try {
       const tag = req.params.tag;
@@ -4972,7 +4841,7 @@ router.post('/api/device/:tag/password', requireAdmin, express.json(), async (re
   const { password } = req.body;
   if (!password || password.length < 8) return res.status(400).json({ error: 'Password minimal 8 karakter' });
   const ok = await customerDevice.updatePassword(req.params.tag, password);
-  // Kirim notifikasi WhatsApp ke pelanggan
+  
   if (ok) {
     try {
       const tag = req.params.tag;
@@ -5006,7 +4875,7 @@ router.post('/api/bulk/ssid', requireAdmin, express.json(), async (req, res) => 
     try {
       const success = await customerDevice.updateSSID(tag, ssid);
       results.push({ tag, success });
-      // Kirim notifikasi WhatsApp ke pelanggan
+      
       if (success) {
         try {
           const cust = customerSvc.findCustomerByAny(tag);
@@ -5021,7 +4890,7 @@ router.post('/api/bulk/ssid', requireAdmin, express.json(), async (req, res) => 
               `⚠️ Jangan bagikan info ini ke orang lain.`;
             await trySendWhatsappPayment(cust.phone, msg);
           }
-        } catch (e) { /* ignore per-customer WA notification errors */ }
+        } catch (e) {  }
       }
     }
     catch (e) { results.push({ tag, success: false, error: e.message }); }
@@ -5057,7 +4926,6 @@ router.get('/api/mikrotik/users', requireAdmin, async (req, res) => {
   }
 });
 
-// ─── MIKROTIK MONITORING ───────────────────────────────────────────────────
 router.get('/mikrotik', requireAdminSession, requireSidebarMenuAccess('mikrotik'), (req, res) => {
   const dbRouters = mikrotikService.getAllRouters();
   const settings = getSettings();
@@ -5168,7 +5036,6 @@ router.get('/api/webhook/payment-notif/logs', requireAdminSession, (req, res) =>
     `;
     const rows = db.prepare(sql).all(...params, limit);
 
-    // Convert created_at to local timezone
     const rowsWithLocalTime = rows.map(row => ({
       ...row,
       created_at: row.created_at ? formatDateLocal(row.created_at, 'YYYY-MM-DD HH:mm:ss') : null
@@ -5717,7 +5584,6 @@ router.get('/api/mikrotik/monitoring-display-data', requireAdmin, async (req, re
       return res.status(500).json({ error: 'Gagal terhubung ke router MikroTik.' });
     }
 
-    // Parallel execution for performance
     const [
       resource,
       interfaces,
@@ -5726,39 +5592,38 @@ router.get('/api/mikrotik/monitoring-display-data', requireAdmin, async (req, re
       activeHotspot,
       hotspotUsers
     ] = await Promise.all([
-      // 1. Resources
+      
       mikrotikService.getSystemResource(routerId).catch(err => {
         logger.error('[NOC Display] Error resource:', err.message);
         return null;
       }),
-      // 2. Interfaces
+      
       conn.client.menu('/interface').get().catch(err => {
         logger.error('[NOC Display] Error interfaces:', err.message);
         return [];
       }),
-      // 3. Active PPPoE
+      
       mikrotikService.getPppoeActive(routerId).catch(err => {
         logger.error('[NOC Display] Error active PPPoE:', err.message);
         return [];
       }),
-      // 4. PPPoE Secrets
+      
       mikrotikService.getPppoeSecrets(routerId).catch(err => {
         logger.error('[NOC Display] Error secrets:', err.message);
         return [];
       }),
-      // 5. Active Hotspot
+      
       mikrotikService.getHotspotActive(routerId).catch(err => {
         logger.error('[NOC Display] Error active Hotspot:', err.message);
         return [];
       }),
-      // 6. Hotspot Users
+      
       mikrotikService.getHotspotUsers(routerId).catch(err => {
         logger.error('[NOC Display] Error hotspot users:', err.message);
         return [];
       })
     ]);
 
-    // Calculate PPPoE Offline
     const activePppoeNames = new Set((activePppoe || []).map(s => String(s.name).trim()));
     const offlinePppoe = (secrets || []).filter(s => {
       const isOnline = activePppoeNames.has(String(s.name).trim());
@@ -5766,7 +5631,6 @@ router.get('/api/mikrotik/monitoring-display-data', requireAdmin, async (req, re
       return !isOnline && !isDisabled;
     });
 
-    // Format resources
     const resData = {
       cpu: resource ? String(resource['cpu-load'] || resource.cpuLoad || resource['cpu'] || '0') : '0',
       freeMemory: resource ? Number(resource['free-memory'] || resource.freeMemory) || 0 : 0,
@@ -5776,7 +5640,6 @@ router.get('/api/mikrotik/monitoring-display-data', requireAdmin, async (req, re
       version: resource ? String(resource['version'] || 'N/A') : 'N/A'
     };
 
-    // Format interfaces (only return fields needed)
     const formattedInterfaces = (interfaces || []).map(i => {
       return {
         name: i.name,
@@ -5825,7 +5688,6 @@ router.get('/api/mikrotik/ip-pools', requireAdmin, async (req, res) => {
   try { res.json(await mikrotikService.getIpPools(req.query.routerId)); } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// PPPoE Profiles CRUD
 router.post('/api/mikrotik/pppoe-profiles', requireAdmin, express.json(), async (req, res) => {
   try { await mikrotikService.addPppoeProfile(req.body, req.query.routerId); res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -5836,7 +5698,6 @@ router.post('/api/mikrotik/pppoe-profiles/:id/delete', requireAdmin, async (req,
   try { await mikrotikService.deletePppoeProfile(req.params.id, req.query.routerId); res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Hotspot User Profiles CRUD
 router.get('/api/mikrotik/hotspot-user-profiles', requireAdmin, async (req, res) => {
   try {
     const rows = await mikrotikService.getHotspotUserProfiles(req.query.routerId);
@@ -5875,8 +5736,6 @@ router.get('/api/mikrotik/backup', requireAdmin, async (req, res) => {
   }
 });
 
-// ─── WHATSAPP ──────────────────────────────────────────────────────────────
-// Global Broadcast Tracker
 global.broadcastStatus = {
   active: false,
   total: 0,
@@ -5890,21 +5749,18 @@ global.broadcastStatus = {
   hourlyLimit: 100
 };
 
-// Helper: Random delay generator untuk smart rate limiting
 function getRandomDelay(baseDelayMs, varianceMs = 3000) {
   const minDelay = Math.max(baseDelayMs - varianceMs, 2000);
   const maxDelay = baseDelayMs + varianceMs;
   return Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
 }
 
-// Helper: Exponential backoff untuk error handling
 function getBackoffDelay(attemptCount, baseDelayMs = 2000) {
   const maxDelay = 30000;
   const delay = Math.min(baseDelayMs * Math.pow(2, attemptCount), maxDelay);
   return delay + Math.floor(Math.random() * 1000);
 }
 
-// Helper: Message variation untuk menghindari spam detection
 function addMessageVariation(message, index) {
   const variations = [
     '',
@@ -5917,44 +5773,37 @@ function addMessageVariation(message, index) {
   return message + suffix;
 }
 
-// Helper: Cek apakah waktu aman untuk broadcast (hindari jam sibuk)
 function isSafeTimeToBroadcast() {
   const now = new Date();
   const hour = now.getHours();
-  // Hindari jam 00:00 - 06:00 (jam malam) dan jam 18:00 - 21:00 (jam sibuk)
+  
   return hour >= 8 && hour <= 17;
 }
 
-// Helper: Hitung delay berdasarkan jam (lebih lama di jam sibuk)
 function getTimeBasedDelay(baseDelayMs) {
   const now = new Date();
   const hour = now.getHours();
   
-  // Jam sibuk (18:00 - 21:00): delay 2x lebih lama
   if (hour >= 18 && hour <= 21) {
     return baseDelayMs * 2;
   }
   
-  // Jam malam (00:00 - 06:00): delay 3x lebih lama
   if (hour >= 0 && hour <= 6) {
     return baseDelayMs * 3;
   }
   
-  // Jam normal: delay normal
   return baseDelayMs;
 }
 
-// Helper: Cek duplicate message untuk menghindari spam
 function isDuplicateMessage(phone, message, messageHistory) {
   const key = `${phone}_${message.substring(0, 50)}`;
   const lastSent = messageHistory.get(key);
   if (!lastSent) return false;
   
   const timeDiff = Date.now() - lastSent;
-  return timeDiff < 3600000; // 1 jam
+  return timeDiff < 3600000; 
 }
 
-// Helper: Cek apakah error adalah permanent (tidak perlu retry)
 function isPermanentError(errorMessage) {
   const permanentErrorPatterns = [
     /invalid.*number/i,
@@ -5971,7 +5820,6 @@ function isPermanentError(errorMessage) {
   return permanentErrorPatterns.some(pattern => pattern.test(errorMessage));
 }
 
-// Helper: Cek apakah error adalah temporary (bisa retry)
 function isTemporaryError(errorMessage) {
   const temporaryErrorPatterns = [
     /timeout/i,
@@ -5989,14 +5837,10 @@ function isTemporaryError(errorMessage) {
   return temporaryErrorPatterns.some(pattern => pattern.test(errorMessage));
 }
 
-// Global message history untuk duplicate detection
 global.broadcastMessageHistory = new Map();
 
 const waSvc = require('../services/whatsappService');
 
-
-// Phase 11: halaman ini merender kredensial provider (token/secret) ke HTML.
-// requireAdminSession masih mengizinkan kasir → tambahkan restrictToAdmin.
 router.get('/whatsapp', requireAdminSession, restrictToAdmin, requireSidebarMenuAccess('whatsapp'), async (req, res) => {
   const waGatewayType = getSetting('wa_gateway_type', 'baileys');
   const metaSettings = {
@@ -6029,9 +5873,6 @@ router.get('/whatsapp', requireAdminSession, restrictToAdmin, requireSidebarMenu
   });
 });
 
-// Phase 11: konfigurasi kredensial provider WhatsApp = security-sensitive.
-// requireAdminSession masih mengizinkan kasir (customer_service), maka
-// restrictToAdmin ditambahkan agar hanya role `admin` yang boleh mengubah token/secret.
 router.post('/whatsapp/gateway-settings', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const { wa_gateway_type, meta_phone_number_id, meta_waba_id, meta_access_token, meta_verify_token, meta_business_phone,
@@ -6063,7 +5904,6 @@ router.post('/whatsapp/gateway-settings', requireAdminSession, restrictToAdmin, 
   res.redirect('/admin/whatsapp');
 });
 
-// LIVE CHAT ROUTES
 router.get('/whatsapp/live-chat', requireAdminSession, requireSidebarMenuAccess('whatsapp'), async (req, res) => {
   const waGatewayType = getSetting('wa_gateway_type', 'baileys');
   const customers = customerSvc.getAllCustomers();
@@ -6179,7 +6019,6 @@ router.get('/api/whatsapp/broadcast-status', requireAdminSession, (req, res) => 
   res.json(global.broadcastStatus);
 });
 
-// API: Pause Broadcast
 router.post('/api/whatsapp/broadcast-pause', requireAdminSession, (req, res) => {
   if (!global.broadcastStatus.active) {
     return res.json({ ok: false, error: 'Tidak ada broadcast yang sedang berjalan.' });
@@ -6189,7 +6028,6 @@ router.post('/api/whatsapp/broadcast-pause', requireAdminSession, (req, res) => 
   res.json({ ok: true, message: 'Broadcast berhasil dipause.' });
 });
 
-// API: Resume Broadcast
 router.post('/api/whatsapp/broadcast-resume', requireAdminSession, (req, res) => {
   if (!global.broadcastStatus.active) {
     return res.json({ ok: false, error: 'Tidak ada broadcast yang sedang berjalan.' });
@@ -6199,7 +6037,6 @@ router.post('/api/whatsapp/broadcast-resume', requireAdminSession, (req, res) =>
   res.json({ ok: true, message: 'Broadcast berhasil dilanjutkan.' });
 });
 
-// API: Stop Broadcast
 router.post('/api/whatsapp/broadcast-stop', requireAdminSession, (req, res) => {
   if (!global.broadcastStatus.active) {
     return res.json({ ok: false, error: 'Tidak ada broadcast yang sedang berjalan.' });
@@ -6215,11 +6052,10 @@ router.post('/whatsapp/broadcast', requireAdminSession, express.urlencoded({ ext
     const { target, message, delay: customDelay, batchSize: customBatchSize, hourlyLimit: customHourlyLimit } = req.body;
     if (!message) throw new Error('Pesan tidak boleh kosong');
     
-    // Smart Rate Limit Settings
-    const baseDelayMs = (parseInt(customDelay) || getSetting('whatsapp_broadcast_delay', 5)) * 1000; // Default 5 detik
-    const batchSize = parseInt(customBatchSize) || 15; // Default 15 pesan per batch (lebih aman)
-    const batchPauseMs = 120000; // Pause 2 menit setelah setiap batch (lebih aman)
-    const hourlyLimit = parseInt(customHourlyLimit) || 80; // Default 80 pesan per jam (lebih aman)
+    const baseDelayMs = (parseInt(customDelay) || getSetting('whatsapp_broadcast_delay', 5)) * 1000; 
+    const batchSize = parseInt(customBatchSize) || 15; 
+    const batchPauseMs = 120000; 
+    const hourlyLimit = parseInt(customHourlyLimit) || 80; 
     
     if (customDelay) {
       const v = parseInt(customDelay);
@@ -6245,7 +6081,6 @@ router.post('/whatsapp/broadcast', requireAdminSession, express.urlencoded({ ext
       customers = allCust.filter(c => c.unpaid_count > 0);
     }
 
-    // Ambil pelanggan unik berdasarkan nomor HP
     const uniqueCustomers = [];
     const seenPhones = new Set();
     for (const c of customers) {
@@ -6259,7 +6094,6 @@ router.post('/whatsapp/broadcast', requireAdminSession, express.urlencoded({ ext
       throw new Error('Tidak ada nomor pelanggan yang valid untuk target tersebut.');
     }
     
-    // Initialize Tracker dengan Smart Rate Limit
     global.broadcastStatus = {
       active: true,
       total: uniqueCustomers.length,
@@ -6290,7 +6124,6 @@ router.post('/whatsapp/broadcast', requireAdminSession, express.urlencoded({ ext
         }
         if (global.broadcastStatus.stopped) break;
 
-        // Rate Limiting: Cek batas per jam
         const now = Date.now();
         if (now - windowStartTime >= 3600000) {
           windowStartTime = now;
@@ -6313,11 +6146,10 @@ router.post('/whatsapp/broadcast', requireAdminSession, express.urlencoded({ ext
 
         while (attemptCount < maxAttempts) {
           try {
-            // Smart Random Delay
+            
             const randomDelay = getRandomDelay(baseDelayMs, 2000);
             await new Promise(r => setTimeout(r, randomDelay));
 
-            // Format Pesan dengan Spintax
             let formattedMsg = message.replace(/{{nama}}/gi, cust.name || 'Pelanggan');
 
             const { parseSpintax } = await import('../services/whatsappBot.mjs');
@@ -6330,7 +6162,6 @@ router.post('/whatsapp/broadcast', requireAdminSession, express.urlencoded({ ext
             global.broadcastStatus.messagesPerHour = messagesInCurrentHour;
             batchCount++;
             
-            // Batch Processing: Pause setelah N pesan
             if (batchCount >= batchSize && i < uniqueCustomers.length - 1) {
               logger.info(`[Broadcast] Selesai batch ${global.broadcastStatus.currentBatch + 1} (${batchSize} pesan). Pause ${Math.floor(batchPauseMs / 1000)} detik...`);
               global.broadcastStatus.currentBatch++;
@@ -6338,26 +6169,24 @@ router.post('/whatsapp/broadcast', requireAdminSession, express.urlencoded({ ext
               batchCount = 0;
             }
             
-            break; // Sukses, keluar dari retry loop
+            break; 
           } catch (e) {
             attemptCount++;
             const errorMsg = e.message || e.toString();
             
-            // Cek apakah error permanent (tidak perlu retry)
             if (isPermanentError(errorMsg)) {
               logger.warn(`[Broadcast] SKIP: Error permanent untuk ${cust.phone} - ${errorMsg}`);
               global.broadcastStatus.failed++;
-              break; // Skip retry langsung ke pelanggan berikutnya
+              break; 
             }
             
-            // Error temporary, bisa retry
             logger.error(`[Broadcast] Gagal kirim ke ${cust.phone} (attempt ${attemptCount}/${maxAttempts}): ${errorMsg}`);
             
             if (attemptCount >= maxAttempts) {
               logger.warn(`[Broadcast] Max attempts tercapai untuk ${cust.phone}`);
               global.broadcastStatus.failed++;
             } else {
-              // Exponential backoff untuk retry
+              
               const backoffDelay = getBackoffDelay(attemptCount);
               logger.info(`[Broadcast] Retry ke ${cust.phone} dalam ${Math.floor(backoffDelay / 1000)} detik...`);
               await new Promise(r => setTimeout(r, backoffDelay));
@@ -6422,7 +6251,6 @@ router.get('/api/whatsapp/status', requireAdmin, async (req, res) => {
     }
   });
 
-// Phase 11: test koneksi provider = configuration testing → admin only.
 router.post('/whatsapp/test-notification', requireAdminSession, restrictToAdmin, async (req, res) => {
   try {
     const gatewayType = getSetting('wa_gateway_type', 'baileys');
@@ -6432,7 +6260,6 @@ router.post('/whatsapp/test-notification', requireAdminSession, restrictToAdmin,
     if (Array.isArray(adminNumbers) && adminNumbers.length > 0) adminPhone = adminNumbers[0];
     else if (Array.isArray(legacyNumbers) && legacyNumbers.length > 0) adminPhone = legacyNumbers[0];
 
-    // HTTP/Meta gateway tidak butuh Baileys open — cukup kirim via waService
     if (['fonnte', 'wablas', 'http', 'meta'].includes(gatewayType)) {
       const waSvc = require('../services/whatsappService');
       logger.info(`[WA Test] Mengirim test via ${gatewayType} ke ${adminPhone}`);
@@ -6463,7 +6290,6 @@ router.post('/whatsapp/test-notification', requireAdminSession, restrictToAdmin,
   res.redirect('/admin/whatsapp');
 });
 
-// Phase 11: menghapus sesi Baileys = destruktif + security-sensitive → admin only.
 router.post('/whatsapp/reset', requireAdminSession, restrictToAdmin, (req, res) => {
   try {
     const authFolder = getSetting('whatsapp_auth_folder', 'auth_info_baileys');
@@ -6473,7 +6299,6 @@ router.post('/whatsapp/reset', requireAdminSession, restrictToAdmin, (req, res) 
       fs.rmSync(folderPath, { recursive: true, force: true });
       logger.info(`[WA] Session reset by admin. Folder ${authFolder} deleted.`);
       
-      // Trigger restart bot secara asinkron
       import('../services/whatsappBot.mjs').then(m => m.restartWhatsAppBot()).catch(e => {
         logger.error('Failed to trigger WA restart:', e.message);
       });
@@ -6490,7 +6315,6 @@ router.post('/whatsapp/reset', requireAdminSession, restrictToAdmin, (req, res) 
   }
 });
 
-// ─── ROUTERS (MULTI-ROUTER) ──────────────────────────────────────────────────
 router.get('/routers', requireAdminSession, requireSidebarMenuAccess('mikrotik'), (req, res) => {
   res.render('admin/routers', {
     title: 'Manajemen Router', company: company(), activePage: 'mikrotik',
@@ -6498,7 +6322,6 @@ router.get('/routers', requireAdminSession, requireSidebarMenuAccess('mikrotik')
   });
 });
 
-// ─── PROMO SLIDES ─────────────────────────────────────────────────────────────
 router.get('/promo-slides', requireAdminSession, requireSidebarMenuAccess('settings'), (req, res) => {
   try {
     const slides = db.prepare(`
@@ -6594,7 +6417,6 @@ router.post('/promo-slides/:id/update', requireAdminSession, requireSidebarMenuA
       slideId
     );
     
-    // Cleanup old image file if new one was uploaded
     if (oldImagePath && oldImagePath !== imagePath) {
       const oldFilePath = path.resolve(__dirname, '..', 'public', oldImagePath);
       try {
@@ -6604,7 +6426,7 @@ router.post('/promo-slides/:id/update', requireAdminSession, requireSidebarMenuA
         }
       } catch (err) {
         logger.warn(`[PromoSlides] Failed to delete old image: ${err.message}`);
-        // Don't fail the request, just log warning
+        
       }
     }
     
@@ -6619,13 +6441,10 @@ router.post('/promo-slides/:id/delete', requireAdminSession, requireSidebarMenuA
   try {
     const slideId = Number(req.params.id);
     
-    // Get slide data to retrieve image path for cleanup
     const slide = db.prepare('SELECT * FROM promo_slides WHERE id = ?').get(slideId);
     
-    // Delete from database
     db.prepare('DELETE FROM promo_slides WHERE id = ?').run(slideId);
     
-    // Cleanup image file
     if (slide && slide.image_path) {
       const filePath = path.resolve(__dirname, '..', 'public', slide.image_path);
       try {
@@ -6635,7 +6454,7 @@ router.post('/promo-slides/:id/delete', requireAdminSession, requireSidebarMenuA
         }
       } catch (err) {
         logger.warn(`[PromoSlides] Failed to delete image: ${err.message}`);
-        // Don't fail the request, just log warning
+        
       }
     }
     
@@ -6806,13 +6625,6 @@ router.get('/api/isolir-portal-script', requireAdmin, async (req, res) => {
   }
 });
 
-// PHASE 10A: endpoint legacy ini adalah jalur otoritas KEDUA untuk operasi
-// paling berbahaya di aplikasi (shell exec git pull/update.sh) dengan
-// autentikasi lebih lemah (requireAdmin menerima role cashier + bypass
-// x-admin-key statis) dan TANPA backup/restore preserved files sama sekali.
-// Tidak ada UI yang memanggil endpoint ini (audit: views/**). Dimatikan
-// permanen — satu-satunya jalur update yang sah adalah /admin/update/run
-// (requireAdminSession + restrictToAdmin, dengan backup/restore).
 router.post('/api/system/update', (req, res) => {
   return res.status(410).json({ success: false, error: 'Endpoint ini sudah tidak digunakan. Gunakan halaman Update Aplikasi (/admin/update).' });
 });
@@ -6844,9 +6656,7 @@ router.get('/api/mikrotik/users/:routerId', requireAdmin, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-// ─── ATTENDANCE MANAGEMENT ───────────────────────────────────────────────────
 
-// Attendance dashboard
 router.get('/attendance', requireAdminSession, requireSidebarMenuAccess('attendance'), (req, res) => {
   try {
     const date = req.query.date || getNowLocal().split(' ')[0];
@@ -6874,7 +6684,6 @@ router.get('/attendance', requireAdminSession, requireSidebarMenuAccess('attenda
   }
 });
 
-// Get attendance by date range (API)
 router.get('/api/attendance/range', requireAdminSession, (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -6889,7 +6698,6 @@ router.get('/api/attendance/range', requireAdminSession, (req, res) => {
   }
 });
 
-// Get employee attendance history
 router.get('/api/attendance/employee/:type/:id', requireAdminSession, (req, res) => {
   try {
     const { type, id } = req.params;
@@ -6901,7 +6709,6 @@ router.get('/api/attendance/employee/:type/:id', requireAdminSession, (req, res)
   }
 });
 
-// Get monthly summary
 router.get('/api/attendance/summary/:type/:id/:year/:month', requireAdminSession, (req, res) => {
   try {
     const { type, id, year, month } = req.params;
@@ -6917,13 +6724,11 @@ router.get('/api/attendance/summary/:type/:id/:year/:month', requireAdminSession
   }
 });
 
-// Update attendance (admin correction)
 router.post('/attendance/:id/update', requireAdminSession, express.json(), (req, res) => {
   try {
     const { id } = req.params;
     const { check_in_time, check_in_note, check_out_time, check_out_note } = req.body;
     
-    // Calculate duration if both times provided
     let duration = 0;
     if (check_in_time && check_out_time) {
       const checkIn = parseDateInTimezone(check_in_time);
@@ -6948,7 +6753,6 @@ router.post('/attendance/:id/update', requireAdminSession, express.json(), (req,
   }
 });
 
-// Delete attendance
 router.post('/attendance/:id/delete', requireAdminSession, (req, res) => {
   try {
     const { id } = req.params;
@@ -6962,7 +6766,6 @@ router.post('/attendance/:id/delete', requireAdminSession, (req, res) => {
   }
 });
 
-// Export attendance to Excel
 router.get('/attendance/export', requireAdminSession, (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -6973,7 +6776,6 @@ router.get('/attendance/export', requireAdminSession, (req, res) => {
     
     const attendances = attendanceSvc.getAttendanceByDateRange(startDate, endDate);
     
-    // Prepare data for Excel
     const data = attendances.map(a => ({
       'ID': a.id,
       'Tipe Karyawan': a.employee_type,
@@ -7004,9 +6806,6 @@ router.get('/attendance/export', requireAdminSession, (req, res) => {
     res.redirect('/admin/attendance');
   }
 });
-
-
-// ─── PAYROLL / GAJI KARYAWAN ───────────────────────────────────────────────
 
 router.get('/payroll', requireAdmin, requireSidebarMenuAccess('payroll'), (req, res) => {
   const now = new Date();
@@ -7204,9 +7003,8 @@ router.post('/payroll/slip/:id/send-wa', requireAdmin, async (req, res) => {
 
 router.use('/acs', acsPortal);
 
-// Mount Finance Portal
 router.use('/finance', require('./financePortal'));
-// ─── ONU PROVISION ─────────────────────────────────────────────────────────
+
 const onuProvisionSvc = require('../services/onuProvisionService');
 
 router.get('/onu-provision', requireAdminSession, restrictToAdmin, (req, res) => {
@@ -7233,7 +7031,7 @@ router.post('/onu-provision/configure-olt', requireAdminSession, restrictToAdmin
     const { vendor, host, port, username, password, action } = req.body;
     
     if (action === 'test') {
-      // Test connection
+      
       const oltConfig = { vendor, host, port: parseInt(port), username, password };
       
       try {
@@ -7244,7 +7042,7 @@ router.post('/onu-provision/configure-olt', requireAdminSession, restrictToAdmin
         req.session._msg = { type: 'error', text: `Gagal koneksi: ${error.message}` };
       }
     } else if (action === 'save') {
-      // Save configuration
+      
       const currentSettings = getSettings();
       const success = saveSettings({
         ...currentSettings,
@@ -7353,9 +7151,8 @@ router.post('/onu-provision/provision', requireAdminSession, restrictToAdmin, ex
     let result;
     let messages = [];
     
-    // Check if need to create MikroTik PPPoE
     if (createMikrotikPPPoE === 'on' && mikrotikPppoeUsername && mikrotikPppoePassword) {
-      // Validate PPPoE username not already in use
+      
       const routerId = req.body.router_id ? Number(req.body.router_id) : null;
       const existingCustomer = db.prepare('SELECT id, name FROM customers WHERE router_id IS ? AND pppoe_username = ? LIMIT 1').get(routerId, mikrotikPppoeUsername);
       
@@ -7363,7 +7160,6 @@ router.post('/onu-provision/provision', requireAdminSession, restrictToAdmin, ex
         throw new Error(`PPPoE Username "${mikrotikPppoeUsername}" sudah digunakan oleh pelanggan: ${existingCustomer.name}`);
       }
       
-      // Use full provision with MikroTik integration
       const mikrotikConfig = {
         host: getSetting('mikrotik_host', ''),
         user: getSetting('mikrotik_user', ''),
@@ -7372,7 +7168,7 @@ router.post('/onu-provision/provision', requireAdminSession, restrictToAdmin, ex
       };
       
       if (mikrotikConfig.host) {
-        // Prepare params for full provision
+        
         const provisionParams = {
           ...req.body,
           pppoeUsername: mikrotikPppoeUsername,
@@ -7395,7 +7191,7 @@ router.post('/onu-provision/provision', requireAdminSession, restrictToAdmin, ex
         throw new Error('MikroTik belum dikonfigurasi di settings');
       }
     } else {
-      // Standard provision (ONU only)
+      
       if (vendor === 'ZTE') {
         result = await onuProvisionSvc.zteProvisionONU(oltConfig, req.body);
       } else if (vendor === 'Huawei') {
@@ -7478,7 +7274,6 @@ router.post('/onu-provision/delete', requireAdminSession, restrictToAdmin, expre
   }
 });
 
-// --- RADIUS SERVER MANAGEMENT ---
 const radiusSvc = require('../services/radiusServerService');
 
 router.get('/radius-settings', requireAdminSession, restrictToAdmin, async (req, res) => {
@@ -7561,7 +7356,6 @@ router.post('/radius-settings', requireAdminSession, restrictToAdmin, async (req
       radius_framed_pool: String(radius_framed_pool || 'pool-pppoe').trim()
     });
 
-    // Kontrol background service UDP RADIUS
     radiusSvc.stop();
     if (radius_enabled === '1') {
       radiusSvc.start();

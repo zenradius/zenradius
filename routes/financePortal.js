@@ -4,7 +4,6 @@ const db = require('../config/database');
 const { getSetting, getSettings, getNowLocal, formatDateLocal } = require('../config/settingsManager');
 const sidebarMenuSvc = require('../services/sidebarMenuService');
 
-// Helper untuk menampilkan notifikasi sukses/error
 function flashMsg(req) {
   const m = req.session._msg;
   delete req.session._msg;
@@ -13,10 +12,9 @@ function flashMsg(req) {
 
 function company() { return getSetting('company_header', 'ISP Admin'); }
 
-// Pastikan hanya admin & kasir yang bisa akses
 function requireAdminSession(req, res, next) {
   if (req.session?.isAdmin || req.session?.isCashier) {
-    // Phase 3: verifikasi tambahan terhadap canonical role bila sudah tersedia di session.
+
     const canonical = req.session?.role;
     if (canonical && !['admin', 'customer_service'].includes(canonical)) {
       return res.redirect('/admin/login');
@@ -40,7 +38,6 @@ router.use((req, res, next) => {
   next();
 });
 
-// ─── KATEGORI PENGELUARAN ──────────────────────────────────────────────
 router.get('/expense-categories', (req, res) => {
   const categories = db.prepare('SELECT * FROM expense_categories ORDER BY name ASC').all();
   res.render('admin/finance/expense_categories', {
@@ -71,17 +68,16 @@ router.post('/expense-categories/:id/delete', (req, res) => {
   res.redirect('/admin/finance/expense-categories');
 });
 
-// ─── PENGELUARAN (CASH OUT) ────────────────────────────────────────────
 router.get('/expenses', (req, res) => {
   const expenses = db.prepare(`
-    SELECT e.*, c.color as category_color, c.icon as category_icon 
-    FROM expenses e 
-    LEFT JOIN expense_categories c ON c.name = e.category 
+    SELECT e.*, c.color as category_color, c.icon as category_icon
+    FROM expenses e
+    LEFT JOIN expense_categories c ON c.name = e.category
     ORDER BY e.date DESC, e.id DESC LIMIT 500
   `).all();
-  
+
   const categories = db.prepare('SELECT * FROM expense_categories ORDER BY name ASC').all();
-  
+
   res.render('admin/finance/expenses', {
     activePage: 'expenses',
     expenses,
@@ -93,14 +89,14 @@ router.get('/expenses', (req, res) => {
 router.post('/expenses', express.urlencoded({ extended: true }), (req, res) => {
   try {
     const { date, category, amount, description, payment_method, receipt_number, vendor } = req.body;
-    const cleanAmount = String(amount).replace(/[^0-9]/g, ''); // bersihkan format rupiah
+    const cleanAmount = String(amount).replace(/[^0-9]/g, '');
     const recorded_by_name = req.session.cashierName ? `Kasir ${req.session.cashierName}` : 'Admin';
-    
+
     db.prepare(`
-      INSERT INTO expenses (date, category, amount, description, payment_method, receipt_number, vendor, recorded_by_name) 
+      INSERT INTO expenses (date, category, amount, description, payment_method, receipt_number, vendor, recorded_by_name)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(date, category, cleanAmount, description, payment_method, receipt_number, vendor, recorded_by_name);
-    
+
     req.session._msg = { type: 'success', text: 'Pengeluaran berhasil dicatat' };
   } catch(e) {
     req.session._msg = { type: 'error', text: 'Gagal mencatat pengeluaran: ' + e.message };
@@ -118,7 +114,6 @@ router.post('/expenses/:id/delete', (req, res) => {
   res.redirect('/admin/finance/expenses');
 });
 
-// ─── KAS MASUK (CASH IN) ───────────────────────────────────────────────
 router.get('/cash-in', (req, res) => {
   const cashIn = db.prepare(`SELECT * FROM cash_in ORDER BY date DESC, id DESC LIMIT 500`).all();
   res.render('admin/finance/cash_in', {
@@ -131,14 +126,14 @@ router.get('/cash-in', (req, res) => {
 router.post('/cash-in', express.urlencoded({ extended: true }), (req, res) => {
   try {
     const { date, category, amount, description, payment_method, receipt_number } = req.body;
-    const cleanAmount = String(amount).replace(/[^0-9]/g, ''); // bersihkan format rupiah
+    const cleanAmount = String(amount).replace(/[^0-9]/g, '');
     const recorded_by_name = req.session.cashierName ? `Kasir ${req.session.cashierName}` : 'Admin';
-    
+
     db.prepare(`
-      INSERT INTO cash_in (date, category, amount, description, payment_method, receipt_number, recorded_by_name) 
+      INSERT INTO cash_in (date, category, amount, description, payment_method, receipt_number, recorded_by_name)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(date, category, cleanAmount, description, payment_method, receipt_number, recorded_by_name);
-    
+
     req.session._msg = { type: 'success', text: 'Kas Masuk berhasil dicatat' };
   } catch(e) {
     req.session._msg = { type: 'error', text: 'Gagal mencatat Kas Masuk: ' + e.message };

@@ -1,22 +1,14 @@
 const db = require('../config/database');
 const crypto = require('crypto');
 
-/**
- * Password Security Functions
- * Uses PBKDF2 (Password-Based Key Derivation Function 2) with SHA-256
- * This is a secure alternative to bcrypt and uses only Node.js built-in crypto
- */
+/** Password Security Functions */
 
 const HASH_ALGORITHM = 'sha256';
 const ITERATIONS = 100000;
 const KEY_LENGTH = 64;
 const SALT_LENGTH = 32;
 
-/**
- * Hash a plaintext password securely
- * @param {string} plaintext - The plaintext password to hash
- * @returns {string} A hash string in format: salt$iterations$hash (hex encoded)
- */
+/** Hash a plaintext password securely */
 function hashPassword(plaintext) {
   if (!plaintext || typeof plaintext !== 'string') {
     throw new Error('Password must be a non-empty string');
@@ -25,16 +17,10 @@ function hashPassword(plaintext) {
   const salt = crypto.randomBytes(SALT_LENGTH).toString('hex');
   const hash = crypto.pbkdf2Sync(plaintext, salt, ITERATIONS, KEY_LENGTH, HASH_ALGORITHM).toString('hex');
   
-  // Format: salt$iterations$hash
   return `${salt}$${ITERATIONS}$${hash}`;
 }
 
-/**
- * Verify a plaintext password against a stored hash
- * @param {string} plaintext - The plaintext password to verify
- * @param {string} storedHash - The stored hash to verify against
- * @returns {boolean} True if password matches, false otherwise
- */
+/** Verify a plaintext password against a stored hash */
 function verifyPassword(plaintext, storedHash) {
   if (!plaintext || !storedHash || typeof plaintext !== 'string' || typeof storedHash !== 'string') {
     return false;
@@ -43,25 +29,19 @@ function verifyPassword(plaintext, storedHash) {
   try {
     const parts = storedHash.split('$');
     if (parts.length !== 3) {
-      return false; // Invalid hash format
+      return false; 
     }
     
     const [salt, iterations, hash] = parts;
     const computedHash = crypto.pbkdf2Sync(plaintext, salt, parseInt(iterations), KEY_LENGTH, HASH_ALGORITHM).toString('hex');
     
-    // Constant-time comparison to prevent timing attacks
     return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(computedHash));
   } catch (e) {
     return false;
   }
 }
 
-/**
- * Check if a password string is already a hash (not plaintext)
- * A hash should be in format: salt$iterations$hash (all hex with $ delimiters)
- * @param {string} passwordStr - The password string to check
- * @returns {boolean} True if it looks like a hash, false if plaintext
- */
+/** Check if a password string is already a hash (not plaintext) */
 function isPasswordHash(passwordStr) {
   if (!passwordStr || typeof passwordStr !== 'string') return false;
   
@@ -70,12 +50,11 @@ function isPasswordHash(passwordStr) {
   
   const [salt, iterations, hash] = parts;
   
-  // Check if all parts are valid hex and iterations is a number
   if (!/^[a-f0-9]+$/i.test(salt)) return false;
   if (!/^\d+$/.test(iterations)) return false;
   if (!/^[a-f0-9]+$/i.test(hash)) return false;
-  if (salt.length !== SALT_LENGTH * 2) return false; // salt is 32 bytes = 64 hex chars
-  if (hash.length !== KEY_LENGTH * 2) return false; // hash is 64 bytes = 128 hex chars
+  if (salt.length !== SALT_LENGTH * 2) return false; 
+  if (hash.length !== KEY_LENGTH * 2) return false; 
   
   return true;
 }
@@ -154,20 +133,18 @@ function authenticateCashier(username, password) {
   const cashier = db.prepare('SELECT * FROM cashiers WHERE username = ? AND is_active = 1').get(username);
   if (!cashier) return null;
   
-  // Verify password (handles both plaintext and hashed)
   if (isPasswordHash(cashier.password)) {
-    // Password is already hashed, use verification
+    
     if (!verifyPassword(password, cashier.password)) return null;
   } else {
-    // Password is plaintext (legacy), verify and hash it
+    
     if (password !== cashier.password) return null;
     
-    // Migrate to hash on successful login
     try {
       const hashedPassword = hashPassword(password);
       db.prepare('UPDATE cashiers SET password = ? WHERE id = ?').run(hashedPassword, cashier.id);
     } catch (e) {
-      // Log but don't fail authentication on migration error
+      
       console.error('[adminService] Failed to migrate cashier password:', e.message);
     }
   }
@@ -216,20 +193,18 @@ function authenticateCollector(username, password) {
   const collector = db.prepare('SELECT * FROM collectors WHERE username = ? AND is_active = 1').get(username);
   if (!collector) return null;
   
-  // Verify password (handles both plaintext and hashed)
   if (isPasswordHash(collector.password)) {
-    // Password is already hashed, use verification
+    
     if (!verifyPassword(password, collector.password)) return null;
   } else {
-    // Password is plaintext (legacy), verify and hash it
+    
     if (password !== collector.password) return null;
     
-    // Migrate to hash on successful login
     try {
       const hashedPassword = hashPassword(password);
       db.prepare('UPDATE collectors SET password = ? WHERE id = ?').run(hashedPassword, collector.id);
     } catch (e) {
-      // Log but don't fail authentication on migration error
+      
       console.error('[adminService] Failed to migrate collector password:', e.message);
     }
   }

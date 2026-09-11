@@ -3,8 +3,8 @@ let loginRateLimiter = (req, res, next) => next();
 try {
   const rateLimit = require('express-rate-limit');
   loginRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Limit each IP to 10 login requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 10,
     standardHeaders: true,
     legacyHeaders: false,
     validate: { xForwardedForHeader: false },
@@ -43,9 +43,7 @@ try {
     }
   });
 } catch (e) {
-  // Phase 15: JANGAN fail-open. Jika express-rate-limit tidak tersedia, endpoint
-  // login akan kehilangan seluruh proteksi brute-force. Gunakan limiter in-memory
-  // sederhana (per-IP, jendela & batas sama) sebagai jaring pengaman.
+
   const WINDOW_MS = 15 * 60 * 1000;
   const MAX_ATTEMPTS = 10;
   const hits = new Map();

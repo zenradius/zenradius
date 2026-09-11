@@ -3,11 +3,7 @@ const { logger } = require('../config/logger');
 const { getSetting } = require('../config/settingsManager');
 const metaService = require('./metaWhatsappService');
 
-/**
- * HTTP WA Gateway — Fonnte / Wablas / custom
- * Kirim via HTTP POST, tanpa kelola device/Baileys sendiri.
- * Provider handle session, anti-ban & queue.
- */
+/** HTTP WA Gateway — Fonnte / Wablas / custom */
 
 function normalizePhone(phone) {
   return metaService.normalizePhone(phone);
@@ -38,7 +34,6 @@ async function sendViaWablas(toPhone, messageText) {
   const token = String(getSetting('wablas_token', '') || '').trim();
   if (!domain || !token) throw new Error('Wablas domain/token belum diisi.');
 
-  // Wablas v2: POST https://{domain}/api/v2/send-message
   const base = domain.replace(/\/$/, '').replace(/\/api.*$/, '');
   const url = `${base}/api/v2/send-message`;
   const phone = normalizePhone(toPhone);
@@ -64,7 +59,7 @@ function renderPayloadTemplate(template, vars) {
       .replaceAll('{target}', vars.phone)
       .replaceAll('{message}', JSON.stringify(vars.message).slice(1, -1).replace(/"/g, '\\"'))
       .replaceAll('{text}', JSON.stringify(vars.message).slice(1, -1).replace(/"/g, '\\"'));
-    // Allow {message_raw} for unescaped
+    
     json = json.replaceAll('{message_raw}', vars.message).replaceAll('{text_raw}', vars.message);
     return JSON.parse(json);
   } catch (e) {

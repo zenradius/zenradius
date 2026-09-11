@@ -51,7 +51,6 @@ function updateArea(id, data) {
 
   const description = String(data.description || '').trim();
 
-  // If area name changed, update references in customers, collectors, technicians
   if (oldArea.name !== newName) {
     db.prepare('UPDATE customers SET area = ? WHERE LOWER(TRIM(area)) = LOWER(TRIM(?))').run(newName, oldArea.name);
     db.prepare('UPDATE collectors SET area = ? WHERE LOWER(TRIM(area)) = LOWER(TRIM(?))').run(newName, oldArea.name);

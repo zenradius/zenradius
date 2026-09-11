@@ -2,7 +2,7 @@ const db = require('../config/database');
 const { authenticateTechnician } = require('./adminService');
 
 function authenticate(username, password) {
-  // Delegasi ke adminService: verifikasi hash PBKDF2 + auto-migrasi password plaintext legacy
+
   return authenticateTechnician(username, password);
 }
 
@@ -14,8 +14,7 @@ function getTechStats(techId) {
   const total = db.prepare("SELECT COUNT(*) as count FROM tickets WHERE technician_id = ?").get(techId).count;
   const inProgress = db.prepare("SELECT COUNT(*) as count FROM tickets WHERE technician_id = ? AND status = 'in_progress'").get(techId).count;
   const resolved = db.prepare("SELECT COUNT(*) as count FROM tickets WHERE technician_id = ? AND status = 'resolved'").get(techId).count;
-  
-  // Ambil open tickets yang belum ada teknisinya atau di-assign ke teknisi ini
+
   const open = db.prepare("SELECT COUNT(*) as count FROM tickets WHERE status = 'open'").get().count;
 
   return { total, open, inProgress, resolved };
@@ -23,9 +22,9 @@ function getTechStats(techId) {
 
 function getAssignedTickets(techId) {
   return db.prepare(`
-    SELECT t.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address 
-    FROM tickets t 
-    JOIN customers c ON t.customer_id = c.id 
+    SELECT t.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
+    FROM tickets t
+    JOIN customers c ON t.customer_id = c.id
     WHERE t.technician_id = ? AND t.status != 'resolved'
     ORDER BY t.created_at DESC
   `).all(techId);
@@ -33,9 +32,9 @@ function getAssignedTickets(techId) {
 
 function getOpenTickets() {
   return db.prepare(`
-    SELECT t.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address 
-    FROM tickets t 
-    JOIN customers c ON t.customer_id = c.id 
+    SELECT t.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
+    FROM tickets t
+    JOIN customers c ON t.customer_id = c.id
     WHERE t.status = 'open'
     ORDER BY t.created_at DESC
   `).all();
@@ -43,19 +42,16 @@ function getOpenTickets() {
 
 function getResolvedTickets(techId) {
   return db.prepare(`
-    SELECT t.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address 
-    FROM tickets t 
-    JOIN customers c ON t.customer_id = c.id 
+    SELECT t.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
+    FROM tickets t
+    JOIN customers c ON t.customer_id = c.id
     WHERE t.technician_id = ? AND t.status = 'resolved'
     ORDER BY t.updated_at DESC LIMIT 50
   `).all(techId);
 }
 
 function takeTicket(ticketId, techId) {
-  // SECURITY (Phase 6): hanya izinkan mengambil tiket yang masih 'open' (belum ada
-  // teknisi) ATAU tiket yang memang sudah menjadi milik teknisi ini sendiri.
-  // Mencegah IDOR: teknisi lain tidak boleh membajak tiket yang sedang dikerjakan
-  // teknisi lain hanya dengan menebak/mengirim ticket ID yang valid.
+
   const result = db.prepare(
     "UPDATE tickets SET technician_id = ?, status = 'in_progress', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND (status = 'open' OR technician_id = ? OR technician_id IS NULL)"
   ).run(techId, ticketId, techId);
@@ -67,12 +63,12 @@ function takeTicket(ticketId, techId) {
 
 function updateTicketStatus(ticketId, techId, status, extraData = {}) {
   const { notes, photos, photoMetadata } = extraData;
-  
+
   if (notes !== undefined || photos !== undefined || photoMetadata !== undefined) {
-    // Update with additional fields
+
     const updates = ['status = ?', 'updated_at = CURRENT_TIMESTAMP'];
     const params = [status];
-    
+
     if (notes !== undefined) {
       updates.push('technician_notes = ?');
       params.push(notes);
@@ -85,17 +81,16 @@ function updateTicketStatus(ticketId, techId, status, extraData = {}) {
       updates.push('photo_metadata = ?');
       params.push(photoMetadata);
     }
-    
+
     params.push(ticketId, techId);
     const sql = `UPDATE tickets SET ${updates.join(', ')} WHERE id = ? AND technician_id = ?`;
     db.prepare(sql).run(...params);
   } else {
-    // Simple status update
+
     db.prepare('UPDATE tickets SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND technician_id = ?').run(status, ticketId, techId);
   }
 }
 
-// Admin helper
 function getAllTechnicians() {
   return db.prepare('SELECT id, username, name, phone, area, is_active FROM technicians').all();
 }

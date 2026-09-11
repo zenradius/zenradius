@@ -1,6 +1,4 @@
-/**
- * Service: Penjadwalan Tugas Otomatis (Cron)
- */
+/** Service: Penjadwalan Tugas Otomatis (Cron) */
 const cron = require('node-cron');
 const billingSvc = require('./billingService');
 const { logger } = require('../config/logger');
@@ -12,21 +10,18 @@ const { getSetting } = require('../config/settingsManager');
 const db = require('../config/database');
 const qrisUtil = require('../utils/qrisUtil');
 
-// Helper: Random delay generator untuk smart rate limiting
 function getRandomDelay(baseDelayMs, varianceMs = 3000) {
   const minDelay = Math.max(baseDelayMs - varianceMs, 2000);
   const maxDelay = baseDelayMs + varianceMs;
   return Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
 }
 
-// Helper: Exponential backoff untuk error handling
 function getBackoffDelay(attemptCount, baseDelayMs = 2000) {
   const maxDelay = 30000;
   const delay = Math.min(baseDelayMs * Math.pow(2, attemptCount), maxDelay);
   return delay + Math.floor(Math.random() * 1000);
 }
 
-// Helper: Cek apakah error adalah permanent (tidak perlu retry)
 function isPermanentError(errorMessage) {
   const permanentErrorPatterns = [
     /invalid.*number/i,
@@ -42,7 +37,6 @@ function isPermanentError(errorMessage) {
   return permanentErrorPatterns.some(pattern => pattern.test(errorMessage));
 }
 
-// Helper: Message variation untuk menghindari spam detection
 function addMessageVariation(message, index) {
   const variations = [
     '',
@@ -56,7 +50,7 @@ function addMessageVariation(message, index) {
 }
 
 function startCronJobs() {
-  // 1. Generate Tagihan Otomatis setiap tanggal 1 jam 00:01
+  
   cron.schedule('1 0 1 * *', () => {
     const now = new Date();
     const month = now.getMonth() + 1;
@@ -71,7 +65,6 @@ function startCronJobs() {
     }
   });
 
-  // 2. Isolir Otomatis setiap hari jam 02:00
   cron.schedule('0 2 * * *', async () => {
     const now = new Date();
     const today = now.getDate();
@@ -127,16 +120,13 @@ function startCronJobs() {
 
       offset += BATCH_SIZE;
       if (batch.length === BATCH_SIZE) {
-        await new Promise(r => setTimeout(r, 300)); // Jeda 300ms antar batch
+        await new Promise(r => setTimeout(r, 300)); 
       }
     }
 
     logger.info(`[CRON] Selesai pengecekan isolir. Total ${isolatedCount} pelanggan baru di-isolir.`);
   });
 
-  // Phase 17 — Mobile push invoice reminder. Independent of the WhatsApp
-  // gateway (which gates the job below). Same targeting rules: prepaid D-1/D-2,
-  // postpaid on (isolate_day - 1) when unpaid invoices exist.
   cron.schedule('5 9 * * *', async () => {
     try {
       const pushSvc = require('./pushNotificationService');
@@ -208,7 +198,7 @@ function startCronJobs() {
         return;
       }
     } else if (['fonnte', 'wablas', 'http'].includes(gatewayType)) {
-      // HTTP gateway tidak butuh cek Baileys — cukup validasi token/url
+      
       const hasCreds =
         (gatewayType === 'fonnte' && getSetting('fonnte_token', '')) ||
         (gatewayType === 'wablas' && getSetting('wablas_token', '') && getSetting('wablas_domain', '')) ||
@@ -233,9 +223,9 @@ function startCronJobs() {
     };
 
     const loginLink = `${resolveBaseUrl()}/customer/login`;
-    const baseDelayMs = (Number(getSetting('whatsapp_broadcast_delay', 5) || 5) * 1000); // Default 5 detik
-    const batchSize = 15; // 15 pesan per batch (dari 20)
-    const batchPauseMs = 120000; // Pause 2 menit setelah batch (dari 1 menit)
+    const baseDelayMs = (Number(getSetting('whatsapp_broadcast_delay', 5) || 5) * 1000); 
+    const batchSize = 15; 
+    const batchPauseMs = 120000; 
 
     const today = new Date();
     const day = today.getDate();
@@ -257,7 +247,6 @@ function startCronJobs() {
       `Salam,\nAdmin ${getSetting('company_header', 'ISP')}`;
     const template = String(db.getAppSetting('whatsapp_auto_billing_message', defaultTemplate) || defaultTemplate);
 
-    // Filter pelanggan yang perlu diingatkan
     const targetCustomers = [];
     const seenPhones = new Set();
     for (const c of customers) {
@@ -304,7 +293,6 @@ function startCronJobs() {
 
     logger.info(`[CRON] Memulai pengingat tagihan otomatis untuk ${targetCustomers.length} pelanggan dengan smart rate limit.`);
 
-    // Kirim pesan dengan smart rate limit
     for (let i = 0; i < targetCustomers.length; i++) {
       const c = targetCustomers[i];
       let attemptCount = 0;
@@ -312,7 +300,7 @@ function startCronJobs() {
 
       while (attemptCount < maxAttempts) {
         try {
-          // Smart Random Delay
+          
           const randomDelay = getRandomDelay(baseDelayMs, 2000);
           await new Promise(r => setTimeout(r, randomDelay));
 
@@ -320,7 +308,6 @@ function startCronJobs() {
           const totalTagihan = unpaidInvoices.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
           const rincianBulan = unpaidInvoices.map(inv => `${inv.period_month}/${inv.period_year}`).join(', ');
 
-          // Process Dynamic QRIS if enabled & available
           let qrisImageBuffer = null;
           let finalTagihanStr = totalTagihan.toLocaleString('id-ID');
 
@@ -332,7 +319,6 @@ function startCronJobs() {
               const invId = Number(inv.id);
               const baseAmount = totalTagihan > 0 ? totalTagihan : Number(inv.amount || 0);
 
-              // Jika amt tidak ada atau amt tidak cocok dengan akumulasi total tagihan + kode, buat/perbarui nominal unik
               if ((!code || !amt || (amt - code !== baseAmount)) && invId > 0 && baseAmount > 0) {
                 const exists = db.prepare('SELECT id FROM invoices WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1');
                 const custId = Number(c?.id || inv?.customer_id || 0);
@@ -389,7 +375,6 @@ function startCronJobs() {
             }
           }
 
-          // Format pesan dengan Spintax & variation untuk anti-spam
           let formattedMsg = template
             .replace(/{{nama}}/gi, c.name || 'Pelanggan')
             .replace(/{{tagihan}}/gi, finalTagihanStr)
@@ -400,7 +385,6 @@ function startCronJobs() {
           const { parseSpintax } = await import('./whatsappBot.mjs');
           formattedMsg = parseSpintax(formattedMsg);
 
-          // Add subtle variation untuk menghindari spam detection
           formattedMsg = addMessageVariation(formattedMsg, i);
 
           await waSvc.sendWhatsAppMessage(c.phone, formattedMsg);
@@ -413,33 +397,30 @@ function startCronJobs() {
             throw new Error('Gagal kirim pesan');
           }
 
-          // Batch Processing: Pause setelah N pesan
           if (batchCount >= batchSize && i < targetCustomers.length - 1) {
             logger.info(`[CRON] Selesai batch ${Math.floor(i / batchSize) + 1} (${batchSize} pesan). Pause ${Math.floor(batchPauseMs / 1000)} detik...`);
             await new Promise(r => setTimeout(r, batchPauseMs));
             batchCount = 0;
           }
 
-          break; // Sukses, keluar dari retry loop
+          break; 
         } catch (e) {
           attemptCount++;
           const errorMsg = e.message || e.toString();
 
-          // Cek apakah error permanent (tidak perlu retry)
           if (isPermanentError(errorMsg)) {
             logger.warn(`[CRON] SKIP: Error permanent untuk ${c.phone} - ${errorMsg}`);
             failed++;
-            break; // Skip retry langsung ke pelanggan berikutnya
+            break; 
           }
 
-          // Error temporary, bisa retry
           logger.error(`[CRON] Gagal kirim ke ${c.phone} (attempt ${attemptCount}/${maxAttempts}): ${errorMsg}`);
 
           if (attemptCount >= maxAttempts) {
             logger.warn(`[CRON] Max attempts tercapai untuk ${c.phone}`);
             failed++;
           } else {
-            // Exponential backoff untuk retry
+            
             const backoffDelay = getBackoffDelay(attemptCount);
             logger.info(`[CRON] Retry ke ${c.phone} dalam ${Math.floor(backoffDelay / 1000)} detik...`);
             await new Promise(r => setTimeout(r, backoffDelay));
@@ -451,7 +432,6 @@ function startCronJobs() {
     logger.info(`[CRON] Pengingat tagihan otomatis selesai: target=${targetCount}, terkirim=${sent}, gagal=${failed}`);
   });
 
-  // 4. Jam Kalong (Night Speed) Start - Jam 00:00
   cron.schedule('0 0 * * *', async () => {
     logger.info('[CRON] Memulai Jam Kalong (Night Speed) - Ganti Profile...');
     try {
@@ -491,7 +471,6 @@ function startCronJobs() {
     }
   });
 
-  // 5. Jam Kalong (Night Speed) End - Jam 06:00
   cron.schedule('0 6 * * *', async () => {
     logger.info('[CRON] Mengakhiri Jam Kalong (Night Speed) - Kembali ke Profile Normal...');
     try {
@@ -531,14 +510,13 @@ function startCronJobs() {
     }
   });
 
-  // 6. Track Usage Pelanggan (Data Traffic) - Setiap 10 Menit
   cron.schedule('*/10 * * * *', async () => {
     const enabled = getSetting('usage_tracking_enabled', true);
     if (!enabled) return;
 
     try {
       const routers = mikrotikService.getAllRouters();
-      // Hanya load pelanggan yang punya pppoe_username (lebih efisien)
+      
       const customers = db.prepare(
         `SELECT c.id, c.pppoe_username FROM customers c
          WHERE c.pppoe_username IS NOT NULL AND c.pppoe_username != '' AND c.status = 'active'`
@@ -589,7 +567,6 @@ function startCronJobs() {
     }
   });
 
-  // 7. FUP (Fair Usage Policy) Check - Setiap Jam
   cron.schedule('0 * * * *', async () => {
     logger.info('[CRON] Mengecek FUP Pelanggan...');
     try {
@@ -601,7 +578,7 @@ function startCronJobs() {
       let fupCount = 0;
 
       while (true) {
-        // Hanya ambil pelanggan yang paketnya punya FUP aktif
+        
         const batch = db.prepare(
           `SELECT c.id, c.name, c.pppoe_username, c.router_id,
                   p.fup_limit_gb, p.fup_profile_name
@@ -640,7 +617,6 @@ function startCronJobs() {
     }
   });
 
-  // 8. Auto-Refresh ACS Devices & Sync IPs - Setiap 5 Menit
   cron.schedule('*/5 * * * *', async () => {
     const enabled = getSetting('use_builtin_acs', false) === true || getSetting('use_builtin_acs', false) === 'true';
     if (!enabled) return;
@@ -658,7 +634,6 @@ function startCronJobs() {
         let params = {};
         try { params = JSON.parse(dev.params || '{}'); } catch (_) {}
 
-        // Extract PPPoE user
         let pppoeUser = '';
         const pppoeUserKeys = [
           'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username',

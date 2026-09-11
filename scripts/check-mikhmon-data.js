@@ -1,6 +1,4 @@
-/**
- * Script untuk memeriksa data Mikhmon di database
- */
+/** Script untuk memeriksa data Mikhmon di database */
 const path = require('path');
 const Database = require('better-sqlite3');
 
@@ -9,7 +7,6 @@ const db = new Database(dbPath);
 
 console.log('=== MEMERIKSA DATA MIKHMON DI DATABASE ===\n');
 
-// Cari profiles dengan Mikhmon
 const profiles = db.prepare(`
   SELECT name, onLogin 
   FROM hotspot_profiles 
@@ -29,7 +26,6 @@ if (profiles.length === 0) {
   });
 }
 
-// Cek semua profiles
 const allProfiles = db.prepare('SELECT name, onLogin FROM hotspot_profiles LIMIT 20').all();
 console.log(`\nTotal profiles di database: ${allProfiles.length}`);
 

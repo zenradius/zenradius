@@ -17,34 +17,27 @@ const mikrotikService = require('./services/mikrotikService');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { scheduleAutoBackup } = require('./services/backupService');
 
-// Prefer IPv4 to avoid AggregateError (IPv6 timeouts) on some servers
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-// Handle unhandled promise rejections to prevent silent crashes
 process.on('unhandledRejection', (reason, promise) => {
   const errorMsg = reason instanceof Error ? reason.stack : JSON.stringify(reason);
   logger.error(`Unhandled Rejection: ${errorMsg}`);
 });
 
-// Handle uncaught exceptions to prevent server crashes from external service failures
-// (e.g. ros-client throws uncaught errors when MikroTik router is unreachable)
 process.on('uncaughtException', (err) => {
   const errorMsg = err instanceof Error ? err.stack : String(err);
   logger.error(`uncaughtException: ${errorMsg}`);
-  // Don't exit process — keep server running despite transient connection errors
+  
 });
 
-// Settings Management
 const session = require('express-session');
 const { getSetting, getSettingsWithCache, ensureDefaultSettings, parseBooleanSetting } = require('./config/settingsManager');
 const { SUPPORTED_LANGS, FALLBACK_LANG, normalizeLang, t } = require('./config/i18n');
 
-// Pastikan semua default settings ada (untuk migrasi/update dari GitHub)
 ensureDefaultSettings();
 
-// Inisialisasi aplikasi Express
 const app = express();
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -52,7 +45,6 @@ const cookieSecure = parseBooleanSetting(getSetting('cookie_secure', isProductio
 const trustProxySetting = parseBooleanSetting(getSetting('trust_proxy', true), true);
 app.set('trust proxy', trustProxySetting ? 1 : true);
 
-// Middleware dasar
 app.use(express.json({
   limit: '1mb',
   verify: (req, res, buf) => {
@@ -79,7 +71,7 @@ app.use(express.text({
     req.rawBody = buf?.toString('utf8') || '';
   }
 }));
-// Session store persisten (SQLite) agar login tidak hilang saat nodemon restart
+
 let sessionStore = null;
 try {
   const SQLiteStoreFactory = require('better-sqlite3-session-store');
@@ -109,8 +101,6 @@ app.use(session({
   name: 'customer.sid'
 }));
 
-// Phase 15: Security headers. Tanpa CSP agresif agar Golden UI/CDN tidak rusak.
-// Hanya header defensif yang tidak mengubah rendering.
 app.disable('x-powered-by');
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -120,7 +110,7 @@ app.use((req, res, next) => {
   if (isProduction && cookieSecure) {
     res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
   }
-  // Jangan cache halaman/API terautentikasi agar tidak tersimpan di proxy/browser bersama.
+  
   const p = req.path || '';
   const isSensitive = p.startsWith('/admin') || p.startsWith('/tech') ||
     p.startsWith('/agent') || p.startsWith('/collector') || p.startsWith('/customer');
@@ -131,7 +121,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware Proteksi CSRF berbasis Referer/Origin (Aman untuk production tanpa merubah EJS)
 app.use((req, res, next) => {
   const method = req.method;
   if (['POST', 'PUT', 'DELETE'].includes(method)) {
@@ -139,7 +128,6 @@ app.use((req, res, next) => {
     const referer = req.headers.referer;
     const host = req.headers.host;
 
-    // Kecualikan webhook eksternal, ACS server TR-069, atau payment gateway callback
     const isWebhook = req.path.startsWith('/api/webhook') || req.path.startsWith('/webhook') || req.path === '/customer/payment/callback' || req.path.startsWith('/api/meta-webhook');
     const isAcs = req.path.startsWith('/acs');
     if (isWebhook || isAcs) {
@@ -168,7 +156,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// i18n middleware (aman: hanya teks UI, tidak mengubah logic fitur)
 app.use((req, res, next) => {
   if (req.query && typeof req.query.lang === 'string') {
     const requested = normalizeLang(req.query.lang);
@@ -182,16 +169,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Branding middleware — semua view memakai nilai dari panel admin (settings.json).
-// Admin mengubah "company_header"/"footer_info" di /admin/settings → footer & judul ikut berubah.
 app.use((req, res, next) => {
   const brandName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
   const footerPoweredBy = String(getSetting('footer_info', '') || '').trim();
   
-  // Kembalikan footerInfo secara presisi ke nilai kustom di panel admin (footer_info) atau default "brandName - All Rights Reserved"
   let footerInfo = footerPoweredBy || `${brandName} - All Rights Reserved`;
   
-  // Tambahkan Powered by ZenRadius dengan mengarah ke zenradius.net di footer
   if (footerPoweredBy) {
     if (!footerPoweredBy.includes('Powered by')) {
       footerInfo = `${footerPoweredBy} | Powered by <a href="https://zenradius.net" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">ZenRadius</a>`;
@@ -215,7 +198,6 @@ app.get('/lang/:lang', (req, res) => {
   return res.redirect('/');
 });
 
-// Keep the displayed/runtime version aligned with the updater's version.txt.
 const VERSION = String(fs.readFileSync(path.join(__dirname, 'version.txt'), 'utf8') || '').trim() || '0.0.0';
 
 const insertWebhookPaymentNotif = db.prepare(`
@@ -442,7 +424,6 @@ function genCustomCode(len, charset) {
   if (charset === 'numbers' && out[0] === '0') out = '1' + out.slice(1);
   return out;
 }
-
 
 function normalizeQrisPayload(raw) {
   let s = String(raw || '').replace(/[\r\n\t]+/g, '').trim();
@@ -689,19 +670,16 @@ Dukungan Anda sangat berarti bagi pengembangan aplikasi Billing RTRW & RADIUS. S
   }
 }
 
-
-// Meta WhatsApp Cloud API Public Webhook Endpoints
 const metaWAService = require('./services/metaWhatsappService');
 app.get('/api/meta-webhook', (req, res) => metaWAService.verifyWebhook(req, res));
 app.post('/api/meta-webhook', (req, res) => metaWAService.processWebhookEvent(req, res));
 
-// Universal WA inbound webhook — Fonnte / Wablas / Starsender / GOWA / Custom
 const httpWebhookService = require('./services/httpWebhookService');
 const waInboundHandler = (req, res) => httpWebhookService.handleInbound(req, res);
 app.post('/api/webhook/wa-inbound', waInboundHandler);
 app.post('/api/webhook/fonnte', waInboundHandler);
 app.post('/api/webhook/wablas', waInboundHandler);
-app.get('/api/webhook/wa-inbound', waInboundHandler); // GET fallback untuk provider yang pakai query string
+app.get('/api/webhook/wa-inbound', waInboundHandler); 
 
 app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
   let body = req.body || {};
@@ -737,9 +715,7 @@ app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
     req.get('x-webhook-token') ??
     req.get('x-webhook-secret') ??
     req.get('x-webhook-key');
-  // Phase 11: JANGAN pernah memakai fallback secret hardcoded — nilainya ada di
-  // source code publik sehingga siapa pun dapat memalsukan notifikasi pembayaran.
-  // Fail-closed: bila secret belum dikonfigurasi, request ditolak di bawah.
+  
   const expected = process.env.MY_WEBHOOK_SECRET || getSettingsWithCache().webhook_secret || '';
   const expectedTrim = typeof expected === 'string' ? expected.trim() : '';
   const gotTrim = String(secret_key || '').trim();
@@ -754,7 +730,6 @@ app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
     return res.status(403).json({ ok: false, error: 'Forbidden', reason: 'secret_key_mismatch' });
   }
 
-  // Safe debugging: log incoming request parameters (secrets masked)
   const sanitizeForLog = (obj) => {
     if (!obj || typeof obj !== 'object') return {};
     const clean = {};
@@ -770,7 +745,6 @@ app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
   };
   logger.info(`[WEBHOOK][payment-notif] Debug params: query=${JSON.stringify(sanitizeForLog(req.query))} body=${JSON.stringify(sanitizeForLog(body))} headers=${JSON.stringify(sanitizeForLog(req.headers))}`);
 
-  // Collect all potential text from request
   const extractedTexts = [];
   if (typeof body === 'string') {
     extractedTexts.push(body);
@@ -1044,7 +1018,6 @@ app.post('/webhook/digiflazz', async (req, res) => {
   return res.json({ success: true, ref_id: refId, matched_agent_tx_id: matchedTxId });
 });
 
-// Inisialisasi database billing
 try {
   require('./config/database');
   logger.info('[DB] Billing database ready');
@@ -1052,7 +1025,6 @@ try {
   logger.error('[DB] Database init failed:', e.message);
 }
 
-// Variabel global untuk modul lain yang masih membaca konfigurasi (mis. skrip utilitas)
 global.appSettings = {
   port: getSetting('server_port', 4555),
   host: getSetting('server_host', 'localhost'),
@@ -1063,7 +1035,6 @@ global.appSettings = {
   footerInfo: getSetting('footer_info', 'ZenRadius - All Rights Reserved'),
 };
 
-// Route untuk health check
 app.get('/health', (req, res) => {
   let databaseStatus = 'ok';
   try {
@@ -1088,33 +1059,27 @@ app.get('/', (req, res) => {
   res.render('login', { error: null, success: null, settings, packages, landingOnly: true, footerInfo: res.locals.footerInfo });
 });
 
-// Alias singkat: /login → /customer/login
 app.get('/login', (req, res) => {
   res.redirect('/customer/login');
 });
 
-// Halaman Isolir (Akses langsung dari redirect MikroTik) - dengan integrasi pembayaran otomatis
 app.get('/isolated', (req, res) => {
   try {
     const settings = getSettingsWithCache();
     
-    // 1. Identifikasi pelanggan dari session atau IP
     let customer = null;
     let invoices = [];
     
-    // Try: Session-based detection
     if (req.session && req.session.phone) {
       customer = customerSvc.findCustomerByAny(req.session.phone);
     }
     
-    // Fallback: IP-based detection
     if (!customer) {
       const rawIp = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() 
                   || req.ip 
                   || req.connection.remoteAddress 
                   || '';
       
-      // Clean IPv6 prefix (::ffff:192.168.1.1 -> 192.168.1.1)
       const cleanIp = rawIp.replace(/^::ffff:/, '').trim();
       
       if (cleanIp) {
@@ -1126,17 +1091,14 @@ app.get('/isolated', (req, res) => {
       }
     }
     
-    // 2. If customer found and active, redirect to dashboard
     if (customer && customer.status === 'active') {
       return res.redirect('/customer/dashboard');
     }
     
-    // 3. If suspended, get unpaid invoices
     let invoicesWithTokens = [];
     if (customer && customer.status === 'suspended') {
       invoices = billingSvc.getUnpaidInvoicesByCustomerId(customer.id);
       
-      // 4. Generate public tokens for each invoice
       const tokenUtil = require('./utils/tokenUtil');
       invoicesWithTokens = invoices.map(inv => ({
         ...inv,
@@ -1144,12 +1106,11 @@ app.get('/isolated', (req, res) => {
           invoiceId: inv.id,
           customerId: inv.customer_id,
           lookup: customer.phone,
-          exp: Date.now() + 15 * 60 * 1000  // 15 minutes
+          exp: Date.now() + 15 * 60 * 1000  
         }, settings.session_secret)
       }));
     }
     
-    // 5. Get active payment channels
     const paymentChannels = getActivePaymentChannelsForIsolated(settings);
     
     res.render('isolated', {
@@ -1178,12 +1139,10 @@ app.get('/isolated', (req, res) => {
   }
 });
 
-// NEW ENDPOINT: GET /isolated/status - untuk polling status pelanggan
 app.get('/isolated/status', (req, res) => {
   try {
     let customer = null;
     
-    // Detection: Session atau IP
     if (req.session && req.session.phone) {
       customer = customerSvc.findCustomerByAny(req.session.phone);
     } else {
@@ -1212,7 +1171,7 @@ app.get('/isolated/status', (req, res) => {
     const unpaidInvoices = billingSvc.getUnpaidInvoicesByCustomerId(customer.id);
     
     res.json({
-      status: customer.status,  // 'active' atau 'suspended'
+      status: customer.status,  
       unpaid_count: unpaidInvoices.length,
       customer_id: customer.id,
       customer_name: customer.name,
@@ -1226,11 +1185,9 @@ app.get('/isolated/status', (req, res) => {
   }
 });
 
-// HELPER FUNCTION: Get active payment channels
 function getActivePaymentChannelsForIsolated(settings) {
   const channels = [];
   
-  // QRIS Static
   if (settings.qris_static_enabled && settings.qris_static_payload) {
     channels.push({
       code: 'QRIS_STATIC',
@@ -1239,7 +1196,6 @@ function getActivePaymentChannelsForIsolated(settings) {
     });
   }
   
-  // Tripay
   if (settings.tripay_enabled && settings.tripay_api_key) {
     channels.push({
       code: 'TRIPAY',
@@ -1248,7 +1204,6 @@ function getActivePaymentChannelsForIsolated(settings) {
     });
   }
   
-  // Midtrans
   if (settings.midtrans_enabled && settings.midtrans_server_key) {
     channels.push({
       code: 'MIDTRANS',
@@ -1257,7 +1212,6 @@ function getActivePaymentChannelsForIsolated(settings) {
     });
   }
   
-  // Xendit
   if (settings.xendit_enabled && settings.xendit_api_key) {
     channels.push({
       code: 'XENDIT',
@@ -1271,7 +1225,6 @@ function getActivePaymentChannelsForIsolated(settings) {
   ];
 }
 
-// Tambahkan view engine dan static
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.get('/manifest.webmanifest', (req, res) => {
@@ -1359,7 +1312,6 @@ app.get('/qris/static.jpg', async (req, res) => {
     const qrisUtil = require('./utils/qrisUtil');
     let payload = qrisUtil.normalizeQrisPayload(String(settings?.qris_static_payload || ''));
 
-    // If payload not in settings, try decode from uploaded QR file
     if (!payload && settings?.qris_static_qr_url) {
       const url = String(settings.qris_static_qr_url);
       const match = url.match(/^\/uploads\/qris\/([^/?#]+)$/i);
@@ -1389,7 +1341,6 @@ app.get('/qris/static.jpg', async (req, res) => {
       }
     }
 
-    // Fallback if static image file exists
     const url = String(settings?.qris_static_qr_url || '').trim();
     if (url) {
       const match = url.match(/^\/uploads\/qris\/([^/?#]+)$/i);
@@ -1415,7 +1366,6 @@ app.get('/broadcast', (req, res) => {
   res.redirect('/admin/whatsapp/broadcast');
 });
 
-// Endpoint Buat Pesanan Donasi dengan Kode Unik
 app.post(['/donasi/create', '/api/donasi/create'], (req, res) => {
   try {
     const { name, phone, amount, notes } = req.body || {};
@@ -1443,7 +1393,6 @@ app.post(['/donasi/create', '/api/donasi/create'], (req, res) => {
   }
 });
 
-// Endpoint Status Donasi (Real-time Polling)
 app.get(['/donasi/status/:orderId', '/api/donasi/status/:orderId'], (req, res) => {
   try {
     const orderId = Number(req.params.orderId || 0);
@@ -1465,7 +1414,6 @@ app.get(['/donasi/status/:orderId', '/api/donasi/status/:orderId'], (req, res) =
   }
 });
 
-// Endpoint Konfirmasi Donasi & Fallback Kirim Kode Aktivasi
 app.post(['/donasi/confirm', '/api/donasi/confirm'], async (req, res) => {
   try {
     const { orderId } = req.body || {};
@@ -1473,9 +1421,6 @@ app.post(['/donasi/confirm', '/api/donasi/confirm'], async (req, res) => {
     const ord = donId > 0 ? selectDonationOrderById.get(donId) : null;
     if (!ord) return res.status(404).json({ success: false, message: 'Order donasi tidak ditemukan' });
 
-    // PHASE 21A: fail-closed. Kode aktivasi (entitlement premium) TIDAK boleh
-    // diberikan atau status paid diset hanya karena konfirmasi client.
-    // Status paid hanya diset oleh webhook pembayaran trusted.
     if (ord.status !== 'paid') {
       return res.status(409).json({
         success: false,
@@ -1484,7 +1429,6 @@ app.post(['/donasi/confirm', '/api/donasi/confirm'], async (req, res) => {
       });
     }
 
-    // Fallback pengiriman ulang kode aktivasi via WA untuk order yang sudah lunas.
     const fulfillRes = await fulfillDonationOrder(getSettingsWithCache(), donId);
 
     return res.json({
@@ -1502,61 +1446,51 @@ app.post(['/donasi/confirm', '/api/donasi/confirm'], async (req, res) => {
   }
 });
 
-// Mount built-in ACS server endpoint (TR-069)
 const acsServerService = require('./services/acsServerService');
 app.post('/acs', express.raw({ type: ['text/xml', 'application/soap+xml', 'application/xml', 'text/plain'], limit: '2mb' }), acsServerService.handleCwmpRequest);
 
-// Mount Mobile API v1 (Phase 14 — Android Native App)
 const mobileApi = require('./routes/mobileApi');
 app.use('/api/mobile/v1', mobileApi);
 
-// Mount customer portal
 const customerPortal = require('./routes/customerPortal');
 app.use('/customer', customerPortal);
 
-// Mount admin portal — single door: /admin (full-access)
 const adminPortal = require('./routes/adminPortal');
 app.use('/admin', adminPortal);
-// Legacy /administrator redirect -> /admin (hapus setelah migrasi selesai)
+
 app.use('/administrator', (req, res) => res.redirect(301, '/admin' + (req.url || '')));
 
-// Mount tech portal
 const techPortal = require('./routes/techPortal');
 app.use('/tech', techPortal);
 
-// Mount agent portal
 const agentPortal = require('./routes/agentPortal');
 app.use('/agent', agentPortal);
 
-// Mount collector portal
 const collectorPortal = require('./routes/collectorPortal');
 app.use('/collector', collectorPortal);
 
-// Fungsi untuk memulai server dengan penanganan port yang sudah digunakan
 function startServer(portToUse) {
     logger.info(`Mencoba memulai server pada port ${portToUse}...`);
     
-    // Coba port alternatif jika port utama tidak tersedia
     try {
         const server = app.listen(portToUse, () => {
             global.__zenradiusServer = server;
             logger.info(`Server berhasil berjalan pada port ${portToUse}`);
             logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-            // Update global.appSettings.port dengan port yang berhasil digunakan
+            
             global.appSettings.port = portToUse.toString();
         }).on('error', (err) => {
             if (err.code === 'EADDRINUSE') {
                 logger.warn(`PERINGATAN: Port ${portToUse} sudah digunakan, mencoba port alternatif...`);
-                // Coba port alternatif (port + 1000)
+                
                 const alternativePort = portToUse + 1000;
                 logger.info(`Mencoba port alternatif: ${alternativePort}`);
                 
-                // Buat server baru dengan port alternatif
                 const alternativeServer = app.listen(alternativePort, () => {
                     global.__zenradiusServer = alternativeServer;
                     logger.info(`Server berhasil berjalan pada port alternatif ${alternativePort}`);
                     logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-                    // Update global.appSettings.port dengan port yang berhasil digunakan
+                    
                     global.appSettings.port = alternativePort.toString();
                 }).on('error', (altErr) => {
                     logger.error(`ERROR: Gagal memulai server pada port alternatif ${alternativePort}:`, altErr.message);
@@ -1573,16 +1507,11 @@ function startServer(portToUse) {
     }
 }
 
-// Mulai server dengan port dari settings.json
 const port = global.appSettings.port;
 logger.info(`Attempting to start server on configured port: ${port}`);
 
-// Mulai server dengan port dari konfigurasi
 startServer(port);
 
-// Phase 16: graceful shutdown untuk deployment container.
-// Tanpa handler SIGTERM, `docker stop` mematikan proses secara paksa sehingga
-// request in-flight terputus dan koneksi SQLite tidak ditutup rapi.
 let shuttingDown = false;
 function gracefulShutdown(signal) {
   if (shuttingDown) return;
@@ -1611,7 +1540,6 @@ function gracefulShutdown(signal) {
     finish();
   }
 
-  // Jaring pengaman: jangan menggantung selamanya bila ada koneksi keep-alive.
   setTimeout(() => {
     logger.warn('[shutdown] Batas waktu tercapai, keluar paksa.');
     process.exit(0);
@@ -1631,22 +1559,17 @@ if (getSetting('telegram_enabled', false)) {
   initTelegram();
 }
 
-// Mulai cron jobs (generate tagihan otomatis, dll)
 const { startCronJobs } = require('./services/cronService');
 startCronJobs();
 
-// Mulai auto backup
 scheduleAutoBackup();
 
-// Inisialisasi RADIUS Server jika diaktifkan di settings
 const radiusSvc = require('./services/radiusServerService');
 if (getSetting('radius_enabled', '0') === '1') {
   radiusSvc.start();
 }
 
-// Error handling middleware (harus di akhir setelah semua routes)
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Export app untuk testing
 module.exports = app;

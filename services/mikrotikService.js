@@ -6,18 +6,15 @@ const { getSettingsWithCache } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 const db = require('../config/database');
 
-// Runtime patches for node-routeros to prevent uncaught exceptions under RouterOS v7
 try {
   const { Channel } = require('node-routeros/dist/Channel');
   const { Receiver } = require('node-routeros/dist/connector/Receiver');
   const { RosException } = require('node-routeros/dist/RosException');
 
-  // 1. Prevent onUnknown from throwing a synchronous exception which crashes the process.
   Channel.prototype.onUnknown = function(reply) {
     logger.warn(`[MikroTik Channel] Received unknown reply: ${reply}`);
   };
 
-  // 2. Reject the write promise when receiving an unknown reply, so it can be handled by try-catch.
   const originalWrite = Channel.prototype.write;
   Channel.prototype.write = function(params, isStream = false, returnPromise = true) {
     if (returnPromise) {
@@ -36,7 +33,6 @@ try {
     return originalWrite.call(this, params, isStream, returnPromise);
   };
 
-  // 3. Prevent sendTagData from throwing a synchronous exception when tag is unregistered.
   Receiver.prototype.sendTagData = function(currentTag) {
     const tag = this.tags.get(currentTag);
     if (tag) {
@@ -53,8 +49,7 @@ try {
 const connectionProbeCache = new Map();
 const listCache = new Map();
 
-// CACHE DISABLED untuk data yang selalu akurat
-const CACHE_ENABLED = false; // Set false untuk disable cache
+const CACHE_ENABLED = false;
 
 function cacheKey(routerId, name) {
   const rid = routerId == null || String(routerId).trim() === '' ? 'default' : String(routerId).trim();
@@ -62,7 +57,7 @@ function cacheKey(routerId, name) {
 }
 
 function getCachedList(key, ttlMs) {
-  if (!CACHE_ENABLED) return null; // Skip cache jika disabled
+  if (!CACHE_ENABLED) return null;
   const hit = listCache.get(key);
   if (!hit) return null;
   const age = Date.now() - Number(hit.ts || 0);
@@ -71,7 +66,7 @@ function getCachedList(key, ttlMs) {
 }
 
 function setCachedList(key, data) {
-  if (!CACHE_ENABLED) return; // Skip cache jika disabled
+  if (!CACHE_ENABLED) return;
   listCache.set(key, { ts: Date.now(), data });
 }
 
@@ -271,18 +266,18 @@ async function getConnection(routerId = null) {
     user = router.user;
     password = router.password;
   } else {
-    // Tidak ada routerId, coba cari router default dari database
+
     const defaultRouter = db.prepare('SELECT * FROM routers WHERE is_active = 1 ORDER BY id ASC LIMIT 1').get();
-    
+
     if (defaultRouter) {
-      // Ada router aktif di database, gunakan itu
+
       host = defaultRouter.host;
       port = defaultRouter.port || 8728;
       user = defaultRouter.user;
       password = defaultRouter.password;
       logger.info(`[MikroTik] Using default router from database: ${defaultRouter.name} (${defaultRouter.host})`);
     } else {
-      // Fallback ke settings.json untuk backward compatibility
+
       const settings = getSettingsWithCache();
       host = settings.mikrotik_host;
       port = settings.mikrotik_port || 8728;
@@ -337,8 +332,6 @@ async function getConnection(routerId = null) {
       timeout: 5000
     });
 
-    // Attach defensive error listener to prevent unhandled 'error' events
-    // from crashing the process when connection is refused or drops
     if (typeof api.on === 'function') {
       api.on('error', (err) => {
         logger.error(`[MikroTik] Connection error event (${host}): ${err?.message || err}`);
@@ -353,8 +346,7 @@ async function getConnection(routerId = null) {
 
     await api.connect();
     connectionProbeCache.set(cacheKey, { port: selectedPort, okUntil: Date.now() + 30000, failUntil: 0, failMessage: '' });
-    
-    // Adapt api so that it exposes the expected .send method and correct close logic
+
     api.send = async (words) => {
       if (!api.rosApi || typeof api.rosApi.write !== 'function') {
         throw new Error('MikroTik API connection is not established');
@@ -370,7 +362,7 @@ async function getConnection(routerId = null) {
       return undefined;
     };
     if (typeof api.disconnect !== 'function') api.disconnect = api.close;
-    
+
     const client = new ClientAdapter(api);
     return { client, api };
   } catch (err) {
@@ -452,7 +444,7 @@ async function getPppoeUsers(routerId = null) {
   let conn = null;
   try {
     conn = await getConnection(routerId);
-    // Only get secrets for pppoe service
+
     const results = await conn.client.menu('/ppp/secret').where('service', 'pppoe').get();
     return results.map(r => ({
       id: r['.id'],
@@ -468,14 +460,13 @@ async function getPppoeUsers(routerId = null) {
   }
 }
 
-// Function to isolate a user
 async function setPppoeProfile(username, profileName, routerId = null) {
   let conn = null;
   try {
     conn = await getConnection(routerId);
     const secretMenu = conn.client.menu('/ppp/secret');
     const secrets = await secretMenu.where('name', username).get();
-    
+
     if (!secrets || secrets.length === 0) {
       throw new Error(`PPPoE User ${username} not found in MikroTik`);
     }
@@ -487,12 +478,10 @@ async function setPppoeProfile(username, profileName, routerId = null) {
     }
     const currentProfile = secret.profile;
 
-    // Hanya update dan kick jika profil berubah
     if (currentProfile !== profileName) {
       logger.info(`[MikroTik] Changing profile for ${username}: ${currentProfile} -> ${profileName}`);
       await secretMenu.set({ profile: profileName }, secretId);
-      
-      // Disconnect active connection so they reconnect with new profile
+
       await kickPppoeUser(username, routerId);
     } else {
       logger.info(`[MikroTik] Profile for ${username} is already ${profileName}. Skipping update and kick.`);
@@ -517,7 +506,7 @@ async function kickPppoeUser(username, routerId = null) {
   try {
     conn = await getConnection(routerId);
     const sessions = await conn.client.menu('/ppp/active').where('name', normalizedUsername).get();
-    
+
     if (sessions.length > 0) {
       logger.info(`[MikroTik] Kicking ${sessions.length} active session(s) for user: ${normalizedUsername}`);
       for (const s of sessions) {
@@ -531,7 +520,7 @@ async function kickPppoeUser(username, routerId = null) {
       activeSessionsMapCache = { ts: 0, data: new Map() };
       return true;
     }
-    
+
     logger.info(`[MikroTik] No active PPPoE session found for user: ${normalizedUsername}`);
     return false;
   } catch (e) {
@@ -549,7 +538,7 @@ async function kickHotspotUser(username, routerId = null) {
   try {
     conn = await getConnection(routerId);
     const sessions = await conn.client.menu('/ip/hotspot/active').where('user', normalizedUsername).get();
-    
+
     if (sessions.length > 0) {
       logger.info(`[MikroTik] Kicking ${sessions.length} active hotspot session(s) for user: ${normalizedUsername}`);
       for (const s of sessions) {
@@ -573,32 +562,32 @@ async function kickHotspotUser(username, routerId = null) {
 
 async function getPppoeSecrets(routerId = null) {
   const ck = cacheKey(routerId, 'pppoeSecrets');
-  const cached = getCachedList(ck, 5000); // Reduced cache to 5s for real-time consistency
+  const cached = getCachedList(ck, 5000);
   if (cached) return cached;
   let conn = null;
   try {
     conn = await getConnection(routerId);
-    // Use proplist to only fetch needed fields for better performance
+
     let rows;
     try {
       rows = await withTimeout(
         conn.api.send([
           '/ppp/secret/print',
-          '?service=pppoe', // Only get PPPoE service
+          '?service=pppoe',
           '=.proplist=.id,name,profile,local-address,remote-address,disabled,service'
         ]),
-        25000, // Increased timeout to 25s for very slow routers
+        25000,
         'getPppoeSecrets'
       );
     } catch (timeoutErr) {
-      // Fallback: try without proplist if timeout occurs
+
       logger.warn(`[MikroTik] Timeout with proplist, trying full query: ${timeoutErr.message}`);
       const allRows = await withTimeout(
         conn.client.menu('/ppp/secret').get(),
-        30000, // 30 second timeout for fallback
+        30000,
         'getPppoeSecrets-fallback'
       );
-      // Filter only pppoe service
+
       rows = Array.isArray(allRows) ? allRows.filter(r => {
         const svc = String(r?.service || '').toLowerCase();
         return svc === 'pppoe' || svc === 'any' || !svc;
@@ -609,7 +598,7 @@ async function getPppoeSecrets(routerId = null) {
     return mapped;
   } catch (e) {
     logger.error('Error getting PPPoE secrets:', e);
-    // Return cached data if available, even if expired
+
     const staleCache = listCache.get(ck);
     if (staleCache && staleCache.data) {
       logger.warn('[MikroTik] Returning stale cache due to error');
@@ -621,7 +610,7 @@ async function getPppoeSecrets(routerId = null) {
       try {
         conn.api.close();
       } catch (closeErr) {
-        // Ignore close errors
+
       }
     }
   }
@@ -676,12 +665,11 @@ async function createPppoeSecret({ username, password, profile, remoteAddress, r
       service: 'pppoe',
       profile: profile
     };
-    
-    // Add remote address if provided
+
     if (remoteAddress && remoteAddress.trim()) {
       secretData['remote-address'] = remoteAddress.trim();
     }
-    
+
     const res = await conn.client.menu('/ppp/secret').add(secretData);
     listCache.delete(cacheKey(routerId, 'pppoeSecrets'));
     listCache.delete(cacheKey(routerId, 'pppoeActive'));
@@ -697,7 +685,7 @@ async function createPppoeSecret({ username, password, profile, remoteAddress, r
 
 async function getPppoeActive(routerId = null) {
   const ck = cacheKey(routerId, 'pppoeActive');
-  const cached = getCachedList(ck, 2000); // Very short cache (2s) for real-time active sessions
+  const cached = getCachedList(ck, 2000);
   if (cached) return cached;
   let conn = null;
   try {
@@ -758,7 +746,7 @@ async function getPppoeActive(routerId = null) {
     return mapped;
   } catch (e) {
     logger.error('Error getting active PPPoE sessions:', e);
-    // Return cached data if available, even if expired
+
     const staleCache = listCache.get(ck);
     if (staleCache && staleCache.data) {
       logger.warn('[MikroTik] Returning stale active sessions cache due to error');
@@ -770,7 +758,7 @@ async function getPppoeActive(routerId = null) {
       try {
         conn.api.close();
       } catch (closeErr) {
-        // Ignore close errors
+
       }
     }
   }
@@ -875,17 +863,16 @@ async function getAllActiveSessionsMap(forceRefresh = false) {
   return activeSessionsMapCache.data;
 }
 
-
 async function getHotspotActive(routerId = null) {
   const ck = cacheKey(routerId, 'hotspotActive');
-  const cached = getCachedList(ck, 5000); // Increased cache from 3s to 5s for better performance
+  const cached = getCachedList(ck, 5000);
   if (cached) return cached;
   let conn = null;
   try {
     conn = await getConnection(routerId);
     const rows = await withTimeout(
       conn.client.menu('/ip/hotspot/active').get(),
-      5000, // 5 second timeout
+      5000,
       'getHotspotActive'
     );
     setCachedList(ck, rows);
@@ -924,7 +911,6 @@ async function getIpPools(routerId = null) {
   }
 }
 
-// PPPoE Profiles CRUD
 async function addPppoeProfile(data, routerId = null) {
   let conn = null;
   try {
@@ -970,7 +956,6 @@ async function deletePppoeProfile(id, routerId = null) {
   }
 }
 
-// Hotspot Profiles CRUD (User Profiles)
 async function getHotspotUserProfiles(routerId = null) {
   const ck = cacheKey(routerId, 'hotspotUserProfiles');
   const cached = getCachedList(ck, 15000);
@@ -979,7 +964,7 @@ async function getHotspotUserProfiles(routerId = null) {
   try {
     conn = await getConnection(routerId);
     const start = Date.now();
-    // Gunakan client.menu().get() karena dengan routeros-client sudah stabil dan tidak hang
+
     const rows = await conn.client.menu('/ip/hotspot/user/profile').get();
     const ms = Date.now() - start;
     if (ms > 1200) logger.warn(`[MikroTik] Slow /ip/hotspot/user/profile.get (${ms}ms)`);
@@ -1035,8 +1020,7 @@ async function addHotspotUserProfile(data, routerId = null) {
       const first = st ? st.split(/\\s+/)[0] : '';
       if (first) payload['session-timeout'] = first;
     }
-    
-    // Handle on-login (Mikhmon metadata)
+
     if (data && data['on-login'] != null) {
       const onLogin = String(data['on-login'] || '').trim();
       if (onLogin) payload['on-login'] = onLogin;
@@ -1085,8 +1069,7 @@ async function updateHotspotUserProfile(id, data, routerId = null) {
       const first = st ? st.split(/\\s+/)[0] : '';
       if (first) safe['session-timeout'] = first;
     }
-    
-    // Handle on-login (Mikhmon metadata)
+
     if (data && data['on-login'] != null) {
       const onLogin = String(data['on-login'] || '').trim();
       if (onLogin) safe['on-login'] = onLogin;
@@ -1137,12 +1120,12 @@ async function deleteHotspotUserProfile(id, routerId = null) {
 
 async function getHotspotUsers(routerId = null) {
   const ck = cacheKey(routerId, 'hotspotUsers');
-  const cached = getCachedList(ck, 10000); // Reduced cache to 10s for more consistent data
+  const cached = getCachedList(ck, 10000);
   if (cached) return cached;
   let conn = null;
   try {
     conn = await getConnection(routerId);
-    // Use proplist to only fetch needed fields for better performance
+
     let rows;
     try {
       rows = await withTimeout(
@@ -1150,15 +1133,15 @@ async function getHotspotUsers(routerId = null) {
           '/ip/hotspot/user/print',
           '=.proplist=.id,name,profile,mac-address,disabled,comment'
         ]),
-        20000, // Increased timeout to 20s for very slow routers
+        20000,
         'getHotspotUsers'
       );
     } catch (timeoutErr) {
-      // Fallback: try without proplist if timeout occurs
+
       logger.warn(`[MikroTik] Timeout with proplist for hotspot users, trying full query: ${timeoutErr.message}`);
       rows = await withTimeout(
         conn.client.menu('/ip/hotspot/user').get(),
-        25000, // 25 second timeout for fallback
+        25000,
         'getHotspotUsers-fallback'
       );
     }
@@ -1167,14 +1150,14 @@ async function getHotspotUsers(routerId = null) {
     return mapped;
   } catch (e) {
     logger.error('Error getting Hotspot users:', e.message);
-    // Return empty array instead of throwing to prevent page crash
+
     return [];
   } finally {
     if (conn && conn.api) {
       try {
         conn.api.close();
       } catch (closeErr) {
-        // Ignore close errors
+
       }
     }
   }
@@ -1413,7 +1396,6 @@ async function deleteHotspotProfile(id, routerId = null) {
   }
 }
 
-// Router CRUD Services
 function getAllRouters() {
   return db.prepare('SELECT * FROM routers ORDER BY name ASC').all();
 }
@@ -1440,11 +1422,7 @@ function deleteRouter(id) {
   return db.prepare('DELETE FROM routers WHERE id = ?').run(id);
 }
 
-/**
- * RouterOS (.rsc) untuk mengarahkan pelanggan di address-list LIST_ISOLIR ke portal billing
- * (HTTP/HTTPS ke IP server sesuai Pengaturan → app_url). Salin ke Terminal / Import.
- * PPPoE: set profil isolir on-up agar IP masuk LIST_ISOLIR (sama seperti tombol Setup Firewall di panel).
- */
+/** RouterOS (.rsc) untuk mengarahkan pelanggan di address-list LIST_ISOLIR ke portal billing */
 async function generateIsolirPortalScript() {
   const settings = getSettingsWithCache();
   const raw = String(settings.app_url || '').trim();
@@ -1535,11 +1513,7 @@ function getDistinctIsolirProfilesForRouter(routerId) {
   return [...names];
 }
 
-/**
- * Pasang on-up / on-down di profil PPPoE (mis. isolir) agar IP pelanggan masuk address-list LIST_ISOLIR
- * saat login — supaya NAT/firewall "halaman isolir" berlaku untuk trafik internet mereka.
- * @param {object|null} reuseConn - hasil getConnection() jika sudah terbuka (mis. dari setupIsolirFirewall).
- */
+/** Pasang on-up / on-down di profil PPPoE (mis. isolir) agar IP pelanggan masuk address-list LIST_ISOLIR */
 async function ensurePppProfileIsolirAddressListHook(profileName, routerId = null, reuseConn = null) {
   const name = String(profileName || 'isolir').trim() || 'isolir';
   let conn = reuseConn;
@@ -1593,7 +1567,6 @@ async function ensurePppProfileIsolirAddressListHook(profileName, routerId = nul
   }
 }
 
-// --- FIREWALL & ISOLIR STATIC IP ---
 async function setupIsolirFirewall(routerId = null) {
   let conn = null;
   try {
@@ -1619,7 +1592,6 @@ async function setupIsolirFirewall(routerId = null) {
       logger.warn('[setupIsolirFirewall] app_url tidak valid / tidak bisa di-resolve:', e.message);
     }
 
-    // 1. NAT HTTP/HTTPS untuk mengarahkan pelanggan isolir ke portal billing
     const natMenu = conn.client.menu('/ip/firewall/nat');
     const ensureNat = async (comment, dstPort, toPort) => {
       if (!billingIp) return;
@@ -1720,12 +1692,11 @@ async function manageStaticIp(data, routerId = null) {
   let conn = null;
   try {
     conn = await getConnection(routerId);
-    
-    // 1. Manage Simple Queue for Bandwidth
+
     const queueMenu = conn.client.menu('/queue/simple');
     const existingQueue = await queueMenu.where('target', `${ip}/32`).get();
     const safeName = String(name || '').trim().replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 40) || String(ip || '').trim();
-    
+
     const queueData = {
       name: `CUST-${safeName}`,
       target: `${ip}/32`,
@@ -1739,7 +1710,6 @@ async function manageStaticIp(data, routerId = null) {
       await queueMenu.add(queueData);
     }
 
-    // 2. Manage Address List for Isolation
     const addrListMenu = conn.client.menu('/ip/firewall/address-list');
     const existingEntry = await addrListMenu.where('address', ip).where('list', 'LIST_ISOLIR').get();
 
@@ -1766,13 +1736,11 @@ async function removeStaticIp(ip, routerId = null) {
   let conn = null;
   try {
     conn = await getConnection(routerId);
-    
-    // Remove Queue
+
     const queueMenu = conn.client.menu('/queue/simple');
     const queues = await queueMenu.where('target', `${ip}/32`).get();
     for (const q of queues) await queueMenu.remove(q['.id']);
 
-    // Remove from Address List
     const addrListMenu = conn.client.menu('/ip/firewall/address-list');
     const entries = await addrListMenu.where('address', ip).where('list', 'LIST_ISOLIR').get();
     for (const e of entries) await addrListMenu.remove(e['.id']);

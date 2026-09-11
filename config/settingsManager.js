@@ -26,10 +26,9 @@ function isPlaceholderSessionSecret(value) {
   ].includes(lower);
 }
 
-// Cache untuk settings dengan timestamp
 let settingsCache = null;
 let settingsCacheTime = 0;
-const CACHE_DURATION = 2000; // 2 detik
+const CACHE_DURATION = 2000; 
 
 function parseBooleanSetting(value, fallback = false) {
   if (value === true || value === false) return value;
@@ -42,15 +41,11 @@ function parseBooleanSetting(value, fallback = false) {
   return Boolean(fallback);
 }
 
-// File system watcher untuk auto-reload settings
-// PHASE 22: Development-only override. Unset in production → identical behavior
-// (../settings.json). A local dev launcher may point this at an isolated copy.
 const settingsPath = String(process.env.ZENRADIUS_SETTINGS_PATH || '').trim()
   ? path.resolve(process.env.ZENRADIUS_SETTINGS_PATH)
   : path.join(__dirname, '../settings.json');
 let watcher = null;
 
-// Helper untuk baca settings.json secara dinamis
 function getSettings() {
   try {
     const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) || {};
@@ -87,7 +82,6 @@ function getSettings() {
   }
 }
 
-// Helper untuk baca settings.json dengan cache
 function getSettingsWithCache() {
   const now = Date.now();
   if (!settingsCache || (now - settingsCacheTime) > CACHE_DURATION) {
@@ -97,13 +91,11 @@ function getSettingsWithCache() {
   return settingsCache;
 }
 
-// Helper untuk mendapatkan nilai setting dengan fallback
 function getSetting(key, defaultValue = null) {
   const settings = getSettingsWithCache();
   return settings[key] !== undefined ? settings[key] : defaultValue;
 }
 
-// Helper untuk mendapatkan multiple settings
 function getSettingsByKeys(keys) {
   const settings = getSettingsWithCache();
   const result = {};
@@ -113,18 +105,16 @@ function getSettingsByKeys(keys) {
   return result;
 }
 
-// File system watcher untuk auto-reload settings
 function startSettingsWatcher() {
   try {
-    // Hapus watcher lama jika ada
+    
     if (watcher) {
       watcher.close();
     }
     
-    // Buat watcher baru
     watcher = fs.watch(settingsPath, (eventType, filename) => {
       if (eventType !== 'change') return;
-      // Di Windows `filename` sering null; hanya abaikan jika jelas bukan settings.json
+      
       if (filename != null && filename !== 'settings.json') return;
 
       settingsCache = null;
@@ -148,16 +138,12 @@ function startSettingsWatcher() {
   }
 }
 
-// Mulai watcher saat modul dimuat
 startSettingsWatcher();
 
-// Menyimpan pengaturan ke settings.json
 function saveSettings(newSettings) {
   try {
     const currentSettings = getSettings();
-    // Phase 14: newSettings dapat berasal dari request body ({...req.body}).
-    // Tolak key prototype-polluting agar payload seperti __proto__ tidak dapat
-    // mencemari Object.prototype atau ditulis ke settings.json.
+    
     const safeIncoming = {};
     for (const [k, v] of Object.entries(newSettings || {})) {
       if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
@@ -174,10 +160,7 @@ function saveSettings(newSettings) {
   }
 }
 
-/**
- * Helper untuk mendapatkan waktu sekarang dalam format lokal
- * sesuai timezone yang diatur di settings.json
- */
+/** Helper untuk mendapatkan waktu sekarang dalam format lokal */
 function getNowLocal() {
   const tz = getSetting('timezone', 'Asia/Jakarta');
   const now = new Date();
@@ -198,15 +181,11 @@ function getNowLocal() {
   return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}`;
 }
 
-/**
- * Helper untuk mendapatkan objek Date yang sudah disesuaikan dengan timezone di settings.
- * Mengembalikan objek Date yang "angkanya" sudah sesuai dengan waktu lokal.
- */
+/** Helper untuk mendapatkan objek Date yang sudah disesuaikan dengan timezone di settings. */
 function getCurrentDateInTimezone() {
   const tz = getSetting('timezone', 'Asia/Jakarta');
   const now = new Date();
   
-  // Ambil string format ISO lokal
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: tz,
     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -218,7 +197,6 @@ function getCurrentDateInTimezone() {
   const p = {};
   parts.forEach(part => p[part.type] = part.value);
   
-  // Buat objek Date baru dengan nilai lokal tersebut
   return new Date(`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`);
 }
 
@@ -249,20 +227,14 @@ function getCurrentTimeInfo() {
   };
 }
 
-/**
- * Mendapatkan string ISO-like tapi dalam waktu lokal (bukan UTC).
- * Berguna untuk timestamp log/backup.
- */
+/** Mendapatkan string ISO-like tapi dalam waktu lokal (bukan UTC). */
 function getNowLocalISO() {
   const info = getCurrentTimeInfo();
   const pad = (n) => String(n).padStart(2, '0');
   return `${info.year}-${pad(info.month)}-${pad(info.day)}T${pad(info.hour)}:${pad(info.minute)}:${pad(info.second)}`;
 }
 
-/**
- * Memparse string tanggal (YYYY-MM-DD HH:mm:ss) menjadi objek Date
- * dengan asumsi string tersebut adalah waktu lokal sesuai setting timezone.
- */
+/** Memparse string tanggal (YYYY-MM-DD HH:mm:ss) menjadi objek Date */
 function parseDateInTimezone(dateStr) {
   if (!dateStr) return null;
   const tz = getSetting('timezone', 'Asia/Jakarta');
@@ -306,21 +278,17 @@ function formatTimeLocal(date) {
   return d.toLocaleTimeString('id-ID', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
 }
 
-/**
- * Memastikan semua setting wajib ada di settings.json dengan default value.
- * Dijalankan saat startup aplikasi untuk migrasi/inisialisasi setting baru.
- */
+/** Memastikan semua setting wajib ada di settings.json dengan default value. */
 function ensureDefaultSettings() {
   try {
     const currentSettings = getSettings();
     let needsSave = false;
     
-    // Default settings yang wajib ada
     const defaultSettings = {
-      // Branding default (dipakai footer & judul; admin bisa ubah dari /admin/settings)
+      
       company_header: 'ZenRadius',
       footer_info: 'ZenRadius - All Rights Reserved',
-      // WA defaults agar broadcast/pengingat tidak undefined di install baru
+      
       wa_gateway_type: 'baileys',
       whatsapp_broadcast_delay: 5,
       whatsapp_auto_billing_enabled: false,
@@ -328,7 +296,7 @@ function ensureDefaultSettings() {
       fonnte_url: 'https://api.fonnte.com/send',
       http_wa_method: 'POST',
       http_wa_header_name: 'Authorization',
-      // RADIUS Server settings (ditambahkan untuk update dari GitHub)
+      
       radius_enabled: '0',
       radius_secret: 'secret123',
       radius_auth_port: '1812',
@@ -349,7 +317,6 @@ function ensureDefaultSettings() {
 
     };
     
-    // Cek dan tambahkan setting yang belum ada
     for (const [key, defaultValue] of Object.entries(defaultSettings)) {
       if (currentSettings[key] === undefined) {
         currentSettings[key] = defaultValue;
@@ -358,7 +325,6 @@ function ensureDefaultSettings() {
       }
     }
     
-    // Simpan jika ada perubahan
     if (needsSave) {
       fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2), 'utf-8');
       settingsCache = currentSettings;

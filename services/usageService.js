@@ -1,6 +1,4 @@
-/**
- * Service: Pelacakan Pemakaian Kuota (Usage Tracking)
- */
+/** Service: Pelacakan Pemakaian Kuota (Usage Tracking) */
 const db = require('../config/database');
 const { logger } = require('../config/logger');
 
@@ -18,10 +16,10 @@ function updateUsage(customerId, deltaIn, deltaOut, totalIn, totalOut) {
 
   if (existing) {
     return db.prepare(`
-      UPDATE customer_usage 
-      SET bytes_in = bytes_in + ?, 
-          bytes_out = bytes_out + ?, 
-          last_total_bytes_in = ?, 
+      UPDATE customer_usage
+      SET bytes_in = bytes_in + ?,
+          bytes_out = bytes_out + ?,
+          last_total_bytes_in = ?,
           last_total_bytes_out = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
@@ -37,8 +35,8 @@ function updateUsage(customerId, deltaIn, deltaOut, totalIn, totalOut) {
 function resetUsageCounter(customerId) {
   const now = new Date();
   return db.prepare(`
-    UPDATE customer_usage 
-    SET last_total_bytes_in = 0, last_total_bytes_out = 0 
+    UPDATE customer_usage
+    SET last_total_bytes_in = 0, last_total_bytes_out = 0
     WHERE customer_id = ? AND period_month = ? AND period_year = ?
   `).run(customerId, now.getMonth() + 1, now.getFullYear());
 }

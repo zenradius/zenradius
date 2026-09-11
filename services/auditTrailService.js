@@ -1,11 +1,7 @@
-/**
- * Service: Audit Trail untuk Operasi Sensitif
- * Mencatat semua operasi sensitif untuk tracking dan security
- */
+/** Service: Audit Trail untuk Operasi Sensitif */
 const db = require('../config/database');
 const { logger } = require('../config/logger');
 
-// Inisialisasi tabel audit_trail
 function initAuditTrailTable() {
   try {
     db.exec(`
@@ -33,22 +29,9 @@ function initAuditTrailTable() {
   }
 }
 
-// Inisialisasi saat module dimuat
 initAuditTrailTable();
 
-/**
- * Catat audit trail
- * @param {Object} data - Data audit
- * @param {string} data.action - Tipe aksi (CREATE, UPDATE, DELETE, LOGIN, LOGOUT, dll)
- * @param {string} data.entity_type - Tipe entity (customer, invoice, package, dll)
- * @param {string} data.entity_id - ID entity
- * @param {string} data.actor_type - Tipe actor (admin, cashier, technician, agent, customer, system)
- * @param {string} data.actor_id - ID actor
- * @param {string} data.actor_name - Nama actor
- * @param {Object} data.details - Detail aksi (akan di-JSON.stringify)
- * @param {string} data.ip_address - IP address
- * @param {string} data.user_agent - User agent
- */
+/** Catat audit trail */
 function logAuditTrail(data) {
   try {
     const stmt = db.prepare(`
@@ -76,16 +59,7 @@ function logAuditTrail(data) {
   }
 }
 
-/**
- * Ambil audit trail berdasarkan filter
- * @param {Object} filters - Filter pencarian
- * @param {string} filters.action - Filter berdasarkan aksi
- * @param {string} filters.entity_type - Filter berdasarkan tipe entity
- * @param {string} filters.actor_type - Filter berdasarkan tipe actor
- * @param {string} filters.actor_id - Filter berdasarkan ID actor
- * @param {number} filters.limit - Batas hasil
- * @param {number} filters.offset - Offset hasil
- */
+/** Ambil audit trail berdasarkan filter */
 function getAuditTrail(filters = {}) {
   try {
     let query = 'SELECT * FROM audit_trail WHERE 1=1';
@@ -126,7 +100,6 @@ function getAuditTrail(filters = {}) {
     const stmt = db.prepare(query);
     const results = stmt.all(...params);
 
-    // Parse details JSON
     return results.map(row => ({
       ...row,
       details: row.details ? JSON.parse(row.details) : null
@@ -150,11 +123,9 @@ function getAuditStats() {
       recent_24h: 0
     };
 
-    // Total audit
     const totalStmt = db.prepare('SELECT COUNT(*) as count FROM audit_trail');
     stats.total = totalStmt.get().count;
 
-    // By action
     const actionStmt = db.prepare(`
       SELECT action, COUNT(*) as count
       FROM audit_trail
@@ -163,7 +134,6 @@ function getAuditStats() {
     `);
     stats.by_action = actionStmt.all();
 
-    // By entity type
     const entityStmt = db.prepare(`
       SELECT entity_type, COUNT(*) as count
       FROM audit_trail
@@ -172,7 +142,6 @@ function getAuditStats() {
     `);
     stats.by_entity_type = entityStmt.all();
 
-    // By actor type
     const actorStmt = db.prepare(`
       SELECT actor_type, COUNT(*) as count
       FROM audit_trail
@@ -181,7 +150,6 @@ function getAuditStats() {
     `);
     stats.by_actor_type = actorStmt.all();
 
-    // Recent 24h
     const recentStmt = db.prepare(`
       SELECT COUNT(*) as count
       FROM audit_trail
@@ -196,10 +164,7 @@ function getAuditStats() {
   }
 }
 
-/**
- * Hapus audit trail lama (retention policy)
- * @param {number} days - Jumlah hari untuk dipertahankan (default 90 hari)
- */
+/** Hapus audit trail lama (retention policy) */
 function cleanupOldAuditTrail(days = 90) {
   try {
     const stmt = db.prepare(`

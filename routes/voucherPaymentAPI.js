@@ -1,7 +1,4 @@
-/**
- * Voucher Payment API Routes
- * Clean API untuk voucher payment dengan auto-detect payment gateway
- */
+/** Voucher Payment API Routes */
 const express = require('express');
 const router = express.Router();
 const { logger } = require('../config/logger');
@@ -9,10 +6,7 @@ const db = require('../config/database');
 const voucherPaymentSvc = require('../services/voucherPaymentService');
 const { getSettingsWithCache } = require('../config/settingsManager');
 
-/**
- * GET /api/voucher/payment-methods
- * Get available payment methods dari semua gateway yang aktif
- */
+/** GET /api/voucher/payment-methods */
 router.get('/payment-methods', async (req, res) => {
   try {
     const methods = await voucherPaymentSvc.getAvailablePaymentMethods();
@@ -24,7 +18,6 @@ router.get('/payment-methods', async (req, res) => {
       });
     }
 
-    // Group by gateway
     const grouped = {};
     methods.forEach(method => {
       if (!grouped[method.gateway]) {
@@ -48,15 +41,11 @@ router.get('/payment-methods', async (req, res) => {
   }
 });
 
-/**
- * POST /api/voucher/create-payment
- * Create voucher payment transaction
- */
+/** POST /api/voucher/create-payment */
 router.post('/create-payment', async (req, res) => {
   try {
     const { voucherOrderId, paymentMethod, appUrl } = req.body;
 
-    // Validate input
     if (!voucherOrderId) {
       return res.status(400).json({
         success: false,
@@ -71,7 +60,6 @@ router.post('/create-payment', async (req, res) => {
       });
     }
 
-    // Get voucher order
     const voucherOrder = db.prepare(
       'SELECT * FROM public_voucher_orders WHERE id = ?'
     ).get(voucherOrderId);
@@ -90,14 +78,12 @@ router.post('/create-payment', async (req, res) => {
       });
     }
 
-    // Create payment
     const result = await voucherPaymentSvc.createVoucherPayment(
       voucherOrder,
       paymentMethod,
       appUrl
     );
 
-    // Update voucher order dengan payment info
     db.prepare(`
       UPDATE public_voucher_orders
       SET payment_gateway = ?,
@@ -141,10 +127,7 @@ router.post('/create-payment', async (req, res) => {
   }
 });
 
-/**
- * GET /api/voucher/order/:orderId
- * Get voucher order details
- */
+/** GET /api/voucher/order/:orderId */
 router.get('/order/:orderId', (req, res) => {
   try {
     const { orderId } = req.params;
@@ -185,10 +168,7 @@ router.get('/order/:orderId', (req, res) => {
   }
 });
 
-/**
- * GET /api/voucher/default-gateway
- * Get default payment gateway
- */
+/** GET /api/voucher/default-gateway */
 router.get('/default-gateway', (req, res) => {
   try {
     const gateway = voucherPaymentSvc.getDefaultPaymentGateway();
@@ -213,10 +193,7 @@ router.get('/default-gateway', (req, res) => {
   }
 });
 
-/**
- * GET /api/voucher/status/:orderId
- * Get voucher order status
- */
+/** GET /api/voucher/status/:orderId */
 router.get('/status/:orderId', (req, res) => {
   try {
     const { orderId } = req.params;

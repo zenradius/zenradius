@@ -1,7 +1,4 @@
-/**
- * Settings API Routes
- * Untuk manage settings lewat API dengan security & validation
- */
+/** Settings API Routes */
 const express = require('express');
 const router = express.Router();
 const { logger } = require('../config/logger');
@@ -17,15 +14,11 @@ const {
   rateLimitSettings
 } = require('../middleware/settingsMiddleware');
 
-// Apply middleware
 router.use(rateLimitSettings);
 router.use(maskSensitiveValues);
 router.use(logSettingsAccess);
 
-/**
- * GET /api/settings
- * Get all settings (masked)
- */
+/** GET /api/settings */
 router.get('/', requireSuperAdmin, (req, res) => {
   try {
     const settings = getSettings();
@@ -43,10 +36,7 @@ router.get('/', requireSuperAdmin, (req, res) => {
   }
 });
 
-/**
- * GET /api/settings/rules
- * Get validation rules untuk setiap field
- */
+/** GET /api/settings/rules */
 router.get('/rules', requireSuperAdmin, (req, res) => {
   try {
     const rules = getAllRules();
@@ -63,10 +53,7 @@ router.get('/rules', requireSuperAdmin, (req, res) => {
   }
 });
 
-/**
- * GET /api/settings/:field
- * Get single setting (masked)
- */
+/** GET /api/settings/:field */
 router.get('/:field', requireSuperAdmin, (req, res) => {
   try {
     const { field } = req.params;
@@ -94,10 +81,7 @@ router.get('/:field', requireSuperAdmin, (req, res) => {
   }
 });
 
-/**
- * POST /api/settings
- * Update settings dengan validation & encryption
- */
+/** POST /api/settings */
 router.post('/', requireSuperAdmin, validateSettingsMiddleware, (req, res) => {
   try {
     const settings = req.validatedSettings;
@@ -129,10 +113,7 @@ router.post('/', requireSuperAdmin, validateSettingsMiddleware, (req, res) => {
   }
 });
 
-/**
- * PUT /api/settings/:field
- * Update single setting
- */
+/** PUT /api/settings/:field */
 router.put('/:field', requireSuperAdmin, (req, res) => {
   try {
     const { field } = req.params;
@@ -172,10 +153,7 @@ router.put('/:field', requireSuperAdmin, (req, res) => {
   }
 });
 
-/**
- * GET /api/settings/audit/history
- * Get settings change history
- */
+/** GET /api/settings/audit/history */
 router.get('/audit/history', requireSuperAdmin, (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
@@ -194,10 +172,7 @@ router.get('/audit/history', requireSuperAdmin, (req, res) => {
   }
 });
 
-/**
- * GET /api/settings/audit/stats
- * Get audit statistics
- */
+/** GET /api/settings/audit/stats */
 router.get('/audit/stats', requireSuperAdmin, (req, res) => {
   try {
     const stats = getAuditStats();
@@ -214,10 +189,7 @@ router.get('/audit/stats', requireSuperAdmin, (req, res) => {
   }
 });
 
-/**
- * GET /api/settings/audit/export
- * Export audit log
- */
+/** GET /api/settings/audit/export */
 router.get('/audit/export', requireSuperAdmin, (req, res) => {
   try {
     const format = req.query.format || 'json';
@@ -249,10 +221,7 @@ router.get('/audit/export', requireSuperAdmin, (req, res) => {
   }
 });
 
-/**
- * POST /api/settings/test-connection/:service
- * Test connection ke external service
- */
+/** POST /api/settings/test-connection/:service */
 router.post('/test-connection/:service', requireSuperAdmin, async (req, res) => {
   try {
     const { service } = req.params;

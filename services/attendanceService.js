@@ -1,14 +1,10 @@
 const db = require('../config/database');
 const { getSetting, getCurrentDateInTimezone, parseDateInTimezone } = require('../config/settingsManager');
 
-/**
- * ATTENDANCE SERVICE
- * Mengelola absensi karyawan (teknisi, admin, cashier, collector)
- */
+/** ATTENDANCE SERVICE */
 
-// Calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Radius of Earth in kilometers
+  const R = 6371; 
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a =
@@ -16,32 +12,27 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
     Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c * 1000; // Convert to meters
+  const distance = R * c * 1000; 
   return distance;
 }
 
-// Validate if location is within allowed radius
 function validateLocation(lat, lng) {
-  // Get office location from settings
+  
   const officeLat = parseFloat(getSetting('office_lat', '0'));
   const officeLng = parseFloat(getSetting('office_lng', '0'));
-  const allowedRadius = parseInt(getSetting('attendance_radius', '100')); // Default 100 meters
+  const allowedRadius = parseInt(getSetting('attendance_radius', '100')); 
   const geofencingEnabled = getSetting('attendance_geofencing', 'true') === 'true';
   
-  // If geofencing disabled or office location not set, allow all
   if (!geofencingEnabled || !officeLat || !officeLng) {
     return { valid: true, distance: 0, message: 'Geofencing disabled' };
   }
   
-  // If no GPS provided
   if (!lat || !lng) {
     return { valid: false, distance: 0, message: 'GPS location required' };
   }
   
-  // Calculate distance
   const distance = calculateDistance(officeLat, officeLng, parseFloat(lat), parseFloat(lng));
   
-  // Check if within radius
   if (distance <= allowedRadius) {
     return {
       valid: true,
@@ -57,9 +48,8 @@ function validateLocation(lat, lng) {
   }
 }
 
-// Create attendance record (check-in)
 function checkIn(data) {
-  // Validate location
+  
   const locationCheck = validateLocation(data.lat, data.lng);
   if (!locationCheck.valid) {
     throw new Error(locationCheck.message);
@@ -82,7 +72,6 @@ function checkIn(data) {
   );
 }
 
-// Update attendance record (check-out)
 function checkOut(attendanceId, data) {
   const attendance = db.prepare('SELECT * FROM attendance WHERE id = ?').get(attendanceId);
   if (!attendance) {
@@ -93,13 +82,11 @@ function checkOut(attendanceId, data) {
     throw new Error('Already checked out');
   }
   
-  // Validate location for check-out
   const locationCheck = validateLocation(data.lat, data.lng);
   if (!locationCheck.valid) {
     throw new Error(locationCheck.message);
   }
   
-  // Calculate work duration in minutes
   const checkInTime = parseDateInTimezone(attendance.check_in_time);
   const checkOutTime = new Date();
   const durationMinutes = Math.floor((checkOutTime - checkInTime) / 1000 / 60);
@@ -126,7 +113,6 @@ function checkOut(attendanceId, data) {
   );
 }
 
-// Get today's attendance for an employee
 function getTodayAttendance(employeeType, employeeId) {
   const stmt = db.prepare(`
     SELECT * FROM attendance 
@@ -140,7 +126,6 @@ function getTodayAttendance(employeeType, employeeId) {
   return stmt.get(employeeType, employeeId);
 }
 
-// Get attendance history for an employee
 function getAttendanceHistory(employeeType, employeeId, limit = 30) {
   const stmt = db.prepare(`
     SELECT * FROM attendance 
@@ -152,7 +137,6 @@ function getAttendanceHistory(employeeType, employeeId, limit = 30) {
   return stmt.all(employeeType, employeeId, limit);
 }
 
-// Get all attendance records for a specific date
 function getAttendanceByDate(date) {
   const stmt = db.prepare(`
     SELECT * FROM attendance 
@@ -163,7 +147,6 @@ function getAttendanceByDate(date) {
   return stmt.all(date);
 }
 
-// Get attendance records for a date range
 function getAttendanceByDateRange(startDate, endDate) {
   const stmt = db.prepare(`
     SELECT * FROM attendance 
@@ -174,7 +157,6 @@ function getAttendanceByDateRange(startDate, endDate) {
   return stmt.all(startDate, endDate);
 }
 
-// Get attendance summary for an employee (monthly)
 function getMonthlyAttendanceSummary(employeeType, employeeId, year, month) {
   const stmt = db.prepare(`
     SELECT 
@@ -195,7 +177,6 @@ function getMonthlyAttendanceSummary(employeeType, employeeId, year, month) {
   return stmt.get(employeeType, employeeId, yearStr, monthStr);
 }
 
-// Get all attendance for today (for admin dashboard)
 function getTodayAllAttendance() {
   const stmt = db.prepare(`
     SELECT * FROM attendance 
@@ -206,7 +187,6 @@ function getTodayAllAttendance() {
   return stmt.all();
 }
 
-// Get attendance statistics for admin
 function getAttendanceStats(date = null) {
   const dateFilter = date ? `date(check_in_time) = date('${date}')` : `date(check_in_time) = date(NOW_LOCAL())`;
   
@@ -224,13 +204,11 @@ function getAttendanceStats(date = null) {
   return stmt.all();
 }
 
-// Check if employee has checked in today
 function hasCheckedInToday(employeeType, employeeId) {
   const today = getTodayAttendance(employeeType, employeeId);
   return today !== undefined;
 }
 
-// Get late check-ins (after 8:30 AM)
 function getLateCheckIns(date = null) {
   const dateFilter = date ? `date(check_in_time) = date('${date}')` : `date(check_in_time) = date(NOW_LOCAL())`;
   
@@ -244,7 +222,6 @@ function getLateCheckIns(date = null) {
   return stmt.all();
 }
 
-// Get employees who haven't checked out
 function getNotCheckedOut(date = null) {
   const dateFilter = date ? `date(check_in_time) = date('${date}')` : `date(check_in_time) = date(NOW_LOCAL())`;
   
@@ -258,12 +235,10 @@ function getNotCheckedOut(date = null) {
   return stmt.all();
 }
 
-// Delete attendance record (admin only)
 function deleteAttendance(id) {
   return db.prepare('DELETE FROM attendance WHERE id = ?').run(id);
 }
 
-// Update attendance record (admin only - for corrections)
 function updateAttendance(id, data) {
   const stmt = db.prepare(`
     UPDATE attendance 
@@ -285,7 +260,6 @@ function updateAttendance(id, data) {
   );
 }
 
-// Get geofencing settings
 function getGeofencingSettings() {
   return {
     enabled: getSetting('attendance_geofencing', 'true') === 'true',
@@ -315,4 +289,3 @@ module.exports = {
   getGeofencingSettings
 };
 
-// Made with Bob

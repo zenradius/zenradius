@@ -6,20 +6,12 @@ function normalizePhone(phone) {
   return metaService.normalizePhone(phone);
 }
 
-/**
- * Webhook inbound universal — Fonnte, Wablas, Starsender, Woowa, GOWA, dll.
- * Provider cukup arahkan webhook ke salah satu URL di bawah (POST JSON):
- *   POST /api/webhook/wa-inbound          (universal)
- *   POST /api/webhook/fonnte              (alias Fonnte)
- *   POST /api/webhook/wablas              (alias Wablas)
- *   GET  /api/webhook/wa-inbound?sender=62xxx&message=halo&token=xxx  (GET fallback)
- */
+/** Webhook inbound universal — Fonnte, Wablas, Starsender, Woowa, GOWA, dll. */
 async function handleInbound(req, res) {
   try {
     const body = req.body || {};
     const query = req.query || {};
 
-    // Coba ekstrak nomor pengirim & pesan dari berbagai format provider
     let senderPhone =
       body.sender || body.from || body.phone || body.fromPhone || body.number ||
       body.senderNumber || body.wa_number || body.source || body.chatId ||
@@ -33,12 +25,6 @@ async function handleInbound(req, res) {
       body.message?.text || body.message?.body || body.result?.message ||
       query.message || query.text || query.body || '';
 
-    // Fonnte format: { sender: "628123...", message: "...", device: "..." }
-    // Wablas format: { phone: "628123...", message: "..." } atau { data: { phone, message } }
-    // Starsender: { from: "628123...", text: "..." }
-    // GOWA: { sender: "628123...@s.whatsapp.net", message: "..." }
-
-    // Bersihkan JID suffix jika ada
     if (senderPhone && String(senderPhone).includes('@')) {
       senderPhone = String(senderPhone).split('@')[0];
     }
@@ -52,13 +38,12 @@ async function handleInbound(req, res) {
     }
 
     if (!messageText) {
-      // Ada provider kirim image tanpa text — catat sebagai [Media]
+      
       const hasMedia = body.image || body.media || body.document || body.data?.image;
       if (hasMedia) messageText = '[Media]';
       else return res.status(200).json({ ok: true, message: 'ignored — no message' });
     }
 
-    // Opsional: verifikasi token jika diisi
     const expectedToken = String(
       require('../config/settingsManager').getSetting('http_wa_inbound_token', '') || ''
     ).trim();
@@ -70,7 +55,6 @@ async function handleInbound(req, res) {
       }
     }
 
-    // Cari pelanggan dari DB
     let customerName = 'Pelanggan';
     let customerId = null;
     try {
@@ -78,14 +62,12 @@ async function handleInbound(req, res) {
       if (cust) { customerName = cust.name; customerId = cust.id; }
     } catch (e) {}
 
-    // Tentukan gateway dari path atau header
     let gateway = 'http';
     const path = req.path || req.originalUrl || '';
     if (path.includes('fonnte')) gateway = 'fonnte';
     else if (path.includes('wablas')) gateway = 'wablas';
     else if (body.gateway) gateway = String(body.gateway);
 
-    // Deduplicate: hindari simpan duplikat pesan yang sama dalam 5 detik terakhir
     try {
       const recent = db.prepare(
         "SELECT id FROM wa_chat_messages WHERE sender_phone=? AND message_text=? AND created_at >= datetime('now','-5 seconds') LIMIT 1"

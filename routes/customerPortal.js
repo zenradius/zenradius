@@ -48,7 +48,7 @@ function customerWifiActor(req, profile, loginId) {
     userAgent: req.get('user-agent') || null
   };
 }
-// Phase 15: fail-closed jika modul rate limiter tidak dapat dimuat.
+
 let loginRateLimiter = (req, res, next) => res.status(503).send('Layanan login sementara tidak tersedia.');
 try {
   const rlMod = require('../middleware/rateLimiter');
@@ -57,7 +57,6 @@ try {
   }
 } catch (e) {}
 
-// Configure multer for customer photo uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, '../public/uploads/tickets');
@@ -74,7 +73,7 @@ const storage = multer.diskStorage({
 
 const uploadCustomer = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 5 * 1024 * 1024 }, 
   fileFilter: function (req, file, cb) {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -219,8 +218,6 @@ function verifyPublicToken(token, secret) {
   }
 }
 
-// parseMikhmonOnLogin dipindahkan ke utils/mikhmonParser.js (shared utility)
-
 function normalizeBuyerPhone(input) {
   const digits = String(input || '').replace(/\D/g, '');
   if (digits.length < 8) return '';
@@ -248,7 +245,6 @@ function genCustomCode(len, charset) {
   if (charset === 'numbers' && out[0] === '0') out = '1' + out.slice(1);
   return out;
 }
-
 
 function isEnabledFlag(v) {
   return v === true || v === 'true' || v === 1 || v === '1';
@@ -294,7 +290,7 @@ function resolveConfiguredGateway(settings) {
 function resolveConfiguredGatewayForAmount(settings, amount) {
   const amt = Number(amount || 0) || 0;
   const min = {
-    qris_static: 0,  // QRIS Static: minimal 0
+    qris_static: 0,  
     tripay: 0,
     midtrans: 10000,
     xendit: 1000,
@@ -303,11 +299,10 @@ function resolveConfiguredGatewayForAmount(settings, amount) {
 
   const def = String(settings?.default_gateway || 'tripay').toLowerCase();
   
-  // Priority order: default gateway dulu, kemudian fallback ke gateway lain
   const fallbackOrder = ['qris_static', 'tripay', 'xendit', 'duitku', 'midtrans'];
 
   const ok = (g) => {
-    // QRIS Static check
+    
     if (g === 'qris_static') {
       const enabled = settings?.qris_static_enabled && settings?.qris_static_payload;
       if (!enabled) return false;
@@ -315,18 +310,15 @@ function resolveConfiguredGatewayForAmount(settings, amount) {
       return amt >= minAmt;
     }
     
-    // Gateway lainnya
     if (!isGatewayConfigured(settings, g)) return false;
     const minAmt = min[g] ?? 0;
     return amt >= minAmt;
   };
 
-  // Cek default gateway dulu
   if (ok(def)) return def;
   
-  // Fallback ke gateway lain
   for (const g of fallbackOrder) {
-    if (g === def) continue;  // Skip default, sudah dicek
+    if (g === def) continue;  
     if (ok(g)) return g;
   }
   
@@ -544,7 +536,6 @@ function ensureInvoiceQrisUnique(inv, force = false) {
   let chosenCode = 0;
   let chosenAmount = 0;
 
-  // 1. Prioritaskan ID Pelanggan sebagai kode unik utama (selalu di bawah 500)
   if (custId > 0) {
     const prefCode = (custId % 499 === 0) ? 499 : (custId % 499);
     const prefAmount = baseAmount + prefCode;
@@ -554,7 +545,6 @@ function ensureInvoiceQrisUnique(inv, force = false) {
     }
   }
 
-  // 2. Jika kode ID Pelanggan sudah terpakai, cari kode terendah yang tersedia (1 s/d 499)
   if (!chosenAmount) {
     for (let code = 1; code <= 499; code++) {
       const amount = baseAmount + code;
@@ -566,7 +556,6 @@ function ensureInvoiceQrisUnique(inv, force = false) {
     }
   }
 
-  // 3. Fallback keamanan jika slot 1-499 penuh (500 s/d 999)
   if (!chosenAmount) {
     for (let code = 500; code <= 999; code++) {
       const amount = baseAmount + code;
@@ -607,7 +596,6 @@ function ensureVoucherOrderQrisUnique(order, force = false) {
   let chosenCode = 0;
   let chosenAmount = 0;
 
-  // Search sequentially from 1 to 499 (always under 500)
   for (let code = 1; code <= 499; code++) {
     const amount = baseAmount + code;
     if (isQrisAmountAvailable(amount, { excludeVoucherOrderId: orderId })) {
@@ -617,7 +605,6 @@ function ensureVoucherOrderQrisUnique(order, force = false) {
     }
   }
 
-  // Safety fallback if 1-499 full
   if (!chosenAmount) {
     for (let code = 500; code <= 999; code++) {
       const amount = baseAmount + code;
@@ -740,7 +727,6 @@ async function invokeRouterOsMenuCommand(menu, command, args) {
   return null;
 }
 
-// Route: Syarat & Ketentuan (TOS)
 router.get('/tos', (req, res) => {
   const settings = getSettingsWithCache();
   res.render('tos', { 
@@ -750,7 +736,6 @@ router.get('/tos', (req, res) => {
   });
 });
 
-// Route: Kebijakan Privasi
 router.get('/privacy', (req, res) => {
   const settings = getSettingsWithCache();
   res.render('privacy', { 
@@ -760,7 +745,6 @@ router.get('/privacy', (req, res) => {
   });
 });
 
-// Route: Tentang Kami
 router.get('/about', (req, res) => {
   const settings = getSettingsWithCache();
   res.render('about', { 
@@ -770,7 +754,6 @@ router.get('/about', (req, res) => {
   });
 });
 
-// Route: Kontak Support
 router.get('/contact', (req, res) => {
   const settings = getSettingsWithCache();
   res.render('contact', { 
@@ -974,9 +957,6 @@ router.get('/check-billing', async (req, res) => {
   });
 });
 
-// Simpan hasil query profile terakhir yang berhasil (last-known-good)
-// Dipakai sebagai fallback jika MikroTik timeout/gagal sesaat
-// Bukan cache permanen — hilang saat server restart
 let _voucherLastGoodProfiles = null;
 
 router.get('/voucher', async (req, res) => {
@@ -989,7 +969,7 @@ router.get('/voucher', async (req, res) => {
     const name = String(profileName || '').trim();
     if (!name) return null;
     try {
-      // ── Cek voucher_packages ──────────────────
+      
       const pkgRow = db.prepare(`
         SELECT price, validity
         FROM voucher_packages
@@ -1002,7 +982,6 @@ router.get('/voucher', async (req, res) => {
         if (price > 0) return { price, validity };
       }
 
-      // ── Fallback: voucher_batches ──────────────────
       const row = db.prepare(`
         SELECT price, validity
         FROM voucher_batches
@@ -1020,14 +999,10 @@ router.get('/voucher', async (req, res) => {
     }
   };
 
-  /**
-   * Ambil voucher profiles — LANGSUNG dari database lokal (voucher_batches).
-   * Tidak perlu koneksi ke MikroTik. Instan < 1ms karena SQLite lokal.
-   * Profile dengan nama 'default' difilter otomatis.
-   */
+  /** Ambil voucher profiles — LANGSUNG dari database lokal (voucher_batches). */
   const getVoucherProfiles = async () => {
     try {
-      // ── SUMBER UTAMA: voucher_packages di SQLite lokal ──────────────────
+      
       const activePackages = db.prepare(`
         SELECT router_id, profile_name, price, validity
         FROM voucher_packages
@@ -1051,9 +1026,6 @@ router.get('/voucher', async (req, res) => {
         }
       }
 
-      // ── FALLBACK 1: voucher_batches di SQLite lokal ──────────────────
-      // Ambil profile unik dengan harga terbaru (id MAX per profile_name)
-      // Filter: price > 0 dan bukan nama 'default'
       const dbRows = db.prepare(`
         SELECT router_id, profile_name, price, validity
         FROM voucher_batches
@@ -1082,12 +1054,10 @@ router.get('/voucher', async (req, res) => {
 
       logger.warn('[Voucher] voucher_batches kosong atau tidak ada harga — coba last-known-good');
 
-      // ── FALLBACK: last-known-good dari query sebelumnya ────────────────
       if (_voucherLastGoodProfiles && _voucherLastGoodProfiles.length > 0) {
         return _voucherLastGoodProfiles;
       }
 
-      // ── LAST RESORT: coba MikroTik dengan timeout singkat 3 detik ──────
       logger.warn('[Voucher] Fallback ke MikroTik (last resort)...');
       const mikrotikHost = settings.mikrotik_host;
       const mikrotikUser = settings.mikrotik_user;
@@ -1134,24 +1104,20 @@ router.get('/voucher', async (req, res) => {
     }
   };
 
-
   const resolveVoucherGateway = () => {
     return resolveConfiguredGateway(settings);
   };
 
-  // Cache untuk payment channels
-  // Set PAYMENT_CACHE_DURATION = 0 untuk disable cache
   const PAYMENT_CACHE_KEY = 'voucher_payment_channels_cache';
-  const PAYMENT_CACHE_DURATION = 60 * 1000; // 1 menit (payment channels jarang berubah)
+  const PAYMENT_CACHE_DURATION = 60 * 1000; 
   
   const getVoucherPaymentChannels = async () => {
-    // Cek apakah ada gateway yang aktif
+    
     const gateway = resolveVoucherGateway();
     if (!gateway) {
       return [];
     }
     
-    // Cek cache terlebih dahulu (skip jika PAYMENT_CACHE_DURATION = 0)
     const cacheKey = `${PAYMENT_CACHE_KEY}_${gateway}`;
     if (PAYMENT_CACHE_DURATION > 0) {
       const cached = global[cacheKey];
@@ -1165,7 +1131,7 @@ router.get('/voucher', async (req, res) => {
     
     if (gateway === 'tripay') {
       try {
-        // Timeout 1.5 detik untuk Tripay (lebih agresif)
+        
         channels = await Promise.race([
           paymentSvc.getTripayChannels(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500))
@@ -1175,7 +1141,7 @@ router.get('/voucher', async (req, res) => {
         channels = [];
       }
     } else {
-      // Gateway lain tidak perlu query API, langsung return hardcoded
+      
       const base = [
         { code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true },
         { code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', active: true },
@@ -1190,7 +1156,6 @@ router.get('/voucher', async (req, res) => {
       else channels = base;
     }
     
-    // Simpan ke cache (jika enabled)
     if (PAYMENT_CACHE_DURATION > 0) {
       global[cacheKey] = {
         data: channels,
@@ -1202,8 +1167,6 @@ router.get('/voucher', async (req, res) => {
     return channels;
   };
 
-  // OPTIMASI UTAMA: Parallel execution untuk profiles dan payment channels
-  // Tidak perlu menunggu satu selesai baru eksekusi yang lain
   const [profiles, paymentChannels] = await Promise.all([
     getVoucherProfiles().catch(e => {
       logger.error('[Voucher] Error getting profiles: ' + e.message);
@@ -1290,7 +1253,7 @@ router.get('/voucher/qris/:orderId', async (req, res) => {
     return res.redirect('/customer/voucher?order=' + encodeURIComponent(String(orderId)) + '&t=' + encodeURIComponent(String(req.query.t || '')) + '&err=' + encodeURIComponent(String(e?.message || e || 'Gagal')));
   }
 });
-// API endpoint untuk cek status voucher order (untuk auto-polling di halaman QRIS)
+
 router.get('/voucher/status/:orderId', async (req, res) => {
   const settings = getSettingsWithCache();
   const orderId = Number(req.params.orderId || 0);
@@ -1321,7 +1284,6 @@ router.get('/voucher/status/:orderId', async (req, res) => {
   }
 });
 
-
 router.post('/public/voucher/create-payment', async (req, res) => {
   const settings = getSettingsWithCache();
 
@@ -1338,7 +1300,7 @@ router.post('/public/voucher/create-payment', async (req, res) => {
     const name = String(profileName || '').trim();
     if (!name) return null;
     try {
-      // ── Cek voucher_packages ──────────────────
+      
       const pkgRow = db.prepare(`
         SELECT price, validity
         FROM voucher_packages
@@ -1351,7 +1313,6 @@ router.post('/public/voucher/create-payment', async (req, res) => {
         if (price > 0) return { price, validity };
       }
 
-      // ── Fallback: voucher_batches ──────────────────
       const row = db.prepare(`
         SELECT price, validity
         FROM voucher_batches
@@ -1404,7 +1365,6 @@ router.post('/public/voucher/create-payment', async (req, res) => {
     selected = null;
   }
 
-  // ── Robust DB Fallback ──────────────────
   if (!selected) {
     logger.warn(`[Voucher] Resolving profile '${profileName}' from MikroTik failed or timed out. Falling back to local DB...`);
     const configured = getConfiguredVoucherPrice(null, profileName);
@@ -1609,7 +1569,6 @@ router.post('/public/voucher/create-payment', async (req, res) => {
   }
 });
 
-// ─── REGISTRATION / PENDAFTARAN ─────────────────────────────────────────────
 router.get('/register', (req, res) => {
   const settings = getSettingsWithCache();
   const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
@@ -1630,7 +1589,6 @@ router.post('/register', async (req, res) => {
       throw new Error('Anda harus menyetujui Syarat & Ketentuan sebelum mendaftar.');
     }
 
-    // Buat pelanggan dengan status inactive (menunggu survei/pemasangan)
     const newCustomer = customerSvc.createCustomer({
       name,
       phone,
@@ -1656,7 +1614,6 @@ router.post('/register', async (req, res) => {
       } catch (e) { logger.warn('[Register] Gagal kirim password portal ke pelanggan: ' + e.message); }
     }
 
-    // Kirim notifikasi ke Admin
     if (settings.whatsapp_enabled && settings.whatsapp_admin_numbers && settings.whatsapp_admin_numbers.length > 0) {
       const { sendWA } = await import('../services/whatsappBot.mjs');
       const selectedPkg = packages.find(p => p.id.toString() === package_id.toString());
@@ -1675,11 +1632,10 @@ router.post('/register', async (req, res) => {
         if (digits.startsWith('0')) digits = '62' + digits.slice(1);
         if (seen.has(digits)) continue;
         seen.add(digits);
-        try { await sendWA(digits, finalAdminMsg); } catch(e) { /* ignore */ }
+        try { await sendWA(digits, finalAdminMsg); } catch(e) {  }
       }
     }
 
-    // Kirim notifikasi ke Teknisi Aktif
     if (settings.whatsapp_enabled) {
       try {
         const { sendWA } = await import('../services/whatsappBot.mjs');
@@ -1703,10 +1659,10 @@ router.post('/register', async (req, res) => {
             if (digits.startsWith('0')) digits = '62' + digits.slice(1);
             if (seenTech.has(digits)) continue;
             seenTech.add(digits);
-            try { await sendWA(digits, finalTechMsg); } catch(e) { /* ignore */ }
+            try { await sendWA(digits, finalTechMsg); } catch(e) {  }
           }
         }
-      } catch(e) { /* ignore */ }
+      } catch(e) {  }
     }
 
     res.render('register', { 
@@ -1771,21 +1727,18 @@ router.post('/login', loginRateLimiter, async (req, res) => {
     });
   }
 
-  // 1. Tahap 1: Cari Data di Billing DB
   customerPhone = customer.phone || phone;
   pppoeUsername = customer.pppoe_username || null;
 
-  // Prioritas: PPPoE username > genieacs_tag > phone
   const searchTokens = [
     customer.pppoe_username,
     customer.genieacs_tag,
     customer.phone
   ].filter(Boolean);
 
-  // Cari secara paralel dengan timeout 2.0s agar tidak menggantung jika GenieACS offline/lambat
   const acsSearchPromise = (async () => {
     const results = await Promise.allSettled(searchTokens.map(async (token) => {
-      let d = await customerDevice.findDeviceByPppoe(token); // Prioritas PPPoE
+      let d = await customerDevice.findDeviceByPppoe(token); 
       if (!d) d = await customerDevice.findDeviceByTag(token);
       if (!d) {
         const variants = await customerDevice.findDeviceWithTagVariants(token);
@@ -1809,7 +1762,6 @@ router.post('/login', loginRateLimiter, async (req, res) => {
     }
   }
 
-  // 2. Tahap 2: Fallback (Jika DB tidak ketemu atau perangkat belum link)
   if (!device) {
     try {
       const directPromise = customerDevice.findDeviceWithTagVariants(phone);
@@ -1827,7 +1779,6 @@ router.post('/login', loginRateLimiter, async (req, res) => {
     } catch (e) {}
   }
 
-  // 3. Tahap 3: Verifikasi Akhir
   if (!device) {
     logger.warn('[Login] Login dilanjutkan tanpa data ONU (device tidak ditemukan).');
   }
@@ -1835,12 +1786,10 @@ router.post('/login', loginRateLimiter, async (req, res) => {
   const loginTime = Date.now() - startTime;
   logger.info(`[Login] Proses login selesai dalam ${loginTime}ms`);
 
-  // --- OTP LOGIC ---
   if (settings.login_otp_enabled) {
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    const expiry = Date.now() + 5 * 60 * 1000; // 5 menit
+    const expiry = Date.now() + 5 * 60 * 1000; 
     
-    // Simpan ke session sementara
     req.session.pending_login = {
       phone: customerPhone,
       pppoeUsername: pppoeUsername,
@@ -1850,7 +1799,6 @@ router.post('/login', loginRateLimiter, async (req, res) => {
 
     logger.info('[Login] OTP dibuat.');
 
-    // Kirim via WhatsApp
     if (settings.whatsapp_enabled) {
       try {
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
@@ -1877,18 +1825,17 @@ router.post('/login', loginRateLimiter, async (req, res) => {
     return res.redirect('/customer/login-otp');
   }
 
-  // --- DIRECT LOGIN ---
   logger.info('[Login] Login direct berhasil.');
-  // SECURITY: Regenerate session after authentication to prevent session fixation
+  
   return req.session.regenerate((err) => {
     if (err) {
       logger.error('[CUSTOMER LOGIN] Session regeneration failed:', err);
       const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
       return res.render('customer-login', { error: 'Kesalahan sistem. Silakan coba lagi.', success: null, settings, packages });
     }
-    req.session.phone = customerPhone; // Nomor telepon untuk findCustomerByAny()
-    req.session.role = "pelanggan"; // canonical RBAC role (Phase 3)
-    req.session.pppoe_username = pppoeUsername; // PPPoE username untuk GenieACS & MikroTik
+    req.session.phone = customerPhone; 
+    req.session.role = "pelanggan"; 
+    req.session.pppoe_username = pppoeUsername; 
     req.session.save((err2) => {
       if (err2) {
         logger.error('[CUSTOMER LOGIN] Session save failed:', err2);
@@ -1924,16 +1871,16 @@ router.post('/login-otp', loginRateLimiter, (req, res) => {
     logger.info('[Login] OTP berhasil diverifikasi.');
     const pendingPhone = pending.phone;
     const pendingPppoe = pending.pppoeUsername;
-    // SECURITY: Regenerate session after authentication to prevent session fixation
+    
     return req.session.regenerate((err) => {
       if (err) {
         logger.error('[CUSTOMER OTP LOGIN] Session regeneration failed:', err);
         const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
         return res.render('customer-login', { error: 'Kesalahan sistem. Silakan coba lagi.', success: null, settings, packages });
       }
-      req.session.phone = pendingPhone; // Nomor telepon customer
-      req.session.role = "pelanggan"; // canonical RBAC role (Phase 3)
-      req.session.pppoe_username = pendingPppoe; // PPPoE username untuk GenieACS & MikroTik
+      req.session.phone = pendingPhone; 
+      req.session.role = "pelanggan"; 
+      req.session.pppoe_username = pendingPppoe; 
       req.session.save((err2) => {
         if (err2) {
           logger.error('[CUSTOMER OTP LOGIN] Session save failed:', err2);
@@ -1950,7 +1897,6 @@ router.post('/login-otp', loginRateLimiter, (req, res) => {
   }
 });
 
-// Pelanggan terisolir: paksa halaman /isolated, kecuali cek tagihan / bayar / logout
 router.use((req, res, next) => {
   res.locals.session = req.session;
   res.locals.settings = getSettingsWithCache();
@@ -1968,13 +1914,12 @@ router.use((req, res, next) => {
 });
 
 router.get('/dashboard', async (req, res) => {
-  // Debug logging
+  
   logger.info(`[Dashboard] Session ID: ${req.sessionID}, Phone: ${req.session?.phone || 'TIDAK ADA'}, PPPoE: ${req.session?.pppoe_username || 'TIDAK ADA'}`);
   
   const loginId = req.session && req.session.phone;
   if (!loginId) return res.redirect('/customer/login');
   
-  // Flash message
   let msgNotif = null;
   if (req.session._msg) {
     msgNotif = dashboardNotif(req.session._msg.text, req.session._msg.type);
@@ -2010,7 +1955,6 @@ router.get('/dashboard', async (req, res) => {
   
   const invoices = billingSvc.getInvoicesByAny(searchToken);
   
-  // Ambil tiket keluhan pelanggan
   let tickets = [];
   if (profile) {
     tickets = ticketSvc.getTicketsByCustomerId(profile.id);
@@ -2077,7 +2021,6 @@ router.get('/dashboard', async (req, res) => {
   });
 });
 
-// ─── API: Get Active Promo Slides for Dashboard ────────────────────────────
 router.get('/api/promo-slides', (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
@@ -2285,7 +2228,6 @@ router.post('/change-ssid', async (req, res) => {
     ? { type: 'success', text: 'Nama WiFi (SSID) berhasil diubah.' }
     : { type: 'danger', text: 'Gagal mengubah SSID.' };
 
-  // Kirim notifikasi WhatsApp ke pelanggan
   if (ok) {
     try {
       const settings = getSettingsWithCache();
@@ -2305,7 +2247,7 @@ router.post('/change-ssid', async (req, res) => {
           }
         }
       }
-    } catch (e) { /* ignore WA notification errors */ }
+    } catch (e) {  }
   }
 
   res.redirect('/customer/dashboard');
@@ -2342,7 +2284,6 @@ router.post('/change-password', async (req, res) => {
     ? { type: 'success', text: 'Password WiFi berhasil diubah.' }
     : { type: 'danger', text: 'Gagal mengubah password. Perangkat mungkin offline atau sedang sibuk, silakan coba lagi.' };
 
-  // Kirim notifikasi WhatsApp ke pelanggan
   if (ok) {
     try {
       const settings = getSettingsWithCache();
@@ -2362,20 +2303,18 @@ router.post('/change-password', async (req, res) => {
           }
         }
       }
-    } catch (e) { /* ignore WA notification errors */ }
+    } catch (e) {  }
   }
 
   res.redirect('/customer/dashboard');
 });
 
-// ─── CHANGE PORTAL PASSWORD (Login Password) ────────────────────────────
 router.post('/change-portal-password', async (req, res) => {
   const loginId = String(req.session?.phone ?? '').replace(/[\r\n\t]+/g, '').trim();
   if (!loginId) return res.redirect('/customer/login');
 
   const { current_password, new_password, confirm_password } = req.body;
 
-  // Validate inputs
   if (!current_password || !new_password || !confirm_password) {
     req.session._msg = { type: 'danger', text: 'Semua field harus diisi.' };
     return res.redirect('/customer/dashboard');
@@ -2398,13 +2337,11 @@ router.post('/change-portal-password', async (req, res) => {
       return res.redirect('/customer/dashboard');
     }
 
-    // Verify current password (mendukung hash & legacy plaintext + auto-migrate)
     if (!customerSvc.verifyCustomerPortalPassword(profile, current_password)) {
       req.session._msg = { type: 'danger', text: 'Password saat ini tidak sesuai.' };
       return res.redirect('/customer/dashboard');
     }
 
-    // Update password (disimpan sebagai hash PBKDF2)
     const adminSvc = require('../services/adminService');
     db.prepare('UPDATE customers SET portal_password = ? WHERE id = ?')
       .run(adminSvc.hashPassword(new_password), profile.id);
@@ -2526,7 +2463,6 @@ router.post('/change-tag', async (req, res) => {
     resolvedPhone = newTag;
     notif = dashboardNotif('ID/Tag berhasil diubah.', 'success');
     
-    // UPDATE DATABASE SQLITE IF MATCHING PROFILE FOUND
     const profileToUpdate = customerSvc.getAllCustomers().find(c => {
       const cleanLogin = oldTag.replace(/\D/g, '');
       const cleanDb = (c.phone || '').replace(/\D/g, '');
@@ -2588,12 +2524,6 @@ router.get('/invoice/:id/pdf', async (req, res) => {
     const inv = billingSvc.getInvoiceById(req.params.id);
     if (!inv) return res.status(404).send('Invoice tidak ditemukan');
 
-    // PHASE 11: IDOR fix — sebelumnya ownership check dilewati ketika tidak
-    // ada sesi customer aktif, sehingga invoice siapa pun dapat diakses hanya
-    // dengan menebak ID. Sekarang WAJIB salah satu: sesi customer pemilik
-    // invoice, staff session (admin/customer_service/kolektor — mis. collector
-    // portal mencetak invoice pelanggan), ATAU signed public token yang terikat
-    // ke invoice ini persis (pola sama dengan flow public_check_billing).
     const sessionCustId = req.session && req.session.customer ? Number(req.session.customer.id) : 0;
     const staffRole = getCanonicalRole(req.session);
     let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service' || staffRole === 'kolektor';
@@ -2629,7 +2559,6 @@ router.get('/invoice/:id/print', async (req, res) => {
     const inv = billingSvc.getInvoiceById(req.params.id);
     if (!inv) return res.status(404).send('Invoice tidak ditemukan');
 
-    // PHASE 11: IDOR fix — lihat catatan pada /invoice/:id/pdf di atas.
     const sessionCustId = req.session && req.session.customer ? Number(req.session.customer.id) : 0;
     const staffRole = getCanonicalRole(req.session);
     let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service' || staffRole === 'kolektor';
@@ -2666,7 +2595,6 @@ router.get('/invoice/:id/print-thermal', async (req, res) => {
     const inv = billingSvc.getInvoiceById(req.params.id);
     if (!inv) return res.status(404).send('Invoice tidak ditemukan');
 
-    // PHASE 11: IDOR fix — lihat catatan pada /invoice/:id/pdf di atas.
     const sessionCustId = req.session && req.session.customer ? Number(req.session.customer.id) : 0;
     const staffRole = getCanonicalRole(req.session);
     let authorized = (sessionCustId > 0 && Number(inv.customer_id) === sessionCustId) || staffRole === 'admin' || staffRole === 'customer_service' || staffRole === 'kolektor';
@@ -2869,7 +2797,6 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
   }
 });
 
-// ─── TICKETS / KELUHAN ─────────────────────────────────────────────────────
 router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, res) => {
   const loginId = req.session && req.session.phone;
   if (!loginId) return res.redirect('/customer/login');
@@ -2877,9 +2804,6 @@ router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, re
   const profile = findCustomerProfileByLoginId(loginId) ||
     (req.session.pppoe_username ? findCustomerProfileByLoginId(req.session.pppoe_username) : null);
 
-  // Phase 13 (IDOR): identitas pemilik tiket HARUS berasal dari session, bukan
-  // dari body. Sebelumnya req.body.customerId diprioritaskan sehingga pelanggan
-  // terautentikasi dapat membuat tiket atas nama pelanggan lain.
   const customerId = profile ? profile.id : null;
   const { subject, message } = req.body;
   if (!subject || !message || !customerId) {
@@ -2888,7 +2812,7 @@ router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, re
   }
 
   try {
-    // Prepare photo data
+    
     let photoPaths = [];
     let photoMetadata = [];
     
@@ -2904,7 +2828,6 @@ router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, re
       }));
     }
     
-    // Create ticket with photos
     const result = ticketSvc.createTicket(customerId, subject, message, {
       customerPhotos: JSON.stringify(photoPaths),
       customerPhotoMetadata: JSON.stringify(photoMetadata)
@@ -2914,12 +2837,10 @@ router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, re
     
     req.session._msg = { type: 'success', text: 'Keluhan berhasil dikirim. Tim teknisi akan segera mengeceknya.' };
 
-    // Phase 17 — mobile push signal (fire-and-forget, independent of WA).
     try {
       require('../services/pushNotificationService').notifyTicketCreated({ ticketId, customerId, subject });
     } catch (_) {}
 
-    // --- WHATSAPP NOTIFICATION FOR NEW TICKET ---
     try {
       const settings = getSettingsWithCache();
       if (settings.whatsapp_enabled) {
@@ -2960,16 +2881,13 @@ router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, re
     } catch (waErr) {
       logger.error(`[Ticket] WA Notification Error: ${waErr.message}`);
     }
-    // --------------------------------------------
-
+    
   } catch (error) {
     req.session._msg = { type: 'danger', text: 'Gagal mengirim keluhan: ' + error.message };
   }
   res.redirect('/customer/dashboard');
 });
 
-// ─── PAYMENT ROUTES ────────────────────────────────────────────────────────
-// API endpoint untuk cek status invoice/payment (untuk auto-polling di halaman QRIS dan /isolated)
 router.get('/payment/status/:invoiceId', async (req, res) => {
   try {
     const invoiceId = Number(req.params.invoiceId || 0);
@@ -2979,7 +2897,6 @@ router.get('/payment/status/:invoiceId', async (req, res) => {
       return res.status(404).json({ error: 'Invoice tidak ditemukan', status: 'error' });
     }
 
-    // CHECK 1: Session-based auth (existing)
     const loginId = req.session && req.session.phone;
     if (loginId) {
       const profile = findCustomerProfileByLoginId(loginId);
@@ -2990,10 +2907,9 @@ router.get('/payment/status/:invoiceId', async (req, res) => {
           paid_at: inv.paid_at || null
         });
       }
-      // If session doesn't match, fall through to token check
+      
     }
 
-    // CHECK 2: Public token auth (NEW for /isolated polling)
     const publicToken = req.query.t;
     if (publicToken) {
       const settings = getSettingsWithCache();
@@ -3020,7 +2936,6 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
   const loginId = req.session && req.session.phone;
   const publicToken = req.query.t;
   
-  // CHECK 1: Session login
   if (!loginId && !publicToken) {
     return res.redirect('/customer/login');
   }
@@ -3032,17 +2947,16 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
     if (!inv) throw new Error('Tagihan tidak ditemukan');
     if (inv.status === 'paid') throw new Error('Tagihan ini sudah lunas.');
     
-    // Verify loginId atau publicToken
     let profile = null;
     if (loginId) {
       profile = findCustomerProfileByLoginId(loginId);
       if (!profile || Number(inv.customer_id) !== Number(profile.id)) throw new Error('Tagihan tidak valid');
     } else if (publicToken) {
-      // Verify public token
+      
       const tokenUtil = require('../utils/tokenUtil');
       const payload = tokenUtil.verifyPublicToken(publicToken, settings.session_secret);
       if (!payload || String(payload.invoiceId) !== String(inv.id)) throw new Error('Token tidak valid atau expired');
-      // Get customer from invoice
+      
       profile = customerSvc.getCustomerById(inv.customer_id);
       if (!profile) throw new Error('Pelanggan tidak ditemukan');
     } else {
@@ -3086,7 +3000,6 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
     const gateway = resolveConfiguredGatewayForAmount(settings, inv.amount);
     if (!gateway) throw new Error('Payment gateway belum dikonfigurasi atau nominal terlalu kecil untuk gateway aktif');
     
-    // Jika gateway adalah QRIS Static, auto-use QRIS_STATIC method
     if (gateway === 'qris_static') {
       const { uniqueCode, amountUnique } = ensureInvoiceQrisUnique(inv, false);
       const qrisQrUrl = await getStaticQrisQrUrlForAmount(settings, amountUnique);
@@ -3121,7 +3034,6 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
     
     logger.info(`[Payment] Creating payment for INV-${inv.id}, Gateway: ${gateway}, Method: ${method}, Auth: ${loginId ? 'session' : 'publicToken'}`);
     
-    // Tentukan base URL aplikasi untuk callback
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     const host = req.get('host');
     const appUrl = settings.app_url || `${protocol}://${host}`;
@@ -3171,7 +3083,7 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
       const resolvedExpiresAt =
         resolvePaymentExpiresAt(gateway, result) ||
         gatewayDefaultExpiresAtIso(gateway);
-      // Simpan info pembayaran ke database
+      
       billingSvc.updatePaymentInfo(inv.id, {
         gateway: gateway,
         order_id: result.order_id,
@@ -3407,7 +3319,7 @@ router.post('/payment/callback', express.json({
 }), async (req, res) => {
   const settings = getSettingsWithCache();
   const tripaySignature = req.headers['x-callback-signature'];
-  const midtransSignature = req.headers['x-callback-token']; // Midtrans usually uses Basic Auth or IP whitelist, but let's check payload
+  const midtransSignature = req.headers['x-callback-token']; 
   
   const jsonBody = req.rawBody || JSON.stringify(req.body);
   let gatewayOrderId = null;
@@ -3416,7 +3328,6 @@ router.post('/payment/callback', express.json({
   let status = null;
   let gateway = null;
 
-  // --- DETEKSI TRIPAY ---
   if (tripaySignature) {
     if (paymentSvc.verifyTripayWebhook(jsonBody, tripaySignature, settings.tripay_private_key)) {
       const { merchant_ref, status: tpStatus } = req.body;
@@ -3431,7 +3342,7 @@ router.post('/payment/callback', express.json({
       return res.status(401).json({ success: false, message: 'Invalid signature' });
     }
   } 
-  // --- DETEKSI MIDTRANS ---
+  
   else if (req.body.transaction_status && req.body.order_id) {
     const serverKey = settings.midtrans_server_key;
     if (paymentSvc.verifyMidtransWebhook(req.body, serverKey)) {
@@ -3447,7 +3358,7 @@ router.post('/payment/callback', express.json({
       return res.status(401).json({ success: false, message: 'Invalid signature' });
     }
   }
-  // --- DETEKSI XENDIT ---
+  
   else if (req.body.external_id && req.body.status && !tripaySignature) {
     const xenditToken = req.headers['x-callback-token'];
     const configuredToken = String(settings.xendit_callback_token || '').trim();
@@ -3474,7 +3385,7 @@ router.post('/payment/callback', express.json({
       return res.status(401).json({ success: false, message: 'Invalid token' });
     }
   }
-  // --- DETEKSI DUITKU ---
+  
   else if (req.body.merchantCode && req.body.merchantOrderId && req.body.resultCode) {
     if (paymentSvc.verifyDuitkuWebhook(req.body, settings.duitku_api_key)) {
       const { merchantOrderId, resultCode } = req.body;
@@ -3491,7 +3402,7 @@ router.post('/payment/callback', express.json({
   }
 
   if (gatewayOrderId && status === 'paid') {
-    // --- 1. Cek Request Top-Up Saldo Pelanggan (Prefix TOPUP) ---
+    
     if (orderPrefix === 'TOPUP' || gatewayOrderId.startsWith('TOPUP')) {
       const topupReq = db.prepare('SELECT * FROM customer_topup_requests WHERE payment_order_id = ? OR id = ?').get(gatewayOrderId, gatewayOrderId.replace('TOPUP', '').replace(/^-/, ''));
       if (topupReq && String(topupReq.status) === 'pending') {
@@ -3503,7 +3414,6 @@ router.post('/payment/callback', express.json({
           db.prepare(`UPDATE customers SET balance = balance + ? WHERE id=?`).run(topupReq.amount, topupReq.customer_id);
         })();
 
-        // Kirim notifikasi WA ke pelanggan
         const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(topupReq.customer_id);
         if (settings.whatsapp_enabled && customer && customer.phone) {
           try {
@@ -3525,7 +3435,6 @@ router.post('/payment/callback', express.json({
       return res.json({ success: true });
     }
 
-    // --- 2. Cek Request Top-Up Saldo Agen (Prefix AGTOP) ---
     if (orderPrefix === 'AGTOP' || gatewayOrderId.startsWith('AGTOP')) {
       const agentTopupReq = db.prepare('SELECT * FROM agent_topup_requests WHERE payment_order_id = ? OR id = ?').get(gatewayOrderId, gatewayOrderId.replace('AGTOP', '').replace(/^-/, ''));
       if (agentTopupReq && String(agentTopupReq.status) === 'pending') {
@@ -3537,7 +3446,6 @@ router.post('/payment/callback', express.json({
           db.prepare(`UPDATE agents SET balance = balance + ? WHERE id=?`).run(agentTopupReq.amount, agentTopupReq.agent_id);
         })();
 
-        // Kirim notifikasi WA ke Agen
         const agent = db.prepare('SELECT * FROM agents WHERE id = ?').get(agentTopupReq.agent_id);
         if (settings.whatsapp_enabled && agent && agent.phone) {
           try {
@@ -3559,7 +3467,6 @@ router.post('/payment/callback', express.json({
       return res.json({ success: true });
     }
 
-    // --- 3. Cek Pesanan Voucher Hotspot (Prefix VOUCHER) ---
     if (orderPrefix === 'VOUCHER' || gatewayOrderId.startsWith('VOUCHER')) {
       const order = db.prepare('SELECT * FROM public_voucher_orders WHERE payment_order_id = ? OR id = ?').get(gatewayOrderId, targetIdCandidate);
       if (order) {
@@ -3584,7 +3491,6 @@ router.post('/payment/callback', express.json({
           let created = null;
           let attempt = 0;
           
-          // ── Load Paket Voucher Config ──────────────────
           let prefix = '';
           let codeLength = 6;
           let charset = 'mixed';
@@ -3672,7 +3578,6 @@ router.post('/payment/callback', express.json({
       return res.json({ success: true });
     }
 
-    // --- 4. Cek Tagihan Bulanan / Pelanggan (Prefix INV) ---
     const idNum = Number(targetIdCandidate || 0);
     if (idNum > 0 && (orderPrefix === 'INV' || !orderPrefix || gatewayOrderId.startsWith('INV'))) {
       logger.info(`[Webhook] Pembayaran diterima via ${gateway} untuk Invoice ID: ${idNum}`);
@@ -3719,8 +3624,6 @@ router.post('/payment/callback', express.json({
   res.json({ success: true });
 });
 
-// ─── PPOB & SALDO PELANGGAN ───────────────────────────────────────────────────
-
 const agentSvc = require('../services/agentService');
 
 function getCustomerBalance(customerId) {
@@ -3738,7 +3641,6 @@ function adjustCustomerBalance(customerId, delta, note = '') {
   })();
 }
 
-// Halaman PPOB & saldo untuk pelanggan (wajib login)
 router.get('/ppob', (req, res) => {
   const states = sidebarMenuSvc.getStoredMenuStates();
   if (states['digiflazz'] !== 'visible') {
@@ -3746,7 +3648,6 @@ router.get('/ppob', (req, res) => {
   }
   const settings = getSettingsWithCache();
   
-  // Debug logging
   logger.info(`[PPOB] Session ID: ${req.sessionID}, Phone: ${req.session?.phone || 'TIDAK ADA'}`);
   logger.info(`[PPOB] Session object: ${JSON.stringify(req.session)}`);
   
@@ -3761,7 +3662,6 @@ router.get('/ppob', (req, res) => {
     return res.redirect('/customer/login');
   }
 
-  // Get category filter from URL parameter
   const categoryFilter = String(req.query.category || '').trim();
 
   const digiflazzConfigured = Boolean(
@@ -3772,7 +3672,6 @@ router.get('/ppob', (req, res) => {
     ? agentSvc.listDigiflazzProducts({ include_inactive: false, limit: 3000 })
     : [];
   
-  // Filter products by category if specified
   const filteredProducts = categoryFilter
     ? products.filter(p => String(p.category || '').trim() === categoryFilter)
     : products;
@@ -3800,7 +3699,6 @@ router.get('/ppob', (req, res) => {
   });
 });
 
-// Beli PPOB pakai saldo (wajib login)
 router.post('/ppob/buy', express.urlencoded({ extended: true }), async (req, res) => {
   const states = sidebarMenuSvc.getStoredMenuStates();
   if (states['digiflazz'] !== 'visible') {
@@ -3817,10 +3715,6 @@ router.post('/ppob/buy', express.urlencoded({ extended: true }), async (req, res
 
   if (!sku || !target) return redirectErr('Data pesanan tidak lengkap.');
 
-  // Phase 14: harga TIDAK BOLEH berasal dari request. Sebelumnya req.body.price
-  // dipakai langsung untuk memotong saldo, sehingga pelanggan dapat mengirim
-  // price=1 (atau 0) dan membeli produk PPOB tanpa membayar harga sebenarnya.
-  // Harga jual sekarang diambil dari katalog server-side (digiflazz_products).
   const product = agentSvc.getDigiflazzProductLocalBySku(sku);
   if (!product) return redirectErr('Produk tidak ditemukan atau sedang tidak aktif.');
 
@@ -3831,14 +3725,11 @@ router.post('/ppob/buy', express.urlencoded({ extended: true }), async (req, res
   const balance = getCustomerBalance(customer.id);
   if (balance < price) return redirectErr(`Saldo tidak cukup. Saldo Anda: Rp ${balance.toLocaleString('id-ID')}, diperlukan: Rp ${price.toLocaleString('id-ID')}. Silakan top-up terlebih dahulu.`);
 
-  // Potong saldo
   adjustCustomerBalance(customer.id, -price, `Beli PPOB ${productName} -> ${target}`);
 
-  // Catat pesanan
   const ins = db.prepare(`INSERT INTO public_ppob_orders (customer_id, buyer_phone, sku, product_name, target, price, status) VALUES (?, ?, ?, ?, ?, ?, 'processing')`).run(customer.id, customer.phone, sku, productName, target, price);
   const orderId = Number(ins.lastInsertRowid);
 
-  // Eksekusi Digiflazz
   try {
     const digiResult = await agentSvc.buyPulsaAsAdmin({ sku, target, actorName: `Pelanggan ${customer.name}`, actorPhone: customer.phone });
     const digiSn = String(digiResult?.vendor?.sn || '');
@@ -3847,7 +3738,6 @@ router.post('/ppob/buy', express.urlencoded({ extended: true }), async (req, res
     const digiStatus = String(digiResult?.vendor?.status || 'pending').toLowerCase();
     const isFailed = digiStatus === 'gagal' || digiStatus === 'failed';
 
-    // Refund saldo jika gagal
     if (isFailed) {
       adjustCustomerBalance(customer.id, price, `Refund PPOB gagal - ${sku} -> ${target}`);
       db.prepare(`UPDATE public_ppob_orders SET status='failed', digi_message=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(digiMsg || 'Gagal dari provider', orderId);
@@ -3875,9 +3765,6 @@ router.post('/ppob/buy', express.urlencoded({ extended: true }), async (req, res
   }
 });
 
-// ─── TOP-UP SALDO via Payment Gateway ────────────────────────────────────────
-
-// Halaman request top-up saldo pelanggan
 router.get('/topup', async (req, res) => {
   const states = sidebarMenuSvc.getStoredMenuStates();
   if (states['digiflazz'] !== 'visible') {
@@ -3943,7 +3830,6 @@ router.get('/topup', async (req, res) => {
   });
 });
 
-// Proses request top-up → redirect ke Payment Gateway
 router.post('/topup/create', express.urlencoded({ extended: true }), async (req, res) => {
   const states = sidebarMenuSvc.getStoredMenuStates();
   if (states['digiflazz'] !== 'visible') {
@@ -4025,9 +3911,6 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
   }
 });
 
-// ─── TOP-UP SALDO AGEN via Payment Gateway ───────────────────────────────────
-
-// Route untuk agen request top-up via gateway
 router.post('/agent-topup/create', express.urlencoded({ extended: true }), async (req, res) => {
   const settings = getSettingsWithCache();
   if (!req.session.isAgent) return res.redirect('/agent/login');
@@ -4108,7 +3991,6 @@ router.post('/agent-topup/create', express.urlencoded({ extended: true }), async
   }
 });
 
-// ─── RECONNECT / REFRESH INTERNET INSTAN ───────────────────────────────────
 router.post('/customer/reconnect', async (req, res) => {
   try {
     const sessionPhone = req.session.phone;

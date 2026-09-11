@@ -5,7 +5,6 @@ const axios = require('axios');
 const genieacs = require('../config/genieacs');
 const db = require('../config/database');
 
-// Logger configuration
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -24,10 +23,7 @@ const logger = winston.createLogger({
   ]
 });
 
-/**
- * Profil SNMP per brand OLT
- * Setiap profil mendefinisikan OID tabel untuk status, nama, dan cara deteksi.
- */
+/** Profil SNMP per brand OLT */
 const BRAND_PROFILES = {
   hioso: [
     {
@@ -80,8 +76,8 @@ const BRAND_PROFILES = {
       status_table: '1.3.6.1.4.1.3902.1082.500.10.2.3.3.1.9',
       name_table:   '1.3.6.1.4.1.3902.1082.500.10.2.3.3.1.2',
       sn_table:     '1.3.6.1.4.1.3902.1082.500.10.2.3.3.1.6',
-      tx_power_table: '1.3.6.1.4.1.3902.1015.1010.11.2.1.1', // TX Optical power (0.01 dBm)
-      rx_power_table: '1.3.6.1.4.1.3902.1015.1010.11.2.1.2', // RX Optical power (0.01 dBm)
+      tx_power_table: '1.3.6.1.4.1.3902.1015.1010.11.2.1.1',
+      rx_power_table: '1.3.6.1.4.1.3902.1015.1010.11.2.1.2',
       offline_reason_table: '1.3.6.1.4.1.3902.1082.500.10.2.3.8.1.7',
       probe_oid:    '1.3.6.1.4.1.3902.1082.500.10.2.3.3.1.9',
       unauth_sn_table: '1.3.6.1.4.1.3902.1012.3.13.3.1.2',
@@ -120,8 +116,8 @@ const BRAND_PROFILES = {
       status_table: '1.3.6.1.4.1.37950.1.1.5.13.1.1.4',
       name_table:   '1.3.6.1.4.1.37950.1.1.5.13.1.1.10',
       sn_table:     '1.3.6.1.4.1.37950.1.1.5.13.1.1.2',
-      tx_power_table: '1.3.6.1.4.1.37950.1.1.5.13.1.1.20', // 0.1 dBm
-      rx_power_table: '1.3.6.1.4.1.37950.1.1.5.13.1.1.21', // 0.1 dBm
+      tx_power_table: '1.3.6.1.4.1.37950.1.1.5.13.1.1.20',
+      rx_power_table: '1.3.6.1.4.1.37950.1.1.5.13.1.1.21',
       probe_oid:    '1.3.6.1.4.1.37950.1.1.5.13.1.1.4',
     },
   ],
@@ -131,8 +127,8 @@ const BRAND_PROFILES = {
       status_table: '1.3.6.1.4.1.2011.6.128.1.1.2.43.1.11',
       name_table:   '1.3.6.1.4.1.2011.6.128.1.1.2.43.1.3',
       sn_table:     '1.3.6.1.4.1.2011.6.128.1.1.2.43.1.9',
-      tx_power_table: '1.3.6.1.4.1.2011.6.128.1.1.2.46.1.3', // 0.01 dBm
-      rx_power_table: '1.3.6.1.4.1.2011.6.128.1.1.2.46.1.4', // 0.01 dBm
+      tx_power_table: '1.3.6.1.4.1.2011.6.128.1.1.2.46.1.3',
+      rx_power_table: '1.3.6.1.4.1.2011.6.128.1.1.2.46.1.4',
       offline_reason_table: '1.3.6.1.4.1.2011.6.128.1.1.2.46.1.24',
       probe_oid:    '1.3.6.1.4.1.2011.6.128.1.1.2.43.1.11',
       unauth_sn_table: '1.3.6.1.4.1.2011.6.128.1.1.2.45.1.4',
@@ -171,9 +167,9 @@ const BRAND_PROFILES = {
       name: 'CDATA_EPON',
       status_table: '1.3.6.1.4.1.34592.1.3.100.12.1.1.1.15',
       name_table:   '1.3.6.1.4.1.34592.1.3.100.12.1.1.1.10',
-      sn_table:     '1.3.6.1.4.1.34592.1.3.100.12.1.1.1.2', // LLID / MAC table (bukan .10)
+      sn_table:     '1.3.6.1.4.1.34592.1.3.100.12.1.1.1.2',
       tx_power_table: '1.3.6.1.4.1.34592.1.3.100.12.1.1.1.20',
-      rx_power_table: '1.3.6.1.4.1.34592.1.3.100.12.1.1.1.21', // 0.1 dBm
+      rx_power_table: '1.3.6.1.4.1.34592.1.3.100.12.1.1.1.21',
       probe_oid:    '1.3.6.1.4.1.34592.1.3.100.12.1.1.1.15',
     }
   ],
@@ -199,13 +195,12 @@ const BRAND_PROFILES = {
   ]
 };
 
-// Nilai status yang dianggap "online" per brand
 const ONLINE_VALUES = {
   hioso: [1, 3, 4],
   hsgq:  [1, 3, 4],
   zte:   [1, 3, 'working', 'online'],
   vsol:  [1, 3, 4],
-  huawei: [5, 1, 'active', 'online'], // 5: operation
+  huawei: [5, 1, 'active', 'online'],
   fiberhome: [1, 2, 3],
   bdcom: [1, 2, 3],
   cdata: [1, 3],
@@ -222,29 +217,26 @@ const getOnlineValues = (brandKey, profile) => {
   return base;
 };
 
-/**
- * OID sistem per brand untuk mengambil metrics hardware.
- * Semua diambil dengan snmp.get (bukan walk).
- */
+/** OID sistem per brand untuk mengambil metrics hardware. */
 const SYSTEM_OIDS = {
   hioso: {
-    temp:      '1.3.6.1.4.1.25355.3.2.1.1.1.0',  // Suhu (°C)
-    cpu:       '1.3.6.1.4.1.25355.3.2.1.1.2.0',  // CPU Usage (%)
-    ram:       '1.3.6.1.4.1.25355.3.2.1.1.3.0',  // RAM Usage (%)
-    uplink_rx: '1.3.6.1.2.1.31.1.1.1.6.1',       // ifHCInOctets (uplink port 1)
-    uplink_tx: '1.3.6.1.2.1.31.1.1.1.10.1',      // ifHCOutOctets (uplink port 1)
+    temp:      '1.3.6.1.4.1.25355.3.2.1.1.1.0',
+    cpu:       '1.3.6.1.4.1.25355.3.2.1.1.2.0',
+    ram:       '1.3.6.1.4.1.25355.3.2.1.1.3.0',
+    uplink_rx: '1.3.6.1.2.1.31.1.1.1.6.1',
+    uplink_tx: '1.3.6.1.2.1.31.1.1.1.10.1',
   },
   hsgq: {
-    temp:      '1.3.6.1.4.1.3320.101.11.1.12.1', // Temp sensor
-    cpu:       '1.3.6.1.4.1.3320.101.11.1.13.1', // CPU Usage
-    ram:       '1.3.6.1.4.1.3320.101.11.1.14.1', // RAM Usage
+    temp:      '1.3.6.1.4.1.3320.101.11.1.12.1',
+    cpu:       '1.3.6.1.4.1.3320.101.11.1.13.1',
+    ram:       '1.3.6.1.4.1.3320.101.11.1.14.1',
     uplink_rx: '1.3.6.1.2.1.31.1.1.1.6.1',
     uplink_tx: '1.3.6.1.2.1.31.1.1.1.10.1',
   },
   zte: {
-    temp:      '1.3.6.1.4.1.3902.1082.500.10.2.2.4.1.19.1.1.1', // Temp sensor (zxAnCardCpuTemp)
-    cpu:       '1.3.6.1.4.1.3902.1082.500.10.2.2.4.1.10.1.1.1', // CPU Usage
-    ram:       '1.3.6.1.4.1.3902.1082.500.10.2.2.4.1.11.1.1.1', // RAM Usage
+    temp:      '1.3.6.1.4.1.3902.1082.500.10.2.2.4.1.19.1.1.1',
+    cpu:       '1.3.6.1.4.1.3902.1082.500.10.2.2.4.1.10.1.1.1',
+    ram:       '1.3.6.1.4.1.3902.1082.500.10.2.2.4.1.11.1.1.1',
     uplink_rx: '1.3.6.1.2.1.31.1.1.1.6.1',
     uplink_tx: '1.3.6.1.2.1.31.1.1.1.10.1',
   },
@@ -256,23 +248,23 @@ const SYSTEM_OIDS = {
     uplink_tx: '1.3.6.1.2.1.31.1.1.1.10.1',
   },
   huawei: {
-    temp:      '1.3.6.1.4.1.2011.6.128.1.1.2.23.1.13.0.0', // Suhu (°C)
-    cpu:       '1.3.6.1.4.1.2011.6.128.1.1.2.23.1.14.0.0', // CPU (%)
-    ram:       '1.3.6.1.4.1.2011.6.128.1.1.2.23.1.15.0.0', // RAM (%)
+    temp:      '1.3.6.1.4.1.2011.6.128.1.1.2.23.1.13.0.0',
+    cpu:       '1.3.6.1.4.1.2011.6.128.1.1.2.23.1.14.0.0',
+    ram:       '1.3.6.1.4.1.2011.6.128.1.1.2.23.1.15.0.0',
     uplink_rx: '1.3.6.1.2.1.31.1.1.1.6.1',
     uplink_tx: '1.3.6.1.2.1.31.1.1.1.10.1',
   },
   fiberhome: {
-    temp:      '1.3.6.1.4.1.27332.1.1.1.9.1.11.1.1', // Suhu (°C)
-    cpu:       '1.3.6.1.4.1.27332.1.1.1.9.1.12.1.1', // CPU (%)
-    ram:       '1.3.6.1.4.1.27332.1.1.1.9.1.14.1.1', // RAM (%)
+    temp:      '1.3.6.1.4.1.27332.1.1.1.9.1.11.1.1',
+    cpu:       '1.3.6.1.4.1.27332.1.1.1.9.1.12.1.1',
+    ram:       '1.3.6.1.4.1.27332.1.1.1.9.1.14.1.1',
     uplink_rx: '1.3.6.1.2.1.31.1.1.1.6.1',
     uplink_tx: '1.3.6.1.2.1.31.1.1.1.10.1',
   },
   bdcom: {
-    temp:      '1.3.6.1.4.1.3320.101.11.1.12.1', // Suhu (°C)
-    cpu:       '1.3.6.1.4.1.3320.101.11.1.13.1', // CPU (%)
-    ram:       '1.3.6.1.4.1.3320.101.11.1.14.1', // RAM (%)
+    temp:      '1.3.6.1.4.1.3320.101.11.1.12.1',
+    cpu:       '1.3.6.1.4.1.3320.101.11.1.13.1',
+    ram:       '1.3.6.1.4.1.3320.101.11.1.14.1',
     uplink_rx: '1.3.6.1.2.1.31.1.1.1.6.1',
     uplink_tx: '1.3.6.1.2.1.31.1.1.1.10.1',
   },
@@ -328,8 +320,6 @@ const CARD_STATUS_MAP = {
   5: 'INIT',
 };
 
-// ─── DB CRUD ────────────────────────────────────────────────────────────────
-
 function getAllOlts() {
   return db.prepare('SELECT * FROM olts ORDER BY created_at DESC').all();
 }
@@ -373,7 +363,7 @@ function updateOlt(id, data) {
     ? String(data.enable_password).trim()
     : (prev && prev.enable_password) || null;
   const stmt = db.prepare(`
-    UPDATE olts 
+    UPDATE olts
     SET name = ?, host = ?, snmp_community = ?, snmp_port = ?, brand = ?, description = ?, is_active = ?, web_user = ?, web_password = ?, api_base_url = ?, telnet_port = ?, enable_password = ?
     WHERE id = ?
   `);
@@ -398,8 +388,6 @@ function deleteOlt(id) {
   return db.prepare('DELETE FROM olts WHERE id = ?').run(id);
 }
 
-// ─── SNMP HELPERS ────────────────────────────────────────────────────────────
-
 /**
  * Normalisasi OID: hapus prefix 'iso.' atau awalan '1.' yang ganda
  */
@@ -420,7 +408,7 @@ const extractIdx = (rawOid, baseOid) => {
   if (normRaw.startsWith(normBase)) {
     return normRaw.substring(normBase.length).replace(/^\./, '');
   }
-  // fallback
+
   return rawOid.split('.').slice(-1)[0];
 };
 
@@ -444,10 +432,7 @@ const decodeSn = (val) => {
   return val.toString().toUpperCase();
 };
 
-/**
- * SN di SNMP sering jadi hex rapat (mis. 88D2742B900D); di CLI OLT bisa ditampilkan bertitik dua (88:D2:74:2B:90:0D).
- * Untuk perintah otorisasi, keduanya harus jadi bentuk yang sama (hex huruf besar tanpa separator, atau SN GPON vendor).
- */
+/** SN di SNMP sering jadi hex rapat (mis. 88D2742B900D); di CLI OLT bisa ditampilkan bertitik dua (88:D2:74:2B:90:0D). */
 function normalizeSnForOltProvision(sn) {
   const raw = String(sn == null ? '' : sn).trim();
   if (!raw) return raw;
@@ -670,8 +655,6 @@ const fetchHiosoOnuDetailViaTelnet = async (olt) => {
   }
 };
 
-// ─── CORE SNMP FUNCTIONS ─────────────────────────────────────────────────────
-
 const slowWalk = async (session, baseOid, maxEntries = 5000) => {
   const results  = {};
   let walkCount  = 0;
@@ -679,7 +662,7 @@ const slowWalk = async (session, baseOid, maxEntries = 5000) => {
   return new Promise((resolve) => {
     session.subtree(
       baseOid,
-      20, // maxRepetitions (GETBULK size)
+      20,
       (varbinds) => {
         for (const vb of varbinds) {
           if (!vb || vb.oid == null) continue;
@@ -695,7 +678,7 @@ const slowWalk = async (session, baseOid, maxEntries = 5000) => {
         }
       },
       (error) => {
-        // Resolve results when done, ignoring errors
+
         resolve(results);
       }
     );
@@ -743,17 +726,14 @@ const probeOid = async (session, oid) => {
       });
     });
     if (!vb || vb.type === snmp.ObjectType.EndOfMibView || vb.type === snmp.ObjectType.NoSuchObject) return false;
-    // Cek apakah hasil masih di bawah OID ini atau sub-treenya ada data
+
     return oidUnderBase(vb.oid, oid);
   } catch (e) {
     return false;
   }
 };
 
-/**
- * Ambil satu atau beberapa OID sekaligus menggunakan snmp.get.
- * Kembalikan array nilai (atau null jika error/tidak ada).
- */
+/** Ambil satu atau beberapa OID sekaligus menggunakan snmp.get. */
 const snmpGet = async (session, oids) => {
   try {
     const vbs = await new Promise((rv, rj) => {
@@ -1092,7 +1072,7 @@ const pickUplinkIfIndexByTraffic = async (session, oltId) => {
   if (oltId) {
     const now = Date.now();
     const cached = uplinkCache.get(oltId);
-    if (cached && (now - cached.timestamp < 3600000)) { // 1 hour cache
+    if (cached && (now - cached.timestamp < 3600000)) {
       return cached.ifIndex;
     }
   }
@@ -1105,7 +1085,7 @@ const pickUplinkIfIndexByTraffic = async (session, oltId) => {
 
   for (const c of top) {
     const first = await readInterfaceOctets(session, c.idx);
-    await new Promise(rv => setTimeout(rv, 100)); // Jedah scan lebih cepat (100ms)
+    await new Promise(rv => setTimeout(rv, 100));
     const second = await readInterfaceOctets(session, c.idx);
 
     const wrap64 = BigInt(1) << BigInt(64);
@@ -1160,10 +1140,7 @@ const readInterfaceOctets = async (session, ifIndex) => {
   };
 };
 
-/**
- * Ambil system metrics (temp, cpu, ram, uplink) untuk brand tertentu.
- * Mengisi field stats secara langsung.
- */
+/** Ambil system metrics (temp, cpu, ram, uplink) untuk brand tertentu. */
 const fetchSystemMetrics = async (session, brandKey, stats, oltId) => {
   const oids = SYSTEM_OIDS[brandKey] || SYSTEM_OIDS.hioso;
   try {
@@ -1245,7 +1222,7 @@ const fetchCardMetrics = async (session, brandKey, stats) => {
 
       const statusNum = bufferToInt(statusMap[idx]);
       const statusText = CARD_STATUS_MAP[statusNum] || (statusNum != null ? String(statusNum) : 'UNKNOWN');
-      
+
       const cpuVal = bufferToInt(cpuMap[idx]);
       const ramVal = bufferToInt(ramMap[idx]);
 
@@ -1328,7 +1305,7 @@ function translateOfflineReason(brand, rawValue) {
   }
 
   const bKey = String(brand || '').toLowerCase();
-  
+
   if (bKey === 'zte') {
     switch (valNum) {
       case 2:
@@ -1407,8 +1384,6 @@ function translateOfflineReason(brand, rawValue) {
   return `Kode (${valNum})`;
 }
 
-// ─── MAIN: getOltStats ────────────────────────────────────────────────────────
-
 async function limitConcurrency(tasks, limit) {
   const results = [];
   const executing = new Set();
@@ -1432,7 +1407,7 @@ async function getOltStats(id, full = false) {
   const cacheKey = `${id}:${full}`;
   const now = Date.now();
   const cached = statsCache.get(cacheKey);
-  const cacheDuration = full ? 15000 : 10000; // 15s cache for full table, 10s for summary
+  const cacheDuration = full ? 15000 : 10000;
 
   if (cached && (now - cached.timestamp < cacheDuration)) {
     logger.info(`[oltService] Returning cached stats for OLT ${id} (full: ${full})`);
@@ -1492,8 +1467,7 @@ async function getOltStatsInternal(id, full = false) {
 
   const community  = olt.snmp_community || 'public';
   const brandKey   = (olt.brand || 'hioso').toLowerCase();
-  
-  // Gabungkan semua profil untuk deteksi otomatis jika brand yang dipilih tidak cocok
+
   const selectedProfiles = (BRAND_PROFILES[brandKey] || []).map(p => ({ ...p, __brandKey: brandKey }));
   const otherProfiles = Object.keys(BRAND_PROFILES)
     .filter(k => k !== brandKey)
@@ -1530,7 +1504,7 @@ async function getOltStatsInternal(id, full = false) {
 
     (async () => {
       try {
-        // 1. Cek koneksi dasar (Uptime)
+
         const uptimeVbs = await new Promise(rv => {
           session.get(['1.3.6.1.2.1.1.3.0'], (err, vbs) => {
             if (err) {
@@ -1541,7 +1515,7 @@ async function getOltStatsInternal(id, full = false) {
         });
 
         if (!uptimeVbs[0] || uptimeVbs[0].type === snmp.ObjectType.NoSuchObject || uptimeVbs[0].type === snmp.ObjectType.EndOfMibView) {
-          // Telnet Fallback for HIOSO/HSGQ if SNMP is not enabled
+
           if (brandKey === 'hioso' || brandKey === 'hsgq') {
             const telnetData = await fetchHiosoOnuDetailViaTelnet(olt);
             if (telnetData && telnetData.length > 0) {
@@ -1578,7 +1552,6 @@ async function getOltStatsInternal(id, full = false) {
         stats.uptime = decodeUptime(uptimeVbs[0].value);
         stats.status = 'Online';
 
-        // 3. Deteksi profil yang cocok
         let activeProfile = null;
         for (const profile of allAvailableProfiles) {
           const ok = await probeOid(session, profile.probe_oid);
@@ -1589,7 +1562,7 @@ async function getOltStatsInternal(id, full = false) {
         }
 
         if (!activeProfile) {
-          // Telnet Fallback if profile not matched
+
           if (brandKey === 'hioso' || brandKey === 'hsgq') {
             const telnetData = await fetchHiosoOnuDetailViaTelnet(olt);
             if (telnetData && telnetData.length > 0) {
@@ -1635,10 +1608,8 @@ async function getOltStatsInternal(id, full = false) {
         };
         const onlineVals = getOnlineValues(detectedBrandKey, activeProfile);
 
-        // Start system metrics concurrently
         const systemMetricsPromise = fetchSystemMetrics(session, detectedBrandKey, stats, olt.id);
 
-        // 4. Mode Counter (ZTE)
         if (activeProfile.is_counter) {
           const [onlineMap, totalMap] = await Promise.all([
             slowWalk(session, activeProfile.status_table),
@@ -1654,7 +1625,6 @@ async function getOltStatsInternal(id, full = false) {
           return;
         }
 
-        // 5. Mode Table (Hioso, VSOL, HSGQ, etc)
         const [statusMap, nameMap] = await Promise.all([
           slowWalk(session, activeProfile.status_table),
           slowWalk(session, activeProfile.name_table)
@@ -1668,46 +1638,38 @@ async function getOltStatsInternal(id, full = false) {
         let upMap = {};
         let reasonMap = {};
 
-        // OPTIMIZATION: Only fetch detailed metrics if full=true
-        // Summary mode: skip rx/tx/distance/firmware/uptime/reason walks
-        // This makes summary 5-10x faster
         if (full) {
           const tasks = [];
 
-          // Walk OLT cards & unauth ONUs
           tasks.push(() => fetchCardMetrics(session, detectedBrandKey, stats));
           tasks.push(() => fetchUnauthOnus(session, activeProfile, stats));
 
-          // 1. Pick SN Table
           tasks.push(() => pickSnTable(session, activeProfile).then(res => snMap = res.map || {}));
 
-          // 2. Rx Power
           if (activeProfile.rx_power_table) {
             tasks.push(() => slowWalk(session, activeProfile.rx_power_table).then(res => rxMap = res));
           }
-          // 3. Tx Power
+
           if (activeProfile.tx_power_table) {
             tasks.push(() => slowWalk(session, activeProfile.tx_power_table).then(res => txMap = res));
           }
-          // 4. Distance
+
           if (activeProfile.distance_table) {
             tasks.push(() => slowWalk(session, activeProfile.distance_table).then(res => distMap = res));
           }
-          // 5. Firmware
+
           if (activeProfile.firmware_table) {
             tasks.push(() => slowWalk(session, activeProfile.firmware_table).then(res => fwMap = res));
           }
-          // 6. Uptime
+
           if (activeProfile.uptime_table) {
             tasks.push(() => slowWalk(session, activeProfile.uptime_table).then(res => upMap = res));
           }
-          // 7. Offline Reason
+
           if (activeProfile.offline_reason_table) {
             tasks.push(() => slowWalk(session, activeProfile.offline_reason_table).then(res => reasonMap = res));
           }
 
-          // OPTIMIZATION: Tune concurrency per brand
-          // ZTE handles 5, others 3-4
           const concurrencyMap = {
             'zte': 5,
             'huawei': 4,
@@ -1724,7 +1686,7 @@ async function getOltStatsInternal(id, full = false) {
 
         const allIndices = new Set([...Object.keys(statusMap), ...Object.keys(nameMap)]);
         stats.onus_total = allIndices.size;
-        
+
         const onus = [];
         let weakCount = 0;
 
@@ -1758,7 +1720,7 @@ async function getOltStatsInternal(id, full = false) {
           const firmware = safeToString(fwVal) || '-';
           const onuUptime = upVal ? decodeUptime(bufferToInt(upVal)) : '-';
           const onuId = hiosoOnuIdFromIndex(idx);
-          
+
           if (isUp) stats.onus_online++;
           else stats.onus_offline++;
 
@@ -1854,8 +1816,6 @@ function enrichOnusWithCustomerData(onus) {
   return onus;
 }
 
-// ─── ONU ACTIONS ─────────────────────────────────────────────────────────────
-
 function decodeOltSnmpIndex(brand, index) {
   const idxNum = parseInt(index, 10);
   if (!Number.isFinite(idxNum)) {
@@ -1905,7 +1865,7 @@ async function rebootOnu(oltId, index) {
     };
     const portVal = parseInt(olt.telnet_port, 10);
     oltConfig.port = (Number.isFinite(portVal) && portVal > 0) ? portVal : 22;
-    
+
     const parsed = decodeOltSnmpIndex(olt.brand, index);
     return await onuProvisionSvc.rebootONU(oltConfig, olt.brand, parsed);
   }
@@ -1937,7 +1897,7 @@ async function renameOnu(oltId, index, newName) {
     };
     const portVal = parseInt(olt.telnet_port, 10);
     oltConfig.port = (Number.isFinite(portVal) && portVal > 0) ? portVal : 22;
-    
+
     const parsed = decodeOltSnmpIndex(olt.brand, index);
     parsed.newName = newName;
     return await onuProvisionSvc.renameONU(oltConfig, olt.brand, parsed);
@@ -1966,7 +1926,6 @@ async function authorizeOnu(oltId, data) {
   const { index, sn, name, vlan } = data;
   const snCli = normalizeSnForOltProvision(sn);
 
-  // Parsing index (format ZTE: 1/board/port:onuId)
   let board = 1, port = 1, onuId = 1;
   if (index.includes('/')) {
     const parts = index.split(/[/: ]+/).filter(Boolean);
@@ -1986,7 +1945,7 @@ async function authorizeOnu(oltId, data) {
     cmds.push('exit');
     cmds.push(`interface gpon-onu_1/${board}/${port}:${onuId}`);
     if (name) cmds.push(`name ${name}`);
-    cmds.push('tcont 1 profile UP-100M'); // Default profile
+    cmds.push('tcont 1 profile UP-100M');
     cmds.push('gemport 1 tcont 1');
     if (vlan) cmds.push(`service-port 1 vport 1 user-vlan ${vlan} vlan ${vlan}`);
     cmds.push('exit');
@@ -2028,12 +1987,11 @@ async function enrichOnusWithAcsData(onus) {
 
       logger.debug(`[ACS-Sync] Mencari SN: ${targetSn}`);
 
-      // Cari device di ACS berdasarkan SN (fuzzy match)
       const acsDev = acsDevices.find(d => {
         const sn1 = d.Device?.DeviceInfo?.SerialNumber?._value;
         const sn2 = d.InternetGatewayDevice?.DeviceInfo?.SerialNumber?._value;
         const sn3 = d._id;
-        
+
         const acsSn = normalizeSN(sn1 || sn2 || sn3);
         const match = acsSn.includes(targetSn) || targetSn.includes(acsSn);
         if (match) logger.info(`[ACS-Sync] Match Found: ${targetSn} matches ${acsSn} (ID: ${d._id})`);
@@ -2041,16 +1999,15 @@ async function enrichOnusWithAcsData(onus) {
       });
 
       if (acsDev) {
-        // Ambil SSID (Cek beberapa path umum)
-        const ssid = 
+
+        const ssid =
           acsDev.InternetGatewayDevice?.LANDevice?.['1']?.WLANConfiguration?.['1']?.SSID?._value ||
-          acsDev.Device?.WiFi?.SSID?.['1']?.SSID?._value || 
-          acsDev.Device?.WiFi?.SSID?.['1']?.SSID || 
+          acsDev.Device?.WiFi?.SSID?.['1']?.SSID?._value ||
+          acsDev.Device?.WiFi?.SSID?.['1']?.SSID ||
           acsDev.InternetGatewayDevice?.LANDevice?.['1']?.WLANConfiguration?.['5']?.SSID?._value || '-';
-        
+
         onu.wifi_ssid = ssid;
-        
-        // Hitung Client Connected (Sum up all radios if possible)
+
         let associations = 0;
         const paths = [
           'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalAssociations',
@@ -2067,7 +2024,7 @@ async function enrichOnusWithAcsData(onus) {
             associations += parseInt(val) || 0;
           }
         }
-        
+
         onu.client_count = associations;
         onu.acs_id = acsDev._id;
         logger.info(`[ACS-Sync] Updated ${onu.sn}: SSID=${onu.wifi_ssid}, Users=${onu.client_count}`);
@@ -2110,10 +2067,7 @@ const telnetOptsFromOlt = (olt) => ({
   enablePassword: olt.enable_password != null && String(olt.enable_password).length > 0 ? String(olt.enable_password) : null
 });
 
-/**
- * Delegasi VLAN / service-port ke [go-api-c320](https://github.com/s4lfanet/go-api-c320) — POST /api/v1/vlan/onu
- * Format pon_port: rack/shelf/slot (contoh 1/2/7) dari indeks gpon-onu_1/2/7:5
- */
+/** Delegasi VLAN / service-port ke [go-api-c320](https://github.com/s4lfanet/go-api-c320) — POST /api/v1/vlan/onu */
 async function configureZteWanViaGoApi(oltId, data) {
   const olt = getOltById(oltId);
   if (!olt) throw new Error('OLT tidak ditemukan');
@@ -2195,14 +2149,12 @@ async function configureZteWanViaGoApi(oltId, data) {
 async function configureWanViaAcs(sn, data) {
   const acsDevices = await genieacs.getDevices();
   const acsDev = acsDevices.find(d => d._id.includes(sn) || (d.Device?.DeviceInfo?.SerialNumber?._value && d.Device.DeviceInfo.SerialNumber._value.includes(sn)));
-  
+
   if (!acsDev) throw new Error(`Perangkat dengan SN ${sn} tidak ditemukan di ACS.`);
 
   const { mode, vlan, username, password, lans, ssids } = data;
   const params = {};
 
-  // Helper to build binding strings
-  // Typical formats: "LAN1,LAN2" or "WLAN1,WLAN2"
   const lanBind = lans ? lans.split(',').map(l => `LAN${l}`).join(',') : '';
   const ssidBind = ssids ? ssids.split(',').map(s => `WLAN${s}`).join(',') : '';
 
@@ -2216,10 +2168,10 @@ async function configureWanViaAcs(sn, data) {
     if (vlan) {
       params[`${basePath}VLANID`] = vlan;
     }
-    // LAN & SSID Binding for Broadcom/Typical ONUs
+
     if (lanBind) params[`${basePath}X_BROADCOM_COM_LANBind`] = lanBind;
     if (ssidBind) params[`${basePath}X_BROADCOM_COM_WLANBind`] = ssidBind;
-    
+
   } else {
     const basePath = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.";
     params[`${basePath}Enable`] = true;
@@ -2227,7 +2179,7 @@ async function configureWanViaAcs(sn, data) {
     if (vlan) {
       params[`${basePath}VLANID`] = vlan;
     }
-    // LAN & SSID Binding
+
     if (lanBind) params[`${basePath}X_BROADCOM_COM_LANBind`] = lanBind;
     if (ssidBind) params[`${basePath}X_BROADCOM_COM_WLANBind`] = ssidBind;
   }
@@ -2254,7 +2206,6 @@ async function configureWanViaAcs(sn, data) {
 
   const { index, mode, vlan, username, password, lans, ssids } = data;
 
-  // Parsing index
   let board = 1, port = 1, onuId = 1;
   if (index.includes('/')) {
     const parts = index.split(/[/: ]+/).filter(Boolean);
@@ -2269,16 +2220,13 @@ async function configureWanViaAcs(sn, data) {
   if (brand === 'zte') {
     cmds.push('enable');
     cmds.push('configure terminal');
-    
+
     if (mode === 'PPPoE') {
-      // ZTE C300/C320 PPPoE Config via OMCI (pon-onu-mng)
+
       cmds.push(`pon-onu-mng gpon-onu_1/${board}/${port}:${onuId}`);
-      
-      // 1. Configure WAN IP with PPPoE
-      // Note: vlan here is used as vlan-profile name. Usually named 'VLAN100' or just '100'
+
       cmds.push(`wan-ip 1 mode pppoe username ${username} password ${password} vlan-profile ${vlan} host 1`);
-      
-      // 2. Binding LAN & SSID
+
       if (lans || ssids) {
         let bindCmd = `wan 1`;
         if (lans) bindCmd += ` ethuni ${lans}`;
@@ -2286,17 +2234,15 @@ async function configureWanViaAcs(sn, data) {
         bindCmd += ` service internet host 1`;
         cmds.push(bindCmd);
       }
-      
+
       cmds.push('exit');
-      
-      // OLT side service-port
+
       cmds.push(`interface gpon-onu_1/${board}/${port}:${onuId}`);
       cmds.push(`service-port 1 vport 1 user-vlan ${vlan} vlan ${vlan}`);
     } else {
-      // Bridge Mode
+
       cmds.push(`pon-onu-mng gpon-onu_1/${board}/${port}:${onuId}`);
-      
-      // Tagging each selected port to the target VLAN
+
       if (vlan) {
         if (lans) {
           lans.split(',').forEach(l => {
@@ -2309,14 +2255,13 @@ async function configureWanViaAcs(sn, data) {
           });
         }
       }
-      
+
       cmds.push('exit');
-      
-      // OLT side service-port
+
       cmds.push(`interface gpon-onu_1/${board}/${port}:${onuId}`);
       cmds.push(`service-port 1 vport 1 user-vlan ${vlan} vlan ${vlan}`);
     }
-    
+
     cmds.push('exit');
     cmds.push('end');
     cmds.push('write');
@@ -2325,7 +2270,7 @@ async function configureWanViaAcs(sn, data) {
      cmds.push('enable');
      cmds.push('config');
      if (mode === 'PPPoE') {
-       // Huawei usually configures WAN via OMCI/TR069, but basic service-port is needed
+
        cmds.push(`service-port vlan ${vlan} gpon 0/${board}/${port} ont ${onuId} gemport 1 multi-service user-vlan ${vlan}`);
      } else {
        cmds.push(`service-port vlan ${vlan} gpon 0/${board}/${port} ont ${onuId} gemport 1 multi-service user-vlan ${vlan}`);
@@ -2334,10 +2279,10 @@ async function configureWanViaAcs(sn, data) {
    } else {
      throw new Error(`Fitur konfigurasi WAN belum didukung untuk brand ${brand}`);
    }
- 
+
    return await telnetLoginAndRun(olt.host, olt.web_user, olt.web_password, cmds, telnetOptsFromOlt(olt));
  }
- 
+
  async function getAllOltsStats(full = false) {
    const olts = getActiveOlts();
    if (!olts || olts.length === 0) {

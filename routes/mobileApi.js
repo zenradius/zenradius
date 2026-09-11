@@ -1,10 +1,4 @@
-/**
- * routes/mobileApi.js — Mobile API v1
- *
- * Isolated routes for native Android application.
- * Separate from Web portals (/admin, /customer, /tech, /agent, /collector).
- * All responses: { success: true/false, data: {...}, error: {...} }
- */
+/** routes/mobileApi.js — Mobile API v1 */
 
 const express = require('express');
 const router = express.Router();
@@ -24,10 +18,6 @@ const techSvc = require('../services/techService');
 const pushSvc = require('../services/pushNotificationService');
 const tokenUtil = require('../utils/tokenUtil');
 
-// ══════════════════════════════════════════════════════════════════════════════
-// RESPONSE HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
-
 function successResponse(data = {}) {
   return {
     success: true,
@@ -45,15 +35,7 @@ function errorResponse(code, message) {
   };
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MOBILE TOKEN MIDDLEWARE
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Middleware: Extract and validate mobile access token from Authorization header.
- * Sets req.mobileUser if valid.
- * Does NOT reject — lets endpoints decide (some public, some require auth).
- */
+/** Middleware: Extract and validate mobile access token from Authorization header. */
 function extractMobileToken(req, res, next) {
   const authHeader = req.headers.authorization || '';
   const match = authHeader.match(/^Bearer\s+(.+)$/);
@@ -69,7 +51,7 @@ function extractMobileToken(req, res, next) {
         role: session.role,
         deviceId: session.deviceId
       };
-      req.mobileToken = token; // Store for logout
+      req.mobileToken = token; 
     }
   }
   
@@ -107,15 +89,7 @@ function requireMobileRole(roles) {
   };
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PUBLIC ENDPOINTS (No authentication required)
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * GET /api/mobile/v1/health
- * Public health check endpoint.
- * Returns minimal info (no secrets, no internal details).
- */
+/** GET /api/mobile/v1/health */
 router.get('/health', (req, res) => {
   res.status(200).json(successResponse({
     status: 'ok',
@@ -124,53 +98,10 @@ router.get('/health', (req, res) => {
   }));
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// AUTHENTICATION ENDPOINTS
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * POST /api/mobile/v1/auth/login
- * Mobile login — authenticate user and issue tokens.
- *
- * Body:
- * {
- *   "identifier": "string (phone, email, username, pppoe_username, or genieacs_tag)",
- *   "password": "string",
- *   "deviceId": "string (optional)"
- * }
- *
- * Role resolution (server-side only, tried in order):
- * 1. admin (env MASTER_ADMIN_* or settings.json admin_username/password)
- * 2. customer_service (cashiers table, username + PBKDF2 password)
- * 3. teknisi (technicians table, username + PBKDF2 password)
- * 4. pelanggan (customers table, phone/email/pppoe_username/genieacs_tag/mac_address
- *    via existing findCustomerByAny() + verifyCustomerPortalPassword())
- *
- * Success (200):
- * {
- *   "success": true,
- *   "data": {
- *     "accessToken": "...",
- *     "refreshToken": "...",
- *     "expiresIn": 900,
- *     "role": "pelanggan|admin|customer_service|teknisi",
- *     "userId": "123"
- *   }
- * }
- *
- * Error (401/422):
- * {
- *   "success": false,
- *   "error": {
- *     "code": "INVALID_CREDENTIALS",
- *     "message": "..."
- *   }
- * }
- */
+/** POST /api/mobile/v1/auth/login */
 router.post('/auth/login', loginRateLimiter, (req, res) => {
   const { identifier, password, deviceId } = req.body;
   
-  // Validate input — identifier can be: phone, email, or username
   if (!identifier || typeof identifier !== 'string' || identifier.trim().length === 0) {
     return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Identifier harus diisi (phone, email, atau username).'));
   }
@@ -181,7 +112,6 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
   try {
     const cleanIdentifier = identifier.trim();
     
-    // 1. Try admin (environment or settings.json)
     const masterUsername = String(process.env.MASTER_ADMIN_USERNAME || '').trim();
     const masterPassword = String(process.env.MASTER_ADMIN_PASSWORD || '');
     const configuredUsername = String(getSetting('admin_username', '') || '').trim() || 'admin';
@@ -206,11 +136,6 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
       }));
     }
     
-    // 2. Try customer_service (cashiers table)
-    // Uses adminService.verifyPassword() — the SAME hash verification the Web
-    // admin portal uses (format: salt$iterations$hexhash). Do not duplicate
-    // hash-parsing logic here; a prior local re-implementation used an
-    // incompatible format and silently could never authenticate real accounts.
     let user = db.prepare('SELECT id, password FROM cashiers WHERE username = ? AND is_active = 1 LIMIT 1').get(cleanIdentifier);
     if (user && adminSvc.verifyPassword(password, user.password)) {
       const session = mobileAuthSvc.createSession(user.id, 'customer_service', deviceId || null, {
@@ -227,7 +152,6 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
       }));
     }
     
-    // 3. Try teknisi (technicians table)
     user = db.prepare('SELECT id, password FROM technicians WHERE username = ? AND is_active = 1 LIMIT 1').get(cleanIdentifier);
     if (user && adminSvc.verifyPassword(password, user.password)) {
       const session = mobileAuthSvc.createSession(user.id, 'teknisi', deviceId || null, {
@@ -244,10 +168,6 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
       }));
     }
     
-    // 4. Try reseller (agents table). "agent" is the canonical `reseller`
-    // role (see middleware/authz.js LEGACY_TO_CANONICAL and
-    // userManagementService.SOURCE_TO_ROLE). Reuses the SAME authenticate()
-    // the Web /agent portal uses — PBKDF2 verify + legacy auto-migrate.
     const agent = agentSvc.authenticate(cleanIdentifier, password);
     if (agent && agent.id) {
       const session = mobileAuthSvc.createSession(agent.id, 'reseller', deviceId || null, {
@@ -264,12 +184,10 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
       }));
     }
     
-    // 5. Try pelanggan (customers table) — use existing customer service authentication model
-    // Identifier can be: phone, email, genieacs_tag, pppoe_username, or mac_address
     const customer = customerSvc.findCustomerByAny(cleanIdentifier);
     
     if (customer && customer.status === 'active') {
-      // Verify using existing portal password verification (supports both hash and plaintext legacy)
+      
       if (customerSvc.verifyCustomerPortalPassword(customer, password)) {
         const session = mobileAuthSvc.createSession(customer.id, 'pelanggan', deviceId || null, {
           identifier: cleanIdentifier,
@@ -287,7 +205,6 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
       }
     }
     
-    // Authentication failed — generic response (no user enumeration)
     logger.warn(`[mobile-auth] Login failed (all roles): identifier=${cleanIdentifier}`);
     return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Identifier atau password salah.'));
     
@@ -297,33 +214,7 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
   }
 });
 
-/**
- * POST /api/mobile/v1/auth/refresh
- * Refresh access token using refresh token.
- *
- * Body:
- * {
- *   "refreshToken": "string"
- * }
- *
- * Success (200):
- * {
- *   "success": true,
- *   "data": {
- *     "accessToken": "...",
- *     "expiresIn": 900
- *   }
- * }
- *
- * Error (401/422):
- * {
- *   "success": false,
- *   "error": {
- *     "code": "INVALID_TOKEN|TOKEN_EXPIRED",
- *     "message": "..."
- *   }
- * }
- */
+/** POST /api/mobile/v1/auth/refresh */
 router.post('/auth/refresh', (req, res) => {
   const { refreshToken } = req.body;
   
@@ -350,28 +241,10 @@ router.post('/auth/refresh', (req, res) => {
   }
 });
 
-/**
- * POST /api/mobile/v1/auth/logout
- * Revoke mobile session(s).
- *
- * Headers:
- * Authorization: Bearer {accessToken}
- *
- * Success (200):
- * {
- *   "success": true,
- *   "data": {}
- * }
- *
- * Error (401):
- * {
- *   "success": false,
- *   "error": {...}
- * }
- */
+/** POST /api/mobile/v1/auth/logout */
 router.post('/auth/logout', requireMobileAuth, (req, res) => {
   try {
-    // Revoke current session
+    
     mobileAuthSvc.revokeSession(req.mobileToken);
     
     logger.info(`[mobile-auth] User logged out: role=${req.mobileUser.role}, userId=${req.mobileUser.userId}`);
@@ -384,34 +257,15 @@ router.post('/auth/logout', requireMobileAuth, (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// USER PROFILE ENDPOINT
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * GET /api/mobile/v1/me
- * Get current authenticated user profile.
- *
- * Success (200):
- * {
- *   "success": true,
- *   "data": {
- *     "userId": "123",
- *     "role": "pelanggan",
- *     "name": "John Doe",
- *     "username": "john"
- *   }
- * }
- */
+/** GET /api/mobile/v1/me */
 router.get('/me', requireMobileAuth, (req, res) => {
   try {
     const { userId, role } = req.mobileUser;
     
-    // Fetch user details based on role
     let user = null;
     
     if (role === 'admin') {
-      // Admin has no specific table record, return generic info
+      
       if (userId === 'admin-master') {
         return res.status(200).json(successResponse({
           userId,
@@ -426,7 +280,7 @@ router.get('/me', requireMobileAuth, (req, res) => {
     } else if (role === 'reseller') {
       user = db.prepare('SELECT id, username, name, phone, balance, billing_fee FROM agents WHERE id = ?').get(userId);
     } else if (role === 'pelanggan') {
-      // customers table has no username column — use phone/name/email instead
+      
       user = db.prepare('SELECT id, phone, name, email, address, status, package_id, pppoe_username FROM customers WHERE id = ?').get(userId);
     } else if (role === 'customer_service') {
       user = db.prepare('SELECT id, username, name, phone FROM cashiers WHERE id = ?').get(userId);
@@ -480,9 +334,7 @@ router.get('/me', requireMobileAuth, (req, res) => {
       userId,
       role,
       name: 'Administrator',
-      // Web /admin/profile/change-password is a disabled stub; admin
-      // credentials live in settings.json / env and are managed via
-      // /admin/settings. The mobile app must not pretend otherwise.
+      
       canChangePassword: false
     }));
     
@@ -491,10 +343,6 @@ router.get('/me', requireMobileAuth, (req, res) => {
     return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Kesalahan server.'));
   }
 });
-
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — SHARED HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
 
 const STAFF_ROLES = ['admin', 'customer_service'];
 const MONTHS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -599,16 +447,7 @@ function ownsTicket(req, t) {
   return t && String(t.customer_id) === String(req.mobileUser.userId);
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — PUSH NOTIFICATIONS
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * GET /api/mobile/v1/push/config
- * Public Firebase CLIENT identifiers for runtime FirebaseApp initialization.
- * These values ship inside every Android app that uses Firebase; they are
- * not secrets. The service-account credential is NEVER returned.
- */
+/** GET /api/mobile/v1/push/config */
 router.get('/push/config', requireMobileAuth, (req, res) => {
   const projectId = String(getSetting('fcm_project_id', '') || '').trim();
   const appId = String(getSetting('fcm_app_id', '') || '').trim();
@@ -624,11 +463,7 @@ router.get('/push/config', requireMobileAuth, (req, res) => {
   }));
 });
 
-/**
- * POST /api/mobile/v1/push/register
- * Body: { fcmToken, appVersion? }
- * Identity (userId/role) is taken exclusively from the bearer session.
- */
+/** POST /api/mobile/v1/push/register */
 router.post('/push/register', requireMobileAuth, (req, res) => {
   const { fcmToken, appVersion } = req.body || {};
   if (!fcmToken || typeof fcmToken !== 'string') {
@@ -649,10 +484,7 @@ router.post('/push/register', requireMobileAuth, (req, res) => {
   }
 });
 
-/**
- * POST /api/mobile/v1/push/unregister
- * Body: { fcmToken }
- */
+/** POST /api/mobile/v1/push/unregister */
 router.post('/push/unregister', requireMobileAuth, (req, res) => {
   const { fcmToken } = req.body || {};
   if (!fcmToken || typeof fcmToken !== 'string') {
@@ -666,12 +498,7 @@ router.post('/push/unregister', requireMobileAuth, (req, res) => {
   return res.status(200).json(successResponse({ unregistered: ok }));
 });
 
-/**
- * GET /api/mobile/v1/notifications
- * Returns only events persisted for the authenticated mobile identity.
- * FCM provider acceptance is not delivery/read confirmation; those fields
- * remain null until a future receipt/read mechanism exists.
- */
+/** GET /api/mobile/v1/notifications */
 router.get('/notifications', requireMobileAuth, (req, res) => {
   const rawLimit = Number.parseInt(req.query.limit, 10);
   const limit = Number.isInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
@@ -688,30 +515,13 @@ router.get('/notifications', requireMobileAuth, (req, res) => {
   return res.status(200).json(successResponse({ notifications: rows }));
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — PROFILE: CHANGE PASSWORD (all roles that have a credential row)
-// ══════════════════════════════════════════════════════════════════════════════
-
 const PASSWORD_TABLES = Object.freeze({
   customer_service: 'cashiers',
   teknisi: 'technicians',
   reseller: 'agents'
 });
 
-/**
- * POST /api/mobile/v1/profile/change-password
- * Body: { currentPassword, newPassword, confirmPassword }
- *
- * - Identity from bearer session only.
- * - Current password verified with the SAME mechanism the Web portals use.
- * - New password hashed with adminService.hashPassword (PBKDF2), identical
- *   to Web. No new hashing scheme.
- * - On success every other mobile session of this identity is revoked and
- *   push tokens are deactivated (session invalidation), mirroring the Web
- *   behaviour which destroys the session after a portal password change.
- * - Admin: NOT_SUPPORTED — Web /admin/profile/change-password is a disabled
- *   stub; admin credentials are managed in /admin/settings.
- */
+/** POST /api/mobile/v1/profile/change-password */
 router.post('/profile/change-password', requireMobileAuth, (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body || {};
   const { userId, role } = req.mobileUser;
@@ -739,7 +549,7 @@ router.post('/profile/change-password', requireMobileAuth, (req, res) => {
     if (role === 'pelanggan') {
       const customer = customerSvc.getCustomerById(userId);
       if (!customer) return res.status(404).json(errorResponse('NOT_FOUND', 'Pelanggan tidak ditemukan.'));
-      // Same verifier as Web POST /customer/change-portal-password
+      
       verified = customerSvc.verifyCustomerPortalPassword(customer, currentPassword);
       if (!verified) {
         return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Kata sandi saat ini tidak sesuai.'));
@@ -751,7 +561,7 @@ router.post('/profile/change-password', requireMobileAuth, (req, res) => {
       if (!table) return res.status(403).json(errorResponse('FORBIDDEN', 'Peran tidak mendukung ubah kata sandi.'));
       const row = db.prepare(`SELECT id, password FROM ${table} WHERE id = ? AND is_active = 1`).get(userId);
       if (!row) return res.status(404).json(errorResponse('NOT_FOUND', 'Akun tidak ditemukan.'));
-      // Supports both PBKDF2 hash and legacy plaintext, exactly as the portals do.
+      
       verified = adminSvc.isPasswordHash(row.password)
         ? adminSvc.verifyPassword(currentPassword, row.password)
         : currentPassword === row.password;
@@ -762,9 +572,6 @@ router.post('/profile/change-password', requireMobileAuth, (req, res) => {
         .run(adminSvc.hashPassword(newPassword), row.id);
     }
 
-    // Session invalidation: revoke every mobile session of this identity
-    // (including the current one) and deactivate push tokens. The client
-    // must log in again with the new credential.
     mobileAuthSvc.revokeAllUserSessions(userId);
     pushSvc.unregisterAllForUser(userId, role);
 
@@ -775,10 +582,6 @@ router.post('/profile/change-password', requireMobileAuth, (req, res) => {
     return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Kesalahan server.'));
   }
 });
-
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — DASHBOARD (role-scoped summary; all figures from real queries)
-// ══════════════════════════════════════════════════════════════════════════════
 
 router.get('/dashboard', requireMobileAuth, (req, res) => {
   const { userId, role } = req.mobileUser;
@@ -843,10 +646,6 @@ router.get('/dashboard', requireMobileAuth, (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — CUSTOMERS (staff)
-// ══════════════════════════════════════════════════════════════════════════════
-
 router.get('/customers', requireMobileRole(STAFF_ROLES), (req, res) => {
   try {
     const search = String(req.query.q || '').trim().slice(0, 100);
@@ -878,15 +677,7 @@ router.get('/customers/:id', requireMobileRole(STAFF_ROLES), (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — INVOICES
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * GET /invoices
- * staff: all invoices (filters: status, month, year, q)
- * pelanggan: own invoices only
- */
+/** GET /invoices */
 router.get('/invoices', requireMobileAuth, (req, res) => {
   const { userId, role } = req.mobileUser;
   try {
@@ -923,7 +714,7 @@ router.get('/invoices/:id', requireMobileAuth, (req, res) => {
     const inv = billingSvc.getInvoiceById(toInt(req.params.id));
     if (!inv) return res.status(404).json(errorResponse('NOT_FOUND', 'Tagihan tidak ditemukan.'));
     if (role === 'pelanggan' && !ownsInvoice(req, inv)) {
-      // Do not distinguish "exists but not yours" from "missing".
+      
       return res.status(404).json(errorResponse('NOT_FOUND', 'Tagihan tidak ditemukan.'));
     }
     if (!STAFF_ROLES.includes(role) && role !== 'pelanggan') {
@@ -936,11 +727,7 @@ router.get('/invoices/:id', requireMobileAuth, (req, res) => {
   }
 });
 
-/**
- * POST /invoices/:id/pay  (staff)
- * Marks an invoice as paid through the SAME billingSvc.markAsPaid the Web
- * admin uses, with audit trail, then fires the payment push signal.
- */
+/** POST /invoices/:id/pay  (staff) */
 router.post('/invoices/:id/pay', requireMobileRole(STAFF_ROLES), (req, res) => {
   try {
     const inv = billingSvc.getInvoiceById(toInt(req.params.id));
@@ -950,7 +737,7 @@ router.post('/invoices/:id/pay', requireMobileRole(STAFF_ROLES), (req, res) => {
     }
     const notes = String((req.body || {}).notes || '').slice(0, 200);
     const paidBy = req.mobileUser.role === 'admin' ? 'Admin (Mobile)' : 'Customer Service (Mobile)';
-    // markAsPaid also fires the payment push signal (single seam for all channels).
+    
     billingSvc.markAsPaid(inv.id, paidBy, notes, actorFromReq(req));
 
     const updated = billingSvc.getInvoiceById(inv.id);
@@ -961,17 +748,7 @@ router.post('/invoices/:id/pay', requireMobileRole(STAFF_ROLES), (req, res) => {
   }
 });
 
-/**
- * GET /invoices/:id/payment-link  (pelanggan, own invoice only)
- *
- * Reuses the EXISTING Web payment pipeline. The Web route
- * GET /customer/payment/create/:invoiceId already supports a signed public
- * token (`?t=`) — the same mechanism used by the /isolated page — which
- * resolves the configured gateway (Tripay/Midtrans/Xendit/Duitku/QRIS static),
- * creates the real transaction and handles the callback/webhook. The mobile
- * app opens the returned URL in the system browser / Custom Tab, so no
- * payment logic is duplicated and no fake transaction can be produced.
- */
+/** GET /invoices/:id/payment-link  (pelanggan, own invoice only) */
 router.get('/invoices/:id/payment-link', requireMobileRole('pelanggan'), (req, res) => {
   try {
     const inv = billingSvc.getInvoiceById(toInt(req.params.id));
@@ -1005,16 +782,7 @@ router.get('/invoices/:id/payment-link', requireMobileRole('pelanggan'), (req, r
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — TICKETS
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * GET /tickets
- * staff: all (filter ?status=)
- * teknisi: ?scope=assigned (default) | pool | history
- * pelanggan: own tickets
- */
+/** GET /tickets */
 router.get('/tickets', requireMobileAuth, (req, res) => {
   const { userId, role } = req.mobileUser;
   try {
@@ -1053,7 +821,7 @@ router.get('/tickets/:id', requireMobileAuth, (req, res) => {
       return res.status(404).json(errorResponse('NOT_FOUND', 'Tiket tidak ditemukan.'));
     }
     if (role === 'teknisi') {
-      // A technician may see open pool tickets and their own; not another tech's.
+      
       const mine = String(t.technician_id || '') === String(userId);
       const openPool = t.status === 'open' && !t.technician_id;
       if (!mine && !openPool) {
@@ -1070,10 +838,7 @@ router.get('/tickets/:id', requireMobileAuth, (req, res) => {
   }
 });
 
-/**
- * POST /tickets  (pelanggan creates for self; staff creates for a customer)
- * Body: { subject, message, customerId? (staff only) }
- */
+/** POST /tickets  (pelanggan creates for self; staff creates for a customer) */
 router.post('/tickets', requireMobileAuth, (req, res) => {
   const { userId, role } = req.mobileUser;
   const { subject, message } = req.body || {};
@@ -1086,7 +851,7 @@ router.post('/tickets', requireMobileAuth, (req, res) => {
   try {
     let customerId;
     if (role === 'pelanggan') {
-      customerId = toInt(userId); // never from body
+      customerId = toInt(userId); 
     } else if (STAFF_ROLES.includes(role)) {
       customerId = toInt((req.body || {}).customerId, 0);
       if (customerId > 0 && !customerSvc.getCustomerById(customerId)) {
@@ -1112,7 +877,7 @@ router.post('/tickets', requireMobileAuth, (req, res) => {
 router.post('/tickets/:id/take', requireMobileRole('teknisi'), (req, res) => {
   const id = toInt(req.params.id);
   try {
-    // techSvc.takeTicket throws when the ticket is not open / owned by another tech.
+    
     techSvc.takeTicket(id, toInt(req.mobileUser.userId));
   } catch (err) {
     return res.status(409).json(errorResponse('CONFLICT', 'Tiket sudah diambil teknisi lain atau tidak tersedia.'));
@@ -1127,12 +892,7 @@ router.post('/tickets/:id/take', requireMobileRole('teknisi'), (req, res) => {
   }
 });
 
-/**
- * POST /tickets/:id/status
- * Body: { status: open|in_progress|resolved, notes?, technicianId? (staff) }
- * teknisi: only own ticket, via techSvc.updateTicketStatus (technician_id scoped)
- * staff: any ticket, via ticketSvc.updateTicketStatus
- */
+/** POST /tickets/:id/status */
 router.post('/tickets/:id/status', requireMobileAuth, (req, res) => {
   const { userId, role } = req.mobileUser;
   const { status, notes, technicianId } = req.body || {};
@@ -1146,11 +906,11 @@ router.post('/tickets/:id/status', requireMobileAuth, (req, res) => {
     if (!before) return res.status(404).json(errorResponse('NOT_FOUND', 'Tiket tidak ditemukan.'));
 
     if (role === 'teknisi') {
-      // Object-level check BEFORE the write: only the owning technician.
+      
       if (String(before.technician_id || '') !== String(userId)) {
         return res.status(404).json(errorResponse('NOT_FOUND', 'Tiket tidak ditemukan.'));
       }
-      // technician_id-scoped update (WHERE id=? AND technician_id=?)
+      
       techSvc.updateTicketStatus(id, toInt(userId), String(status), {
         notes: typeof notes === 'string' ? notes.slice(0, 2000) : undefined
       });
@@ -1176,10 +936,6 @@ router.post('/tickets/:id/status', requireMobileAuth, (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — PACKAGES (read-only catalogue)
-// ══════════════════════════════════════════════════════════════════════════════
-
 router.get('/packages', requireMobileAuth, (req, res) => {
   try {
     const rows = customerSvc.getAllPackages().filter(p => Number(p.is_active ?? 1) === 1);
@@ -1195,10 +951,6 @@ router.get('/packages', requireMobileAuth, (req, res) => {
     return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Kesalahan server.'));
   }
 });
-
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 17 — RESELLER
-// ══════════════════════════════════════════════════════════════════════════════
 
 router.get('/reseller/transactions', requireMobileRole('reseller'), (req, res) => {
   try {
@@ -1224,10 +976,7 @@ router.get('/reseller/prices', requireMobileRole('reseller'), (req, res) => {
   }
 });
 
-/**
- * GET /reseller/invoice-lookup?q=  — find a customer's unpaid invoices to pay
- * on their behalf (same as Web /agent dashboard search).
- */
+/** GET /reseller/invoice-lookup?q=  — find a customer's unpaid invoices to pay */
 router.get('/reseller/invoice-lookup', requireMobileRole('reseller'), (req, res) => {
   try {
     const q = String(req.query.q || '').trim().slice(0, 100);
@@ -1240,22 +989,18 @@ router.get('/reseller/invoice-lookup', requireMobileRole('reseller'), (req, res)
   }
 });
 
-/**
- * POST /reseller/pay-invoice  Body: { invoiceId, note? }
- * Uses agentSvc.payInvoiceAsAgent — identical to Web POST /agent/pay-invoice.
- * Balance deduction, commission and invoice state come from that service.
- */
+/** POST /reseller/pay-invoice  Body: { invoiceId, note? } */
 router.post('/reseller/pay-invoice', requireMobileRole('reseller'), async (req, res) => {
   try {
     const invoiceId = toInt((req.body || {}).invoiceId, 0);
     if (invoiceId <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'invoiceId tidak valid.'));
     const note = String((req.body || {}).note || '').slice(0, 200);
     const result = await agentSvc.payInvoiceAsAgent(toInt(req.mobileUser.userId), invoiceId, note);
-    // Push signal fires inside billingSvc.markAsPaid (single seam) — no duplicate here.
+    
     const inv = billingSvc.getInvoiceById(invoiceId);
     return res.status(200).json(successResponse({ result, invoice: projectInvoice(inv) }));
   } catch (err) {
-    // Business-rule failures from the service (saldo kurang, sudah lunas…)
+    
     return res.status(409).json(errorResponse('CONFLICT', String(err.message || 'Transaksi gagal.')));
   }
 });

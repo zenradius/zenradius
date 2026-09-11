@@ -1,52 +1,22 @@
-/**
- * services/mobileAuthService.js — Mobile API Authentication
- *
- * Isolated token-based authentication for native mobile clients.
- * Separate from Web session (browser cookies).
- *
- * Mobile Flow:
- * 1. POST /api/mobile/v1/auth/login → access_token + refresh_token
- * 2. Client stores both tokens locally (secure storage on device)
- * 3. API calls include Authorization: Bearer {access_token}
- * 4. Access token expires in 15 minutes
- * 5. Before expiry, POST /api/mobile/v1/auth/refresh → new access_token
- * 6. Refresh token valid 30 days, revokable, rotatable
- * 7. POST /api/mobile/v1/auth/logout → revoke all mobile sessions
- *
- * Design:
- * - Tokens are opaque random strings (no JWT, no claims)
- * - Server stores hash(token) + metadata in mobile_sessions table
- * - Token format: 64 random bytes, base64url-encoded (88 chars)
- * - Access token hash: sha256(token)
- * - Refresh token hash: sha256(token)
- * - Both searchable by fingerprint (first 16 chars of token)
- */
+/** services/mobileAuthService.js — Mobile API Authentication */
 
 const crypto = require('crypto');
 const db = require('../config/database');
 const { getCanonicalRole } = require('../middleware/authz');
 const { logger } = require('../config/logger');
 
-// Token configuration (seconds)
 const TOKEN_CONFIG = {
-  access: 15 * 60,        // 15 minutes
-  refresh: 30 * 24 * 60 * 60  // 30 days
+  access: 15 * 60,        
+  refresh: 30 * 24 * 60 * 60  
 };
 
-/**
- * Generate cryptographically random token (opaque, high entropy).
- * Format: 64 random bytes → base64url (no padding)
- * Result: ~88 characters, URL-safe
- */
+/** Generate cryptographically random token (opaque, high entropy). */
 function generateToken() {
   const buf = crypto.randomBytes(64);
   return buf.toString('base64url');
 }
 
-/**
- * Create hash of token for server-side storage.
- * SHA256 digest, hex-encoded.
- */
+/** Create hash of token for server-side storage. */
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
@@ -63,40 +33,28 @@ function getTokenFingerprint(token) {
  */
 function isValidTokenFormat(token) {
   if (typeof token !== 'string') return false;
-  // Token should be base64url, roughly 88 chars, alphanumeric + - _
+  
   return /^[A-Za-z0-9_-]{80,96}$/.test(token);
 }
 
-/**
- * Create initial mobile session (login).
- *
- * @param {string|number} userId - user identifier (varies by role table)
- * @param {string} role - canonical role (admin, customer_service, teknisi, pelanggan)
- * @param {string} deviceId - opaque device identifier from client (optional but recommended)
- * @param {object} deviceInfo - optional JSON metadata (user-agent, OS, etc.)
- * @returns {object} { accessToken, refreshToken, expiresIn, refreshExpiresIn }
- */
+/** Create initial mobile session (login). */
 function createSession(userId, role, deviceId = null, deviceInfo = null) {
   const now = Math.floor(Date.now() / 1000);
   
-  // Generate tokens
   const accessToken = generateToken();
   const refreshToken = generateToken();
   
-  // Hash for storage
   const accessTokenHash = hashToken(accessToken);
   const refreshTokenHash = hashToken(refreshToken);
   
-  // Fingerprints for quick lookup
   const accessFingerprint = getTokenFingerprint(accessToken);
   const refreshFingerprint = getTokenFingerprint(refreshToken);
   
-  // Expiration times (absolute Unix seconds)
   const accessExpiresAt = now + TOKEN_CONFIG.access;
   const refreshExpiresAt = now + TOKEN_CONFIG.refresh;
   
   try {
-    // Insert session record
+    
     const stmt = db.prepare(`
       INSERT INTO mobile_sessions (
         user_id, role, device_id, 
@@ -130,12 +88,7 @@ function createSession(userId, role, deviceId = null, deviceInfo = null) {
   }
 }
 
-/**
- * Validate access token (used in every API request).
- *
- * @param {string} token - raw access token from Authorization header
- * @returns {object|null} { sessionId, userId, role, deviceId } or null if invalid
- */
+/** Validate access token (used in every API request). */
 function validateAccessToken(token) {
   if (!isValidTokenFormat(token)) {
     return null;
@@ -171,12 +124,7 @@ function validateAccessToken(token) {
   }
 }
 
-/**
- * Validate and refresh access token using refresh token.
- *
- * @param {string} refreshToken - raw refresh token from request
- * @returns {object|null} { accessToken, expiresIn } or null if invalid
- */
+/** Validate and refresh access token using refresh token. */
 function refreshAccessToken(refreshToken) {
   if (!isValidTokenFormat(refreshToken)) {
     return null;
@@ -186,7 +134,6 @@ function refreshAccessToken(refreshToken) {
     const now = Math.floor(Date.now() / 1000);
     const refreshTokenHash = hashToken(refreshToken);
     
-    // Find session by refresh token
     const stmt = db.prepare(`
       SELECT id, user_id, role, device_id, device_info
       FROM mobile_sessions
@@ -201,13 +148,11 @@ function refreshAccessToken(refreshToken) {
       return null;
     }
     
-    // Generate new access token
     const newAccessToken = generateToken();
     const newAccessTokenHash = hashToken(newAccessToken);
     const newAccessFingerprint = getTokenFingerprint(newAccessToken);
     const newAccessExpiresAt = now + TOKEN_CONFIG.access;
     
-    // Update session with new access token
     const updateStmt = db.prepare(`
       UPDATE mobile_sessions
       SET access_token_hash = ?,
@@ -236,11 +181,7 @@ function refreshAccessToken(refreshToken) {
   }
 }
 
-/**
- * Revoke a single mobile session (logout from one device).
- *
- * @param {string} accessToken - access token to revoke
- */
+/** Revoke a single mobile session (logout from one device). */
 function revokeSession(accessToken) {
   if (!isValidTokenFormat(accessToken)) {
     return false;
@@ -266,11 +207,7 @@ function revokeSession(accessToken) {
   }
 }
 
-/**
- * Revoke all mobile sessions for a user (logout from all devices).
- *
- * @param {string|number} userId - user identifier
- */
+/** Revoke all mobile sessions for a user (logout from all devices). */
 function revokeAllUserSessions(userId) {
   try {
     const stmt = db.prepare(`
@@ -288,12 +225,7 @@ function revokeAllUserSessions(userId) {
   }
 }
 
-/**
- * Get active session info (for debugging, not for auth checks).
- *
- * @param {number} sessionId - session record ID
- * @returns {object|null} Session metadata or null
- */
+/** Get active session info (for debugging, not for auth checks). */
 function getSessionInfo(sessionId) {
   try {
     const stmt = db.prepare(`
@@ -310,15 +242,11 @@ function getSessionInfo(sessionId) {
   }
 }
 
-/**
- * Cleanup expired sessions (periodic maintenance).
- * Call periodically (e.g., daily) to remove old records.
- */
+/** Cleanup expired sessions (periodic maintenance). */
 function cleanupExpiredSessions() {
   try {
     const now = Math.floor(Date.now() / 1000);
     
-    // Delete sessions where both tokens are expired
     const stmt = db.prepare(`
       DELETE FROM mobile_sessions
       WHERE refresh_expires_at < ?
@@ -343,6 +271,6 @@ module.exports = {
   revokeAllUserSessions,
   getSessionInfo,
   cleanupExpiredSessions,
-  // For testing only (disabled in production)
+  
   __testTokenConfig: TOKEN_CONFIG
 };

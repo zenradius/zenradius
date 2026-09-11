@@ -105,7 +105,6 @@ function convertStaticQrisToDynamic(staticPayload, amount) {
 async function decodeQrisPayloadFromBuffer(buf) {
   if (!buf || !buf.length) return '';
 
-  // 1. Try jsQR (Fast & reliable for screenshots)
   try {
     const img = await Jimp.read(buf);
     const w = img.bitmap.width;
@@ -118,7 +117,6 @@ async function decodeQrisPayloadFromBuffer(buf) {
     }
   } catch (e) {}
 
-  // 2. Fallback to @zxing/library
   try {
     const img = await Jimp.read(buf);
     const rgba = new Uint8ClampedArray(img.bitmap.data.buffer, img.bitmap.data.byteOffset, img.bitmap.data.byteLength);

@@ -1,7 +1,4 @@
-/**
- * Settings Audit Trail
- * Log semua perubahan settings untuk compliance & debugging
- */
+/** Settings Audit Trail */
 const fs = require('fs');
 const path = require('path');
 const { logger } = require('./logger');
@@ -10,7 +7,6 @@ const { isSensitiveField, maskValue } = require('./settingsEncryption');
 const AUDIT_LOG_DIR = path.join(__dirname, '../logs/settings-audit');
 const AUDIT_LOG_FILE = path.join(AUDIT_LOG_DIR, 'settings-changes.jsonl');
 
-// Ensure audit log directory exists
 if (!fs.existsSync(AUDIT_LOG_DIR)) {
   fs.mkdirSync(AUDIT_LOG_DIR, { recursive: true });
 }
@@ -22,7 +18,6 @@ function logSettingsChange(actor, changes, metadata = {}) {
   try {
     const timestamp = new Date().toISOString();
     
-    // Mask sensitive values
     const maskedChanges = {};
     Object.keys(changes).forEach(field => {
       if (isSensitiveField(field)) {
@@ -44,7 +39,6 @@ function logSettingsChange(actor, changes, metadata = {}) {
       metadata
     };
 
-    // Write to JSONL file
     fs.appendFileSync(AUDIT_LOG_FILE, JSON.stringify(logEntry) + '\n', 'utf-8');
 
     logger.info(`[settings-audit] Settings changed by ${actor}`, {
@@ -69,7 +63,6 @@ function getChangeHistory(limit = 100) {
     const lines = fs.readFileSync(AUDIT_LOG_FILE, 'utf-8').split('\n').filter(l => l.trim());
     const entries = lines.map(line => JSON.parse(line));
 
-    // Return latest entries
     return entries.slice(-limit).reverse();
   } catch (error) {
     logger.error(`[settings-audit] Error reading change history: ${error.message}`);
@@ -130,7 +123,7 @@ function exportAuditLog(format = 'json') {
     const history = getChangeHistory(10000);
 
     if (format === 'csv') {
-      // Convert to CSV
+      
       const headers = ['Timestamp', 'Actor', 'Field', 'Old Value', 'New Value', 'IP'];
       const rows = [];
 
@@ -154,7 +147,6 @@ function exportAuditLog(format = 'json') {
       };
     }
 
-    // Default JSON format
     return {
       format: 'json',
       count: history.length,
@@ -213,10 +205,9 @@ function getAuditStats() {
     };
 
     history.forEach(entry => {
-      // Count by actor
+      
       stats.changesByActor[entry.actor] = (stats.changesByActor[entry.actor] || 0) + 1;
 
-      // Count by field
       Object.keys(entry.changes).forEach(field => {
         stats.changedFields.add(field);
         stats.changesByField[field] = (stats.changesByField[field] || 0) + 1;

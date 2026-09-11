@@ -21,8 +21,6 @@ function requireCollectorSession(req, res, next) {
   return res.redirect('/collector/login');
 }
 
-// Guard: menu bisa disembunyikan admin dari /admin/sidebar-settings. Akses
-// langsung via URL tetap ditolak jika menu sedang disembunyikan.
 function requireMenuAccess(menuKey) {
   return (req, res, next) => {
     const access = sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session);
@@ -55,7 +53,6 @@ router.use((req, res, next) => {
   next();
 });
 
-// Phase 15: fail-closed jika modul rate limiter tidak dapat dimuat.
 let loginRateLimiter = (req, res, next) => res.status(503).send('Layanan login sementara tidak tersedia.');
 try {
   const rlMod = require('../middleware/rateLimiter');
@@ -74,16 +71,14 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   const password = String(req.body.password || '');
   const collector = adminSvc.authenticateCollector(username, password);
   if (collector) {
-    // SECURITY: Regenerate session after authentication to prevent session fixation
+    
     return req.session.regenerate((err) => {
       if (err) {
         logger.error('[COLLECTOR LOGIN] Session regeneration failed:', err);
         return res.render('collector/login', { title: 'Login Kolektor', company: company(), error: 'Kesalahan sistem. Silakan coba lagi.' });
       }
       req.session.isCollector = true;
-      // Kolektor punya canonical role sendiri ('kolektor'), terpisah dari Kasir
-      // ('customer_service') meski keduanya sama-sama staff non-admin. Lihat
-      // middleware/authz.js LEGACY_TO_CANONICAL.
+      
       req.session.role = "kolektor";
       req.session.collectorId = collector.id;
       req.session.collectorName = collector.name;
@@ -106,7 +101,6 @@ router.get('/logout', (req, res) => {
   res.redirect('/collector/login');
 });
 
-// ─── COLLECTOR ATTENDANCE ────────────────────────────────────────────────────
 router.get('/attendance', requireCollectorSession, requireMenuAccess('collector_attendance'), (req, res) => {
   try {
     const collectorId = req.session.collectorId;
@@ -208,9 +202,9 @@ router.get('/', requireCollectorSession, (req, res) => {
   const now = new Date();
   const month = Math.max(1, Math.min(12, parseInt(req.query.month || (now.getMonth() + 1), 10) || (now.getMonth() + 1)));
   const year = parseInt(req.query.year || now.getFullYear(), 10) || now.getFullYear();
-  const status = String(req.query.status || 'all').trim(); // all, unpaid, paid
+  const status = String(req.query.status || 'all').trim(); 
   const search = String(req.query.search || '').trim();
-  const scope = String(req.query.scope || '').trim(); // today, unpaid, isolir, multi, all
+  const scope = String(req.query.scope || '').trim(); 
   const todayDay = now.getDate();
 
   const collectorId = Number(req.session.collectorId || 0);
@@ -376,7 +370,6 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
     const y = Number(req.body.year || new Date().getFullYear());
     const note = String(req.body.note || '').trim();
 
-    // If invoice doesn't exist yet, auto generate invoice on-the-fly!
     if ((!invoiceId || invoiceId <= 0) && customerId > 0) {
       const genResult = billingSvc.generateInvoiceForCustomer(customerId, m, y);
       invoiceId = Number(genResult.invoiceId || 0);
@@ -399,12 +392,11 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
     const amount = Math.max(0, Number(inv.amount || 0) || 0);
     if (amount <= 0) throw new Error('Nominal tagihan tidak valid');
 
-    // Check if auto-approve is enabled for this collector
     const collector = db.prepare('SELECT auto_approve FROM collectors WHERE id = ?').get(collectorId);
     const autoApproveEnabled = collector && collector.auto_approve === 1;
 
     if (autoApproveEnabled) {
-      // Auto-approve: directly mark invoice as paid
+      
       const collectorName = String(req.session.collectorName || '').trim();
       const collectorUsername = String(req.session.collectorUsername || '').trim();
       const collectorLabel = `Kolektor ${collectorName}${collectorUsername ? ` (@${collectorUsername})` : ''}`;
@@ -417,16 +409,13 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
       if (note) notesParts.push(note);
       const notes = notesParts.join(' | ');
 
-      // Mark invoice as paid
       billingSvc.markAsPaid(invoiceId, collectorLabel, notes);
 
-      // Insert request with approved status
       db.prepare(`
         INSERT INTO collector_payment_requests (collector_id, invoice_id, customer_id, amount, note, status, decided_by_role, decided_by_name, decided_note, decided_at)
         VALUES (?, ?, ?, ?, ?, 'approved', 'system', 'Auto-Approve', 'Otomatis disetujui (kolektor setting aktif)', CURRENT_TIMESTAMP)
       `).run(collectorId, invoiceId, Number(inv.customer_id || 0), amount, note);
 
-      // Auto-unisolate if customer status is currently suspended
       const customer = customerSvc.getCustomerById(inv.customer_id);
       let unisolatedText = '';
       if (customer && customer.status === 'suspended') {
@@ -439,7 +428,6 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
         }
       }
 
-      // Send WhatsApp notification to customer
       if (customer && customer.phone) {
         const msg =
           `✅ *PEMBAYARAN BERHASIL*\n\n` +
@@ -459,7 +447,7 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
 
       req.session._msg = { type: 'success', text: `Pembayaran berhasil diproses, tagihan lunas${unisolatedText}. <a href="/collector/invoice/${invoiceId}/print-thermal" target="_blank" class="btn btn-sm btn-dark ms-2 fw-bold"><i class="bi bi-printer"></i> Cetak Struk (Bluetooth Thermal)</a>` };
     } else {
-      // Manual approval: insert as pending
+      
       db.prepare(`
         INSERT INTO collector_payment_requests (collector_id, invoice_id, customer_id, amount, note, status)
         VALUES (?, ?, ?, ?, ?, 'pending')
@@ -479,7 +467,6 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
   res.redirect('/collector' + suffix);
 });
 
-// ─── THERMAL RECEIPT PRINT ROUTE (58mm/80mm Bluetooth Printer) ───────────────
 router.get('/invoice/:id/print-thermal', requireCollectorSession, (req, res) => {
   try {
     const invoiceId = Number(req.params.id || 0);
@@ -505,7 +492,6 @@ router.get('/invoice/:id/print-thermal', requireCollectorSession, (req, res) => 
   }
 });
 
-// ─── SEND INVOICE PDF VIA WHATSAPP ROUTE ──────────────────────────────────────
 router.post('/invoice/:id/send-pdf-wa', requireCollectorSession, async (req, res) => {
   try {
     const invoiceId = Number(req.params.id || 0);

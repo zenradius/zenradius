@@ -1,12 +1,8 @@
-/**
- * Settings Validation Schema
- * Validate setiap field sebelum di-save ke settings.json
- */
+/** Settings Validation Schema */
 const { logger } = require('./logger');
 
-// Validation rules untuk setiap field
 const VALIDATION_RULES = {
-  // Server Configuration
+  
   server_port: {
     type: 'number',
     min: 1024,
@@ -26,7 +22,6 @@ const VALIDATION_RULES = {
     description: 'Session secret (min 32 karakter)'
   },
 
-  // Company Information
   company_header: {
     type: 'string',
     maxLength: 100,
@@ -69,7 +64,6 @@ const VALIDATION_RULES = {
     description: 'Jam operasional'
   },
 
-  // Admin Credentials
   admin_username: {
     type: 'string',
     minLength: 3,
@@ -93,7 +87,6 @@ const VALIDATION_RULES = {
     description: 'Permission personal admin (opsional — admin kini full-access)'
   },
 
-  // GenieACS Configuration
   genieacs_url: {
     type: 'string',
     pattern: /^https?:\/\/.+/,
@@ -108,7 +101,6 @@ const VALIDATION_RULES = {
     description: 'Password GenieACS'
   },
 
-  // MikroTik Configuration
   mikrotik_name: {
     type: 'string',
     minLength: 1,
@@ -142,7 +134,6 @@ const VALIDATION_RULES = {
     description: 'Hari isolir (1-365)'
   },
 
-  // WhatsApp Configuration
   whatsapp_enabled: {
     type: 'boolean',
     description: 'Enable WhatsApp'
@@ -174,7 +165,6 @@ const VALIDATION_RULES = {
   http_wa_headers: { type: 'string', description: 'Extra headers JSON' },
   http_wa_inbound_token: { type: 'string', description: 'Inbound webhook token' },
 
-  // Telegram Configuration
   telegram_enabled: {
     type: 'boolean',
     description: 'Enable Telegram'
@@ -189,7 +179,6 @@ const VALIDATION_RULES = {
     description: 'Telegram admin ID (numeric)'
   },
 
-  // Tripay Configuration
   tripay_enabled: {
     type: 'boolean',
     description: 'Enable Tripay'
@@ -215,7 +204,6 @@ const VALIDATION_RULES = {
     description: 'Tripay mode'
   },
 
-  // Midtrans Configuration
   midtrans_enabled: {
     type: 'boolean',
     description: 'Enable Midtrans'
@@ -231,7 +219,6 @@ const VALIDATION_RULES = {
     description: 'Midtrans mode'
   },
 
-  // Xendit Configuration
   xendit_enabled: {
     type: 'boolean',
     description: 'Enable Xendit'
@@ -242,7 +229,6 @@ const VALIDATION_RULES = {
     description: 'Xendit API key'
   },
 
-  // Duitku Configuration
   duitku_enabled: {
     type: 'boolean',
     description: 'Enable Duitku'
@@ -263,7 +249,6 @@ const VALIDATION_RULES = {
     description: 'Duitku mode'
   },
 
-  // Location
   office_lat: {
     type: 'string',
     pattern: /^-?\d+(\.\d+)?$|^$/,
@@ -275,7 +260,6 @@ const VALIDATION_RULES = {
     description: 'Longitude kantor'
   },
 
-  // Other
   default_gateway: {
     type: 'string',
     enum: ['tripay', 'midtrans', 'xendit', 'duitku'],
@@ -290,11 +274,6 @@ const VALIDATION_RULES = {
     description: 'Enable OTP login'
   },
 
-  // Phase 17 — Mobile push (FCM). Only a FILE PATH is stored; the service
-  // account JSON itself lives on disk outside settings.json and is never
-  // exposed to any client. Firebase client identifiers below are public by
-  // design (they ship in every Android app) and are served to the app at
-  // runtime so no google-services.json needs to be baked into the APK.
   fcm_service_account_path: {
     type: 'string',
     minLength: 5,
@@ -333,13 +312,12 @@ const VALIDATION_RULES = {
  * Validate single value
  */
 function validateValue(field, value, rule) {
-  // Trim string values
+  
   let trimmedValue = value;
   if (typeof value === 'string') {
     trimmedValue = value.trim();
   }
 
-  // Check type
   if (rule.type === 'number') {
     if (typeof trimmedValue !== 'number') return `${field} harus berupa angka`;
     if (rule.min !== undefined && trimmedValue < rule.min) return `${field} minimal ${rule.min}`;
@@ -362,7 +340,7 @@ function validateValue(field, value, rule) {
     if (typeof trimmedValue !== 'boolean') return `${field} harus berupa boolean`;
   }
 
-  return null; // Valid
+  return null; 
 }
 
 /**
@@ -375,21 +353,17 @@ function validateSettings(settings) {
     const value = settings[field];
     const rule = VALIDATION_RULES[field];
 
-    // Skip jika tidak ada rule (field baru atau optional)
     if (!rule) return;
 
-    // Check required
     if (rule.required && (value === undefined || value === null || value === '')) {
       errors.push(`${field} wajib diisi`);
       return;
     }
 
-    // Skip validation jika value kosong dan tidak required
     if (!rule.required && (value === undefined || value === null || value === '')) {
       return;
     }
 
-    // Validate value
     const error = validateValue(field, value, rule);
     if (error) errors.push(error);
   });

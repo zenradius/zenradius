@@ -1,7 +1,4 @@
-/**
- * Error Handling Middleware
- * Menangani error secara terpusat dan memberikan response yang konsisten
- */
+/** Error Handling Middleware */
 const { logger } = require('../config/logger');
 
 /**
@@ -71,7 +68,7 @@ class InternalServerError extends AppError {
  * Error Handler Middleware
  */
 function errorHandler(err, req, res, next) {
-  // Log error
+
   if (err.isOperational) {
     logger.warn(`[Error Handler] Operational error: ${err.message}`, {
       statusCode: err.statusCode,
@@ -89,12 +86,8 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Determine status code
   const statusCode = err.statusCode || 500;
 
-  // Phase 15: jangan pernah membocorkan detail internal (pesan driver DB, SQL,
-  // path filesystem, pesan library) pada error non-operasional / 5xx di produksi.
-  // Error operasional (4xx yang sengaja dilempar aplikasi) tetap informatif.
   const isProd = process.env.NODE_ENV === 'production';
   const safeMessage = (err.isOperational && statusCode < 500)
     ? (err.message || 'Permintaan tidak dapat diproses.')
@@ -103,14 +96,13 @@ function errorHandler(err, req, res, next) {
       : (err.message || 'Internal server error'));
   const safeType = (err.isOperational && statusCode < 500) ? (err.name || 'Error') : 'Error';
 
-  // Determine response format based on request type
   const isApi = req.path.startsWith('/api/');
   const wantsJsonType = req.headers['content-type'] === 'application/json';
   const bestMatch = req.accepts(['html', 'json']);
   const isJson = wantsJsonType || bestMatch === 'json';
 
   if (isApi || isJson) {
-    // JSON response for API requests
+
     res.status(statusCode).json({
       success: false,
       error: {
@@ -121,11 +113,10 @@ function errorHandler(err, req, res, next) {
       }
     });
   } else {
-    // HTML response for web requests
+
     const errorMessage = safeMessage;
     const errorTitle = safeType;
 
-    // Set flash message for web pages
     if (req.session) {
       req.session._msg = {
         type: 'error',
@@ -133,16 +124,15 @@ function errorHandler(err, req, res, next) {
       };
     }
 
-    // Redirect or render error page
     if (req.accepts('html') && !req.xhr) {
-      // Render error page
+
       res.status(statusCode).render('error', {
         title: `${statusCode} - ${errorTitle}`,
         error: errorMessage,
         statusCode: statusCode
       });
     } else {
-      // Send plain text for non-HTML requests
+
       res.status(statusCode).send(`${statusCode} - ${errorMessage}`);
     }
   }
@@ -182,38 +172,29 @@ function notFoundHandler(req, res, next) {
   }
 }
 
-/**
- * Async Error Wrapper
- * Menangani error di async functions secara otomatis
- */
+/** Async Error Wrapper */
 function asyncHandler(fn) {
   return (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
 
-/**
- * Validation Helper
- * Memvalidasi input dan throw ValidationError jika tidak valid
- */
+/** Validation Helper */
 function validateInput(data, schema) {
   const errors = [];
-  
+
   for (const [field, rules] of Object.entries(schema)) {
     const value = data[field];
-    
-    // Required check
+
     if (rules.required && (value === undefined || value === null || value === '')) {
       errors.push(`${field} is required`);
       continue;
     }
-    
-    // Skip other validations if field is not required and not provided
+
     if (!rules.required && (value === undefined || value === null || value === '')) {
       continue;
     }
-    
-    // Type check
+
     if (rules.type) {
       if (rules.type === 'string' && typeof value !== 'string') {
         errors.push(`${field} must be a string`);
@@ -231,35 +212,29 @@ function validateInput(data, schema) {
         }
       }
     }
-    
-    // Min length check
+
     if (rules.minLength && typeof value === 'string' && value.length < rules.minLength) {
       errors.push(`${field} must be at least ${rules.minLength} characters`);
     }
-    
-    // Max length check
+
     if (rules.maxLength && typeof value === 'string' && value.length > rules.maxLength) {
       errors.push(`${field} must be at most ${rules.maxLength} characters`);
     }
-    
-    // Min value check
+
     if (rules.min !== undefined && typeof value === 'number' && value < rules.min) {
       errors.push(`${field} must be at least ${rules.min}`);
     }
-    
-    // Max value check
+
     if (rules.max !== undefined && typeof value === 'number' && value > rules.max) {
       errors.push(`${field} must be at most ${rules.max}`);
     }
-    
-    // Pattern check
+
     if (rules.pattern && typeof value === 'string') {
       if (!rules.pattern.test(value)) {
         errors.push(`${field} format is invalid`);
       }
     }
-    
-    // Custom validation
+
     if (rules.validate && typeof rules.validate === 'function') {
       const result = rules.validate(value);
       if (result !== true) {
@@ -267,11 +242,11 @@ function validateInput(data, schema) {
       }
     }
   }
-  
+
   if (errors.length > 0) {
     throw new ValidationError(errors.join(', '));
   }
-  
+
   return true;
 }
 

@@ -1,7 +1,4 @@
-/**
- * Service: Backup & Recovery System
- * Melakukan backup otomatis database dan settings
- */
+/** Service: Backup & Recovery System */
 const fs = require('fs');
 const path = require('path');
 const { logger } = require('../config/logger');
@@ -12,7 +9,6 @@ const backupDir = path.join(projectRoot, 'backups');
 const dbPath = path.join(projectRoot, 'database', 'zenradius.db');
 const settingsPath = path.join(projectRoot, 'settings.json');
 
-// Pastikan direktori backup ada
 if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir, { recursive: true });
   logger.info('[Backup] Created backup directory');
@@ -32,16 +28,7 @@ function getBackupTimestamp() {
   return `${year}${month}${day}_${hours}${minutes}${seconds}`;
 }
 
-/**
- * Backup database SQLite
- *
- * PHASE 11: sebelum copy file, paksa WAL checkpoint (TRUNCATE) agar seluruh
- * data yang masih berada di file -wal digabungkan ke file utama .db.
- * Raw fs.copyFileSync tanpa checkpoint dapat menghasilkan backup yang tidak
- * lengkap/tidak konsisten pada database WAL-mode yang sedang aktif menerima
- * write. checkpoint(TRUNCATE) aman dipanggil kapan pun (blocking singkat),
- * tidak destruktif, dan tidak mengubah data.
- */
+/** Backup database SQLite */
 function backupDatabase() {
   try {
     const timestamp = getBackupTimestamp();
@@ -57,10 +44,6 @@ function backupDatabase() {
 
     fs.copyFileSync(dbPath, backupFilePath);
 
-    // PHASE 11: verifikasi backup — jangan silently berhasil jika file hasil
-    // copy ternyata korup. Buka read-only dan jalankan integrity_check resmi
-    // SQLite. Tidak mengubah/menghapus backup yang gagal verifikasi; hanya
-    // melaporkan agar admin tahu backup ini tidak dapat dipercaya.
     let verified = false;
     let verifyError = null;
     try {
@@ -81,7 +64,7 @@ function backupDatabase() {
     const sizeKB = Math.round(stats.size / 1024);
 
     logger.info(`[Backup] Database backup created: ${backupFileName} (${sizeKB} KB, verified=${verified})`);
-    
+
     return {
       success: true,
       fileName: backupFileName,
@@ -108,14 +91,13 @@ function backupSettings() {
     const backupFileName = `settings_${timestamp}.json`;
     const backupFilePath = path.join(backupDir, backupFileName);
 
-    // Copy settings file
     fs.copyFileSync(settingsPath, backupFilePath);
 
     const stats = fs.statSync(backupFilePath);
     const sizeKB = Math.round(stats.size / 1024);
 
     logger.info(`[Backup] Settings backup created: ${backupFileName} (${sizeKB} KB)`);
-    
+
     return {
       success: true,
       fileName: backupFileName,
@@ -152,7 +134,6 @@ function restoreDatabase(backupFileName) {
   try {
     const backupFilePath = path.join(backupDir, backupFileName);
 
-    // Cek apakah file backup ada
     if (!fs.existsSync(backupFilePath)) {
       return {
         success: false,
@@ -160,20 +141,18 @@ function restoreDatabase(backupFileName) {
       };
     }
 
-    // Backup database saat ini sebelum restore
     const preRestoreBackup = backupDatabase();
     if (!preRestoreBackup.success) {
       logger.warn('[Backup] Failed to create pre-restore backup');
     }
 
-    // Restore database
     fs.copyFileSync(backupFilePath, dbPath);
 
     const stats = fs.statSync(dbPath);
     const sizeKB = Math.round(stats.size / 1024);
 
     logger.info(`[Backup] Database restored from: ${backupFileName} (${sizeKB} KB)`);
-    
+
     return {
       success: true,
       fileName: backupFileName,
@@ -197,7 +176,6 @@ function restoreSettings(backupFileName) {
   try {
     const backupFilePath = path.join(backupDir, backupFileName);
 
-    // Cek apakah file backup ada
     if (!fs.existsSync(backupFilePath)) {
       return {
         success: false,
@@ -205,20 +183,18 @@ function restoreSettings(backupFileName) {
       };
     }
 
-    // Backup settings saat ini sebelum restore
     const preRestoreBackup = backupSettings();
     if (!preRestoreBackup.success) {
       logger.warn('[Backup] Failed to create pre-restore backup');
     }
 
-    // Restore settings
     fs.copyFileSync(backupFilePath, settingsPath);
 
     const stats = fs.statSync(settingsPath);
     const sizeKB = Math.round(stats.size / 1024);
 
     logger.info(`[Backup] Settings restored from: ${backupFileName} (${sizeKB} KB)`);
-    
+
     return {
       success: true,
       fileName: backupFileName,
@@ -246,11 +222,10 @@ function listBackups() {
     for (const file of files) {
       const filePath = path.join(backupDir, file);
       const stats = fs.statSync(filePath);
-      
-      // Parse filename untuk mendapatkan tanggal
+
       let backupDate = null;
       let backupType = null;
-      
+
       if (file.startsWith('billing_db_') && file.endsWith('.db')) {
         backupType = 'database';
         const timestamp = file.replace('billing_db_', '').replace('.db', '');
@@ -272,7 +247,6 @@ function listBackups() {
       });
     }
 
-    // Sort by created date (terbaru dulu)
     backups.sort((a, b) => b.created - a.created);
 
     return {
@@ -295,7 +269,7 @@ function listBackups() {
  */
 function parseBackupTimestamp(timestamp) {
   try {
-    // Format: YYYYMMDD_HHMMSS
+
     const [datePart, timePart] = timestamp.split('_');
     const year = datePart.substring(0, 4);
     const month = datePart.substring(4, 6);
@@ -366,16 +340,15 @@ function checkBackupCapacity(maxSizeMB = 500) {
 
     if (totalSizeMB > maxSizeMB) {
       logger.warn(`[Backup] Backup size (${totalSizeMB.toFixed(2)} MB) exceeds limit (${maxSizeMB} MB)`);
-      
-      // Hapus backup paling lama sampai kapasitas aman
+
       const sortedBackups = [...result.backups].sort((a, b) => a.created - b.created);
       let deletedCount = 0;
-      
+
       for (const backup of sortedBackups) {
-        if (totalSizeMB <= maxSizeMB * 0.8) { // Hapus sampai 80% dari limit
+        if (totalSizeMB <= maxSizeMB * 0.8) {
           break;
         }
-        
+
         const filePath = path.join(backupDir, backup.fileName);
         fs.unlinkSync(filePath);
         totalSizeMB -= backup.size / (1024 * 1024);
@@ -413,7 +386,7 @@ function checkBackupCapacity(maxSizeMB = 500) {
 function scheduleAutoBackup() {
   const nodeCron = require('node-cron');
   const enabled = getSetting('auto_backup_enabled', true);
-  const schedule = getSetting('auto_backup_schedule', '0 2 * * *'); // Default jam 2 pagi setiap hari
+  const schedule = getSetting('auto_backup_schedule', '0 2 * * *');
 
   if (!enabled) {
     logger.info('[Backup] Auto backup disabled');
@@ -423,7 +396,7 @@ function scheduleAutoBackup() {
   nodeCron.schedule(schedule, () => {
     logger.info('[Backup] Starting scheduled backup...');
     const result = backupAll();
-    
+
     if (result.database.success && result.settings.success) {
       logger.info('[Backup] Scheduled backup completed successfully');
     } else {

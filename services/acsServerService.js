@@ -1,23 +1,3 @@
-/**
- * ──────────────────────────────────────────────────────────────────────────────
- * Built-in ACS Server Service  (TR-069 / CWMP)
- * ──────────────────────────────────────────────────────────────────────────────
- *
- * Handles CWMP SOAP communication with CPE devices (ONUs / routers) directly
- * within the billing application – no external GenieACS required.
- *
- * Protocol flow:
- *   1. CPE  → POST Inform        → ACS responds InformResponse
- *   2. CPE  → POST Empty         → ACS sends queued task  (or 204)
- *   3. CPE  → POST TaskResponse  → ACS marks task, sends next or 204
- *
- * Exports:
- *   handleCwmpRequest        – Express handler for POST /acs
- *   triggerConnectionRequest – Kick a CPE to reconnect
- *   getBuiltinDevices        – Query acs_devices
- *   getBuiltinDevice         – Single device lookup
- *   createBuiltinTask        – Insert task + trigger CR
- */
 
 'use strict';
 
@@ -28,9 +8,8 @@ const db = require('../config/database');
 const { logger } = require('../config/logger');
 const { getSetting, getNowLocal } = require('../config/settingsManager');
 
-// Versioned bootstrap migration — only runs once per version change
 try {
-  const BOOTSTRAP_VERSION = 4; // v4: Added CMCC, CT-COM, CU, FH, ZTE-COM vendor RX Power paths
+  const BOOTSTRAP_VERSION = 4;
   const migRow = db.prepare("SELECT value FROM app_settings WHERE key = 'acs_bootstrap_version'").get();
   const currentVersion = migRow ? parseInt(migRow.value, 10) : 0;
   if (currentVersion < BOOTSTRAP_VERSION) {
@@ -50,7 +29,6 @@ try {
   logger.error(`[ACS] Failed bootstrap migration: ${err.message}`);
 }
 
-// Cleanup stale monitoring tasks from older ACS task formats so they don't keep faulting after restart.
 try {
   db.prepare(
     `DELETE FROM acs_tasks
@@ -68,23 +46,14 @@ try {
   logger.error(`[ACS] Failed stale monitoring task cleanup: ${err.message}`);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  SOAP NAMESPACES & CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════════
-
 const SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
 const CWMP_NS = 'urn:dslforum-org:cwmp-1-0';
 const XSD_NS  = 'http://www.w3.org/2001/XMLSchema';
 const XSI_NS  = 'http://www.w3.org/2001/XMLSchema-instance';
 const SOAP_ENC_NS = 'http://schemas.xmlsoap.org/soap/encoding/';
 
-const SESSION_TIMEOUT_MS = 120_000; // 120 seconds
+const SESSION_TIMEOUT_MS = 120_000;
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  IN-MEMORY SESSION STORE
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/** @type {Map<string, {deviceId:string, step:string, currentTaskId:number|null, lastActivity:number}>} */
 const sessions = new Map();
 const lastDeviceByIp = new Map();
 const recentFaultLogs = new Map();
@@ -99,7 +68,6 @@ setInterval(() => {
   }
 }, 60_000);
 
-// Cleanup stale lastTriggerTimes entries every 5 minutes
 setInterval(() => {
   const cutoff = Date.now() - 5 * 60 * 1000;
   for (const [deviceId, ts] of lastTriggerTimes) {
@@ -119,7 +87,7 @@ function generateSessionId() {
 }
 
 function getOrCreateSession(req, res) {
-  // Try to read existing session from cookie
+
   const cookieHeader = req.headers.cookie || '';
   const match = cookieHeader.match(/(?:^|;\s*)acs_session=([^;]+)/);
   let sid = match ? match[1] : null;
@@ -130,7 +98,6 @@ function getOrCreateSession(req, res) {
     return { sid, session: sess, isNew: false };
   }
 
-  // Create new session
   sid = generateSessionId();
   const session = { deviceId: null, step: null, currentTaskId: null, lastActivity: Date.now() };
   sessions.set(sid, session);
@@ -138,39 +105,22 @@ function getOrCreateSession(req, res) {
   return { sid, session, isNew: true };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  TIMESTAMP HELPERS
-// ═══════════════════════════════════════════════════════════════════════════════
-
 function nowLocal() {
-  // Use ISO 8601 UTC format for ACS timestamps.
-  // This ensures correct Date.now() comparison regardless of server timezone.
-  // getNowLocal() returns local time WITHOUT timezone offset (e.g. "2026-06-08 11:49:50"),
-  // which causes incorrect parsing on servers with UTC system timezone.
+
   return new Date().toISOString();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  REGEX-BASED SOAP / XML PARSING
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Extract the text content of a simple XML element.
- * Handles namespace-prefixed elements like <ns:Tag> and <Tag>.
- */
+/** Extract the text content of a simple XML element. */
 function xmlValue(xml, tag) {
-  // Match both <tag>value</tag> and <ns:tag>value</ns:tag>
+
   const re = new RegExp(`<(?:[\\w-]+:)?${tag}[^>]*>([\\s\\S]*?)<\\/(?:[\\w-]+:)?${tag}>`, 'i');
   const m = xml.match(re);
   return m ? m[1].trim() : '';
 }
 
-/**
- * Detect whether the SOAP body contains a specific CWMP method.
- * E.g. hasCwmpMethod(xml, 'Inform') => true if <cwmp:Inform> or <Inform xmlns=...>
- */
+/** Detect whether the SOAP body contains a specific CWMP method. */
 function hasCwmpMethod(xml, method) {
-  // <cwmp:Method> or <ns123:Method> or <Method xmlns="urn:dslforum-org:cwmp-1-0">
+
   const re = new RegExp(`<(?:[\\w-]+:)?${method}[\\s>]`, 'i');
   return re.test(xml);
 }
@@ -179,7 +129,7 @@ function hasCwmpMethod(xml, method) {
  * Extract CWMP ID from the SOAP header.
  */
 function extractCwmpId(xml) {
-  // <cwmp:ID ...>value</cwmp:ID> or <ID ...>value</ID>
+
   const m = xml.match(/<(?:[\w-]+:)?ID[^>]*>([\s\S]*?)<\/(?:[\w-]+:)?ID>/i);
   return m ? m[1].trim() : '1';
 }
@@ -198,13 +148,10 @@ function parseDeviceId(xml) {
   };
 }
 
-/**
- * Parse all <ParameterValueStruct> entries.
- * Returns a flat object: { 'Device.Path.Name': 'value', ... }
- */
+/** Parse all <ParameterValueStruct> entries. */
 function parseParameterValues(xml) {
   const params = {};
-  // Match each ParameterValueStruct block
+
   const structRe = /<(?:[\w-]+:)?ParameterValueStruct>([\s\S]*?)<\/(?:[\w-]+:)?ParameterValueStruct>/gi;
   let m;
   while ((m = structRe.exec(xml)) !== null) {
@@ -266,10 +213,6 @@ function parseFault(xml) {
   };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  SOAP RESPONSE BUILDERS
-// ═══════════════════════════════════════════════════════════════════════════════
-
 function soapEnvelopeWrap(cwmpId, bodyContent) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope
@@ -310,11 +253,7 @@ function buildFactoryReset(cwmpId) {
   );
 }
 
-/**
- * Build SetParameterValues SOAP envelope.
- * @param {string} cwmpId
- * @param {Array} parameterValues – array of [path, value, type?] or [path, value]
- */
+/** Build SetParameterValues SOAP envelope. */
 function buildSetParameterValues(cwmpId, parameterValues) {
   const pvList = (parameterValues || []).map(pv => {
     const name = pv[0];
@@ -338,11 +277,7 @@ ${pvList}
   );
 }
 
-/**
- * Build GetParameterValues SOAP envelope.
- * @param {string} cwmpId
- * @param {string[]} parameterNames
- */
+/** Build GetParameterValues SOAP envelope. */
 function buildGetParameterValues(cwmpId, parameterNames) {
   const names = (parameterNames || []).map(n =>
     `        <string>${escapeXml(n)}</string>`
@@ -382,11 +317,7 @@ function normalizeObjectPath(objectName) {
   return path;
 }
 
-/**
- * Build AddObject SOAP envelope.
- * @param {string} cwmpId
- * @param {string} objectName – e.g. "InternetGatewayDevice.WANDevice.1.WANConnectionDevice."
- */
+/** Build AddObject SOAP envelope. */
 function buildAddObject(cwmpId, objectName) {
   const normalizedObjectName = normalizeObjectPath(objectName);
   return soapEnvelopeWrap(cwmpId,
@@ -407,17 +338,12 @@ function escapeXml(str) {
     .replace(/'/g, '&apos;');
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  DATABASE OPERATIONS
-// ═══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Upsert device from Inform data.
  */
 function upsertDevice(deviceId, deviceInfo, params, ipAddress) {
   const now = nowLocal();
 
-  // Extract well-known parameters
   const swVer = params['InternetGatewayDevice.DeviceInfo.SoftwareVersion']
     || params['Device.DeviceInfo.SoftwareVersion']
     || '';
@@ -425,7 +351,6 @@ function upsertDevice(deviceId, deviceInfo, params, ipAddress) {
     || params['Device.DeviceInfo.HardwareVersion']
     || '';
 
-  // Connection request URL – look in multiple possible locations
   const connReqUrl = params['InternetGatewayDevice.ManagementServer.ConnectionRequestURL']
     || params['Device.ManagementServer.ConnectionRequestURL']
     || '';
@@ -436,7 +361,6 @@ function upsertDevice(deviceId, deviceInfo, params, ipAddress) {
     || params['Device.ManagementServer.ConnectionRequestPassword']
     || '';
 
-  // Extract IP address from connection request URL if valid, to bypass NAT/masquerade
   let ipToSave = ipAddress;
   if (connReqUrl) {
     try {
@@ -454,19 +378,17 @@ function upsertDevice(deviceId, deviceInfo, params, ipAddress) {
       }
     } catch (_) {}
   }
-  
-  // Clean IPv6 mapped IPv4 prefix
+
   if (ipToSave && ipToSave.startsWith('::ffff:')) {
     ipToSave = ipToSave.slice(7);
   }
 
-  // Check if device exists
   const existing = db.prepare('SELECT id, params, tags FROM acs_devices WHERE id = ?').get(deviceId);
 
   if (existing) {
-    // Merge existing params with new params (new values overwrite)
+
     let mergedParams = {};
-    try { mergedParams = JSON.parse(existing.params || '{}'); } catch (_) { /* empty */ }
+    try { mergedParams = JSON.parse(existing.params || '{}'); } catch (_) {  }
     Object.assign(mergedParams, params);
 
     db.prepare(`
@@ -538,20 +460,17 @@ function mergeDeviceParams(deviceId, newParams) {
   if (!existing) return;
 
   let merged = {};
-  try { merged = JSON.parse(existing.params || '{}'); } catch (_) { /* empty */ }
+  try { merged = JSON.parse(existing.params || '{}'); } catch (_) {  }
   Object.assign(merged, newParams);
 
   db.prepare('UPDATE acs_devices SET params = ?, updated_at = ? WHERE id = ?')
     .run(JSON.stringify(merged), now, deviceId);
 }
 
-/**
- * Check if the device is missing WLAN, WAN, or RX optical power parameters,
- * and if so, queue a getParameterValues task to bootstrap them.
- */
+/** Check if the device is missing WLAN, WAN, or RX optical power parameters, */
 function queueBootstrapTasksIfNeeded(deviceId, currentParams) {
   try {
-    // Check if device is already tagged as bootstrapped to avoid infinite loops on unsupported features
+
     const device = db.prepare('SELECT tags FROM acs_devices WHERE id = ?').get(deviceId);
     if (!device) return;
 
@@ -561,25 +480,23 @@ function queueBootstrapTasksIfNeeded(deviceId, currentParams) {
       return;
     }
 
-    // Check if there is already a pending getParameterValues task for this device to prevent duplication
     const pending = db.prepare("SELECT COUNT(*) as c FROM acs_tasks WHERE device_id = ? AND name = 'getParameterValues' AND status = 'pending'").get(deviceId);
     if (pending && pending.c > 0) {
       return;
     }
 
-    // Check if we need to fetch parameters (if they are missing from currentParams)
     const hasWlan = Object.keys(currentParams).some(k => k.toLowerCase().includes('ssid') || k.toLowerCase().includes('keypassphrase'));
     const hasWan = Object.keys(currentParams).some(k => k.toLowerCase().includes('username') || k.toLowerCase().includes('externalipaddress') || k.toLowerCase().includes('pppoe'));
     const hasRx = Object.keys(currentParams).some(k => k.toLowerCase().includes('rxpower') || k.toLowerCase().includes('redaman') || k.toLowerCase().includes('opticalsignallevel'));
 
     if (!hasWlan || !hasWan || !hasRx) {
       logger.info(`[ACS] Device ${deviceId} is missing key parameters (WLAN:${hasWlan}, WAN:${hasWan}, RX:${hasRx}). Queuing bootstrap parameter fetches.`);
-      
+
       const isTr181 = Object.keys(currentParams).some(k => k.startsWith('Device.'));
       const groups = [];
 
       if (isTr181) {
-        // TR-181 (Modern ONUs) - query as safe individual tasks
+
         groups.push(['Device.DeviceInfo.ModelName', 'Device.DeviceInfo.SoftwareVersion', 'Device.DeviceInfo.HardwareVersion', 'Device.DeviceInfo.UpTime']);
         groups.push(['Device.WiFi.SSID.1.SSID']);
         groups.push(['Device.WiFi.AccessPoint.1.SSIDReference']);
@@ -591,24 +508,19 @@ function queueBootstrapTasksIfNeeded(deviceId, currentParams) {
         groups.push(['Device.Optical.Interface.1.OpticalSignalLevel']);
         groups.push(['Device.WiFi.AccessPoint.1.AssociatedDeviceNumberOfEntries', 'Device.WiFi.AccessPoint.2.AssociatedDeviceNumberOfEntries', 'Device.Hosts.HostNumberOfEntries']);
       } else {
-        // TR-098 (ZTE, Huawei, etc.) - query as safe individual tasks to prevent single-unsupported-path failure
-        // Group 1: Basic Info (guaranteed to succeed)
+
         groups.push(['InternetGatewayDevice.DeviceInfo.ModelName', 'InternetGatewayDevice.DeviceInfo.SoftwareVersion', 'InternetGatewayDevice.DeviceInfo.HardwareVersion', 'InternetGatewayDevice.DeviceInfo.UpTime']);
-        
-        // WLAN 2.4G
+
         groups.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID']);
         groups.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase']);
         groups.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase']);
         groups.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey']);
-        
-        // WLAN 5G (fails on 2.4G-only ONUs, but in its own task it doesn't affect 2.4G)
+
         groups.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID']);
         groups.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.KeyPassphrase']);
         groups.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.KeyPassphrase']);
         groups.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.PreSharedKey']);
-        
-        // WAN / PPPoE (Extended indexes to check common interfaces only)
-        // CIOT ONU hanya support max 3 WAN connections, reduce loop dari 5 ke 3
+
         for (let connIdx = 1; connIdx <= 3; connIdx++) {
           for (let pppIdx = 1; pppIdx <= 2; pppIdx++) {
             groups.push([`InternetGatewayDevice.WANDevice.1.WANConnectionDevice.${connIdx}.WANPPPConnection.${pppIdx}.Username`]);
@@ -617,39 +529,36 @@ function queueBootstrapTasksIfNeeded(deviceId, currentParams) {
             groups.push([`InternetGatewayDevice.WANDevice.1.WANConnectionDevice.${connIdx}.WANPPPConnection.${pppIdx}.Uptime`]);
           }
         }
-        
-        // Optical RX Power — Standard paths
+
         groups.push(['InternetGatewayDevice.WANDevice.1.WANPONInterfaceConfig.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_HW_OpticalSignal.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_GponInterfaceConfig.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_GponInterfaceConfig.RxPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_GponInterafceConfig.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_GponInterafceConfig.RxPower']);
-        // ZTE vendor paths
+
         groups.push(['InternetGatewayDevice.WANDevice.1.X_ZTE_GponInterfaceConfig.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_ZTE_GponInterfaceConfig.RxPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_ZTE_OpticalSignal.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_ZTE_OpticalSignal.RxPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_ZTE-COM_WANPONInterfaceConfig.RXPower']);
-        // Huawei vendor paths
+
         groups.push(['InternetGatewayDevice.WANDevice.1.X_HW_GponInterfaceConfig.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_HW_GponInterfaceConfig.RxPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANOAM.RXPower']);
-        // FiberHome vendor paths
+
         groups.push(['InternetGatewayDevice.WANDevice.1.X_FH_GponInterfaceConfig.RXPower']);
-        // China Mobile (CMCC) vendor paths
+
         groups.push(['InternetGatewayDevice.WANDevice.1.X_CMCC_EponInterfaceConfig.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_CMCC_GponInterfaceConfig.RXPower']);
-        // China Telecom (CT) vendor paths
+
         groups.push(['InternetGatewayDevice.WANDevice.1.X_CT-COM_EponInterfaceConfig.RXPower']);
         groups.push(['InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower']);
-        // China Unicom (CU) vendor paths
+
         groups.push(['InternetGatewayDevice.WANDevice.1.X_CU_WANEPONInterfaceConfig.OpticalTransceiver.RXPower']);
-        
-        // Active associations/client lists will be refreshed via object enumeration to avoid 9005 faults.
+
       }
 
-      // Add 'bootstrapped' tag to prevent infinite bootstrap loops
       if (!tags.includes('bootstrapped')) {
         tags.push('bootstrapped');
         const now = nowLocal();
@@ -682,7 +591,6 @@ function queueBootstrapTasksIfNeeded(deviceId, currentParams) {
         ).run(deviceId, JSON.stringify({ objectName }), now, now);
       }
 
-      // Queue task to configure Periodic Inform (300 seconds)
       const informPvs = [];
       if (isTr181) {
         informPvs.push(['Device.ManagementServer.PeriodicInformEnable', 'true', 'xsd:boolean']);
@@ -714,11 +622,9 @@ function queueRealtimeMonitoringTasks(deviceId, currentParams) {
 
     const isTr181 = Object.keys(currentParams || {}).some(k => String(k).startsWith('Device.'));
     const now = nowLocal();
-    
-    // FIX for Error 9005: Only queue tasks for objects that exist in device params
-    // Some devices (e.g. ZTE GM220-S XPON) don't support LANDevice/WiFi
+
     const refreshObjects = [];
-    
+
     if (isTr181) {
       if (currentParams?.['Device.Hosts.Host']) {
         refreshObjects.push('Device.Hosts.Host');
@@ -734,7 +640,7 @@ function queueRealtimeMonitoringTasks(deviceId, currentParams) {
         refreshObjects.push('InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice');
       }
     }
-    
+
     for (const objectName of refreshObjects) {
       db.prepare(
         `INSERT INTO acs_tasks (device_id, name, payload, status, created_at, updated_at)
@@ -856,17 +762,10 @@ function shouldThrottleFaultLog(deviceId, fault, taskName, payload) {
   return !!lastSeen && (now - lastSeen) < 10 * 60 * 1000;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  TASK → SOAP BUILDER
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Build the SOAP request for a given task.
- * Returns the SOAP XML string or null if the task type is unknown.
- */
+/** Build the SOAP request for a given task. */
 function buildTaskSoap(cwmpId, task) {
   let payload = {};
-  try { payload = JSON.parse(task.payload || '{}'); } catch (_) { /* empty */ }
+  try { payload = JSON.parse(task.payload || '{}'); } catch (_) {  }
 
   switch (task.name) {
     case 'reboot':
@@ -911,14 +810,7 @@ function buildTaskSoap(cwmpId, task) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  DETERMINE DEVICE ID
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Build the canonical device ID from DeviceId fields.
- * Format: {OUI}-{ProductClass}-{SerialNumber}
- */
+/** Build the canonical device ID from DeviceId fields. */
 function buildDeviceId(deviceInfo) {
   const oui = (deviceInfo.OUI || '000000').trim();
   const pc = (deviceInfo.ProductClass || '').trim();
@@ -929,19 +821,10 @@ function buildDeviceId(deviceInfo) {
   return `${oui}-${sn}`;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  MAIN CWMP REQUEST HANDLER
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Express handler for POST /acs
- *
- * Must be mounted with:
- *   app.post('/acs', express.raw({ type: ['text/xml', 'application/soap+xml', 'application/xml'] }), handleCwmpRequest);
- */
+/** Express handler for POST /acs */
 const handleCwmpRequest = async (req, res) => {
   try {
-    // Get body as string
+
     let body = '';
     if (Buffer.isBuffer(req.body)) {
       body = req.body.toString('utf-8');
@@ -951,26 +834,20 @@ const handleCwmpRequest = async (req, res) => {
       body = String(req.body);
     }
 
-    // Determine CPE IP address
     const cpeIp = req.headers['x-forwarded-for']
       ? String(req.headers['x-forwarded-for']).split(',')[0].trim()
       : req.socket?.remoteAddress || req.ip || '';
 
-    // Get or create session
     const { sid, session } = getOrCreateSession(req, res);
 
-    // ── EMPTY POST (step 2 or 3) ───────────────────────────────────────────
     if (!body || body.trim().length === 0) {
       return handleEmptyPost(session, sid, res, cpeIp);
     }
 
-    // ── INFORM ─────────────────────────────────────────────────────────────
     if (hasCwmpMethod(body, 'Inform')) {
       return handleInform(body, session, sid, cpeIp, res);
     }
 
-    // ── RESPONSE TO A TASK ─────────────────────────────────────────────────
-    // Check for known response types
     if (hasCwmpMethod(body, 'SetParameterValuesResponse')) {
       return handleTaskResponse(body, session, sid, 'setParameterValues', res);
     }
@@ -990,14 +867,11 @@ const handleCwmpRequest = async (req, res) => {
       return handleAddObjectResponse(body, session, sid, res);
     }
 
-    // ── FAULT ──────────────────────────────────────────────────────────────
     const fault = parseFault(body);
     if (fault) {
       return handleFault(fault, session, sid, res);
     }
 
-    // ── UNKNOWN / UNRECOGNIZED ─────────────────────────────────────────────
-    // Treat as empty post (next task or 204)
     logger.debug(`[ACS] Unrecognized SOAP body from session ${sid.substring(0, 8)}, treating as empty`);
     return handleEmptyPost(session, sid, res, cpeIp);
 
@@ -1006,10 +880,6 @@ const handleCwmpRequest = async (req, res) => {
     res.status(500).set('Content-Type', 'text/xml; charset=utf-8').send('');
   }
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  HANDLER: Inform
-// ═══════════════════════════════════════════════════════════════════════════════
 
 function handleInform(body, session, sid, cpeIp, res) {
   const cwmpId = extractCwmpId(body);
@@ -1025,7 +895,6 @@ function handleInform(body, session, sid, cpeIp, res) {
 
   logger.info(`[ACS] Inform from ${deviceId} (${deviceInfo.Manufacturer} ${deviceInfo.ProductClass}) IP=${cpeIp}`);
 
-  // Upsert device in database
   let mergedParams = params;
   try {
     upsertDevice(deviceId, deviceInfo, params, cpeIp);
@@ -1037,7 +906,6 @@ function handleInform(body, session, sid, cpeIp, res) {
     logger.error(`[ACS] Failed to upsert device ${deviceId}: ${err.message}`);
   }
 
-  // Queue bootstrap parameter fetch if needed
   queueBootstrapTasksIfNeeded(deviceId, mergedParams);
   queueRealtimeMonitoringTasks(deviceId, mergedParams);
 
@@ -1051,7 +919,6 @@ function handleInform(body, session, sid, cpeIp, res) {
     }
   }
 
-  // Update session
   session.deviceId = deviceId;
   session.step = 'informed';
   session.currentTaskId = null;
@@ -1059,10 +926,6 @@ function handleInform(body, session, sid, cpeIp, res) {
 
   return sendSoapResponse(res, buildInformResponse(cwmpId));
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  HANDLER: Empty POST (check task queue)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 function handleEmptyPost(session, sid, res, cpeIp = '') {
   if (!session.deviceId) {
@@ -1078,31 +941,27 @@ function handleEmptyPost(session, sid, res, cpeIp = '') {
     if (!session.deviceId) return res.status(204).set('Content-Type', 'text/xml; charset=utf-8').send('');
   }
 
-  // Look for a pending task for this device
   const task = getNextPendingTask(session.deviceId);
   if (!task) {
-    // No more tasks – signal end of session
+
     logger.debug(`[ACS] No pending tasks for ${session.deviceId}, sending 204`);
     return res.status(204).set('Content-Type', 'text/xml; charset=utf-8').send('');
   }
 
-  // Build SOAP request for this task
   const cwmpId = String(task.id);
   const soapXml = buildTaskSoap(cwmpId, task);
 
   if (!soapXml) {
-    // Invalid task – mark as failed and try next
+
     logger.warn(`[ACS] Could not build SOAP for task ${task.id} (${task.name}), marking failed`);
     failTask(task.id, { error: 'Could not build SOAP request for task' });
     return handleEmptyPost(session, sid, res, cpeIp);
   }
 
-  // Update session – we are now waiting for the response to this task
   session.currentTaskId = task.id;
   session.step = 'task_sent';
   session.lastActivity = Date.now();
 
-  // Mark task as in-progress (optional, keeps it 'pending' until response)
   const now = nowLocal();
   db.prepare("UPDATE acs_tasks SET status = 'in_progress', updated_at = ? WHERE id = ?")
     .run(now, task.id);
@@ -1110,10 +969,6 @@ function handleEmptyPost(session, sid, res, cpeIp = '') {
   logger.info(`[ACS] Sending task ${task.id} (${task.name}) to device ${session.deviceId}`);
   return sendSoapResponse(res, soapXml);
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  HANDLER: Task Responses
-// ═══════════════════════════════════════════════════════════════════════════════
 
 function handleTaskResponse(body, session, sid, taskType, res) {
   const taskId = session.currentTaskId;
@@ -1123,8 +978,7 @@ function handleTaskResponse(body, session, sid, taskType, res) {
     if (taskType === 'setParameterValues') {
       const status = parseSetParameterValuesResponseStatus(body);
       result = { status };
-      
-      // If setting parameter values succeeded, merge those values into the device's local record immediately
+
       if (status === '0' || status === 0 || status === '') {
         try {
           const task = db.prepare('SELECT payload FROM acs_tasks WHERE id = ?').get(taskId);
@@ -1158,7 +1012,6 @@ function handleTaskResponse(body, session, sid, taskType, res) {
   session.currentTaskId = null;
   session.lastActivity = Date.now();
 
-  // Check for next task
   return handleEmptyPost(session, sid, res);
 }
 
@@ -1171,7 +1024,6 @@ function handleGetParameterValuesResponse(body, session, sid, res) {
     completeTask(taskId, params);
   }
 
-  // Merge returned params into device record
   if (session.deviceId && Object.keys(params).length > 0) {
     try {
       mergeDeviceParams(session.deviceId, params);
@@ -1289,10 +1141,6 @@ function handleAddObjectResponse(body, session, sid, res) {
   return handleEmptyPost(session, sid, res);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  HANDLER: SOAP Fault
-// ═══════════════════════════════════════════════════════════════════════════════
-
 function handleFault(fault, session, sid, res) {
   const taskId = session.currentTaskId;
 
@@ -1325,13 +1173,8 @@ function handleFault(fault, session, sid, res) {
   session.currentTaskId = null;
   session.lastActivity = Date.now();
 
-  // Try next task
   return handleEmptyPost(session, sid, res);
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════════════════════════════════════
 
 function sendSoapResponse(res, soapXml) {
   res.status(200)
@@ -1340,17 +1183,7 @@ function sendSoapResponse(res, soapXml) {
     .send(soapXml);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  CONNECTION REQUEST TRIGGER
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Send an HTTP GET to the CPE's ConnectionRequestURL to trigger a new session.
- * Fire-and-forget. Supports Basic Auth.
- *
- * @param {string} deviceId
- * @returns {Promise<{success:boolean, message:string}>}
- */
+/** Send an HTTP GET to the CPE's ConnectionRequestURL to trigger a new session. */
 const activeTriggers = new Map();
 const lastTriggerTimes = new Map();
 
@@ -1378,7 +1211,7 @@ async function triggerConnectionRequest(deviceId) {
       } catch (err) {
         resolve({ success: false, message: err.message });
       }
-    }, 1000); // 1-second debounce window
+    }, 1000);
 
     activeTriggers.set(deviceId, timeoutObj);
   });
@@ -1407,12 +1240,12 @@ function buildDigestAuthorization(method, uri, authParams, username, password) {
   const nonce = authParams.nonce;
   const opaque = authParams.opaque;
   const qop = authParams.qop;
-  
+
   const ha1 = crypto.createHash('md5').update(`${username}:${realm}:${password}`).digest('hex');
   const ha2 = crypto.createHash('md5').update(`${method}:${uri}`).digest('hex');
-  
+
   let authHeader = `Digest username="${username}", realm="${realm}", nonce="${nonce}", uri="${uri}"`;
-  
+
   if (qop) {
     const nc = '00000001';
     const cnonce = crypto.randomBytes(8).toString('hex');
@@ -1422,11 +1255,11 @@ function buildDigestAuthorization(method, uri, authParams, username, password) {
     const response = crypto.createHash('md5').update(`${ha1}:${nonce}:${ha2}`).digest('hex');
     authHeader += `, response="${response}"`;
   }
-  
+
   if (opaque) {
     authHeader += `, opaque="${opaque}"`;
   }
-  
+
   return authHeader;
 }
 
@@ -1454,13 +1287,12 @@ async function performConnectionRequest(deviceId) {
       path: url.pathname + url.search,
       method: 'GET',
       timeout: 10000,
-      rejectUnauthorized: false, // Self-signed certs on CPE devices
+      rejectUnauthorized: false,
     };
 
     const crUser = device.connection_request_user || '';
     const crPass = device.connection_request_pass || '';
 
-    // Initialize with Basic Auth
     if (crUser) {
       options.auth = `${crUser}:${crPass}`;
     }
@@ -1509,7 +1341,6 @@ async function performConnectionRequest(deviceId) {
         req.end();
       };
 
-      // Start first connection request attempt
       executeRequest();
     });
   } catch (err) {
@@ -1518,18 +1349,7 @@ async function performConnectionRequest(deviceId) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  PUBLIC API: Query Devices & Create Tasks
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Query acs_devices with optional filtering.
- *
- * @param {Object} [query]  – Flat object of column → value filters (AND logic).
- *                            Special keys: 'search' (fuzzy across SN/manufacturer/product_class)
- * @param {string} [projection] – Comma-separated column names to select (default: '*')
- * @returns {Array}
- */
+/** Query acs_devices with optional filtering. */
 function getBuiltinDevices(query, projection) {
   try {
     let cols = '*';
@@ -1573,7 +1393,6 @@ function getBuiltinDevices(query, projection) {
 
     const rows = db.prepare(sql).all(...values);
 
-    // Parse JSON fields
     return rows.map(row => {
       try { row.tags = JSON.parse(row.tags || '[]'); } catch (_) { row.tags = []; }
       try { row.params = JSON.parse(row.params || '{}'); } catch (_) { row.params = {}; }
@@ -1585,12 +1404,7 @@ function getBuiltinDevices(query, projection) {
   }
 }
 
-/**
- * Get a single device by its canonical ID.
- *
- * @param {string} deviceId
- * @returns {Object|null}
- */
+/** Get a single device by its canonical ID. */
 function getBuiltinDevice(deviceId) {
   try {
     const row = db.prepare('SELECT * FROM acs_devices WHERE id = ?').get(deviceId);
@@ -1604,14 +1418,7 @@ function getBuiltinDevice(deviceId) {
   }
 }
 
-/**
- * Create a new task for a device and trigger a connection request.
- *
- * @param {string}  deviceId  – acs_devices.id
- * @param {string}  taskName  – reboot | setParameterValues | getParameterValues | refreshObject | factoryReset | addObject
- * @param {Object}  payload   – Task-specific data
- * @returns {{ success: boolean, taskId?: number, message?: string }}
- */
+/** Create a new task for a device and trigger a connection request. */
 function createBuiltinTask(deviceId, taskName, payload) {
   try {
     const now = nowLocal();
@@ -1626,7 +1433,6 @@ function createBuiltinTask(deviceId, taskName, payload) {
 
     logger.info(`[ACS] Task ${taskId} (${taskName}) created for device ${deviceId}`);
 
-    // Fire-and-forget connection request to wake up the CPE
     triggerConnectionRequest(deviceId).catch(err => {
       logger.warn(`[ACS] Failed to trigger connection request for ${deviceId}: ${err.message}`);
     });
@@ -1637,10 +1443,6 @@ function createBuiltinTask(deviceId, taskName, payload) {
     return { success: false, message: err.message };
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  EXPORTS
-// ═══════════════════════════════════════════════════════════════════════════════
 
 module.exports = {
   handleCwmpRequest,

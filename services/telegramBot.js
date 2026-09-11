@@ -1,4 +1,3 @@
-// v1.x CJS build exports { TelegramBot } as a named export (v0.x exported the class directly)
 const ntba = require('node-telegram-bot-api');
 const TelegramBot = ntba.TelegramBot || ntba;
 const { getSetting, getNowLocal } = require('../config/settingsManager');
@@ -24,7 +23,6 @@ function initTelegram() {
     return;
   }
 
-  // Jika token berubah, kita harus stop bot lama dan buat baru
   if (bot && bot.token !== token) {
     bot.stopPolling();
     bot = null;
@@ -33,44 +31,38 @@ function initTelegram() {
 
   if (bot) {
     logger.info('Telegram Bot: Sudah berjalan, melewati inisialisasi.');
-    return; 
+    return;
   }
 
   bot = new TelegramBot(token, { polling: true });
-  
-  // Clear webhook to ensure polling works (Sync)
+
   bot.deleteWebHook().then(() => {
     bot.getMe().then(me => {
       logger.info(`Telegram Bot: Terhubung sebagai @${me.username}`);
     }).catch(e => logger.error('Telegram Bot Error (getMe):', e.message));
   }).catch(e => logger.error('Telegram Bot Error (deleteWebHook):', e.message));
 
-  // Middleware Admin Check (Fetch latest ID every time)
   const isAdmin = (msg) => {
     const currentAdminId = getSetting('telegram_admin_id', '').toString();
     return msg.from.id.toString() === currentAdminId;
   };
 
-  // Helper Mikhmon Parser
   const parseMikhmon = (script) => {
     if (!script) return null;
     const s = String(script).trim();
-    
-    // Cari pattern :put (",rem, ... , ... , ...
-    // Updated regex untuk support format: :put (",rem,4000,2d,5000,,Disable,");
+
     const putMatch = s.match(/:\s*put\s*\(\s*[",]rem[",]?\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)/i);
     if (putMatch) {
       const cost = String(putMatch[1] || '').trim();
       const validity = String(putMatch[2] || '').trim();
       const priceStr = String(putMatch[3] || '').trim();
       const price = Number(priceStr.replace(/[^\d]/g, '')) || 0;
-      
+
       if (validity && price > 0) {
         return { validity, price, cost: Number(cost.replace(/[^\d]/g, '')) || 0 };
       }
     }
-    
-    // Fallback: split by comma
+
     const parts = s.split(',').map(p => String(p).trim());
     let remIdx = -1;
     for (let i = 0; i < parts.length; i++) {
@@ -79,18 +71,18 @@ function initTelegram() {
         break;
       }
     }
-    
+
     if (remIdx >= 0 && remIdx + 3 < parts.length) {
       const cost = String(parts[remIdx + 1] || '').trim();
       const validity = String(parts[remIdx + 2] || '').trim();
       const priceStr = String(parts[remIdx + 3] || '').trim();
       const price = Number(priceStr.replace(/[^\d]/g, '')) || 0;
-      
+
       if (validity && price > 0) {
         return { validity, price, cost: Number(cost.replace(/[^\d]/g, '')) || 0 };
       }
     }
-    
+
     return null;
   };
 
@@ -259,7 +251,6 @@ function initTelegram() {
     return lines.join('\n');
   };
 
-  // Main Menu (Inline Keyboard for better visibility)
   const mainMenu = {
     reply_markup: {
       inline_keyboard: [
@@ -279,12 +270,10 @@ function initTelegram() {
   bot.on('message', async (msg) => {
     if (!isAdmin(msg)) return;
     const text = msg.text;
-    if (text === '/start' || text === '/menu') return; // Handled by onText
-    
-    // Logika handle text manual jika diperlukan (misal untuk perintah kick/edit)
+    if (text === '/start' || text === '/menu') return;
+
   });
 
-  // Callback Query Handling
   bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     const data = query.data;
@@ -308,8 +297,8 @@ function initTelegram() {
       res += `🚫 Terisolir: ${stats.suspended}\n\n`;
       res += `💰 Pendapatan Bulan Ini: Rp ${billing.thisMonth.toLocaleString('id-ID')}\n`;
       res += `⏳ Belum Dibayar: ${billing.unpaidCount} Tagihan`;
-      
-      bot.sendMessage(chatId, res, { 
+
+      bot.sendMessage(chatId, res, {
         parse_mode: 'Markdown',
         reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] }
       });
@@ -354,7 +343,7 @@ function initTelegram() {
         }
       });
     }
-    
+
     else if (data === 'menu_mt') {
       bot.sendMessage(chatId, '⚙️ *STATUS MIKROTIK*\nPilih data:', {
         parse_mode: 'Markdown',
@@ -389,7 +378,7 @@ function initTelegram() {
         const pppoe = await mikrotikSvc.getPppoeActive();
         const hs = await mikrotikSvc.getHotspotActive();
         const scripts = await mikrotikSvc.getSystemScripts();
-        
+
         let txt = `*🟢 USER AKTIF*\n\n`;
         txt += `🌐 *PPPoE (${pppoe.length}):*\n`;
         pppoe.slice(0, 15).forEach(a => {
@@ -397,12 +386,12 @@ function initTelegram() {
           const failCount = s ? (s.source || '0') : '0';
           txt += `• \`${a.name}\` (${a.address}) [⚡${failCount}]\n`;
         });
-        
+
         txt += `\n📶 *Hotspot (${hs.length}):*\n`;
         hs.slice(0, 5).forEach(h => {
           txt += `• \`${h.user}\` (${h.address})\n`;
         });
-        
+
         txt += `\n_⚡ = Jumlah Gangguan Terdeteksi_`;
         bot.sendMessage(chatId, txt, { parse_mode: 'Markdown' });
       } catch (e) {
@@ -440,8 +429,7 @@ function initTelegram() {
     else if (data === 'cust_listonu') {
       const customerDevice = require('./customerDeviceService');
       let res = await customerDevice.listDevicesWithTags(30);
-      
-      // Jika kosong, coba ambil semua perangkat
+
       if (!res.ok || res.devices.length === 0) {
         res = await customerDevice.listAllDevices(30);
       }
@@ -487,7 +475,7 @@ function initTelegram() {
         const stats = billingSvc.getTodayRevenue();
         const total = stats.total || 0;
         const count = stats.count || 0;
-        
+
         let txt = `*📈 PENDAPATAN HARI INI*\n\n`;
         txt += `💰 Total: *Rp ${total.toLocaleString('id-ID')}*\n`;
         txt += `🧾 Jumlah: ${count} Transaksi\n\n`;
@@ -502,8 +490,7 @@ function initTelegram() {
       try {
         const profiles = await mikrotikSvc.getHotspotUserProfiles();
         const buttons = [];
-        
-        // Filter profiles that have Mikhmon Price
+
         const filtered = profiles.filter(p => parseMikhmon(p.onLogin));
 
         if (filtered.length === 0) {
@@ -516,8 +503,8 @@ function initTelegram() {
           buttons[buttons.length - 1].push({ text: `🎫 ${p.name} (Rp ${meta.price})`, callback_data: `vouch_gen:${p.name}` });
         });
         buttons.push([{ text: '⬅️ Kembali', callback_data: 'menu_vouch' }]);
-        
-        bot.sendMessage(chatId, '*📜 PILIH PAKET VOUCHER*\nSilakan klik paket untuk langsung membuat PIN:', { 
+
+        bot.sendMessage(chatId, '*📜 PILIH PAKET VOUCHER*\nSilakan klik paket untuk langsung membuat PIN:', {
           parse_mode: 'Markdown',
           reply_markup: { inline_keyboard: buttons }
         });
@@ -525,7 +512,7 @@ function initTelegram() {
         bot.sendMessage(chatId, 'Error: ' + e.message);
       }
     }
-    
+
     else if (data.startsWith('vouch_gen:')) {
       const profileName = data.split(':')[1];
       try {
@@ -537,7 +524,7 @@ function initTelegram() {
         if (!meta) throw new Error('Data harga/durasi profil tidak ditemukan (Format Mikhmon)');
 
         const pin = Math.floor(1000 + Math.random() * 9000).toString();
-        
+
         await mikrotikSvc.addHotspotUser({
           server: 'all',
           name: pin,
@@ -546,24 +533,23 @@ function initTelegram() {
           'limit-uptime': meta.validity,
           comment: `vc-${pin}-${profileName}`
         });
-        
+
         let res = `*🎫 VOUCHER BERHASIL (INSTAN)*\n\n`;
         res += `🎫 KODE VOUCHER: \`${pin}\`\n`;
         res += `💰 Harga: Rp ${meta.price}\n`;
         res += `⏳ Durasi: ${meta.validity}\n`;
         res += `📦 Paket: ${profileName}\n`;
         res += `\n_Silakan masukkan kode di atas pada halaman login hotspot._`;
-        
+
         bot.sendMessage(chatId, res, { parse_mode: 'Markdown' });
       } catch (e) {
         bot.sendMessage(chatId, 'Gagal: ' + e.message);
       }
     }
-    
+
     bot.answerCallbackQuery(query.id);
   });
 
-  // Custom Commands
   bot.onText(/\/vouch (\S+) (\S+) (.+)/, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const [_, profile, limit, comment] = match;
@@ -638,12 +624,12 @@ function initTelegram() {
   bot.onText(/\/cari (.+)/, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const query = match[1].toLowerCase();
-    const customers = customerSvc.getAllCustomers().filter(c => 
+    const customers = customerSvc.getAllCustomers().filter(c =>
       c.name.toLowerCase().includes(query) || c.phone.includes(query)
     );
-    
+
     if (customers.length === 0) return bot.sendMessage(msg.chat.id, `❌ Pelanggan dengan keyword "${query}" tidak ditemukan.`);
-    
+
     let res = `*🔍 HASIL PENCARIAN (${customers.length})*\n\n`;
     customers.slice(0, 10).forEach(c => {
       res += `👤 *${c.name}*\n📞 ${c.phone}\n🚦 Status: ${c.status === 'active' ? '✅ Aktif' : '🚫 Terisolir'}\n\n`;
@@ -729,11 +715,10 @@ function initTelegram() {
       const formatter = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 });
       const customerName = String(targetInv.customer_name || customer?.name || targetInv.customer_name || '-');
       const notifyTag = customer?.genieacs_tag || customer?.pppoe_username || customer?.phone || targetInv.customer_phone || targetInv.genieacs_tag || '';
-      
-      // Dynamic import of whatsappBot
+
       const waBot = await import('./whatsappBot.mjs').catch(() => null);
       let waNotifStatus = 'tidak dikirim (WA offline)';
-      
+
       const waMessage = `✅ *PEMBAYARAN BERHASIL*\n\n` +
         `Invoice *#${targetInvId}* sudah *LUNAS*.\n` +
         `👤 *Nama:* ${customerName}\n` +
@@ -846,7 +831,7 @@ function initTelegram() {
       const agentKeyLc = agentKey.toLowerCase();
       const agentDigits = normalizeDigits(agentKey);
 
-      const agent = agentSvc.getAllAgents().find(a => 
+      const agent = agentSvc.getAllAgents().find(a =>
         String(a.id) === agentKey ||
         String(a.username || '').toLowerCase() === agentKeyLc ||
         (a.phone && normalizeDigits(a.phone) === agentDigits) ||
@@ -857,8 +842,8 @@ function initTelegram() {
 
       const actorName = msg.from.first_name || 'Telegram Admin';
       const r = agentSvc.topupAgent(agent.id, amount, note, actorName);
-      
-      bot.sendMessage(chatId, 
+
+      bot.sendMessage(chatId,
         `💸 *TOPUP AGENT BERHASIL*\n\n` +
         `👤 Agent: *${agent.name}* (@${agent.username || '-'})\n` +
         `💰 Nominal: Rp ${Number(amount || 0).toLocaleString('id-ID')}\n` +
@@ -901,12 +886,12 @@ function initTelegram() {
     try {
       const cust = customerSvc.findCustomerByAny(inputTag);
       const targetTag = cust ? (cust.genieacs_tag || cust.pppoe_username || cust.phone || inputTag) : inputTag;
-      
+
       const targetDevice = await customerDevice.resolveDeviceToken(targetTag);
       if (!targetDevice) {
         return bot.sendMessage(chatId, `❌ Target *${inputTag}* tidak ditemukan di GenieACS.`);
       }
-      
+
       const data = await customerDevice.getCustomerDeviceData(targetTag);
       let t = `*📡 DETAIL ONU: ${data.lokasi || targetTag}*\n\n`;
       t += `🟢 Status: ${data.status || '-'}\n`;
@@ -1013,5 +998,4 @@ function initTelegram() {
   });
 }
 
-// Export for manual re-init from settings
 module.exports = { initTelegram };

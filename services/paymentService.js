@@ -1,7 +1,4 @@
-/**
- * Service: Integrasi Payment Gateway (Multi-Gateway)
- * Diadaptasi dari alur gembok-simple
- */
+/** Service: Integrasi Payment Gateway (Multi-Gateway) */
 const axios = require('axios');
 const crypto = require('crypto');
 const { getSettingsWithCache } = require('../config/settingsManager');
@@ -190,7 +187,6 @@ async function createMidtransTransaction(invoice, customer, method = 'snap', app
     }]
   };
 
-  // Jika method bukan 'snap', kita batasi pembayarannya
   if (method !== 'snap') {
     const methodMap = {
       'QRIS': ['gopay', 'qris'],
@@ -268,7 +264,7 @@ async function createXenditTransaction(invoice, customer, method = 'xendit', app
     external_id: orderId,
     amount: invoice.amount,
     description: description,
-    invoice_duration: 86400, // 24 jam
+    invoice_duration: 86400, 
     customer: {
       given_names: customer.name,
       email: email,
@@ -284,7 +280,6 @@ async function createXenditTransaction(invoice, customer, method = 'xendit', app
     }]
   };
 
-  // Jika user memilih metode spesifik di Xendit
   if (method !== 'xendit') {
     const methodMap = {
       'QRIS': ['QRIS'],
@@ -350,7 +345,6 @@ async function createDuitkuTransaction(invoice, customer, method = 'duitku', app
   const callbackPath = String(opts.callbackPath || '/customer/payment/callback');
   const returnPath = String(opts.returnPath || '/customer/dashboard');
 
-  // Signature: md5(merchantCode + merchantOrderId + paymentAmount + apiKey)
   const signature = crypto.createHash('md5')
     .update(merchantCode + orderId + amount + apiKey)
     .digest('hex');
@@ -366,7 +360,7 @@ async function createDuitkuTransaction(invoice, customer, method = 'duitku', app
     callbackUrl: `${finalAppUrl}${callbackPath}`,
     returnUrl: `${finalAppUrl}${returnPath}`,
     signature,
-    expiryPeriod: 1440 // 24 jam
+    expiryPeriod: 1440 
   };
 
   const methodMap = {

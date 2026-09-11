@@ -1,19 +1,3 @@
-/**
- * ─────────────────────────────────────────────────────────────────────────────
- *  Release Verifier Service — Phase 10B
- * ─────────────────────────────────────────────────────────────────────────────
- *  Verifikasi metadata & artifact release resmi. SEPARATE trust domain dari
- *  license (services/licenseVerifierService.js). Tidak reuse license key.
- *
- *  Release metadata (JSON) minimal:
- *    { schema, version, artifact, artifact_size, sha256, signature, published_at, channel }
- *
- *  Signature dihitung atas canonical JSON dari field selain `signature`
- *  (deterministic key order), base64 Ed25519 signature.
- *
- *  Fail-closed: apa pun yang tidak dapat diverifikasi → BUKAN VALID.
- * ─────────────────────────────────────────────────────────────────────────────
- */
 const crypto = require('crypto');
 const trustAnchor = require('../config/releaseTrustAnchor');
 
@@ -90,10 +74,7 @@ function validateMetadataShape(meta) {
   return { valid: true, status: STATUS.VALID };
 }
 
-/**
- * Verify release metadata signature (Ed25519) against the trusted release
- * public key. Fail-closed jika trust anchor belum dikonfigurasi.
- */
+/** Verify release metadata signature (Ed25519) against the trusted release */
 function verifyMetadataSignature(meta) {
   const shape = validateMetadataShape(meta);
   if (!shape.valid) return shape;
@@ -129,12 +110,7 @@ function evaluateVersionPolicy(currentVersion, candidateVersion, { allowSame = t
   return { valid: true, status: STATUS.VALID, message: 'Versi baru tersedia.' };
 }
 
-/**
- * Verify a downloaded artifact buffer/stream digest against metadata.
- * Caller computes actualSize/actualSha256 while streaming to disk (Phase 10B
- * download layer) — this function only compares, never reads the file itself,
- * so the same module can be used with any Buffer or precomputed digest.
- */
+/** Verify a downloaded artifact buffer/stream digest against metadata. */
 function verifyArtifactDigest(meta, { actualSize, actualSha256 }) {
   const shape = validateMetadataShape(meta);
   if (!shape.valid) return shape;

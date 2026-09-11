@@ -1,13 +1,8 @@
-/**
- * Inisialisasi database SQLite untuk billing RTRWnet
- */
+/** Inisialisasi database SQLite untuk billing RTRWnet */
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-// PHASE 22: Development-only override. In production ZENRADIUS_DB_PATH is unset,
-// so behavior defaults to database/zenradius.db. A local dev launcher
-// may point this at an isolated copy so UI work never touches production data.
 function resolveDbPath() {
   const override = String(process.env.ZENRADIUS_DB_PATH || '').trim();
   if (override) {
@@ -30,19 +25,17 @@ try {
   db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
-  db.pragma('cache_size = -64000');   // 64MB page cache (negatif = KB)
-  db.pragma('synchronous = NORMAL');  // Lebih cepat dari FULL, masih aman dengan WAL
-  db.pragma('temp_store = MEMORY');   // Tabel temp di RAM
-  db.pragma('mmap_size = 134217728'); // Memory-mapped I/O 128MB
-  db.pragma('busy_timeout = 5000');   // Tunggu 5 detik jika DB locked sebelum error
+  db.pragma('cache_size = -64000');   
+  db.pragma('synchronous = NORMAL');  
+  db.pragma('temp_store = MEMORY');   
+  db.pragma('mmap_size = 134217728'); 
+  db.pragma('busy_timeout = 5000');   
 
-  // Menambahkan fungsi waktu lokal untuk SQLite sesuai setting timezone
   db.function('NOW_LOCAL', () => {
     const { getSetting } = require('./settingsManager');
     const tz = getSetting('timezone', 'Asia/Jakarta');
     const now = new Date();
     
-    // Format: YYYY-MM-DD HH:mm:ss
     const options = {
       timeZone: tz,
       year: 'numeric',
@@ -610,7 +603,6 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_mobile_sessions_revoked ON mobile_sessions(revoked_at);
 `);
 
-// Inisialisasi tabel voucher_packages (Paket Voucher Hotspot Real-time)
 db.exec(`
   CREATE TABLE IF NOT EXISTS voucher_packages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -661,17 +653,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_radius_acct_status ON radius_accounting(status_type);
 `);
 
-
-/**
- * Memastikan menu-menu utama (WA, Settings, dll) selalu terbuka (Visible)
- * meskipun setelah update dari GitHub yang mungkin mengatur menu tersebut
- * ke status hidden secara default.
- *
- * Sistem "activation key" lama (terkait mekanisme premium/lisensi) sudah
- * dihapus total. Visibility menu sekarang murni dikontrol RBAC + preferensi
- * admin di /admin/sidebar-settings — fungsi ini hanya menjamin menu inti
- * operasional tidak pernah ter-sembunyikan secara tidak sengaja.
- */
+/** Memastikan menu-menu utama (WA, Settings, dll) selalu terbuka (Visible) */
 function forceVisibleCoreMenus() {
   try {
     const SETTINGS_KEY = 'sidebar_menu_states';
@@ -699,49 +681,47 @@ function forceVisibleCoreMenus() {
   }
 }
 
-// Jalankan setiap kali database diinisialisasi
 forceVisibleCoreMenus();
 
-// Tambahkan kolom baru jika belum ada
 try {
   db.exec("ALTER TABLE customers ADD COLUMN auto_isolate INTEGER DEFAULT 1");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN isolate_day INTEGER DEFAULT 10");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN email TEXT DEFAULT ''");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN router_id INTEGER REFERENCES routers(id) ON DELETE SET NULL");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN olt_id INTEGER REFERENCES olts(id) ON DELETE SET NULL");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN pon_port TEXT DEFAULT ''");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN odp_id INTEGER REFERENCES odps(id) ON DELETE SET NULL");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN lat TEXT");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN lng TEXT");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN cable_path TEXT");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN connection_type TEXT DEFAULT 'pppoe'");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN static_ip TEXT");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN mac_address TEXT");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN hotspot_username TEXT DEFAULT ''");
 } catch (e) {}
@@ -753,46 +733,42 @@ try {
 } catch (e) {}
 try {
   db.exec("ALTER TABLE customers ADD COLUMN pppoe_password TEXT DEFAULT ''");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN portal_password TEXT DEFAULT ''");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN pppoe_remote_address TEXT DEFAULT ''");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN wifi_ssid TEXT DEFAULT ''");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN nik TEXT DEFAULT ''");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE customers ADD COLUMN collector_id INTEGER REFERENCES collectors(id) ON DELETE SET NULL");
-} catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
 try {
   db.exec("ALTER TABLE collectors ADD COLUMN auto_approve INTEGER DEFAULT 0");
-} catch (e) { /* ignore if already exists */ }
-try { db.exec("ALTER TABLE odps ADD COLUMN port_capacity INTEGER NOT NULL DEFAULT 16"); } catch (e) { /* ignore if already exists */ }
+} catch (e) {  }
+try { db.exec("ALTER TABLE odps ADD COLUMN port_capacity INTEGER NOT NULL DEFAULT 16"); } catch (e) {  }
 
-// Kolom untuk PPN & ULO/USO pada tabel packages
 try { db.exec("ALTER TABLE packages ADD COLUMN use_ppn INTEGER DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN ppn_percentage REAL DEFAULT 11.0"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN use_uso INTEGER DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN uso_percentage REAL DEFAULT 1.75"); } catch (e) {}
 
-// Kolom untuk Prepaid / Prabayar pada packages dan customers
 try { db.exec("ALTER TABLE packages ADD COLUMN billing_type TEXT DEFAULT 'postpaid'"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN duration_days INTEGER DEFAULT 30"); } catch (e) {}
 try { db.exec("ALTER TABLE customers ADD COLUMN expired_at DATETIME DEFAULT NULL"); } catch (e) {}
 
-// Kolom untuk Tiket Bantuan (Foto & Catatan Teknisi)
 try { db.exec("ALTER TABLE tickets ADD COLUMN technician_notes TEXT DEFAULT ''"); } catch (e) {}
 try { db.exec("ALTER TABLE tickets ADD COLUMN photos TEXT DEFAULT ''"); } catch (e) {}
 try { db.exec("ALTER TABLE tickets ADD COLUMN photo_metadata TEXT DEFAULT ''"); } catch (e) {}
 try { db.exec("ALTER TABLE tickets ADD COLUMN customer_photos TEXT DEFAULT ''"); } catch (e) {}
 try { db.exec("ALTER TABLE tickets ADD COLUMN customer_photo_metadata TEXT DEFAULT ''"); } catch (e) {}
 
-// Kolom untuk Payment Gateway di tabel invoices
 try { db.exec("ALTER TABLE invoices ADD COLUMN payment_gateway TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE invoices ADD COLUMN payment_order_id TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE invoices ADD COLUMN payment_link TEXT"); } catch (e) {}
@@ -800,20 +776,17 @@ try { db.exec("ALTER TABLE invoices ADD COLUMN payment_reference TEXT"); } catch
 try { db.exec("ALTER TABLE invoices ADD COLUMN payment_payload TEXT"); } catch (e) {}
 try { db.exec("ALTER TABLE invoices ADD COLUMN payment_expires_at DATETIME"); } catch (e) {}
 
-// Kolom untuk QRIS statis (semi-otomatis via nominal unik)
 try { db.exec("ALTER TABLE invoices ADD COLUMN qris_unique_code INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE invoices ADD COLUMN qris_amount_unique INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE invoices ADD COLUMN qris_assigned_at DATETIME"); } catch (e) {}
 try { db.exec("ALTER TABLE invoices ADD COLUMN qris_paid_notif_id INTEGER"); } catch (e) {}
 
-// Kolom untuk QRIS statis pada voucher publik
 try { db.exec("ALTER TABLE public_voucher_orders ADD COLUMN qris_unique_code INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE public_voucher_orders ADD COLUMN qris_amount_unique INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE public_voucher_orders ADD COLUMN qris_assigned_at DATETIME"); } catch (e) {}
 try { db.exec("ALTER TABLE public_voucher_orders ADD COLUMN qris_paid_notif_id INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE public_voucher_orders ADD COLUMN proof_url TEXT DEFAULT ''"); } catch (e) {}
 
-// Kolom untuk Login OLT (Web/API)
 try { db.exec("ALTER TABLE olts ADD COLUMN web_user TEXT DEFAULT 'admin'"); } catch (e) {}
 try { db.exec("ALTER TABLE olts ADD COLUMN web_password TEXT DEFAULT 'admin'"); } catch (e) {}
 try { db.exec("ALTER TABLE olts ADD COLUMN api_base_url TEXT"); } catch (e) {}
@@ -827,7 +800,6 @@ try { db.exec("ALTER TABLE vouchers ADD COLUMN last_seen_at DATETIME"); } catch 
 try { db.exec("ALTER TABLE voucher_batches ADD COLUMN mode TEXT DEFAULT 'voucher'"); } catch (e) {}
 try { db.exec("ALTER TABLE voucher_batches ADD COLUMN charset TEXT DEFAULT 'numbers'"); } catch (e) {}
 
-// Relasi notifikasi webhook → invoice (untuk audit)
 try { db.exec("ALTER TABLE webhook_payment_notifs ADD COLUMN matched_invoice_id INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE webhook_payment_notifs ADD COLUMN matched_voucher_order_id INTEGER"); } catch (e) {}
 
@@ -844,7 +816,6 @@ try { db.exec("ALTER TABLE agent_transactions ADD COLUMN digi_refunded INTEGER N
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_agent_tx_digi_ref ON agent_transactions(digi_ref_id)"); } catch (e) {}
 try { db.exec("CREATE INDEX IF NOT EXISTS idx_agent_tx_type ON agent_transactions(type)"); } catch (e) {}
 
-// Kolom untuk Dynamic Speed & FUP di tabel packages
 try { db.exec("ALTER TABLE packages ADD COLUMN night_speed_down INTEGER DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN night_speed_up INTEGER DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN fup_limit_gb INTEGER DEFAULT 0"); } catch (e) {}
@@ -854,7 +825,6 @@ try { db.exec("ALTER TABLE packages ADD COLUMN night_profile_name TEXT"); } catc
 try { db.exec("ALTER TABLE packages ADD COLUMN use_fup INTEGER DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN fup_profile_name TEXT"); } catch (e) {}
 
-// Promo harga & prorata tagihan pertama (per paket + counter per pelanggan)
 try { db.exec("ALTER TABLE packages ADD COLUMN promo_price INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN promo_cycles INTEGER DEFAULT 0"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN prorate_first_invoice INTEGER DEFAULT 0"); } catch (e) {}
@@ -862,7 +832,6 @@ try { db.exec("ALTER TABLE packages ADD COLUMN router_id INTEGER REFERENCES rout
 try { db.exec("ALTER TABLE packages ADD COLUMN router_id INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE customers ADD COLUMN promo_cycles_used INTEGER DEFAULT 0"); } catch (e) {}
 
-// Tabel untuk Tracking Pemakaian (Usage) Pelanggan
 db.exec(`
   CREATE TABLE IF NOT EXISTS customer_usage (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -925,7 +894,6 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_digiflazz_webhook_ref ON digiflazz_webhook_logs(ref_id);
 `);
 
-// ─── ATTENDANCE / ABSENSI KARYAWAN ───────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS attendance (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -985,7 +953,6 @@ const saveAppSetting = (key, value) => {
   }
 };
 
-// ─── PAYROLL / GAJI KARYAWAN ─────────────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS payroll_settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1049,7 +1016,6 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_payroll_slips_status ON payroll_slips(status);
 `);
 
-// ─── BUILT-IN ACS (TR-069) ──────────────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS acs_devices (
     id TEXT PRIMARY KEY,
@@ -1088,7 +1054,6 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_acs_tasks_status ON acs_tasks(status);
 `);
 
-// Tambahkan kategori pengeluaran default jika belum ada
 try {
   db.exec(`
     INSERT OR IGNORE INTO expense_categories (name, parent_id, description, icon, color) VALUES
@@ -1100,7 +1065,6 @@ try {
   `);
 } catch (e) {}
 
-// Safe migration for PPOB Digiflazz sell_price
 try {
   const digiCols = db.prepare("PRAGMA table_info(digiflazz_staff_transactions)").all();
   if (!digiCols.find(c => c.name === 'sell_price')) {
@@ -1110,7 +1074,6 @@ try {
   console.error('Failed to migrate digiflazz_staff_transactions:', e);
 }
 
-// Safe migration: tambah kolom balance, area, dan is_radius ke tabel customers, collectors, dan technicians
 try {
   const custCols = db.prepare("PRAGMA table_info(customers)").all();
   if (!custCols.find(c => c.name === 'balance')) {
@@ -1144,7 +1107,6 @@ try {
   console.error('Failed to migrate customer columns:', e);
 }
 
-// Safe migration: sync area-area yang sudah pernah diinput ke tabel areas
 try {
   const hasCustArea = db.prepare("PRAGMA table_info(customers)").all().some(c => c.name === 'area');
   const hasColArea = db.prepare("PRAGMA table_info(collectors)").all().some(c => c.name === 'area');
@@ -1165,7 +1127,6 @@ try {
   }
 } catch(e) {}
 
-// Safe migration: public_donation_orders table & indexes
 try {
   db.exec(`
     CREATE TABLE IF NOT EXISTS public_donation_orders (
@@ -1197,13 +1158,12 @@ try {
     db.exec("ALTER TABLE webhook_payment_notifs ADD COLUMN matched_donation_order_id INTEGER");
   }
 
-  // Migration: add activation_code_used column if not exists
   try {
     const colDonation = db.prepare("PRAGMA table_info(public_donation_orders)").all();
     if (colDonation.length > 0 && !colDonation.some(c => c.name === 'activation_code_used')) {
       db.exec("ALTER TABLE public_donation_orders ADD COLUMN activation_code_used INTEGER DEFAULT 0");
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {  }
 } catch(e) {
   console.error('Failed to migrate public_donation_orders:', e);
 }

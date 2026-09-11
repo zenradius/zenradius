@@ -1,10 +1,7 @@
-/**
- * Service: Manajemen Inventaris / Gudang (Warehouse)
- */
+/** Service: Manajemen Inventaris / Gudang (Warehouse) */
 const db = require('../config/database');
 const { logger } = require('../config/logger');
 
-// ─── CATEGORIES ───────────────────────────────────────────────────────────
 function getAllCategories() {
   return db.prepare('SELECT * FROM inventory_categories ORDER BY name ASC').all();
 }
@@ -23,10 +20,9 @@ function deleteCategory(id) {
   return db.prepare('DELETE FROM inventory_categories WHERE id = ?').run(id);
 }
 
-// ─── ITEMS ───────────────────────────────────────────────────────────────
 function getAllItems(search = '') {
   let query = `
-    SELECT i.*, c.name as category_name, 
+    SELECT i.*, c.name as category_name,
            (SELECT SUM(quantity) FROM inventory_stock s WHERE s.item_id = i.id AND s.status = 'available') as stock_available,
            (SELECT SUM(quantity) FROM inventory_stock s WHERE s.item_id = i.id AND s.status = 'assigned') as stock_assigned
     FROM inventory_items i
@@ -62,7 +58,7 @@ function createItem(data) {
 function updateItem(id, data) {
   const { category_id, name, brand, model, unit, min_stock, description } = data;
   return db.prepare(`
-    UPDATE inventory_items 
+    UPDATE inventory_items
     SET category_id = ?, name = ?, brand = ?, model = ?, unit = ?, min_stock = ?, description = ?
     WHERE id = ?
   `).run(category_id, name, brand, model, unit, min_stock, description, id);
@@ -72,7 +68,6 @@ function deleteItem(id) {
   return db.prepare('DELETE FROM inventory_items WHERE id = ?').run(id);
 }
 
-// ─── STOCK ───────────────────────────────────────────────────────────────
 function getStockByItem(itemId) {
   return db.prepare(`
     SELECT s.*, cust.name as customer_name
@@ -85,7 +80,7 @@ function getStockByItem(itemId) {
 
 function addStock(data, actor = 'Admin') {
   const { item_id, serial_number, quantity, condition, location, note } = data;
-  
+
   const run = db.transaction(() => {
     const result = db.prepare(`
       INSERT INTO inventory_stock (item_id, serial_number, quantity, condition, location, note)
@@ -110,7 +105,7 @@ function assignStockToCustomer(stockId, customerId, actor = 'Admin', note = '') 
 
   const run = db.transaction(() => {
     db.prepare(`
-      UPDATE inventory_stock 
+      UPDATE inventory_stock
       SET status = 'assigned', assigned_to_customer_id = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(customerId, stockId);

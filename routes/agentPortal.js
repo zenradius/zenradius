@@ -114,7 +114,6 @@ router.use((req, res, next) => {
   next();
 });
 
-// Blokir aksi jika menu terkait dinonaktifkan Admin di Pengaturan Sidebar.
 function requireMenuAccess(menuKey) {
   return (req, res, next) => {
     if (!sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session).allowed) {
@@ -128,7 +127,6 @@ function requireMenuAccess(menuKey) {
   };
 }
 
-// Phase 15: fail-closed jika modul rate limiter tidak dapat dimuat.
 let loginRateLimiter = (req, res, next) => res.status(503).send('Layanan login sementara tidak tersedia.');
 try {
   const rlMod = require('../middleware/rateLimiter');
@@ -147,14 +145,14 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   const password = String(req.body.password || '');
   const agent = agentSvc.authenticate(username, password);
   if (agent) {
-    // SECURITY: Regenerate session after authentication to prevent session fixation
+
     return req.session.regenerate((err) => {
       if (err) {
         logger.error('[AGENT LOGIN] Session regeneration failed:', err);
         return res.render('agent/login', { title: 'Login Agent', company: company(), error: 'Kesalahan sistem. Silakan coba lagi.' });
       }
       req.session.isAgent = true;
-      req.session.role = "reseller"; // canonical RBAC role (Phase 3) â€” agent = fungsi reseller resmi
+      req.session.role = "reseller";
       req.session.agentId = agent.id;
       req.session.agentName = agent.name;
       req.session.save((err) => {
@@ -221,7 +219,6 @@ router.get('/', requireAgentSession, async (req, res) => {
   const digiflazzBrandsData = Array.from(digiflazzBrandsMap.values());
   const digiflazzCategories = Array.from(new Set((digiflazzCatalogProducts || []).map(p => String(p.category || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
 
-  // Fetch payment channels
   let paymentChannels = [];
   try {
     const settings = getSettings();

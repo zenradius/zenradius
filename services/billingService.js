@@ -1,6 +1,4 @@
-/**
- * Service: Logika Billing & Tagihan
- */
+/** Service: Logika Billing & Tagihan */
 const db = require('../config/database');
 const auditTrail = require('./auditTrailService');
 const { getCurrentDateInTimezone } = require('../config/settingsManager');
@@ -25,12 +23,7 @@ function countInvoicesForCustomer(customerId) {
   return r ? Number(r.c) || 0 : 0;
 }
 
-/**
- * Hitung nominal tagihan + catatan otomatis (promo siklus & prorata bulan pertama).
- * Promo: pakai promo_price untuk N invoice pertama per pelanggan (promo_cycles), lalu harga normal.
- * Prorata: jika paket mengaktifkan prorate_first_invoice, belum pernah ada invoice,
- *          tanggal pasang (install_date) di bulan/tahun tagihan yang sama → proporsi sisa hari bulan.
- */
+/** Hitung nominal tagihan + catatan otomatis (promo siklus & prorata bulan pertama). */
 function computeInvoiceAmountAndMeta(customer, pkg, periodMonth, periodYear) {
   const price = Number(pkg.price) || 0;
   const promoRaw = pkg.promo_price;
@@ -61,7 +54,7 @@ function computeInvoiceAmountAndMeta(customer, pkg, periodMonth, periodYear) {
   const baseAmount = amount;
   let taxAmount = 0;
   const metaParts = [];
-  
+
   if (usePromo) {
     metaParts.push(`Promo siklus ${promoUsed + 1}/${promoCycles} @ Rp ${Number(promoPrice).toLocaleString('id-ID')}`);
   }
@@ -69,7 +62,6 @@ function computeInvoiceAmountAndMeta(customer, pkg, periodMonth, periodYear) {
     metaParts.push(`Prorata ${billableDays}/${dim} hari`);
   }
 
-  // PPN Calculation
   if (pkg.use_ppn === 1) {
     const ppnPct = Number(pkg.ppn_percentage) || 11.0;
     const ppnVal = Math.round(baseAmount * (ppnPct / 100));
@@ -77,7 +69,6 @@ function computeInvoiceAmountAndMeta(customer, pkg, periodMonth, periodYear) {
     metaParts.push(`PPN ${ppnPct}% (Rp ${ppnVal.toLocaleString('id-ID')})`);
   }
 
-  // USO Calculation
   if (pkg.use_uso === 1) {
     const usoPct = Number(pkg.uso_percentage) || 1.75;
     const usoVal = Math.round(baseAmount * (usoPct / 100));
@@ -117,8 +108,6 @@ function generateMonthlyInvoices(month, year) {
   });
   run();
 
-  // Phase 17 — "invoice_new" push signal, after the transaction commits.
-  // Fire-and-forget; never affects invoice generation.
   try {
     const pushSvc = require('./pushNotificationService');
     const mns = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
@@ -322,7 +311,7 @@ function getAllInvoices({ month, year, status, search, limit = 300 } = {}) {
       const unpaidCount = unpaidList.length;
       const totalUnpaidAmount = unpaidList.reduce((sum, u) => sum + (Number(u.amount) || 0), 0);
       const unpaidPeriods = unpaidList.map(u => `${mns[u.period_month - 1]} ${u.period_year}`).join(', ');
-      
+
       const code = Number(inv.qris_unique_code || 0);
       const qrisAmt = Number(inv.qris_amount_unique || 0);
       const accumulatedQrisAmount = (code > 0 && totalUnpaidAmount > 0)
@@ -375,7 +364,6 @@ function renewCustomerPrepaidValidity(customerId, multiplier = 1) {
     const now = new Date();
     let baseDate = now;
 
-    // If customer has expired_at and it is still in the future:
     if (customer.expired_at) {
       const currentExpiry = new Date(customer.expired_at);
       if (!isNaN(currentExpiry.getTime()) && currentExpiry > now) {
@@ -393,7 +381,6 @@ function renewCustomerPrepaidValidity(customerId, multiplier = 1) {
 
     db.prepare('UPDATE customers SET expired_at = ? WHERE id = ?').run(newExpiredAt, customerId);
 
-    // If customer was suspended / isolated, automatically activate & sync
     if (customer.status === 'suspended') {
       try {
         const customerSvc = require('./customerService');
@@ -421,7 +408,6 @@ function markAsPaid(invoiceId, paidByName, notes, actor = null) {
     renewCustomerPrepaidValidity(invoice.customer_id, 1);
   }
 
-  // Catat audit trail jika berhasil
   if (result.changes > 0 && actor && invoice) {
     auditTrail.logAuditTrail({
       action: 'MARK_INVOICE_PAID',
@@ -442,10 +428,6 @@ function markAsPaid(invoiceId, paidByName, notes, actor = null) {
     });
   }
 
-  // Phase 17 — mobile push signal. This is the single seam every payment
-  // path goes through (admin, cashier, collector approval, gateway webhook,
-  // reseller). Fire-and-forget: a push failure can never affect the
-  // already-committed payment above.
   if (result.changes > 0 && invoice && invoice.customer_id) {
     try {
       const mns = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
@@ -455,7 +437,7 @@ function markAsPaid(invoiceId, paidByName, notes, actor = null) {
         periodText: `${mns[invoice.period_month - 1] || invoice.period_month} ${invoice.period_year}`,
         amountText: Number(invoice.amount || 0).toLocaleString('id-ID')
       });
-    } catch (_) { /* never let push affect billing */ }
+    } catch (_) {  }
   }
 
   return result;
@@ -469,7 +451,6 @@ function deleteInvoice(id, actor = null) {
   const invoice = db.prepare('SELECT id, customer_id, period_month, period_year, amount FROM invoices WHERE id=?').get(id);
   const result = db.prepare('DELETE FROM invoices WHERE id=?').run(id);
 
-  // Catat audit trail jika berhasil
   if (result.changes > 0 && actor && invoice) {
     auditTrail.logAuditTrail({
       action: 'DELETE_INVOICE',
@@ -547,14 +528,13 @@ function getInvoicesByAny(val) {
   if (!val) return [];
   const raw = String(val || '').trim();
   const cleanVal = raw.replace(/\D/g, '');
-  
-  // Find customer ID first using phone, pppoe, or genieacs_tag
+
   let customer = null;
-  
+
   if (cleanVal.length >= 8) {
     customer = db.prepare(`SELECT id FROM customers WHERE phone LIKE ?`).get(`%${cleanVal}%`);
   }
-  
+
   if (!customer) {
     customer = db.prepare(`SELECT id FROM customers WHERE pppoe_username = ? OR genieacs_tag = ?`).get(raw, raw);
   }
@@ -588,7 +568,7 @@ function getInvoicesByAny(val) {
 
   const keyword = raw.toLowerCase();
   if (keyword.length < 3) return [];
-  
+
   return db.prepare(`
     SELECT i.*,
            c.name as customer_name,
@@ -634,16 +614,13 @@ function getUnpaidInvoicesByCustomerId(customerId) {
 
 function getTodayRevenue() {
   return db.prepare(`
-    SELECT SUM(amount) as total, COUNT(*) as count 
-    FROM invoices 
+    SELECT SUM(amount) as total, COUNT(*) as count
+    FROM invoices
     WHERE status='paid' AND date(paid_at) = date(NOW_LOCAL())
   `).get();
 }
 
-/**
- * Buat tagihan susulan untuk bulan kalender **tanggal pasang** (prorata sisa hari),
- * hanya jika belum ada invoice periode itu. Dasar nominal: **harga reguler** paket (bukan harga promo).
- */
+/** Buat tagihan susulan untuk bulan kalender **tanggal pasang** (prorata sisa hari), */
 function createInstallProrataCatchUpInvoice(customerId) {
   const cid = Number(customerId);
   if (!Number.isFinite(cid) || cid <= 0) throw new Error('ID pelanggan tidak valid');
@@ -672,11 +649,10 @@ function createInstallProrataCatchUpInvoice(customerId) {
   const billableDays = Math.min(dim, Math.max(1, dim - inst.d + 1));
   const basePrice = Number(pkg.price) || 0;
   const baseAmount = Math.max(0, Math.round(basePrice * (billableDays / dim)));
-  
+
   let taxAmount = 0;
   const metaParts = [`Susulan prorata bulan pasang (${billableDays}/${dim} hari, dasar harga reguler Rp ${basePrice.toLocaleString('id-ID')})`];
 
-  // PPN
   if (pkg.use_ppn === 1) {
     const ppnPct = Number(pkg.ppn_percentage) || 11.0;
     const ppnVal = Math.round(baseAmount * (ppnPct / 100));
@@ -684,7 +660,6 @@ function createInstallProrataCatchUpInvoice(customerId) {
     metaParts.push(`PPN ${ppnPct}% (Rp ${ppnVal.toLocaleString('id-ID')})`);
   }
 
-  // USO
   if (pkg.use_uso === 1) {
     const usoPct = Number(pkg.uso_percentage) || 1.75;
     const usoVal = Math.round(baseAmount * (usoPct / 100));
@@ -711,12 +686,12 @@ function createInstallProrataCatchUpInvoice(customerId) {
 }
 
 function updatePaymentInfo(invoiceId, data) {
-  const { 
-    gateway, order_id, link, reference, payload, expires_at 
+  const {
+    gateway, order_id, link, reference, payload, expires_at
   } = data;
-  
+
   return db.prepare(`
-    UPDATE invoices SET 
+    UPDATE invoices SET
       payment_gateway = ?,
       payment_order_id = ?,
       payment_link = ?,
