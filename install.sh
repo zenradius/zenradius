@@ -9,7 +9,15 @@
 #   git clone https://github.com/zenradius/zenradius.git
 #   cd zenradius
 #   chmod +x install.sh
-#   sudo ./install.sh zenradius.net
+#   sudo ./install.sh zenradius.net      # mode normal: Nginx + SSL (Certbot)
+#   sudo ./install.sh --cloudflare        # mode Cloudflare Tunnel (skip Nginx/SSL)
+#
+# Mode --cloudflare digunakan jika VPS SUDAH memiliki Cloudflare Tunnel yang
+# terpasang dan domain yang sudah diarahkan ke tunnel tersebut. Dalam mode
+# ini, skrip TIDAK memasang/menyentuh Nginx maupun Certbot sama sekali —
+# domain & HTTPS sepenuhnya menjadi tanggung jawab Cloudflare. Skrip hanya
+# perlu memastikan aplikasi berjalan di localhost:<PORT> agar bisa diteruskan
+# oleh cloudflared.
 #
 # Skrip ini TIDAK menjalankan "npm start" — proses production sepenuhnya
 # dikelola oleh PM2. "npm start" / "npm run dev" tetap tersedia terpisah
@@ -26,7 +34,17 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="zenradius"
 APP_ENTRY="app-customer.js"
-DOMAIN="${1:-}"
+USE_CLOUDFLARE=false
+DOMAIN=""
+
+# ── Parsing Argumen: --cloudflare atau domain biasa ─────────────────────
+for arg in "$@"; do
+  case "$arg" in
+    --cloudflare) USE_CLOUDFLARE=true ;;
+    --*) ;; # abaikan flag tak dikenal agar tidak dianggap domain
+    *) DOMAIN="$arg" ;;
+  esac
+done
 
 info()  { echo -e "\033[1;36m[INFO]\033[0m $1"; }
 ok()    { echo -e "\033[1;32m[OK]\033[0m $1"; }
@@ -54,17 +72,22 @@ else
   warn "Tidak dapat mendeteksi distribusi OS. Melanjutkan proses instalasi..."
 fi
 
-# ── 1. Domain: Wajib untuk Production ───────────────────────────────────
-if [ -z "$DOMAIN" ]; then
-  read -rp "Masukkan domain untuk aplikasi ini (contoh: zenradius.net), atau kosongkan untuk mode tanpa domain: " DOMAIN
-fi
-if [ -n "$DOMAIN" ]; then
-  if [[ "$DOMAIN" =~ ^https?:// ]] || [[ "$DOMAIN" == */* ]]; then
-    fail "Domain tidak valid: '$DOMAIN'. Masukkan nama domain saja, contoh: zenradius.net (tanpa https:// atau path)."
-  fi
-  info "Domain production: $DOMAIN"
+# ── 1. Domain: Wajib untuk Production (dilewati pada mode --cloudflare) ──
+if [ "$USE_CLOUDFLARE" = true ]; then
+  info "Mode Cloudflare Tunnel aktif — konfigurasi Nginx & SSL akan dilewati sepenuhnya."
+  info "Pastikan cloudflared di VPS ini sudah diarahkan ke http://localhost:<PORT> aplikasi."
 else
-  warn "Domain tidak diisi — instalasi akan lanjut TANPA konfigurasi Nginx/SSL. Aplikasi hanya bisa diakses via http://<IP-VPS>:3001."
+  if [ -z "$DOMAIN" ]; then
+    read -rp "Masukkan domain untuk aplikasi ini (contoh: zenradius.net), atau kosongkan untuk mode tanpa domain: " DOMAIN
+  fi
+  if [ -n "$DOMAIN" ]; then
+    if [[ "$DOMAIN" =~ ^https?:// ]] || [[ "$DOMAIN" == */* ]]; then
+      fail "Domain tidak valid: '$DOMAIN'. Masukkan nama domain saja, contoh: zenradius.net (tanpa https:// atau path)."
+    fi
+    info "Domain production: $DOMAIN"
+  else
+    warn "Domain tidak diisi — instalasi akan lanjut TANPA konfigurasi Nginx/SSL. Aplikasi hanya bisa diakses via http://<IP-VPS>:3001."
+  fi
 fi
 
 # ── 2. Pasang Kebutuhan Sistem (git, Node.js, Nginx, Certbot, PM2) ──────
@@ -97,7 +120,7 @@ else
   ok "PM2 sudah terpasang."
 fi
 
-if [ -n "$DOMAIN" ]; then
+if [ "$USE_CLOUDFLARE" = false ] && [ -n "$DOMAIN" ]; then
   apt_install_if_missing nginx nginx
   if ! command -v certbot >/dev/null 2>&1; then
     apt_install_if_missing certbot certbot python3-certbot-nginx
@@ -133,8 +156,10 @@ if [ -f scripts/verify-database.js ]; then
   node scripts/verify-database.js || warn "Verifikasi database menampilkan peringatan — periksa log di atas."
 fi
 
-# ── 6. Konfigurasi Nginx + SSL (hanya jika domain diisi) ────────────────
-if [ -n "$DOMAIN" ]; then
+# ── 6. Konfigurasi Nginx + SSL (dilewati pada mode --cloudflare) ────────
+if [ "$USE_CLOUDFLARE" = true ]; then
+  info "Mode Cloudflare Tunnel: konfigurasi Nginx & SSL dilewati sepenuhnya."
+elif [ -n "$DOMAIN" ]; then
   NGINX_CONF="/etc/nginx/sites-available/${APP_NAME}"
   if [ ! -f "$NGINX_CONF" ]; then
     info "Membuat konfigurasi Nginx untuk domain: $DOMAIN"
@@ -195,14 +220,21 @@ else
 fi
 
 # ── 8. Ringkasan ─────────────────────────────────────────────────────────
+APP_PORT="$(grep -E '^PORT=' .env 2>/dev/null | tail -n1 | cut -d'=' -f2- | tr -d '[:space:]')"
+APP_PORT="${APP_PORT:-3001}"
+
 echo ""
 ok "═══════════════════════════════════════════════════════════════"
 ok " Instalasi ZenRadius selesai!"
 ok " Direktori aplikasi : $APP_DIR"
-if [ -n "$DOMAIN" ]; then
+if [ "$USE_CLOUDFLARE" = true ]; then
+  ok " Mode               : Cloudflare Tunnel"
+  ok " URL akses          : sesuai domain yang dikonfigurasi di Cloudflare Tunnel Anda"
+  warn " Pastikan cloudflared di VPS ini sudah diarahkan ke: http://localhost:${APP_PORT}"
+elif [ -n "$DOMAIN" ]; then
   ok " URL akses          : https://${DOMAIN}"
 else
-  ok " URL akses          : http://<IP-VPS-ANDA>:3001"
+  ok " URL akses          : http://<IP-VPS-ANDA>:${APP_PORT}"
 fi
 ok " Cek status PM2     : pm2 list"
 ok " Lihat log aplikasi : pm2 logs $APP_NAME"

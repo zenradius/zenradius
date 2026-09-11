@@ -160,21 +160,32 @@ cd zenradius
 ```
 
 ### Langkah 2: Jalankan Skrip Instalasi
+
+**Mode Normal** (VPS belum ada reverse proxy — pakai Nginx + SSL otomatis):
 ```bash
 chmod +x install.sh
 sudo ./install.sh zenradius.net
 ```
 Ganti `zenradius.net` dengan domain Anda sendiri. Jika argumen domain tidak disertakan, skrip akan **menanyakan domain secara interaktif** (atau bisa dikosongkan untuk mode tanpa domain/HTTPS).
 
+**Mode Cloudflare Tunnel** (VPS **sudah** memiliki Cloudflare Tunnel + domain yang sudah diarahkan ke tunnel tersebut):
+```bash
+chmod +x install.sh
+sudo ./install.sh --cloudflare
+```
+Dalam mode ini, skrip **tidak memasang atau menyentuh Nginx maupun Certbot sama sekali** — domain dan HTTPS sepenuhnya menjadi tanggung jawab Cloudflare. Skrip hanya memastikan aplikasi berjalan di `localhost:<PORT>` agar bisa diteruskan oleh `cloudflared` yang sudah Anda konfigurasikan sebelumnya.
+
 ### Apa yang Dilakukan Skrip Ini?
 1. **Validasi Lingkungan** — memastikan dijalankan dengan `sudo`, dari dalam folder hasil clone repository yang benar, dan sistem operasi Ubuntu/Debian.
-2. **Domain Wajib untuk Production** — jika kosong, skrip meminta input interaktif; validasi format domain (menolak URL lengkap).
-3. **Pasang Dependensi Sistem Otomatis** — Node.js 20 LTS, Nginx, Certbot, dan PM2 (hanya jika belum terpasang).
+2. **Domain Wajib untuk Production (mode normal)** — jika kosong, skrip meminta input interaktif; validasi format domain (menolak URL lengkap). **Dilewati sepenuhnya** jika memakai flag `--cloudflare`.
+3. **Pasang Dependensi Sistem Otomatis** — Node.js 20 LTS dan PM2 selalu dipasang. **Nginx & Certbot hanya dipasang di mode normal** (dilewati total pada mode `--cloudflare`).
 4. **Pasang Dependensi Aplikasi** — `npm ci`/`npm install` mode production.
 5. **Setup `.env`** — otomatis dibuat dari `.env.example` jika belum ada (tidak menimpa `.env` yang sudah dikonfigurasi sebelumnya).
 6. **Verifikasi Database** — menjalankan `scripts/verify-database.js`.
-7. **Konfigurasi Nginx + SSL Otomatis** (hanya jika domain diisi) — membuat reverse proxy dan meminta sertifikat via Certbot. Jika konfigurasi/sertifikat sudah ada dari instalasi sebelumnya, langkah ini **dilewati** (tidak menimpa).
+7. **Konfigurasi Nginx + SSL Otomatis** (hanya mode normal, dan hanya jika domain diisi) — membuat reverse proxy dan meminta sertifikat via Certbot. Jika konfigurasi/sertifikat sudah ada dari instalasi sebelumnya, langkah ini **dilewati** (tidak menimpa). **Sepenuhnya di-skip pada mode `--cloudflare`.**
 8. **Jalankan via PM2** — `pm2 start`/`pm2 reload` (bukan `npm start`), lalu `pm2 save` + `pm2 startup` agar aplikasi **otomatis hidup kembali saat VPS reboot**.
+
+> ℹ️ **Catatan Mode Cloudflare:** `install.sh` tidak memasang/mengonfigurasi `cloudflared` itu sendiri — skrip mengasumsikan Cloudflare Tunnel sudah Anda siapkan sebelumnya (dari Cloudflare Dashboard) dan sudah diarahkan ke port aplikasi (`PORT` di `.env`, default `3001`).
 
 ### Sifat Idempotent (Aman Dijalankan Berulang Kali)
 Skrip ini **tidak akan menimpa** data yang sudah ada saat dijalankan ulang:
