@@ -156,12 +156,13 @@ mkdir -p database data logs backups public/uploads auth_info_baileys
 ok "Folder runtime (database, data, logs, backups, public/uploads, auth_info_baileys) siap."
 
 # settings.json di-gitignore agar konfigurasi tiap instalasi tidak ikut
-# ter-commit. File kosong dibuat dulu supaya file watcher aplikasi tidak
-# error saat pertama kali start; nilai default akan diisi otomatis oleh
-# aplikasi (ensureDefaultSettings) saat berjalan.
+# ter-commit. File awal dibuat dengan server_port eksplisit karena aplikasi
+# membaca port dari settings.json (server_port), BUKAN dari PORT di .env.
+# Tanpa ini, aplikasi jatuh ke default 4555 yang tidak sesuai asumsi Nginx/
+# Cloudflare Tunnel yang mengarah ke 3001.
 if [ ! -f settings.json ]; then
-  echo '{}' > settings.json
-  ok "settings.json awal dibuat (akan diisi default oleh aplikasi saat start)."
+  echo '{"server_port": 3001}' > settings.json
+  ok "settings.json awal dibuat dengan server_port=3001 (sisanya diisi default oleh aplikasi saat start)."
 else
   ok "settings.json sudah ada, tidak diubah."
 fi
