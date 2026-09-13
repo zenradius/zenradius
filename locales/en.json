@@ -1,10 +1,10 @@
 {
   "roles": {
-    "admin": "System Administrator",
+    "admin": "Admin",
     "customer_service": "Cashier",
-    "kolektor": "Field Collector",
-    "teknisi": "Field Technician",
-    "reseller": "Authorized Reseller",
+    "kolektor": "Collector",
+    "teknisi": "Technician",
+    "reseller": "Reseller",
     "pelanggan": "Subscriber"
   },
   "common": {
@@ -180,7 +180,7 @@
         "technicians": "Technicians",
         "cashiers": "Cashiers",
         "agents": "Agents",
-        "agent_reports": "Agent Reports",
+        "agent_reports": "Reseller Reports",
         "update": "Update GitHub",
         "settings": "Settings",
         "digiflazz": "Digiflazz",
@@ -515,8 +515,8 @@
       "this_month": "This Month",
       "pending_receivable": "Outstanding Receivable",
       "active_customers_total": "Active Customers",
-      "revenue_via_agent_year": "Revenue via Agent",
-      "agent_deposit_year": "Agent Deposits",
+      "revenue_via_agent_year": "Revenue via Reseller",
+      "agent_deposit_year": "Reseller Deposits",
       "cash_in_year": "Cash In (No Double Count)",
       "this_month_prefix": "This month:",
       "monthly_revenue": "Monthly Revenue",
@@ -603,11 +603,11 @@
     },
     "agents": {
       "title": "Agents",
-      "manage_title": "Agent Management",
-      "list": "Agent List",
-      "add": "Add Agent",
+      "manage_title": "Reseller Management",
+      "list": "Reseller List",
+      "add": "Add Reseller",
       "empty": "No agents yet.",
-      "confirm_delete": "Delete this agent?",
+      "confirm_delete": "Delete this reseller?",
       "table": {
         "name": "Name",
         "username": "Username",
@@ -619,11 +619,11 @@
       },
       "reports": {
         "title": "Reports",
-        "open": "Open Agent Reports"
+        "open": "Open Reseller Reports"
       },
       "modal": {
-        "add_title": "Add New Agent",
-        "edit_title": "Edit Agent"
+        "add_title": "Add New Reseller",
+        "edit_title": "Edit Reseller"
       },
       "form": {
         "name": "Name",
@@ -635,16 +635,16 @@
         "status": "Status"
       },
       "topup": {
-        "title": "Top Up Agent Balance",
-        "agent": "Agent",
+        "title": "Top Up Reseller Balance",
+        "agent": "Reseller",
         "amount": "Amount (Rp)",
         "note": "Note",
         "note_placeholder": "Example: shift starting top-up",
         "process": "Process"
       },
       "prices": {
-        "title": "Agent Voucher Prices",
-        "agent": "Agent",
+        "title": "Reseller Voucher Prices",
+        "agent": "Reseller",
         "add_update": "Add / Update Price",
         "router": "Router",
         "default_router": "(Default)",
@@ -666,16 +666,16 @@
           "status": "Status",
           "actions": "Actions"
         },
-        "empty_select_agent": "Select agent",
+        "empty_select_agent": "Select reseller",
         "empty_no_prices": "No prices yet",
-        "required_agent_profile": "Agent and profile are required",
+        "required_agent_profile": "Reseller and profile are required",
         "save_failed": "Failed to save",
         "confirm_delete_price": "Delete this price?",
         "delete_failed": "Failed to delete"
       }
     },
     "agent_reports": {
-      "title": "Agent Reports",
+      "title": "Reseller Reports",
       "history": "Transaction History",
       "empty": "No transactions yet.",
       "transactions_suffix": "transactions",
@@ -691,7 +691,7 @@
       },
       "table": {
         "time": "Time",
-        "agent": "Agent",
+        "agent": "Reseller",
         "type": "Type",
         "detail": "Detail",
         "deduct": "Deduct Balance",
@@ -1035,7 +1035,7 @@
       "technicians": "Technicians",
       "cashiers": "Cashiers",
       "agents": "Agents",
-      "agent_reports": "Agent Reports",
+      "agent_reports": "Reseller Reports",
       "user_management": "User Management",
       "update": "GitHub Update",
       "settings": "Settings"
@@ -1285,9 +1285,9 @@
     }
   },
   "agent": {
-    "portal_title": "Agent Portal",
-    "login_title": "Agent Login",
-    "dashboard_title": "Agent Dashboard",
+    "portal_title": "Reseller Portal",
+    "login_title": "Reseller Login",
+    "dashboard_title": "Reseller Dashboard",
     "username": "Username",
     "password": "Password",
     "username_placeholder": "Enter username",
@@ -1336,7 +1336,7 @@
     "process_pay_prefix": "Process Payment",
     "sell_voucher": "Sell Hotspot Voucher",
     "instant": "Instant",
-    "no_voucher_profiles": "No voucher profiles configured for this agent. Ask admin to set prices & profiles.",
+    "no_voucher_profiles": "No voucher profiles configured for this reseller. Ask admin to set prices & profiles.",
     "buyer_phone_optional": "Buyer WhatsApp (optional)",
     "choose_voucher": "Select a voucher package",
     "create_voucher_prefix": "Create Voucher - ",

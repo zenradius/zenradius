@@ -2,7 +2,7 @@
 <html lang="<%= lang || 'id' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title><%= t('admin.agents.title', 'Agent') %> | <%= company %></title>
+  <title><%= t('admin.agents.title', 'Reseller') %> | <%= company %></title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
 </head>
@@ -14,12 +14,12 @@
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
       <i class="bi bi-person-badge"></i>
-      <span><%= t('admin.agents.manage_title', 'Manajemen Agent') %></span>
+      <span><%= t('admin.agents.manage_title', 'Manajemen Reseller') %></span>
     </div>
     <div class="tb-right">
       <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
       <% if (typeof session !== 'undefined' && session.isAdmin) { %>
-        <button class="btn btn-p btn-sm" onclick="openModal('addAgentModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.agents.add', 'Tambah Agent') %></button>
+        <button class="btn btn-p btn-sm" onclick="openModal('addAgentModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.agents.add', 'Tambah Reseller') %></button>
       <% } %>
     </div>
   </div>
@@ -31,7 +31,7 @@
 
     <div class="card">
       <div class="card-hd">
-        <h6><i class="bi bi-list-ul"></i> <%= t('admin.agents.list', 'Daftar Agent') %></h6>
+        <h6><i class="bi bi-list-ul"></i> <%= t('admin.agents.list', 'Daftar Reseller') %></h6>
       </div>
       <div class="tbl-wrap">
         <table class="dtbl">
@@ -48,7 +48,7 @@
           </thead>
           <tbody>
             <% if (!agents || agents.length === 0) { %>
-              <tr><td colspan="7" class="text-center text-muted" style="padding:20px"><%= t('admin.agents.empty', 'Belum ada agent.') %></td></tr>
+              <tr><td colspan="7" class="text-center text-muted" style="padding:20px"><%= t('admin.agents.empty', 'Belum ada reseller.') %></td></tr>
             <% } else { %>
               <% agents.forEach(a => { %>
                 <tr>
@@ -86,9 +86,9 @@
       </div>
       <div class="card-bd">
         <% if (typeof session !== 'undefined' && session.isAdmin) { %>
-          <a href="/admin/agents/reports" class="btn btn-g"><i class="bi bi-arrow-right"></i> <%= t('admin.agents.reports.open', 'Buka Laporan Agent') %></a>
+          <a href="/admin/agents/reports" class="btn btn-g"><i class="bi bi-arrow-right"></i> <%= t('admin.agents.reports.open', 'Buka Laporan Reseller') %></a>
         <% } else { %>
-          <div class="text-muted" style="color:var(--muted)!important;font-size:12px">Laporan Agent hanya bisa dibuka oleh Admin.</div>
+          <div class="text-muted" style="color:var(--muted)!important;font-size:12px">Laporan Reseller hanya bisa dibuka oleh Admin.</div>
         <% } %>
       </div>
     </div>
@@ -98,7 +98,7 @@
 <div class="mo" id="addAgentModal">
   <div class="mb">
     <form action="/admin/agents" method="POST">
-      <div class="mh"><span class="mt"><%= t('admin.agents.modal.add_title', 'Tambah Agent Baru') %></span><button type="button" class="mc" onclick="closeModal('addAgentModal')">&times;</button></div>
+      <div class="mh"><span class="mt"><%= t('admin.agents.modal.add_title', 'Tambah Reseller Baru') %></span><button type="button" class="mc" onclick="closeModal('addAgentModal')">&times;</button></div>
       <div class="mbody">
         <div class="fg"><label class="fl"><%= t('admin.agents.form.name', 'Nama') %></label><input type="text" name="name" class="fc" required></div>
         <div class="fg"><label class="fl"><%= t('admin.agents.form.username', 'Username') %></label><input type="text" name="username" class="fc" required></div>
@@ -118,7 +118,7 @@
 <div class="mo" id="editAgentModal">
   <div class="mb">
     <form id="editAgentForm" method="POST">
-      <div class="mh"><span class="mt"><%= t('admin.agents.modal.edit_title', 'Edit Agent') %></span><button type="button" class="mc" onclick="closeModal('editAgentModal')">&times;</button></div>
+      <div class="mh"><span class="mt"><%= t('admin.agents.modal.edit_title', 'Edit Reseller') %></span><button type="button" class="mc" onclick="closeModal('editAgentModal')">&times;</button></div>
       <div class="mbody">
         <div class="fg"><label class="fl"><%= t('admin.agents.form.name', 'Nama') %></label><input type="text" name="name" id="ea-name" class="fc" required></div>
         <div class="fg"><label class="fl"><%= t('admin.agents.form.username', 'Username') %></label><input type="text" name="username" id="ea-username" class="fc" required></div>
@@ -144,9 +144,9 @@
 <div class="mo" id="topupModal">
   <div class="mb">
     <form id="topupForm" method="POST">
-      <div class="mh"><span class="mt"><%= t('admin.agents.topup.title', 'Topup Saldo Agent') %></span><button type="button" class="mc" onclick="closeModal('topupModal')">&times;</button></div>
+      <div class="mh"><span class="mt"><%= t('admin.agents.topup.title', 'Topup Saldo Reseller') %></span><button type="button" class="mc" onclick="closeModal('topupModal')">&times;</button></div>
       <div class="mbody">
-        <div class="fg"><label class="fl"><%= t('admin.agents.topup.agent', 'Agent') %></label><input type="text" id="tu-agent" class="fc" readonly></div>
+        <div class="fg"><label class="fl"><%= t('admin.agents.topup.agent', 'Reseller') %></label><input type="text" id="tu-agent" class="fc" readonly></div>
         <div class="fg"><label class="fl"><%= t('admin.agents.topup.amount', 'Nominal (Rp)') %></label><input type="number" name="amount" class="fc" min="1" required></div>
         <div class="fg"><label class="fl"><%= t('admin.agents.topup.note', 'Catatan') %></label><input type="text" name="note" class="fc" placeholder="<%= t('admin.agents.topup.note_placeholder', 'Contoh: topup awal shift') %>"></div>
       </div>
@@ -160,10 +160,10 @@
 
 <div class="mo" id="pricesModal">
   <div class="mb" style="max-width:860px">
-    <div class="mh"><span class="mt"><%= t('admin.agents.prices.title', 'Harga Voucher Agent') %></span><button type="button" class="mc" onclick="closeModal('pricesModal')">&times;</button></div>
+    <div class="mh"><span class="mt"><%= t('admin.agents.prices.title', 'Harga Voucher Reseller') %></span><button type="button" class="mc" onclick="closeModal('pricesModal')">&times;</button></div>
     <div class="mbody">
       <div class="fg">
-        <label class="fl"><%= t('admin.agents.prices.agent', 'Agent') %></label>
+        <label class="fl"><%= t('admin.agents.prices.agent', 'Reseller') %></label>
         <input type="text" id="pr-agent" class="fc" readonly>
         <input type="hidden" id="pr-agent-id">
       </div>
@@ -228,7 +228,7 @@
               </tr>
             </thead>
             <tbody id="pricesTbody">
-              <tr><td colspan="7" class="text-center text-muted" style="padding:18px"><%= t('admin.agents.prices.empty_select_agent', 'Pilih agent') %></td></tr>
+              <tr><td colspan="7" class="text-center text-muted" style="padding:18px"><%= t('admin.agents.prices.empty_select_agent', 'Pilih reseller') %></td></tr>
             </tbody>
           </table>
         </div>
@@ -242,14 +242,14 @@
 
 <script>
 const I18N = {
-  confirmDeleteAgent: "<%= t('admin.agents.confirm_delete', 'Hapus agent ini?') %>",
+  confirmDeleteAgent: "<%= t('admin.agents.confirm_delete', 'Hapus reseller ini?') %>",
   chooseProfile: "<%= t('admin.agents.prices.choose_profile', 'Pilih profile') %>",
   emptyNoPrices: "<%= t('admin.agents.prices.empty_no_prices', 'Belum ada harga') %>",
-  emptySelectAgent: "<%= t('admin.agents.prices.empty_select_agent', 'Pilih agent') %>",
+  emptySelectAgent: "<%= t('admin.agents.prices.empty_select_agent', 'Pilih reseller') %>",
   defaultRouter: "<%= t('admin.agents.prices.default_router', '(Default)') %>",
   active: "<%= t('common.active', 'Aktif') %>",
   inactive: "<%= t('common.inactive', 'Nonaktif') %>",
-  requiredAgentProfile: "<%= t('admin.agents.prices.required_agent_profile', 'Agent dan profile wajib diisi') %>",
+  requiredAgentProfile: "<%= t('admin.agents.prices.required_agent_profile', 'Reseller dan profile wajib diisi') %>",
   saveFailed: "<%= t('admin.agents.prices.save_failed', 'Gagal menyimpan') %>",
   confirmDeletePrice: "<%= t('admin.agents.prices.confirm_delete_price', 'Hapus harga ini?') %>",
   deleteFailed: "<%= t('admin.agents.prices.delete_failed', 'Gagal hapus') %>"

@@ -1,10 +1,10 @@
 {
   "roles": {
-    "admin": "Administrator Sistem",
+    "admin": "Admin",
     "customer_service": "Kasir",
-    "kolektor": "Kolektor Lapangan",
-    "teknisi": "Teknisi Lapangan",
-    "reseller": "Reseller Resmi",
+    "kolektor": "Kolektor",
+    "teknisi": "Teknisi",
+    "reseller": "Reseller",
     "pelanggan": "Pelanggan"
   },
   "common": {
@@ -54,7 +54,7 @@
     },
     "role": {
       "admin": "Admin",
-      "cashier": "Layanan Pelanggan"
+      "cashier": "Kasir"
     },
     "dashboard": {
       "live_update": "Live Update",
@@ -179,8 +179,8 @@
         "customer_tickets": "Tiket Customer",
         "technicians": "Teknisi",
         "cashiers": "Kasir",
-        "agents": "Agent",
-        "agent_reports": "Laporan Agent",
+        "agents": "Reseller",
+        "agent_reports": "Laporan Reseller",
         "update": "Update GitHub",
         "settings": "Pengaturan",
         "digiflazz": "Digiflazz",
@@ -515,8 +515,8 @@
       "this_month": "Bulan Ini",
       "pending_receivable": "Piutang Belum Bayar",
       "active_customers_total": "Total Pelanggan Aktif",
-      "revenue_via_agent_year": "Pendapatan Via Agent",
-      "agent_deposit_year": "Deposit Agent Masuk",
+      "revenue_via_agent_year": "Pendapatan Via Reseller",
+      "agent_deposit_year": "Deposit Reseller Masuk",
       "cash_in_year": "Kas Masuk (Tanpa Double)",
       "this_month_prefix": "Bulan ini:",
       "monthly_revenue": "Pendapatan Bulanan",
@@ -602,12 +602,12 @@
       "months_suffix": "bulan"
     },
     "agents": {
-      "title": "Agent",
-      "manage_title": "Manajemen Agent",
-      "list": "Daftar Agent",
-      "add": "Tambah Agent",
-      "empty": "Belum ada agent.",
-      "confirm_delete": "Hapus agent ini?",
+      "title": "Reseller",
+      "manage_title": "Manajemen Reseller",
+      "list": "Daftar Reseller",
+      "add": "Tambah Reseller",
+      "empty": "Belum ada reseller.",
+      "confirm_delete": "Hapus reseller ini?",
       "table": {
         "name": "Nama",
         "username": "Username",
@@ -619,11 +619,11 @@
       },
       "reports": {
         "title": "Laporan",
-        "open": "Buka Laporan Agent"
+        "open": "Buka Laporan Reseller"
       },
       "modal": {
-        "add_title": "Tambah Agent Baru",
-        "edit_title": "Edit Agent"
+        "add_title": "Tambah Reseller Baru",
+        "edit_title": "Edit Reseller"
       },
       "form": {
         "name": "Nama",
@@ -635,16 +635,16 @@
         "status": "Status"
       },
       "topup": {
-        "title": "Topup Saldo Agent",
-        "agent": "Agent",
+        "title": "Topup Saldo Reseller",
+        "agent": "Reseller",
         "amount": "Nominal (Rp)",
         "note": "Catatan",
         "note_placeholder": "Contoh: topup awal shift",
         "process": "Proses"
       },
       "prices": {
-        "title": "Harga Voucher Agent",
-        "agent": "Agent",
+        "title": "Harga Voucher Reseller",
+        "agent": "Reseller",
         "add_update": "Tambah / Update Harga",
         "router": "Router",
         "default_router": "(Default)",
@@ -666,22 +666,22 @@
           "status": "Status",
           "actions": "Aksi"
         },
-        "empty_select_agent": "Pilih agent",
+        "empty_select_agent": "Pilih reseller",
         "empty_no_prices": "Belum ada harga",
-        "required_agent_profile": "Agent dan profile wajib diisi",
+        "required_agent_profile": "Reseller dan profile wajib diisi",
         "save_failed": "Gagal menyimpan",
         "confirm_delete_price": "Hapus harga ini?",
         "delete_failed": "Gagal hapus"
       }
     },
     "agent_reports": {
-      "title": "Laporan Agent",
+      "title": "Laporan Reseller",
       "history": "Riwayat Transaksi",
       "empty": "Belum ada transaksi.",
       "transactions_suffix": "transaksi",
       "invoice_prefix": "INV #",
       "filter": {
-        "all_agents": "Semua Agent"
+        "all_agents": "Semua Reseller"
       },
       "type": {
         "topup": "TOPUP",
@@ -691,7 +691,7 @@
       },
       "table": {
         "time": "Waktu",
-        "agent": "Agent",
+        "agent": "Reseller",
         "type": "Jenis",
         "detail": "Detail",
         "deduct": "Potong Saldo",
@@ -1034,8 +1034,8 @@
       "customer_tickets": "Tiket Customer",
       "technicians": "Teknisi",
       "cashiers": "Kasir",
-      "agents": "Agent",
-      "agent_reports": "Laporan Agent",
+      "agents": "Reseller",
+      "agent_reports": "Laporan Reseller",
       "user_management": "Manajemen Pengguna",
       "update": "Update GitHub",
       "settings": "Pengaturan"
@@ -1286,8 +1286,8 @@
   },
   "agent": {
     "portal_title": "Pusat Layanan Agen",
-    "login_title": "Login Agent",
-    "dashboard_title": "Dashboard Agent",
+    "login_title": "Login Reseller",
+    "dashboard_title": "Dashboard Reseller",
     "username": "Username",
     "password": "Password",
     "username_placeholder": "Masukkan username",
@@ -1336,7 +1336,7 @@
     "process_pay_prefix": "Proses Bayar",
     "sell_voucher": "Jual Voucher Hotspot",
     "instant": "Instant",
-    "no_voucher_profiles": "Belum ada profile voucher untuk agent ini. Minta admin mengatur harga & profile.",
+    "no_voucher_profiles": "Belum ada profile voucher untuk reseller ini. Minta admin mengatur harga & profile.",
     "buyer_phone_optional": "No WhatsApp pembeli (opsional)",
     "choose_voucher": "Pilih paket voucher",
     "create_voucher_prefix": "Buat Voucher - ",

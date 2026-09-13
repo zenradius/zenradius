@@ -2,7 +2,7 @@
 <html lang="<%= lang || 'id' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title><%= t('admin.agent_reports.title', 'Laporan Agent') %> | <%= company %></title>
+  <title><%= t('admin.agent_reports.title', 'Laporan Reseller') %> | <%= company %></title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
 </head>
@@ -14,7 +14,7 @@
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
       <i class="bi bi-journal-text"></i>
-      <span><%= t('admin.agent_reports.title', 'Laporan Agent') %></span>
+      <span><%= t('admin.agent_reports.title', 'Laporan Reseller') %></span>
     </div>
     <div class="tb-right">
       <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
@@ -33,7 +33,7 @@
       </div>
       <div class="card-bd" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <select class="fs" style="min-width:220px" onchange="location='/admin/agents/reports?agentId='+encodeURIComponent(this.value)">
-          <option value=""><%= t('admin.agent_reports.filter.all_agents', 'Semua Agent') %></option>
+          <option value=""><%= t('admin.agent_reports.filter.all_agents', 'Semua Reseller') %></option>
           <% (agents || []).forEach(a => { %>
             <option value="<%= a.id %>" <%= agentId && Number(agentId)===Number(a.id) ? 'selected' : '' %>><%= a.name %> (@<%= a.username %>)</option>
           <% }) %>
@@ -51,7 +51,7 @@
           <thead>
             <tr>
               <th><%= t('admin.agent_reports.table.time', 'Waktu') %></th>
-              <th><%= t('admin.agent_reports.table.agent', 'Agent') %></th>
+              <th><%= t('admin.agent_reports.table.agent', 'Reseller') %></th>
               <th><%= t('admin.agent_reports.table.type', 'Jenis') %></th>
               <th><%= t('admin.agent_reports.table.detail', 'Detail') %></th>
               <th class="num"><%= t('admin.agent_reports.table.deduct', 'Potong Saldo') %></th>

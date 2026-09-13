@@ -402,6 +402,14 @@ db.exec(`
     created_at DATETIME DEFAULT (NOW_LOCAL())
   );
 
+  CREATE TABLE IF NOT EXISTS user_permissions (
+    source TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    menu_keys TEXT NOT NULL DEFAULT '[]',
+    updated_at DATETIME DEFAULT (NOW_LOCAL()),
+    PRIMARY KEY (source, user_id)
+  );
+
   CREATE TABLE IF NOT EXISTS agent_hotspot_prices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     agent_id INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,

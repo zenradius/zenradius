@@ -51,8 +51,8 @@ const MENU_DEFINITIONS = [
   { key: 'technicians', section: 'user_management', href: '/admin/technicians', icon: 'bi bi-person-gear', labelKey: 'admin.nav.technicians', labelDefault: 'Teknisi', roles: ['admin'], activePages: ['technicians'] },
   { key: 'cashiers', section: 'user_management', href: '/admin/cashiers', icon: 'bi bi-person-vcard', labelKey: 'admin.nav.cashiers', labelDefault: 'Kasir', roles: ['admin'], activePages: ['cashiers'] },
   { key: 'collectors', section: 'user_management', href: '/admin/collectors', icon: 'bi bi-person-badge', labelKey: 'admin.nav.collectors', labelDefault: 'Kolektor', roles: ['admin'], activePages: ['collectors'] },
-  { key: 'agents', section: 'user_management', href: '/admin/agents', icon: 'bi bi-person-badge', labelKey: 'admin.nav.agents', labelDefault: 'Agent', roles: ['admin', 'cashier'], activePages: ['agents'] },
-  { key: 'agents_reports', section: 'user_management', href: '/admin/agents/reports', icon: 'bi bi-journal-text', labelKey: 'admin.nav.agent_reports', labelDefault: 'Laporan Agent', roles: ['admin'], activePages: ['agents_reports'] },
+  { key: 'agents', section: 'user_management', href: '/admin/agents', icon: 'bi bi-person-badge', labelKey: 'admin.nav.agents', labelDefault: 'Reseller', roles: ['admin', 'cashier'], activePages: ['agents'] },
+  { key: 'agents_reports', section: 'user_management', href: '/admin/agents/reports', icon: 'bi bi-journal-text', labelKey: 'admin.nav.agent_reports', labelDefault: 'Laporan Reseller', roles: ['admin'], activePages: ['agents_reports'] },
   { key: 'user_management', section: 'user_management', href: '/admin/users', icon: 'bi bi-person-lines-fill', labelKey: 'admin.nav.user_management', labelDefault: 'Manajemen Pengguna', roles: ['admin'], activePages: ['user_management'] },
 
   { key: 'payment_gateway', section: 'system', href: '/admin/payment-gateway', icon: 'bi bi-credit-card-2-front', labelKey: 'admin.nav.payment_gateway', labelDefault: 'Payment Gateway', roles: ['admin'], activePages: ['payment_gateway'] },
@@ -259,7 +259,29 @@ function isMenuAllowedForSession(menu, session) {
 
   if (menu.masterOnly && !isMasterAdminUser(session)) return false;
 
-  return Boolean(role) && roles.includes(role);
+  if (!role || !roles.includes(role)) return false;
+
+  // Per-user override (checkbox permissions dari Manajemen Pengguna)
+  if (role !== 'admin') {
+    try {
+      const userPermSvc = require('./userPermissionService');
+      const override = userPermSvc.checkSessionMenuOverride(session, menu.key);
+      if (override !== null) return override;
+    } catch (e) {}
+  }
+
+  return true;
+}
+
+/** Daftar menu (dikelompokkan per section) yang bisa diberikan ke role tertentu. */
+function getAssignableMenusForRole(role) {
+  const normalized = role === 'customer_service' ? 'cashier' : String(role || '');
+  return SECTION_DEFINITIONS.map((section) => ({
+    ...section,
+    items: MENU_DEFINITIONS
+      .filter((m) => m.section === section.key && Array.isArray(m.roles) && m.roles.includes(normalized))
+      .map((m) => ({ key: m.key, label: m.labelDefault, labelKey: m.labelKey, icon: m.icon }))
+  })).filter((s) => s.items.length > 0);
 }
 
 function enrichMenu(menu, states) {
@@ -360,6 +382,7 @@ module.exports = {
   getSidebarSections,
   getBottomNavItems,
   getConfigMenus,
+  getAssignableMenusForRole,
   getMenuDefinition,
   getStoredMenuStates,
   sanitizeMenuStates,

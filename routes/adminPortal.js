@@ -341,6 +341,19 @@ function safeAdminPath(rawPath, fallback = '/admin/sidebar-settings') {
 
 function requireSidebarMenuAccess(menuKey) {
   return (req, res, next) => {
+    const s = req.session || {};
+    // Admin utama selalu lolos; hanya kasir (dan role lain) yang dibatasi per-menu.
+    if (!s.isCashier) return next();
+    try {
+      const access = sidebarMenuSvc.evaluateMenuAccess(menuKey, s);
+      if (!access.allowed) {
+        if (req.xhr || (req.get('accept') || '').includes('application/json')) {
+          return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke menu ini.' });
+        }
+        req.session._msg = { type: 'error', text: 'Anda tidak memiliki akses ke menu ini.' };
+        return res.redirect('/admin');
+      }
+    } catch (e) {}
     return next();
   };
 }
@@ -1137,6 +1150,9 @@ router.get('/users', requireAuth, requireRole('admin', { redirectTo: '/admin' })
     roleFilter,
     statusFilter,
     canonicalRoles: userMgmtSvc.MANAGED_SOURCES.map(s => userMgmtSvc.SOURCE_TO_ROLE[s]),
+    roleLabels: userMgmtSvc.ROLE_LABELS,
+    sourceToRole: userMgmtSvc.SOURCE_TO_ROLE,
+    permissionCatalog: userMgmtSvc.getPermissionCatalog(),
     msg: flashMsg(req)
   });
 });
@@ -1144,7 +1160,8 @@ router.get('/users', requireAuth, requireRole('admin', { redirectTo: '/admin' })
 router.post('/users', requireAuth, requireRole('admin'), express.urlencoded({ extended: true }), (req, res) => {
   try {
     const source = String(req.body.source || '');
-    userMgmtSvc.createUser(source, req.body);
+    const permissions = req.body.use_custom_permissions === '1' ? (req.body.permissions || []) : undefined;
+    userMgmtSvc.createUser(source, { ...req.body, permissions });
     req.session._msg = { type: 'success', text: 'Pengguna berhasil ditambahkan.' };
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
@@ -1154,8 +1171,25 @@ router.post('/users', requireAuth, requireRole('admin'), express.urlencoded({ ex
 
 router.post('/users/:source/:id/update', requireAuth, requireRole('admin'), express.urlencoded({ extended: true }), (req, res) => {
   try {
-    userMgmtSvc.updateUser(req.params.source, req.params.id, req.body);
-    req.session._msg = { type: 'success', text: 'Data pengguna diperbarui.' };
+    const { source, id } = req.params;
+    userMgmtSvc.updateUser(source, id, { username: req.body.username, name: req.body.name, phone: req.body.phone, area: req.body.area });
+    if (req.body.use_custom_permissions === '1') {
+      userMgmtSvc.savePermissions(source, id, req.body.permissions || []);
+    } else {
+      const permSvc = require('../services/userPermissionService');
+      permSvc.clearUserPermissions(source, id);
+    }
+    req.session._msg = { type: 'success', text: 'Data pengguna & hak akses diperbarui.' };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
+  }
+  res.redirect('/admin/users');
+});
+
+router.post('/users/:source/:id/delete', requireAuth, requireRole('admin'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    userMgmtSvc.deleteUser(req.params.source, req.params.id);
+    req.session._msg = { type: 'success', text: 'Pengguna berhasil dihapus.' };
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
   }
@@ -1597,7 +1631,7 @@ router.get('/agents', requireAdminSession, requireSidebarMenuAccess('agents'), (
   const agents = agentSvc.getAllAgents();
   const routers = mikrotikService.getAllRouters();
   res.render('admin/agents', {
-    title: 'Manajemen Agent',
+    title: 'Manajemen Reseller',
     company: company(),
     activePage: 'agents',
     agents,
@@ -1609,7 +1643,7 @@ router.get('/agents', requireAdminSession, requireSidebarMenuAccess('agents'), (
 router.post('/agents', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
   try {
     agentSvc.createAgent(req.body);
-    req.session._msg = { type: 'success', text: 'Agent berhasil ditambahkan.' };
+    req.session._msg = { type: 'success', text: 'Reseller berhasil ditambahkan.' };
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
   }
@@ -1619,7 +1653,7 @@ router.post('/agents', requireAdminSession, restrictToAdmin, express.urlencoded(
 router.post('/agents/:id/update', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
   try {
     agentSvc.updateAgent(req.params.id, req.body);
-    req.session._msg = { type: 'success', text: 'Data agent diperbarui.' };
+    req.session._msg = { type: 'success', text: 'Data reseller diperbarui.' };
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
   }
@@ -1629,7 +1663,7 @@ router.post('/agents/:id/update', requireAdminSession, restrictToAdmin, express.
 router.post('/agents/:id/delete', requireAdminSession, restrictToAdmin, (req, res) => {
   try {
     agentSvc.deleteAgent(req.params.id);
-    req.session._msg = { type: 'success', text: 'Agent berhasil dihapus.' };
+    req.session._msg = { type: 'success', text: 'Reseller berhasil dihapus.' };
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
   }
@@ -1654,7 +1688,7 @@ router.get('/agents/reports', requireAdminSession, requireSidebarMenuAccess('age
   const agentId = req.query.agentId ? Number(req.query.agentId) : null;
   const txs = agentSvc.listAgentTransactions({ agentId, limit: 500 });
   res.render('admin/agent_reports', {
-    title: 'Laporan Agent',
+    title: 'Laporan Reseller',
     company: company(),
     activePage: 'agents_reports',
     agents,
