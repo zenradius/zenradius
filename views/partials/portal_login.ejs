@@ -1,0 +1,129 @@
+<%#
+  Shared portal login template (based on tech/login.ejs).
+  Params: title, heading, subtitle, copy, action, usernameLabel, usernamePlaceholder,
+          appLabel, manifest (optional), backLink (optional), idPrefix
+%>
+<!DOCTYPE html>
+<html lang="<%= (typeof lang !== 'undefined' && lang) || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#173945">
+  <title><%= title %> - <%= company %></title>
+  <% if (typeof manifest !== 'undefined' && manifest) { %><link rel="manifest" href="<%= manifest %>"><% } %>
+  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/unified.css">
+  <style>
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      background:#173945;
+      background-image:radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%);
+      color:#f8fafc;min-height:100vh;min-height:100dvh;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'DM Sans',sans-serif;padding:24px;
+    }
+    .login-card{
+      background:#173945;border:1px solid rgba(190,239,255,.28);border-radius:16px;
+      padding:38px 32px 28px;width:100%;max-width:420px;
+      box-shadow:0 20px 48px rgba(3,14,20,.45);
+      display:flex;flex-direction:column;align-items:center;
+    }
+    .login-card form{width:100%;max-width:320px;display:flex;flex-direction:column;align-items:stretch}
+    .login-card .form-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#d9fffb!important;font-weight:700}
+    .form-control{
+      background:rgba(255,255,255,.06);border:1px solid rgba(190,239,255,.22);color:#f0fdfa;
+      padding:12px 14px 12px 40px;border-radius:10px;font-size:14px;
+    }
+    .form-control::placeholder{color:rgba(237,250,250,.38)}
+    .form-control:focus{background:rgba(255,255,255,.09);color:#fff;border-color:rgba(45,212,191,.55);box-shadow:0 0 0 3px rgba(45,212,191,.14)}
+    .btn-login{
+      background:linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);color:#f4fffd;
+      border:1px solid rgba(126,231,219,.48);padding:10px 22px;border-radius:10px;
+      width:auto;min-width:160px;max-width:220px;font-weight:800;font-size:13px;margin:10px auto 0;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 20px rgba(10,41,50,.24);
+    }
+    .btn-login:hover{background:linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%)!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important}
+    .brand-icon{font-size:40px;color:#2dd4bf;margin-bottom:10px}
+    .login-copy{color:rgba(237,250,250,.7);font-size:12px;line-height:1.55;margin:8px auto 24px;max-width:310px}
+    .agent-footer{margin-top:22px;padding-top:14px;border-top:1px solid rgba(124,221,218,.15);color:rgba(237,250,250,.56);font-size:11px;text-align:center}
+    .back-link{margin-top:14px;font-size:12px;color:rgba(237,250,250,.62);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    .back-link:hover{color:#7dd3fc}
+    .password-field-wrapper{position:relative}
+    .password-field-wrapper .eye-toggle{
+      position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      background:transparent;border:none;color:rgba(190,239,255,.72);cursor:pointer;padding:0;
+      width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:15px;
+      transition:all .2s ease;border-radius:6px;z-index:10;box-shadow:none;
+    }
+    .password-field-wrapper .eye-toggle:hover{color:rgba(45,212,191,.95);background:transparent;border:none;box-shadow:none}
+    .password-field-wrapper .eye-toggle:active{transform:translateY(-50%) scale(.96)}
+    .password-field-wrapper .form-control.with-eye{padding-right:42px}
+    .btn-pwa{background:rgba(45,212,191,.08);border:1px solid rgba(126,231,219,.38);color:#d9fffb;border-radius:9px;font-size:12px;transition:all .25s}
+    .btn-pwa:hover{background:rgba(45,212,191,.16);color:#fff}
+  </style>
+</head>
+<body>
+  <div class="login-card text-center">
+    <div class="brand-icon"><img src="/img/logo.png?v=zenradius" alt="ZenRadius" onerror="this.src='/img/icon.png'" style="width:210px;max-width:80%;height:auto;"></div>
+    <h3 class="mb-1 fw-bold"><%= heading %></h3>
+    <p class="text-secondary mb-0 small"><%= subtitle %></p>
+    <p class="login-copy"><%= copy %></p>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger py-2 small rounded-3"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="<%= action %>">
+      <div class="mb-3 text-start">
+        <label class="form-label small mb-1" for="<%= idPrefix %>-username"><%= usernameLabel %></label>
+        <input type="text" id="<%= idPrefix %>-username" name="username" class="form-control" required autocomplete="username" placeholder="<%= usernamePlaceholder %>">
+      </div>
+      <div class="mb-4 text-start">
+        <label class="form-label small mb-1" for="<%= idPrefix %>-password">Password</label>
+        <div class="password-field-wrapper">
+          <input type="password" id="<%= idPrefix %>-password" name="password" class="form-control" required autocomplete="current-password" placeholder="Masukkan password">
+          <button type="button" class="eye-toggle" data-target="<%= idPrefix %>-password" title="Tampilkan/Sembunyikan password"><i class="bi bi-eye"></i></button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-login"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk</button>
+    </form>
+
+    <div style="margin-top:16px;margin-bottom:8px;">
+      <button type="button" id="btn-install-pwa" class="btn btn-sm btn-pwa d-inline-flex align-items-center gap-2 px-3 py-2 fw-bold">
+        <i class="bi bi-download"></i> <%= appLabel %>
+      </button>
+    </div>
+
+    <% if (typeof backLink !== 'undefined' && backLink) { %>
+      <a href="<%= backLink %>" class="back-link"><i class="bi bi-arrow-left"></i> Kembali ke Halaman</a>
+    <% } %>
+
+    <div class="agent-footer">&copy; <%= new Date().getFullYear() %> <%- footerInfo %></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.querySelectorAll('.eye-toggle').forEach((button) => {
+      const input = document.getElementById(button.getAttribute('data-target'));
+      if (input) input.classList.add('with-eye');
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        button.innerHTML = show ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+      });
+    });
+
+    let deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPwaPrompt = e; });
+    document.getElementById('btn-install-pwa')?.addEventListener('click', () => {
+      if (!deferredPwaPrompt) return;
+      deferredPwaPrompt.prompt();
+      deferredPwaPrompt.userChoice.then(() => { deferredPwaPrompt = null; });
+    });
+  </script>
+</body>
+</html>
