@@ -5,6 +5,14 @@
   <title><%= t('admin.nav.packages', 'Paket Internet') %> | <%= company %></title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .pkg-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--pdim);color:var(--primary);border:1px solid rgba(34,211,238,.28);box-shadow:0 0 12px rgba(34,211,238,.15);font-size:16px;flex-shrink:0}
+    .pkg-ico.off{background:rgba(125,133,144,.12);color:var(--muted);border-color:rgba(125,133,144,.2);box-shadow:none}
+    .speed-chip{display:inline-flex;align-items:center;gap:1px;padding:2px 8px 2px 4px;border-radius:8px;background:var(--pdim);color:var(--primary);font-weight:700;font-size:12px;border:1px solid rgba(34,211,238,.22)}
+    .speed-chip.up{background:var(--sdim);color:var(--success);border-color:rgba(52,211,153,.22)}
+    .speed-chip i{font-size:14px}
+    .price-main{font-weight:700;font-size:13.5px;letter-spacing:-.2px}
+  </style>
 </head>
 <body>
 <%- include('partials/sidebar', { activePage: 'packages', company }) %>
@@ -30,16 +38,77 @@
       <div class="alert alert-<%= msg.type==='error'?'d':'s' %>"><%= msg.text %></div>
     <% } %>
 
+    <%
+      const pkgs = packages || [];
+      const pkgActive = pkgs.filter(p => p.is_active).length;
+      const pkgCustomers = pkgs.reduce((a, p) => a + Number(p.customer_count || 0), 0);
+      const pkgPrepaid = pkgs.filter(p => p.billing_type === 'prepaid').length;
+      const pkgPromo = pkgs.filter(p => p.promo_price).length;
+      const pkgMrr = pkgs.reduce((a, p) => a + Number(p.price || 0) * Number(p.customer_count || 0), 0);
+    %>
+    <div class="stat-grid">
+      <div class="sc p">
+        <i class="bi bi-wifi sc-icon"></i>
+        <div class="sc-label"><%= t('admin.packages.stats.total', 'Total Paket') %></div>
+        <div class="sc-val"><%= pkgs.length %></div>
+        <div class="sc-sub"><%= pkgActive %> <%= t('common.active', 'Aktif').toLowerCase() %> · <%= pkgs.length - pkgActive %> <%= t('common.inactive', 'Nonaktif').toLowerCase() %></div>
+      </div>
+      <div class="sc s">
+        <i class="bi bi-people-fill sc-icon"></i>
+        <div class="sc-label"><%= t('admin.packages.stats.subscribers', 'Pelanggan Berlangganan') %></div>
+        <div class="sc-val"><%= pkgCustomers %></div>
+        <div class="sc-sub"><%= t('admin.packages.stats.subscribers_sub', 'Terdistribusi di semua paket') %></div>
+      </div>
+      <div class="sc w">
+        <i class="bi bi-cash-stack sc-icon"></i>
+        <div class="sc-label"><%= t('admin.packages.stats.mrr', 'Estimasi Omzet / Bulan') %></div>
+        <div class="sc-val" style="font-size:20px">Rp&nbsp;<%= pkgMrr.toLocaleString('id-ID') %></div>
+        <div class="sc-sub"><%= t('admin.packages.stats.mrr_sub', 'Harga normal × pelanggan') %></div>
+      </div>
+      <div class="sc i">
+        <i class="bi bi-tags-fill sc-icon"></i>
+        <div class="sc-label"><%= t('admin.packages.stats.type', 'Prabayar / Promo') %></div>
+        <div class="sc-val"><%= pkgPrepaid %> <span style="font-size:14px;color:var(--muted);font-weight:600">/ <%= pkgPromo %></span></div>
+        <div class="sc-sub"><%= pkgs.length - pkgPrepaid %> <%= t('admin.packages.postpaid', 'Pascabayar').toLowerCase() %> · <%= pkgPromo %> <%= t('admin.packages.stats.with_promo', 'dengan promo') %></div>
+      </div>
+    </div>
+
     <% if (routers && routers.length > 0) { %>
     <div class="card" style="margin-bottom:16px">
-      <div class="card-bd" style="display:flex;align-items:center;vertical-align:middle;padding:14px 18px">
-        <form style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%">
-          <div class="filter-title" style="margin:0;border:none"><i class="bi bi-funnel-fill"></i> <%= t('admin.packages.filter_router', 'Filter Router') %></div>
-          <select id="router-filter" class="fs" style="max-width:260px" onchange="changeRouterFilter(this.value)">
+      <div class="card-bd" style="padding:14px 18px">
+        <div class="filter-title"><i class="bi bi-funnel-fill"></i> <%= t('admin.common.search_filter', 'Pencarian & Filter') %></div>
+        <form class="srow" style="margin:0" onsubmit="return false">
+          <div class="sinput" style="max-width:320px">
+            <i class="bi bi-search"></i>
+            <input class="fc" id="pkg-search" placeholder="<%= t('admin.packages.search_placeholder', 'Cari nama paket...') %>" oninput="filterPkgTable()">
+          </div>
+          <select id="router-filter" class="fs" style="max-width:240px" onchange="changeRouterFilter(this.value)">
             <option value="" <%= (!selectedRouterId) ? 'selected' : '' %>><%= t('admin.packages.all_routers', '-- Semua Router --') %></option>
             <% routers.forEach(r => { %>
               <option value="<%= r.id %>" <%= (String(selectedRouterId||'') === String(r.id)) ? 'selected' : '' %>><%= r.name %></option>
             <% }) %>
+          </select>
+          <select id="pkg-status-filter" class="fs" style="max-width:170px" onchange="filterPkgTable()">
+            <option value=""><%= t('admin.customers.filter.all_status', 'Semua Status') %></option>
+            <option value="1"><%= t('common.active', 'Aktif') %></option>
+            <option value="0"><%= t('common.inactive', 'Nonaktif') %></option>
+          </select>
+        </form>
+      </div>
+    </div>
+    <% } else { %>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-bd" style="padding:14px 18px">
+        <div class="filter-title"><i class="bi bi-funnel-fill"></i> <%= t('admin.common.search_filter', 'Pencarian & Filter') %></div>
+        <form class="srow" style="margin:0" onsubmit="return false">
+          <div class="sinput" style="max-width:320px">
+            <i class="bi bi-search"></i>
+            <input class="fc" id="pkg-search" placeholder="<%= t('admin.packages.search_placeholder', 'Cari nama paket...') %>" oninput="filterPkgTable()">
+          </div>
+          <select id="pkg-status-filter" class="fs" style="max-width:170px" onchange="filterPkgTable()">
+            <option value=""><%= t('admin.customers.filter.all_status', 'Semua Status') %></option>
+            <option value="1"><%= t('common.active', 'Aktif') %></option>
+            <option value="0"><%= t('common.inactive', 'Nonaktif') %></option>
           </select>
         </form>
       </div>
@@ -69,25 +138,36 @@
               <tr><td colspan="8" class="text-center text-muted" style="padding:20px"><%= t('admin.packages.empty', 'Belum ada paket internet.') %></td></tr>
             <% } else { %>
             <% packages.forEach(pkg => { %>
-                <tr>
-                  <td><strong><%= pkg.name %></strong><% if (pkg.description) { %><div class="hint" style="font-size:12px;color:var(--muted)"><%= pkg.description %></div><% } %></td>
+                <tr data-name="<%= String(pkg.name || '').toLowerCase() %>" data-active="<%= pkg.is_active ? 1 : 0 %>">
                   <td>
-                    <%= (pkg.speed_down/1000) %>/<%= (pkg.speed_up/1000) %> Mbps
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div class="pkg-ico <%= pkg.is_active ? '' : 'off' %>"><i class="bi bi-wifi"></i></div>
+                      <div>
+                        <strong><%= pkg.name %></strong>
+                        <% if (pkg.description) { %><div class="hint" style="font-size:11.5px;color:var(--muted)"><%= pkg.description %></div><% } %>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="speed-chip"><i class="bi bi-arrow-down-short"></i><%= (pkg.speed_down/1000) %></span>
+                    <span class="speed-chip up"><i class="bi bi-arrow-up-short"></i><%= (pkg.speed_up/1000) %></span>
+                    <span style="font-size:11px;color:var(--muted);margin-left:2px">Mbps</span>
                     <% if (pkg.speed_down_upto || pkg.speed_up_upto) { %>
-                      <div class="hint" style="font-size:11px;color:var(--muted)"><%= t('admin.packages.upto', 'up to') %> <%= (pkg.speed_down_upto/1000) %>/<%= (pkg.speed_up_upto/1000) %> Mbps</div>
+                      <div class="hint" style="font-size:11px;color:var(--muted);margin-top:3px"><%= t('admin.packages.upto', 'up to') %> <%= (pkg.speed_down_upto/1000) %>/<%= (pkg.speed_up_upto/1000) %> Mbps</div>
                     <% } %>
                   </td>
                   <td>
-                    Rp <%= Number(pkg.price).toLocaleString('id-ID') %>
+                    <div class="price-main">Rp <%= Number(pkg.price).toLocaleString('id-ID') %></div>
                     <% if (pkg.promo_price) { %>
-                      <div class="hint" style="font-size:11px;color:#22c55e"><%= t('admin.packages.promo', 'Promo') %>: Rp <%= Number(pkg.promo_price).toLocaleString('id-ID') %> (<%= pkg.promo_cycles %>x)</div>
+                      <span class="badge bs" style="margin-top:4px;font-size:10px"><i class="bi bi-stars"></i> <%= t('admin.packages.promo', 'Promo') %> Rp <%= Number(pkg.promo_price).toLocaleString('id-ID') %> · <%= pkg.promo_cycles %>x</span>
                     <% } %>
                   </td>
-                  <td><span class="badge <%= pkg.billing_type === 'prepaid' ? 'bw' : 'bs' %>"><%= pkg.billing_type === 'prepaid' ? t('admin.packages.prepaid', 'Prabayar') : t('admin.packages.postpaid', 'Pascabayar') %></span></td>
-                  <td><%= pkg.router_name || t('admin.packages.all_routers_short', 'Semua Router') %></td>
-                  <td><span class="badge bs"><%= pkg.customer_count || 0 %></span></td>
+                  <td><span class="badge <%= pkg.billing_type === 'prepaid' ? 'bw' : 'bp' %>"><i class="bi <%= pkg.billing_type === 'prepaid' ? 'bi-lightning-charge-fill' : 'bi-calendar-check-fill' %>" style="font-size:9px"></i> <%= pkg.billing_type === 'prepaid' ? t('admin.packages.prepaid', 'Prabayar') : t('admin.packages.postpaid', 'Pascabayar') %></span></td>
+                  <td><span style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px"><i class="bi bi-hdd-network" style="color:var(--primary)"></i><%= pkg.router_name || t('admin.packages.all_routers_short', 'Semua Router') %></span></td>
+                  <td><span class="badge <%= Number(pkg.customer_count) > 0 ? 'bs' : 'bm' %>"><i class="bi bi-people-fill" style="font-size:9px"></i> <%= pkg.customer_count || 0 %></span></td>
                   <td>
                     <span class="badge <%= pkg.is_active ? 'bs' : 'bd' %>">
+                      <i class="bi <%= pkg.is_active ? 'bi-check-circle-fill' : 'bi-x-circle-fill' %>" style="font-size:9px"></i>
                       <%= pkg.is_active ? t('common.active', 'Aktif') : t('common.inactive', 'Nonaktif') %>
                     </span>
                   </td>
@@ -218,6 +298,20 @@ function changeRouterFilter(routerId) {
   if (routerId) url.searchParams.set('router_id', routerId);
   else url.searchParams.delete('router_id');
   window.location.href = url.toString();
+}
+
+function filterPkgTable() {
+  const q = (document.getElementById('pkg-search')?.value || '').trim().toLowerCase();
+  const st = document.getElementById('pkg-status-filter')?.value || '';
+  let shown = 0;
+  document.querySelectorAll('.dtbl tbody tr[data-name]').forEach(tr => {
+    const okQ = !q || tr.dataset.name.includes(q);
+    const okS = !st || tr.dataset.active === st;
+    tr.style.display = okQ && okS ? '' : 'none';
+    if (okQ && okS) shown++;
+  });
+  const empty = document.getElementById('pkg-empty-row');
+  if (empty) empty.style.display = shown ? 'none' : '';
 }
 </script>
 </body>
