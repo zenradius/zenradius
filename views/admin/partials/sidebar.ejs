@@ -192,6 +192,8 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
 
   // Custom dropdown (gaya sama dengan pilihan bahasa) untuk semua <select class="fs">
   (function(){ var s=document.createElement('script'); s.src='/js/zen-select.js?v=1'; s.defer=true; document.head.appendChild(s); })();
+  // Toast notifications & Scroll helper
+  (function(){ var s=document.createElement('script'); s.src='/js/zen-helpers.js?v=1'; s.defer=true; document.head.appendChild(s); })();
 
   document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') hideLockedMenuNotice();
