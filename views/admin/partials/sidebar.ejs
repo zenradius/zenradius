@@ -31,20 +31,30 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
     </div>
   </div>
   <nav class="sb-nav">
-    <% (sidebarSections || []).forEach((section) => { %>
-      <div class="sb-section"><%= section.labelKey ? t(section.labelKey, section.labelDefault) : section.labelDefault %></div>
-      <% section.items.forEach((item) => { %>
-        <a
-          href="<%= item.hrefResolved %>"
-          class="sb-item <%= (item.activePages || []).includes(activePage) ? 'active' : '' %>"
-        >
-          <i class="<%= item.icon %>"></i>
-          <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
-          <% if (item.key === 'update') { %>
-            <span id="updateBadge" style="display:none;margin-left:auto;padding:2px 7px;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;animation:pulse 1.5s infinite">● Update</span>
-          <% } %>
-        </a>
-      <% }) %>
+    <% (sidebarSections || []).forEach((section, sIdx) => { 
+      // check if any item in this section is currently active
+      const hasActiveItem = section.items.some(item => (item.activePages || []).includes(activePage));
+    %>
+      <div class="sb-section-group <%= hasActiveItem ? 'open' : '' %>" data-section-id="<%= sIdx %>">
+        <div class="sb-section" onclick="toggleSidebarSection(this)">
+          <span><%= section.labelKey ? t(section.labelKey, section.labelDefault) : section.labelDefault %></span>
+          <i class="bi bi-chevron-right sb-sec-chev"></i>
+        </div>
+        <div class="sb-section-items">
+          <% section.items.forEach((item) => { %>
+            <a
+              href="<%= item.hrefResolved %>"
+              class="sb-item <%= (item.activePages || []).includes(activePage) ? 'active' : '' %>"
+            >
+              <i class="<%= item.icon %>"></i>
+              <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
+              <% if (item.key === 'update') { %>
+                <span id="updateBadge" style="display:none;margin-left:auto;padding:2px 7px;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;animation:pulse 1.5s infinite">● Update</span>
+              <% } %>
+            </a>
+          <% }) %>
+        </div>
+      </div>
     <% }) %>
 
     <% if (typeof isMasterAdmin === 'undefined' || !isMasterAdmin) { %>
@@ -102,6 +112,47 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
     sb.classList.toggle('open');
     ov.classList.toggle('show');
   }
+
+  // Akordeon collapse/expand menu section
+  function toggleSidebarSection(secHeader) {
+    const group = secHeader.closest('.sb-section-group');
+    if (!group) return;
+    const wasOpen = group.classList.contains('open');
+    
+    // Jangan menutup jika mengklik group menu tempat halaman aktif berada kecuali jika Anda benar-benar me-collapse-nya (atau tutup yang lain)
+    document.querySelectorAll('.sb-section-group').forEach(function(g) {
+      if (g !== group) {
+        g.classList.remove('open');
+      }
+    });
+
+    if (wasOpen) {
+      group.classList.remove('open');
+    } else {
+      group.classList.add('open');
+    }
+    
+    // Simpan preferensi status lipatan jika di-perlukan (opsional)
+    try {
+      localStorage.setItem('zs-sb-sec-' + group.dataset.sectionId, group.classList.contains('open') ? '1' : '0');
+    } catch(e) {}
+  }
+
+  // Restore sidebar state dari localStorage (kecuali jika ada menu aktif di section tersebut)
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.sb-section-group').forEach(function(g) {
+      // jika ada menu aktif, pastikan selalu terbuka
+      const hasActive = g.classList.contains('open');
+      if (hasActive) return;
+      
+      try {
+        const stored = localStorage.getItem('zs-sb-sec-' + g.dataset.sectionId);
+        if (stored === '1') {
+          g.classList.add('open');
+        }
+      } catch(e) {}
+    });
+  });
 
   function showLockedMenuNotice(message) {
     const modal = document.getElementById('lockedMenuModal');

@@ -75,7 +75,12 @@ body{font-family:'Inter',sans-serif;
 .sb-name{font-size:13px;font-weight:700;line-height:1.3;color:var(--text)}
 .sb-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .sb-nav{flex:1;padding:12px 0 40px}
-.sb-section{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:14px 16px 5px}
+.sb-section{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;transition:color .2s}
+.sb-section:hover{color:var(--text)}
+.sb-section-group .sb-section-items{max-height:0;overflow:hidden;transition:max-height .3s cubic-bezier(0.4,0,0.2,1);padding-left:4px}
+.sb-section-group.open .sb-section-items{max-height:1000px}
+.sb-sec-chev{font-size:10px;color:var(--muted);transition:transform .3s ease}
+.sb-section-group.open .sb-sec-chev{transform:rotate(90deg);color:var(--primary)}
 .sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;border-left:3px solid transparent;transition:all .2s;margin:1px 0}
 .sb-item:hover{color:var(--text);background:rgba(255,255,255,.04)}
 .sb-item.active{color:var(--sb-item-active-color);background:var(--sb-item-active-bg);border-left-color:var(--sb-item-active-border);box-shadow:0 4px 12px rgba(10,41,50,.24)}
