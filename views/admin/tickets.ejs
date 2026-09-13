@@ -50,6 +50,7 @@
         </button>
       </div>
       <div class="card-bd" style="padding-bottom:0">
+        <div class="filter-title"><i class="bi bi-funnel-fill"></i> <%= t('admin.common.search_filter', 'Pencarian & Filter') %></div>
         <form method="GET" action="/admin/tickets" style="display:flex;gap:10px;margin-bottom:18px">
           <select class="fs" name="status" style="width:160px" onchange="this.form.submit()">
             <option value="all" <%= filterStatus==='all'?'selected':'' %>><%= t('common.all_status', 'Semua Status') %></option>

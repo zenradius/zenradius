@@ -48,6 +48,7 @@
 
     <!-- Filter -->
     <form method="GET" action="/admin/billing" class="filter-bar">
+      <div class="filter-title"><i class="bi bi-funnel-fill"></i> <%= t('admin.common.search_filter', 'Pencarian & Filter') %></div>
       <div class="sinput" style="max-width:260px">
         <i class="bi bi-search"></i>
         <input class="fc" name="search" placeholder="<%= t('admin.billing.search_placeholder', 'Cari nama / telepon...') %>" value="<%= search %>">

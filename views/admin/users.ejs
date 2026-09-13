@@ -86,6 +86,7 @@
 
     <div class="card" style="margin-bottom:16px">
       <div class="card-bd" style="padding:14px">
+        <div class="filter-title"><i class="bi bi-funnel-fill"></i> <%= t('admin.common.search_filter', 'Pencarian & Filter') %></div>
         <form method="GET" action="/admin/users" class="d-flex gap-2 flex-wrap" style="align-items:center">
           <input type="text" name="q" class="fc" style="max-width:260px" placeholder="<%= t('admin.users.search_placeholder', 'Cari nama, username, atau HP...') %>" value="<%= q || '' %>">
           <select name="role" class="fs" style="max-width:200px">
