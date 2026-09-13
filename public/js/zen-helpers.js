@@ -159,4 +159,70 @@
     const mwNode = document.querySelector('.mw');
     if (mwNode) mwNode.addEventListener('scroll', handleScroll, { passive: true });
   }, 1000);
+
+  // 3. Tombol Intip Sandi Global (Password Visibility Toggle)
+  function initPasswordToggles() {
+    document.querySelectorAll('input[type="password"]').forEach(function(pwdInput) {
+      if (pwdInput.dataset.hasToggle) return;
+      pwdInput.dataset.hasToggle = '1';
+
+      // Buat container wrapper relatif
+      const parent = pwdInput.parentElement;
+      if (!parent) return;
+
+      if (getComputedStyle(parent).position === 'static') {
+        parent.style.position = 'relative';
+      }
+
+      // Buat icon mata
+      const eyeBtn = document.createElement('button');
+      eyeBtn.type = 'button';
+      eyeBtn.className = 'password-eye-btn';
+      eyeBtn.style.cssText = `
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: rgba(168, 190, 194, 0.7);
+        cursor: pointer;
+        z-index: 10;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: color 0.15s ease;
+      `;
+      eyeBtn.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
+
+      // Sembunyikan padding agar input tidak tertutup ikon mata
+      const currentPadding = getComputedStyle(pwdInput).paddingRight;
+      if (parseFloat(currentPadding) < 38) {
+        pwdInput.style.paddingRight = '38px';
+      }
+
+      eyeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (pwdInput.type === 'password') {
+          pwdInput.type = 'text';
+          eyeBtn.innerHTML = '<i class="bi bi-eye-fill" style="color:var(--primary)"></i>';
+        } else {
+          pwdInput.type = 'password';
+          eyeBtn.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
+        }
+      });
+
+      parent.appendChild(eyeBtn);
+    });
+  }
+
+  // Jalankan untuk password input yang sudah ada, serta pantau modal dinamis baru
+  initPasswordToggles();
+  const mutObserver = new MutationObserver(function() {
+    initPasswordToggles();
+  });
+  mutObserver.observe(document.body, { childList: true, subtree: true });
 })();

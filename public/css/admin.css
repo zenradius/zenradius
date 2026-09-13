@@ -209,6 +209,20 @@ body{font-family:'Inter',sans-serif;
     display: inline-flex !important;
   }
 }
+/* ── Skeleton Loading Shimmer ── */
+.skeleton-shimmer-row {
+  height: 48px;
+  margin: 12px 16px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(27,70,86,0.3) 25%, rgba(34,211,238,0.08) 37%, rgba(27,70,86,0.3) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer-fade 1.4s ease infinite;
+}
+@keyframes skeleton-shimmer-fade {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+}
 .dtbl tr:last-child td{border-bottom:none}
 .dtbl .num{text-align:right}
 .dtbl code{background:var(--bg3);padding:2px 7px;border-radius:6px;font-size:12px;color:var(--primary)}

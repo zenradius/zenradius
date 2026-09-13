@@ -12,7 +12,10 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
     <img src="/img/logo.png?v=zenradius" alt="ZenRadius" style="width:min(176px,78%);height:auto;max-height:52px;object-fit:contain;display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
     <div class="sb-icon" style="display:none"><i class="bi bi-wifi"></i></div>
     <div style="width:100%">
-      <div class="sb-sub" style="text-align:center"><%= t('admin.panel', 'Admin Panel') %></div>
+      <div class="sb-sub" style="text-align:center;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span><%= t('admin.panel', 'Admin Panel') %></span>
+        <span id="waSidebarStatusDot" style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block;box-shadow:0 0 6px rgba(148,163,184,0.4);transition:all .3s" title="WhatsApp: Memeriksa..."></span>
+      </div>
       <% if (typeof multiRouterMode !== 'undefined' && multiRouterMode && allActiveRouters && allActiveRouters.length > 0) { %>
         <div style="margin-top:10px;padding:8px;background:rgba(255,255,255,0.06);border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
           <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;display:flex;align-items:center;gap:4px">
@@ -225,6 +228,44 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
     const style = document.createElement('style');
     style.textContent = '@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}';
     document.head.appendChild(style);
+  })();
+
+  // Realtime WhatsApp Connection Indicator Dot
+  (function() {
+    const dot = document.getElementById('waSidebarStatusDot');
+    if (!dot) return;
+    async function updateWaStatus() {
+      try {
+        const res = await fetch('/admin/api/whatsapp/status', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const conn = String(data.connection || '').toLowerCase();
+        if (conn === 'open' || conn === 'connected') {
+          dot.style.background = '#34D399';
+          dot.style.boxShadow = '0 0 8px rgba(52, 211, 153, 0.7)';
+          dot.title = 'WhatsApp: Terhubung (Connected)';
+        } else if (conn === 'connecting' || conn === 'close') {
+          dot.style.background = '#FBBF24';
+          dot.style.boxShadow = '0 0 8px rgba(251, 191, 36, 0.7)';
+          dot.title = 'WhatsApp: Menghubungkan / Butuh Scan QR';
+        } else {
+          dot.style.background = '#F87171';
+          dot.style.boxShadow = '0 0 8px rgba(248, 113, 113, 0.7)';
+          dot.title = 'WhatsApp: Terputus (Disconnected)';
+        }
+      } catch (e) {
+        dot.style.background = '#F87171';
+        dot.style.boxShadow = '0 0 8px rgba(248, 113, 113, 0.7)';
+        dot.title = 'WhatsApp: Gagal Memeriksa Koneksi';
+      }
+    }
+    updateWaStatus();
+    // Periksa status koneksi WA setiap 30 detik
+    setInterval(updateWaStatus, 30000);
+    // Tambahkan animasi berdenyut untuk dot indikatormu
+    const pulseStyle = document.createElement('style');
+    pulseStyle.textContent = '#waSidebarStatusDot { animation: pulse 2s infinite ease-in-out; }';
+    document.head.appendChild(pulseStyle);
   })();
 </script>
 

@@ -232,6 +232,16 @@ async function loadVoucherPackages() {
   const qs = routerId ? ('?router_id=' + encodeURIComponent(routerId)) : '';
   const tbody = document.getElementById('vp-tbody');
   try {
+    // 2. Efek Kerangka Memuat Data (Skeleton Loading Shimmer)
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="padding:0">
+          <div class="skeleton-shimmer-row"></div>
+          <div class="skeleton-shimmer-row"></div>
+          <div class="skeleton-shimmer-row"></div>
+        </td>
+      </tr>
+    `;
     const res = await fetch('/admin/api/vouchers/packages' + qs);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || I18N.loadFailed);
