@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#173945">
+  <title>Aktivasi Lisensi Diperlukan - ZenRadius</title>
+  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: #173945;
+      background-image:
+        radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+        radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
+        linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      padding: 24px;
+    }
+
+    /* ── Card (Selaras dengan Login & Keymaker) ── */
+    .lock-card {
+      background: #173945;
+      border: 1px solid rgba(190, 239, 255, .28);
+      border-radius: 16px;
+      padding: 38px 32px 28px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 48px rgba(3, 14, 20, .45);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .brand-icon { margin-bottom: 18px; }
+    .brand-icon img { width: 210px; max-width: 80%; height: auto; display: block; margin: 0 auto; }
+
+    .lock-card h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .lock-card h3 i { color: #f59e0b; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.4)); }
+
+    .lock-copy {
+      color: rgba(237, 250, 250, .7);
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 8px auto 20px;
+      max-width: 350px;
+    }
+
+    /* ── Domain Badge ── */
+    .domain-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(45, 212, 191, .08);
+      border: 1px solid rgba(45, 212, 191, .25);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-family: ui-monospace, Consolas, monospace;
+      color: #2dd4bf;
+      font-size: 13px;
+      font-weight: 700;
+      word-break: break-all;
+      margin-bottom: 18px;
+    }
+
+    /* ── Steps List ── */
+    .steps-container {
+      width: 100%;
+      background: rgba(0, 0, 0, .22);
+      border: 1px solid rgba(190, 239, 255, .1);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 22px;
+      text-align: left;
+    }
+    .steps-container ol {
+      padding-left: 20px;
+      color: rgba(237, 250, 250, .75);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .steps-container li { margin-bottom: 8px; }
+    .steps-container li:last-child { margin-bottom: 0; }
+    .steps-container strong { color: #fff; }
+
+    /* ── Alert Match Error ── */
+    .alert-mismatch {
+      width: 100%;
+      background: rgba(239, 68, 68, .08);
+      border: 1px solid rgba(239, 68, 68, .25);
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      margin-bottom: 18px;
+    }
+
+    /* ── Action Buttons ── */
+    .actions-grid {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 18px;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 800; font-family: inherit;
+      cursor: pointer;
+      transition: all .2s ease;
+      text-decoration: none;
+    }
+
+    /* Primary button (settings) */
+    .btn-primary {
+      background: linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%);
+      color: #f4fffd;
+      border: 1px solid rgba(126, 231, 219, .48);
+      box-shadow: 0 8px 20px rgba(10, 41, 50, .24);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%);
+      border-color: rgba(166, 247, 235, .72);
+      color: #fff;
+    }
+
+    /* Secondary button (whatsapp) */
+    .btn-whatsapp {
+      background: rgba(16, 185, 129, .1);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, .25);
+    }
+    .btn-whatsapp:hover {
+      background: rgba(16, 185, 129, .2);
+      border-color: #34d399;
+      color: #fff;
+    }
+
+    /* ── Footer ── */
+    .agent-footer {
+      width: 100%;
+      margin-top: 24px; padding-top: 14px;
+      border-top: 1px solid rgba(124, 221, 218, .15);
+      color: rgba(237, 250, 250, .56);
+      font-size: 11px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="lock-card" role="main">
+    <div class="brand-icon">
+      <img src="/img/logo.png?v=zenradius" alt="ZenRadius" onerror="this.src='/img/icon.png'">
+    </div>
+
+    <h3><i class="bi bi-shield-lock-fill"></i> Aktivasi Lisensi</h3>
+    <p class="lock-copy">Untuk terus menikmati seluruh fungsionalitas dan pemantauan jaringan premium, instansi ZenRadius ini memerlukan lisensi domain aktif.</p>
+
+    <div class="domain-badge">
+      <i class="bi bi-globe"></i> <%= domain %>
+    </div>
+
+    <% if (hasKey) { %>
+      <div class="alert-mismatch">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Kode lisensi yang terpasang di sistem tidak cocok dengan domain ini.</span>
+      </div>
+    <% } %>
+
+    <div class="steps-container">
+      <ol>
+        <li>Hubungi <strong>Developer via WhatsApp</strong> untuk mendaftarkan domain Anda dan mendapatkan kunci lisensi premium seumur hidup.</li>
+        <li>Login sebagai Super Admin, buka menu <strong>Akses Role / Pengaturan → Lisensi</strong>.</li>
+        <li>Tempel kode kunci lisensi tersebut, lalu simpan pengaturan.</li>
+      </ol>
+    </div>
+
+    <div class="actions-grid">
+      <a class="btn btn-primary" href="/admin/settings">
+        <i class="bi bi-gear-fill"></i> Masukkan Lisensi Sekarang
+      </a>
+      <a class="btn btn-whatsapp" href="https://wa.me/6281234567890?text=Halo%20Developer%20ZenRadius,%20saya%20ingin%20meminta%20kunci%20lisensi%20premium%20seumur%20hidup%20untuk%20domain%20<%= encodeURIComponent(domain) %>" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-whatsapp"></i> Hubungi WhatsApp Developer
+      </a>
+    </div>
+
+    <div class="agent-footer">&copy; <%= new Date().getFullYear() %> ZenRadius &middot; Premium Carrier Billing</div>
+  </main>
+
+</body>
+</html>
