@@ -8,8 +8,8 @@ const crypto = require('crypto');
 const { getSetting } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 
-// Secret master. WAJIB sama dengan yang dipakai di generator.html.
-const MASTER_SECRET = String(process.env.ZENRADIUS_LICENSE_SECRET || '').trim();
+// Secret master yang di-hardcode langsung demi kepraktisan & keamanan internal
+const MASTER_SECRET = '@Du4du4220215@';
 
 let cache = { key: null, host: null, valid: false, at: 0 };
 const CACHE_MS = 5000;
