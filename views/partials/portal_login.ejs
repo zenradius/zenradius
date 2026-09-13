@@ -86,17 +86,19 @@
       const _userField = (typeof usernameField !== 'undefined' && usernameField) || 'username';
       const _userType = (typeof usernameType !== 'undefined' && usernameType) || 'text';
       const _links = (typeof links !== 'undefined' && Array.isArray(links)) ? links : [];
+      const _userLabel = (typeof usernameLabel !== 'undefined' && usernameLabel) || 'Username';
+      const _userPlaceholder = (typeof usernamePlaceholder !== 'undefined' && usernamePlaceholder) || 'Username';
     %>
     <form method="POST" action="<%= action %>" id="portal-login-form">
       <div class="mb-3 text-start">
-        <label class="form-label small mb-1" for="<%= idPrefix %>-username"><%= usernameLabel %></label>
-        <input type="<%= _userType %>" id="<%= idPrefix %>-username" name="<%= _userField %>" class="form-control" required autocomplete="username" placeholder="<%= usernamePlaceholder %>" <%= _userType === 'tel' ? 'inputmode="numeric"' : '' %>>
+        <label class="form-label small mb-1" for="<%= idPrefix %>-username"><%= _userLabel %></label>
+        <input type="<%= _userType %>" id="<%= idPrefix %>-username" name="<%= _userField %>" class="form-control" required autocomplete="username" placeholder="<%= _userPlaceholder %>" <%= _userType === 'tel' ? 'inputmode="numeric"' : '' %>>
       </div>
       <div class="mb-4 text-start">
-        <label class="form-label small mb-1" for="<%= idPrefix %>-password">Kata Sandi</label>
+        <label class="form-label small mb-1" for="<%= idPrefix %>-password">Password</label>
         <div class="password-field-wrapper">
-          <input type="password" id="<%= idPrefix %>-password" name="password" class="form-control" required autocomplete="current-password" placeholder="Masukkan kata sandi">
-          <button type="button" class="eye-toggle" data-target="<%= idPrefix %>-password" title="Tampilkan/Sembunyikan kata sandi"><i class="bi bi-eye"></i></button>
+          <input type="password" id="<%= idPrefix %>-password" name="password" class="form-control" required autocomplete="current-password" placeholder="Password">
+          <button type="button" class="eye-toggle" data-target="<%= idPrefix %>-password" title="Tampilkan/Sembunyikan password"><i class="bi bi-eye"></i></button>
         </div>
       </div>
       <button type="submit" class="btn btn-login" id="portal-login-btn"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang</button>
