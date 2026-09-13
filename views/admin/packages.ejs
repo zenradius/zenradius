@@ -140,34 +140,26 @@
             <% packages.forEach(pkg => { %>
                 <tr data-name="<%= String(pkg.name || '').toLowerCase() %>" data-active="<%= pkg.is_active ? 1 : 0 %>">
                   <td>
-                    <div style="display:flex;align-items:center;gap:10px">
-                      <div class="pkg-ico <%= pkg.is_active ? '' : 'off' %>"><i class="bi bi-wifi"></i></div>
-                      <div>
-                        <strong><%= pkg.name %></strong>
-                        <% if (pkg.description) { %><div class="hint" style="font-size:11.5px;color:var(--muted)"><%= pkg.description %></div><% } %>
-                      </div>
-                    </div>
+                    <strong><%= pkg.name %></strong>
+                    <% if (pkg.description) { %><div class="hint" style="font-size:11.5px;color:var(--muted)"><%= pkg.description %></div><% } %>
                   </td>
                   <td>
-                    <span class="speed-chip"><i class="bi bi-arrow-down-short"></i><%= (pkg.speed_down/1000) %></span>
-                    <span class="speed-chip up"><i class="bi bi-arrow-up-short"></i><%= (pkg.speed_up/1000) %></span>
-                    <span style="font-size:11px;color:var(--muted);margin-left:2px">Mbps</span>
+                    <%= (pkg.speed_down/1000) %> / <%= (pkg.speed_up/1000) %> Mbps
                     <% if (pkg.speed_down_upto || pkg.speed_up_upto) { %>
-                      <div class="hint" style="font-size:11px;color:var(--muted);margin-top:3px"><%= t('admin.packages.upto', 'up to') %> <%= (pkg.speed_down_upto/1000) %>/<%= (pkg.speed_up_upto/1000) %> Mbps</div>
+                      <div class="hint" style="font-size:11px;color:var(--muted);margin-top:3px"><%= t('admin.packages.upto', 'up to') %> <%= (pkg.speed_down_upto/1000) %> / <%= (pkg.speed_up_upto/1000) %> Mbps</div>
                     <% } %>
                   </td>
                   <td>
                     <div class="price-main">Rp <%= Number(pkg.price).toLocaleString('id-ID') %></div>
                     <% if (pkg.promo_price) { %>
-                      <span class="badge bs" style="margin-top:4px;font-size:10px"><i class="bi bi-stars"></i> <%= t('admin.packages.promo', 'Promo') %> Rp <%= Number(pkg.promo_price).toLocaleString('id-ID') %> · <%= pkg.promo_cycles %>x</span>
+                      <div class="hint" style="font-size:11px;color:#22c55e;margin-top:3px"><%= t('admin.packages.promo', 'Promo') %>: Rp <%= Number(pkg.promo_price).toLocaleString('id-ID') %> (<%= pkg.promo_cycles %>x)</div>
                     <% } %>
                   </td>
-                  <td><span class="badge <%= pkg.billing_type === 'prepaid' ? 'bw' : 'bp' %>"><i class="bi <%= pkg.billing_type === 'prepaid' ? 'bi-lightning-charge-fill' : 'bi-calendar-check-fill' %>" style="font-size:9px"></i> <%= pkg.billing_type === 'prepaid' ? t('admin.packages.prepaid', 'Prabayar') : t('admin.packages.postpaid', 'Pascabayar') %></span></td>
-                  <td><span style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px"><i class="bi bi-hdd-network" style="color:var(--primary)"></i><%= pkg.router_name || t('admin.packages.all_routers_short', 'Semua Router') %></span></td>
-                  <td><span class="badge <%= Number(pkg.customer_count) > 0 ? 'bs' : 'bm' %>"><i class="bi bi-people-fill" style="font-size:9px"></i> <%= pkg.customer_count || 0 %></span></td>
+                  <td><span class="badge <%= pkg.billing_type === 'prepaid' ? 'bw' : 'bp' %>"><%= pkg.billing_type === 'prepaid' ? t('admin.packages.prepaid', 'Prabayar') : t('admin.packages.postpaid', 'Pascabayar') %></span></td>
+                  <td><%= pkg.router_name || t('admin.packages.all_routers_short', 'Semua Router') %></td>
+                  <td><span class="badge bs"><%= pkg.customer_count || 0 %></span></td>
                   <td>
                     <span class="badge <%= pkg.is_active ? 'bs' : 'bd' %>">
-                      <i class="bi <%= pkg.is_active ? 'bi-check-circle-fill' : 'bi-x-circle-fill' %>" style="font-size:9px"></i>
                       <%= pkg.is_active ? t('common.active', 'Aktif') : t('common.inactive', 'Nonaktif') %>
                     </span>
                   </td>

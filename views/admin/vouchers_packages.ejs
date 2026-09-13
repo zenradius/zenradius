@@ -244,18 +244,13 @@ async function loadVoucherPackages() {
     }
     tbody.innerHTML = rows.map(r => `
       <tr data-name="${escapeHtml(String(r.profile_name || '').toLowerCase())} ${escapeHtml(String(r.prefix || '').toLowerCase())}" data-active="${r.is_active ? 1 : 0}">
-        <td>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="vp-ico ${r.is_active ? '' : 'off'}"><i class="bi bi-ticket-perforated"></i></div>
-            <strong>${escapeHtml(r.profile_name)}</strong>
-          </div>
-        </td>
-        <td><span style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px"><i class="bi bi-hdd-network" style="color:var(--primary)"></i>${escapeHtml(r.router_name || I18N.allRoutersShort)}</span></td>
+        <td><strong>${escapeHtml(r.profile_name)}</strong></td>
+        <td>${escapeHtml(r.router_name || I18N.allRoutersShort)}</td>
         <td><div class="price-main">Rp ${Number(r.price).toLocaleString('id-ID')}</div></td>
-        <td><span class="badge bp"><i class="bi bi-clock-fill" style="font-size:9px"></i> ${escapeHtml(r.validity)}</span></td>
-        <td>${r.prefix ? '<span class="code-preview">' + escapeHtml(r.prefix) + '</span>' : '<span class="text-muted">-</span>'}</td>
-        <td><span class="code-preview">${escapeHtml(r.prefix || '')}${'•'.repeat(Math.max(0, Math.min(16, Number(r.code_length) || 0)))}</span> <span style="font-size:11px;color:var(--muted)">${r.code_length}</span></td>
-        <td><span class="badge ${r.is_active ? 'bs' : 'bd'}"><i class="bi ${r.is_active ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}" style="font-size:9px"></i> ${r.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
+        <td>${escapeHtml(r.validity)}</td>
+        <td>${escapeHtml(r.prefix || '-')}</td>
+        <td>${r.code_length} digits</td>
+        <td><span class="badge ${r.is_active ? 'bs' : 'bd'}">${r.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
         <td>
           <div class="d-flex gap-2">
             <button class="btn btn-g btn-icon btn-sm" onclick='editVp(${JSON.stringify(r).replace(/'/g, "&#39;")})'><i class="bi bi-pencil"></i></button>
