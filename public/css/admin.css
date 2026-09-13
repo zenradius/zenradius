@@ -155,8 +155,8 @@ body{font-family:'Inter',sans-serif;
 .dtbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
 .dtbl th{background:var(--bg3);padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1}
 .dtbl td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:middle;line-height:1.45;transition:background .18s}
-.dtbl tbody tr{transition:background .18s,box-shadow .18s}
-.dtbl tbody tr:hover td{background:transparent}
+.dtbl tbody tr{transition:background .15s ease}
+.dtbl tbody tr:hover td{background:rgba(255,255,255,0.015)}
 .dtbl tbody tr:hover td:first-child{box-shadow:none}
 .dtbl tr:last-child td{border-bottom:none}
 .dtbl .num{text-align:right}
