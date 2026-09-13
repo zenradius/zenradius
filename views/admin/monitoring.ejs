@@ -73,27 +73,37 @@
     }
 
     /* Metric Card Customization */
+    /* Selaras dengan .sc (soft neon gradient) di admin.css */
     .metric-card {
-      text-align: center;
+      --sc-c: var(--primary); --sc-dim: var(--pdim);
+      text-align: left;
       padding: 18px;
-      background: linear-gradient(145deg, rgba(25, 42, 53, 0.96), rgba(16, 30, 40, 0.94));
-      border-radius: 14px;
-      border: 1px solid rgba(152, 195, 203, 0.22);
-      box-shadow: 0 14px 30px rgba(3, 14, 20, 0.24);
+      background: linear-gradient(145deg, var(--sc-dim) 0%, var(--bg2) 58%);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      position: relative; overflow: hidden;
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
     }
+    .metric-card::before { content:''; position:absolute; top:-40px; right:-40px; width:130px; height:130px; border-radius:50%; background:radial-gradient(circle, var(--sc-dim) 0%, transparent 70%); pointer-events:none; }
+    .metric-card::after { content:''; position:absolute; left:0; top:18px; bottom:18px; width:3px; border-radius:0 3px 3px 0; background:var(--sc-c); box-shadow:0 0 10px var(--sc-c); opacity:.85; }
+    .metric-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--sc-c) 55%, var(--border)); box-shadow: 0 12px 28px rgba(3,14,20,.35), 0 0 22px var(--sc-dim); }
     .metric-card h3 {
       font-size: 28px;
-      font-weight: 700;
+      font-weight: 800;
       margin: 0;
       color: var(--text);
+      letter-spacing: -.4px;
+      line-height: 1;
     }
     .metric-card p {
       color: var(--muted);
-      margin: 4px 0 8px 0;
-      font-size: 12px;
+      margin: 0 0 8px 0;
+      font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.7px;
     }
+    .metric-card .progress { position: relative; z-index: 1; }
 
     /* Chart Container */
     .chart-container {

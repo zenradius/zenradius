@@ -166,32 +166,36 @@
 
     <!-- Breakdown by Type -->
     <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:16px">
-      <div class="sc" style="border-left:3px solid #3b82f6">
-        <div class="sc-label">👷 Teknisi</div>
+      <div class="sc i">
+        <i class="bi bi-tools sc-icon"></i>
+        <div class="sc-label">Teknisi</div>
         <div class="sc-val"><%= techStats.total || 0 %></div>
         <div class="sc-sub">
           <span style="color:#22c55e"><%= techStats.checked_in || 0 %> aktif</span> • 
           <span style="color:#3b82f6"><%= techStats.checked_out || 0 %> selesai</span>
         </div>
       </div>
-      <div class="sc" style="border-left:3px solid #a855f7">
-        <div class="sc-label">👨‍💼 Admin</div>
+      <div class="sc p">
+        <i class="bi bi-person-badge sc-icon"></i>
+        <div class="sc-label">Admin</div>
         <div class="sc-val"><%= adminStats.total || 0 %></div>
         <div class="sc-sub">
           <span style="color:#22c55e"><%= adminStats.checked_in || 0 %> aktif</span> • 
           <span style="color:#3b82f6"><%= adminStats.checked_out || 0 %> selesai</span>
         </div>
       </div>
-      <div class="sc" style="border-left:3px solid #22c55e">
-        <div class="sc-label">💰 Kasir</div>
+      <div class="sc s">
+        <i class="bi bi-cash-coin sc-icon"></i>
+        <div class="sc-label">Kasir</div>
         <div class="sc-val"><%= cashierStats.total || 0 %></div>
         <div class="sc-sub">
           <span style="color:#22c55e"><%= cashierStats.checked_in || 0 %> aktif</span> • 
           <span style="color:#3b82f6"><%= cashierStats.checked_out || 0 %> selesai</span>
         </div>
       </div>
-      <div class="sc" style="border-left:3px solid #f97316">
-        <div class="sc-label">🚶 Kolektor</div>
+      <div class="sc w">
+        <i class="bi bi-wallet2 sc-icon"></i>
+        <div class="sc-label">Kolektor</div>
         <div class="sc-val"><%= collectorStats.total || 0 %></div>
         <div class="sc-sub">
           <span style="color:#22c55e"><%= collectorStats.checked_in || 0 %> aktif</span> • 
