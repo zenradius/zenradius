@@ -598,6 +598,9 @@ router.use((req, res, next) => {
 
   res.locals.sidebarSections = sidebarMenuSvc.getSidebarSections(req.session);
   res.locals.sidebarBottomNavItems = sidebarMenuSvc.getBottomNavItems(req.session);
+  res.locals.canAccessMenu = (menuKey) => {
+    try { return sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session).allowed; } catch (e) { return true; }
+  };
   res.locals.settings = getSettings();
   res.locals.company = company();
   res.locals.formatDateLocal = formatDateLocal;

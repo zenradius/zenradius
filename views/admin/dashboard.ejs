@@ -184,22 +184,31 @@
           <div class="card">
             <div class="card-hd"><h6><i class="bi bi-lightning-charge"></i> <%= t('admin.dashboard.quick_actions', 'Aksi Cepat') %></h6></div>
             <div class="card-bd quick-actions-grid">
+              <% const can = (k) => (typeof canAccessMenu === 'function' ? canAccessMenu(k) : true); %>
+              <% if (can('customers')) { %>
               <a href="/admin/customers" class="btn btn-g" style="flex-direction:column;gap:4px;padding:14px 10px;text-align:center">
                 <i class="bi bi-person-plus" style="font-size:20px;color:var(--primary)"></i>
                 <span style="font-size:12px"><%= t('admin.dashboard.qa_add_customer', 'Tambah Pelanggan') %></span>
               </a>
+              <% } %>
+              <% if (can('packages')) { %>
               <a href="/admin/packages" class="btn btn-g" style="flex-direction:column;gap:4px;padding:14px 10px;text-align:center">
                 <i class="bi bi-box-seam" style="font-size:20px;color:var(--success)"></i>
                 <span style="font-size:12px"><%= t('admin.dashboard.qa_manage_packages', 'Kelola Paket') %></span>
               </a>
+              <% } %>
+              <% if (can('billing')) { %>
               <a href="/admin/billing" class="btn btn-g" style="flex-direction:column;gap:4px;padding:14px 10px;text-align:center">
                 <i class="bi bi-receipt" style="font-size:20px;color:var(--warning)"></i>
                 <span style="font-size:12px"><%= t('admin.dashboard.qa_create_invoice', 'Buat Tagihan') %></span>
               </a>
+              <% } %>
+              <% if (can('reports')) { %>
               <a href="/admin/reports" class="btn btn-g" style="flex-direction:column;gap:4px;padding:14px 10px;text-align:center">
                 <i class="bi bi-bar-chart-line" style="font-size:20px;color:var(--info)"></i>
                 <span style="font-size:12px"><%= t('admin.dashboard.qa_reports', 'Laporan') %></span>
               </a>
+              <% } %>
               <button class="btn btn-g" onclick="showTab('monitoring')" style="flex-direction:column;gap:4px;padding:14px 10px;text-align:center">
                 <i class="bi bi-router" style="font-size:20px;color:var(--danger)"></i>
                 <span style="font-size:12px"><%= t('admin.dashboard.qa_monitor_onu', 'Monitor ONU') %></span>
