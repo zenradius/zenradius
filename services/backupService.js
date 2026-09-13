@@ -65,6 +65,14 @@ function backupDatabase() {
 
     logger.info(`[Backup] Database backup created: ${backupFileName} (${sizeKB} KB, verified=${verified})`);
 
+    // Kirim backup database ke Telegram jika Telegram bot aktif
+    try {
+      const { sendBackupToTelegram } = require('./telegramBot');
+      sendBackupToTelegram(backupFilePath);
+    } catch (teleErr) {
+      logger.warn(`[Backup] Gagal meneruskan file backup ke bot Telegram: ${teleErr.message}`);
+    }
+
     return {
       success: true,
       fileName: backupFileName,

@@ -510,6 +510,22 @@ function startCronJobs() {
     }
   });
 
+  // Cron schedule: Auto Backup database SQLite harian tepat jam 00:00 tengah malam
+  cron.schedule('0 0 * * *', () => {
+    logger.info('[CRON] Memulai proses backup database SQLite otomatis harian...');
+    try {
+      const backupSvc = require('./backupService');
+      const backupResult = backupSvc.backupDatabase();
+      if (backupResult && backupResult.success) {
+        logger.info(`[CRON] Backup database SQLite otomatis harian BERHASIL: ${backupResult.fileName}`);
+      } else {
+        logger.error(`[CRON] Backup database SQLite otomatis harian GAGAL: ${backupResult?.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      logger.error(`[CRON] Gagal mengeksekusi backup otomatis harian: ${err.message}`);
+    }
+  });
+
   cron.schedule('*/10 * * * *', async () => {
     const enabled = getSetting('usage_tracking_enabled', true);
     if (!enabled) return;

@@ -1,5 +1,6 @@
 const ntba = require('node-telegram-bot-api');
 const TelegramBot = ntba.TelegramBot || ntba;
+const path = require('path');
 const { getSetting, getNowLocal } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 const customerSvc = require('./customerService');
@@ -998,4 +999,37 @@ function initTelegram() {
   });
 }
 
-module.exports = { initTelegram };
+/**
+ * Send backup document directly to configured admin Telegram Chat ID
+ */
+async function sendBackupToTelegram(filePath) {
+  const enabled = getSetting('telegram_enabled', false);
+  const token = getSetting('telegram_bot_token', '');
+  const adminId = getSetting('telegram_admin_id', '');
+
+  if (!enabled || !token || !adminId) return false;
+
+  try {
+    const fileName = path.basename(filePath);
+    const ntb = require('node-telegram-bot-api');
+    const tempBot = bot || new (ntb.TelegramBot || ntb)(token);
+    
+    await tempBot.sendDocument(adminId, filePath, {
+      caption: `💾 *ZenRadius Auto Cloud Backup*\n\n` +
+               `📦 *Berkas:* \`${fileName}\`\n` +
+               `📅 *Waktu:* ${getNowLocal()}\n` +
+               `✅ Backup database berhasil dikirim secara aman ke Telegram cloud.`
+    }, {
+      contentType: 'application/octet-stream',
+      filename: fileName
+    });
+    
+    logger.info(`[Backup] Berhasil mengirimkan file database backup ${fileName} ke Telegram Admin`);
+    return true;
+  } catch (e) {
+    logger.error(`[Backup] Gagal mengirimkan file database backup ke Telegram: ${e.message}`);
+    return false;
+  }
+}
+
+module.exports = { initTelegram, sendBackupToTelegram };
