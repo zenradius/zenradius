@@ -63,11 +63,15 @@
     .password-field-wrapper .form-control.with-eye{padding-right:42px}
     .btn-pwa{background:rgba(45,212,191,.08);border:1px solid rgba(126,231,219,.38);color:#d9fffb;border-radius:9px;font-size:12px;transition:all .25s}
     .btn-pwa:hover{background:rgba(45,212,191,.16);color:#fff}
+    .login-links{width:100%;max-width:320px;display:flex;justify-content:space-between;gap:12px;margin-top:14px;font-size:12px}
+    .login-links a{color:#7dd3fc;font-weight:700;text-decoration:none}
+    .login-links a:hover{text-decoration:underline}
+    .alert-success{background:rgba(74,222,128,.1);color:#86efac;border:1px solid rgba(74,222,128,.22)}
   </style>
 </head>
 <body>
   <div class="login-card text-center">
-    <div class="brand-icon"><img src="/img/logo.png?v=zenradius" alt="ZenRadius" onerror="this.src='/img/icon.png'" style="width:210px;max-width:80%;height:auto;"></div>
+    <div class="brand-icon"><img src="/img/logo.png?v=zenradius" alt="<%= company %>" onerror="this.src='/img/icon.png'" style="width:210px;max-width:80%;height:auto;"></div>
     <h3 class="mb-1 fw-bold"><%= heading %></h3>
     <p class="text-secondary mb-0 small"><%= subtitle %></p>
     <p class="login-copy"><%= copy %></p>
@@ -75,11 +79,19 @@
     <% if (typeof error !== 'undefined' && error) { %>
       <div class="alert alert-danger py-2 small rounded-3"><%= error %></div>
     <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success py-2 small rounded-3"><%= success %></div>
+    <% } %>
 
-    <form method="POST" action="<%= action %>">
+    <%
+      const _userField = (typeof usernameField !== 'undefined' && usernameField) || 'username';
+      const _userType = (typeof usernameType !== 'undefined' && usernameType) || 'text';
+      const _links = (typeof links !== 'undefined' && Array.isArray(links)) ? links : [];
+    %>
+    <form method="POST" action="<%= action %>" id="portal-login-form">
       <div class="mb-3 text-start">
         <label class="form-label small mb-1" for="<%= idPrefix %>-username"><%= usernameLabel %></label>
-        <input type="text" id="<%= idPrefix %>-username" name="username" class="form-control" required autocomplete="username" placeholder="<%= usernamePlaceholder %>">
+        <input type="<%= _userType %>" id="<%= idPrefix %>-username" name="<%= _userField %>" class="form-control" required autocomplete="username" placeholder="<%= usernamePlaceholder %>" <%= _userType === 'tel' ? 'inputmode="numeric"' : '' %>>
       </div>
       <div class="mb-4 text-start">
         <label class="form-label small mb-1" for="<%= idPrefix %>-password">Kata Sandi</label>
@@ -88,8 +100,14 @@
           <button type="button" class="eye-toggle" data-target="<%= idPrefix %>-password" title="Tampilkan/Sembunyikan kata sandi"><i class="bi bi-eye"></i></button>
         </div>
       </div>
-      <button type="submit" class="btn btn-login"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang</button>
+      <button type="submit" class="btn btn-login" id="portal-login-btn"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang</button>
     </form>
+
+    <% if (_links.length) { %>
+      <div class="login-links">
+        <% _links.forEach((l) => { %><a href="<%= l.href %>"><%= l.label %></a><% }) %>
+      </div>
+    <% } %>
 
     <div style="margin-top:16px;margin-bottom:8px;">
       <button type="button" id="btn-install-pwa" class="btn btn-sm btn-pwa d-inline-flex align-items-center gap-2 px-3 py-2 fw-bold" title="Pasang di layar utama HP Anda">
@@ -106,6 +124,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    document.getElementById('portal-login-form')?.addEventListener('submit', () => {
+      const b = document.getElementById('portal-login-btn');
+      if (b) { b.disabled = true; b.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Memproses...'; }
+    });
+    <% if (typeof swScope !== 'undefined' && swScope) { %>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '<%= swScope %>' }).catch(() => {});
+    <% } %>
     document.querySelectorAll('.eye-toggle').forEach((button) => {
       const input = document.getElementById(button.getAttribute('data-target'));
       if (input) input.classList.add('with-eye');
