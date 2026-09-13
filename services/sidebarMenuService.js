@@ -40,7 +40,7 @@ const MENU_DEFINITIONS = [
   { key: 'cashiers_reports', section: 'finance', href: '/admin/cashiers/reports', icon: 'bi bi-journal-text', labelKey: 'admin.nav.cashiers_reports', labelDefault: 'Laporan Kasir', roles: ['admin', 'cashier'], activePages: ['cashiers_reports'] },
   { key: 'payroll', section: 'finance', href: '/admin/payroll', icon: 'bi bi-wallet2', labelKey: 'admin.nav.payroll', labelDefault: 'Gaji & Payroll', roles: ['admin'], activePages: ['payroll'] },
 
-  { key: 'attendance', section: 'user_management', href: '/admin/attendance', icon: 'bi bi-calendar-check', labelKey: 'admin.nav.attendance', labelDefault: 'Absensi Karyawan', roles: ['admin', 'cashier'], activePages: ['attendance'] },
+  { key: 'user_management', section: 'user_management', href: '/admin/users', icon: 'bi bi-person-lines-fill', labelKey: 'admin.nav.user_management', labelDefault: 'Akses Role', roles: ['admin'], activePages: ['user_management'] },
 
   { key: 'cash_in', section: 'finance', href: '/admin/finance/cash-in', icon: 'bi bi-cash-stack', labelKey: 'admin.nav.cash_in', labelDefault: 'Kas Masuk', roles: ['admin', 'cashier'], activePages: ['cash_in'] },
   { key: 'expenses', section: 'finance', href: '/admin/finance/expenses', icon: 'bi bi-wallet2', labelKey: 'admin.nav.expenses', labelDefault: 'Pengeluaran', roles: ['admin', 'cashier'], activePages: ['expenses'] },
@@ -53,7 +53,7 @@ const MENU_DEFINITIONS = [
   { key: 'collectors', section: 'user_management', href: '/admin/collectors', icon: 'bi bi-person-badge', labelKey: 'admin.nav.collectors', labelDefault: 'Kolektor', roles: ['admin'], activePages: ['collectors'] },
   { key: 'agents', section: 'user_management', href: '/admin/agents', icon: 'bi bi-person-badge', labelKey: 'admin.nav.agents', labelDefault: 'Reseller', roles: ['admin', 'cashier'], activePages: ['agents'] },
   { key: 'agents_reports', section: 'user_management', href: '/admin/agents/reports', icon: 'bi bi-journal-text', labelKey: 'admin.nav.agent_reports', labelDefault: 'Laporan Reseller', roles: ['admin'], activePages: ['agents_reports'] },
-  { key: 'user_management', section: 'user_management', href: '/admin/users', icon: 'bi bi-person-lines-fill', labelKey: 'admin.nav.user_management', labelDefault: 'Akses Role', roles: ['admin'], activePages: ['user_management'] },
+  { key: 'attendance', section: 'user_management', href: '/admin/attendance', icon: 'bi bi-calendar-check', labelKey: 'admin.nav.attendance', labelDefault: 'Absensi Karyawan', roles: ['admin', 'cashier'], activePages: ['attendance'] },
 
   { key: 'payment_gateway', section: 'system', href: '/admin/payment-gateway', icon: 'bi bi-credit-card-2-front', labelKey: 'admin.nav.payment_gateway', labelDefault: 'Payment Gateway', roles: ['admin'], activePages: ['payment_gateway'] },
   { key: 'ewallet_logs', section: 'system', href: '/admin/ewallet-logs', icon: 'bi bi-wallet2', labelKey: 'admin.settings.ewallet_logs.title', labelDefault: 'Notifikasi E-Wallet', roles: ['admin'], activePages: ['ewallet_logs'] },
