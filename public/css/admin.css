@@ -167,16 +167,39 @@ body{font-family:'Inter',sans-serif;
   .dtbl td:last-child {
     position: sticky;
     right: 0;
-    background: var(--bg2) !important;
-    box-shadow: -8px 0 12px rgba(0,0,0,0.3);
-    border-left: 1px solid var(--border);
+    background: #112d3a !important; /* solid contrast agar tidak transparan */
+    box-shadow: -6px 0 10px rgba(0,0,0,0.4);
+    border-left: 1px solid rgba(190, 239, 255, 0.15);
+    padding: 8px 6px !important;
   }
   .dtbl th:last-child {
     position: sticky;
     right: 0;
     background: var(--bg3) !important;
-    border-left: 1px solid var(--border);
+    border-left: 1px solid rgba(190, 239, 255, 0.15);
     z-index: 3;
+    padding: 8px 6px !important;
+  }
+  /* Merapikan susunan tombol agar sebaris rapi di mobile */
+  .dtbl td:last-child .d-flex {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 4px !important;
+  }
+  .dtbl td:last-child .btn-sm {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+  }
+  .dtbl td:last-child form {
+    margin: 0 !important;
+    display: inline-flex !important;
   }
 }
 .dtbl tr:last-child td{border-bottom:none}
