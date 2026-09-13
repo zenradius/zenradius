@@ -170,14 +170,21 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  const brandName = String(getSetting('company_header', '') || '').trim() || 'ISP Anda';
+  const brandName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
   const footerPoweredBy = String(getSetting('footer_info', '') || '').trim();
-  const footerInfo = footerPoweredBy || `${brandName} - All Rights Reserved`;
+  const poweredBy = 'Powered by <a href="https://zenradius.net" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">ZenRadius</a>';
+
+  let footerInfo;
+  if (footerPoweredBy) {
+    footerInfo = footerPoweredBy.includes('Powered by') ? footerPoweredBy : `${footerPoweredBy} | ${poweredBy}`;
+  } else {
+    footerInfo = `${brandName} - All Rights Reserved | ${poweredBy}`;
+  }
 
   res.locals.brandName = brandName;
   res.locals.footerInfo = footerInfo;
   res.locals.footerPoweredBy = footerPoweredBy;
-  res.locals.footerDefault = `${brandName} - All Rights Reserved`;
+  res.locals.footerDefault = 'ZenRadius - All Rights Reserved';
   next();
 });
 
