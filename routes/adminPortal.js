@@ -1132,6 +1132,7 @@ router.get('/users', requireAuth, requireRole('admin', { redirectTo: '/admin' })
   const statusFilter = String(req.query.status || '').trim().toLowerCase();
 
   let users = userMgmtSvc.listUnifiedUsers();
+  const allUsersForStats = users;
 
   if (q) {
     users = users.filter(u =>
@@ -1149,6 +1150,7 @@ router.get('/users', requireAuth, requireRole('admin', { redirectTo: '/admin' })
     company: company(),
     activePage: 'user_management',
     users,
+    allUsersForStats,
     q,
     roleFilter,
     statusFilter,

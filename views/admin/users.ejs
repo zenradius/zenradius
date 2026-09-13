@@ -47,6 +47,43 @@
       <div class="alert alert-<%= msg.type==='error'?'d':'s' %>"><%= msg.text %></div>
     <% } %>
 
+    <%
+      const allUsers = (typeof allUsersForStats !== 'undefined' && allUsersForStats) ? allUsersForStats : (users || []);
+      const cnt = (fn) => allUsers.filter(fn).length;
+      const statTotal = allUsers.length;
+      const statActive = cnt(u => u.active);
+      const statCashier = cnt(u => u.source === 'cashiers' && u.active);
+      const statField = cnt(u => (u.source === 'technicians' || u.source === 'collectors') && u.active);
+      const statReseller = cnt(u => u.source === 'agents' && u.active);
+      const statCustom = cnt(u => u.customPermissions);
+    %>
+    <div class="stat-grid">
+      <div class="sc p">
+        <i class="bi bi-people-fill sc-icon"></i>
+        <div class="sc-label"><%= t('admin.users.stats.total', 'Total Pengguna') %></div>
+        <div class="sc-val"><%= statTotal %></div>
+        <div class="sc-sub"><%= statActive %> <%= t('common.active', 'Aktif').toLowerCase() %> · <%= statTotal - statActive %> <%= t('common.inactive', 'Nonaktif').toLowerCase() %></div>
+      </div>
+      <div class="sc s">
+        <i class="bi bi-cash-coin sc-icon"></i>
+        <div class="sc-label"><%= t('admin.users.stats.cashiers', 'Kasir Aktif') %></div>
+        <div class="sc-val"><%= statCashier %></div>
+        <div class="sc-sub"><%= t('admin.users.stats.cashiers_sub', 'Akses panel admin terbatas') %></div>
+      </div>
+      <div class="sc w">
+        <i class="bi bi-tools sc-icon"></i>
+        <div class="sc-label"><%= t('admin.users.stats.field', 'Tim Lapangan') %></div>
+        <div class="sc-val"><%= statField %></div>
+        <div class="sc-sub"><%= t('admin.users.stats.field_sub', 'Teknisi & Kolektor aktif') %> · <%= statReseller %> reseller</div>
+      </div>
+      <div class="sc i">
+        <i class="bi bi-sliders sc-icon"></i>
+        <div class="sc-label"><%= t('admin.users.stats.custom', 'Akses Kustom') %></div>
+        <div class="sc-val"><%= statCustom %></div>
+        <div class="sc-sub"><%= t('admin.users.stats.custom_sub', 'Pengguna dengan hak akses khusus') %></div>
+      </div>
+    </div>
+
     <div class="card" style="margin-bottom:16px">
       <div class="card-bd" style="padding:14px">
         <form method="GET" action="/admin/users" class="d-flex gap-2 flex-wrap" style="align-items:center">

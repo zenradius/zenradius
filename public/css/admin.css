@@ -150,12 +150,16 @@ body{font-family:'Inter',sans-serif;
 
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto}
-.dtbl{width:100%;border-collapse:collapse;font-size:13px}
-.dtbl th{background:var(--bg3);padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
-.dtbl td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
-.dtbl tr:hover td{background:rgba(255,255,255,.02)}
+.dtbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.dtbl th{background:var(--bg3);padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1}
+.dtbl td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:middle;line-height:1.45;transition:background .18s}
+.dtbl tbody tr{transition:background .18s,box-shadow .18s}
+.dtbl tbody tr:hover td{background:linear-gradient(90deg,var(--pdim) 0%,rgba(255,255,255,.025) 40%)}
+.dtbl tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--primary)}
 .dtbl tr:last-child td{border-bottom:none}
 .dtbl .num{text-align:right}
+.dtbl code{background:var(--bg3);padding:2px 7px;border-radius:6px;font-size:12px;color:var(--primary)}
+.dtbl .text-muted{color:var(--muted)!important}
 
 /* ── BADGES ── */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
@@ -180,8 +184,16 @@ body{font-family:'Inter',sans-serif;
 .btn-w{background:var(--btn-bg);color:var(--btn-color);border:1px solid var(--btn-border)}
 .btn-w:hover{background:var(--btn-bg-hover)!important;border-color:var(--btn-border-hover)!important;color:var(--btn-color-hover)!important}
 .btn-g{background:var(--btn-g-bg);color:var(--text);border:1px solid var(--btn-g-border)}
+.btn-g:hover{border-color:color-mix(in srgb,var(--primary) 45%,var(--btn-g-border));background:var(--pdim);color:var(--primary)}
 .btn-sm{padding:5px 10px;font-size:12px}
 .btn-icon{padding:6px 8px;border-radius:7px}
+
+/* ── FILTER BAR (form pencarian di atas tabel) ── */
+.card form.d-flex .fc,.card form.d-flex .fs,.filter-bar .fc,.filter-bar .fs{background:rgba(27,70,86,.55);backdrop-filter:blur(6px);border-color:rgba(190,239,255,.18);border-radius:10px;height:38px;padding:8px 13px}
+.card form.d-flex .fc:hover,.card form.d-flex .fs:hover,.filter-bar .fc:hover,.filter-bar .fs:hover{border-color:color-mix(in srgb,var(--primary) 40%,var(--border))}
+.card form.d-flex .btn,.filter-bar .btn{height:38px;padding:0 16px;border-radius:10px}
+.card form.d-flex .btn[type=submit].btn-g,.filter-bar .btn[type=submit].btn-g{background:var(--btn-bg);color:var(--btn-color);border-color:var(--btn-border);box-shadow:var(--btn-shadow)}
+.card form.d-flex .btn[type=submit].btn-g:hover,.filter-bar .btn[type=submit].btn-g:hover{background:var(--btn-bg-hover)!important;border-color:var(--btn-border-hover)!important;color:var(--btn-color-hover)!important}
 
 /* ── FORMS ── */
 .fg{margin-bottom:14px}
