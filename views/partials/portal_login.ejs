@@ -82,23 +82,23 @@
         <input type="text" id="<%= idPrefix %>-username" name="username" class="form-control" required autocomplete="username" placeholder="<%= usernamePlaceholder %>">
       </div>
       <div class="mb-4 text-start">
-        <label class="form-label small mb-1" for="<%= idPrefix %>-password">Password</label>
+        <label class="form-label small mb-1" for="<%= idPrefix %>-password">Kata Sandi</label>
         <div class="password-field-wrapper">
-          <input type="password" id="<%= idPrefix %>-password" name="password" class="form-control" required autocomplete="current-password" placeholder="Masukkan password">
-          <button type="button" class="eye-toggle" data-target="<%= idPrefix %>-password" title="Tampilkan/Sembunyikan password"><i class="bi bi-eye"></i></button>
+          <input type="password" id="<%= idPrefix %>-password" name="password" class="form-control" required autocomplete="current-password" placeholder="Masukkan kata sandi">
+          <button type="button" class="eye-toggle" data-target="<%= idPrefix %>-password" title="Tampilkan/Sembunyikan kata sandi"><i class="bi bi-eye"></i></button>
         </div>
       </div>
-      <button type="submit" class="btn btn-login"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk</button>
+      <button type="submit" class="btn btn-login"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang</button>
     </form>
 
     <div style="margin-top:16px;margin-bottom:8px;">
-      <button type="button" id="btn-install-pwa" class="btn btn-sm btn-pwa d-inline-flex align-items-center gap-2 px-3 py-2 fw-bold">
-        <i class="bi bi-download"></i> <%= appLabel %>
+      <button type="button" id="btn-install-pwa" class="btn btn-sm btn-pwa d-inline-flex align-items-center gap-2 px-3 py-2 fw-bold" title="Pasang di layar utama HP Anda">
+        <i class="bi bi-download"></i> Pasang <%= appLabel %>
       </button>
     </div>
 
     <% if (typeof backLink !== 'undefined' && backLink) { %>
-      <a href="<%= backLink %>" class="back-link"><i class="bi bi-arrow-left"></i> Kembali ke Halaman</a>
+      <a href="<%= backLink %>" class="back-link"><i class="bi bi-arrow-left"></i> Kembali ke Beranda</a>
     <% } %>
 
     <div class="agent-footer">&copy; <%= new Date().getFullYear() %> <%- footerInfo %></div>
