@@ -1142,7 +1142,7 @@ router.get('/users', requireAuth, requireRole('admin', { redirectTo: '/admin' })
   if (statusFilter === 'inactive') users = users.filter(u => !u.active);
 
   res.render('admin/users', {
-    title: 'Manajemen Pengguna',
+    title: 'Akses Role',
     company: company(),
     activePage: 'user_management',
     users,

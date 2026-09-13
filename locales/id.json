@@ -728,7 +728,7 @@
       }
     },
     "users": {
-      "title": "Manajemen Pengguna",
+      "title": "Akses Role",
       "list": "Daftar Pengguna",
       "search": "Cari",
       "search_placeholder": "Cari nama, username, atau HP...",
@@ -1036,7 +1036,7 @@
       "cashiers": "Kasir",
       "agents": "Reseller",
       "agent_reports": "Laporan Reseller",
-      "user_management": "Manajemen Pengguna",
+      "user_management": "Akses Role",
       "update": "Update GitHub",
       "settings": "Pengaturan"
     },

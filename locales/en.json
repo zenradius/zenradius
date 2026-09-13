@@ -728,7 +728,7 @@
       }
     },
     "users": {
-      "title": "User Management",
+      "title": "Role Access",
       "list": "User List",
       "search": "Search",
       "search_placeholder": "Search name, username, or phone...",
@@ -1036,7 +1036,7 @@
       "cashiers": "Cashiers",
       "agents": "Agents",
       "agent_reports": "Reseller Reports",
-      "user_management": "User Management",
+      "user_management": "Role Access",
       "update": "GitHub Update",
       "settings": "Settings"
     },
