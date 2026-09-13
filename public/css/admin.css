@@ -209,6 +209,31 @@ body{font-family:'Inter',sans-serif;
 .fc::placeholder{color:var(--muted)}
 .fs option{background:#0e2835;color:var(--text);font-weight:600;padding:8px}
 textarea.fc{resize:vertical;min-height:75px}
+
+/* ── ZEN SELECT (custom dropdown, gaya .lang-menu) ── */
+.zs{position:relative;display:inline-flex;flex-direction:column;width:100%;min-width:0;vertical-align:middle}
+.zs .zs-native{position:absolute!important;opacity:0;pointer-events:none;width:1px;height:1px;margin:0;padding:0;border:0;inset:auto 0 0 auto}
+.zs-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px 9px 13px;color:var(--text);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;transition:border-color .22s ease,box-shadow .22s ease,background .22s ease;min-height:38px}
+.card form.d-flex .zs-btn,.filter-bar .zs-btn,.srow .zs-btn{background:rgba(27,70,86,.55);backdrop-filter:blur(6px);border-color:rgba(190,239,255,.18);height:38px}
+.zs-btn:hover{border-color:color-mix(in srgb,var(--primary) 40%,var(--border));background:rgba(255,255,255,.04)}
+.zs.open .zs-btn,.zs-btn:focus-visible{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--pdim),0 0 10px rgba(34,211,238,.18)}
+.zs-btn:disabled{opacity:.55;cursor:not-allowed}
+.zs-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zs-label.placeholder{color:var(--muted);font-weight:500}
+.zs-chev{font-size:11px;color:var(--primary);transition:transform .22s ease;flex-shrink:0}
+.zs.open .zs-chev{transform:rotate(180deg)}
+.zs-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:160px;max-height:280px;overflow-y:auto;background:linear-gradient(145deg,rgba(23,57,69,.96) 0%,rgba(13,38,47,.98) 100%);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(190,239,255,.22);border-radius:12px;box-shadow:0 12px 30px rgba(3,14,20,.48),0 0 20px rgba(34,211,238,.1);padding:5px;z-index:300;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s ease,transform .2s ease;scrollbar-width:thin;scrollbar-color:var(--primary) transparent}
+.zs.up .zs-menu{top:auto;bottom:calc(100% + 8px);transform:translateY(8px)}
+.zs.open .zs-menu{opacity:1;transform:translateY(0);pointer-events:auto}
+.zs-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:8px;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s ease;white-space:nowrap;overflow:hidden}
+.zs-item-text{overflow:hidden;text-overflow:ellipsis}
+.zs-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.zs-item.active{background:var(--pdim);color:var(--primary);font-weight:700;box-shadow:inset 3px 0 0 var(--primary)}
+.zs-item.disabled{opacity:.4;cursor:not-allowed}
+.zs-check{font-size:13px;opacity:0;transition:opacity .15s}
+.zs-item.active .zs-check{opacity:1}
+.mbody .zs-menu{max-height:220px}
+@media(max-width:576px){.filter-bar .zs,.srow .zs{width:100%!important;max-width:none!important}}
 .form-row, .form-row2, .form-row3 {display:grid;gap:14px}
 .form-row{grid-template-columns:1fr 1fr}
 .form-row2{grid-template-columns:1fr 1fr}
