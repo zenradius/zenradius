@@ -3676,6 +3676,7 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
     paymentWebhookUrl,
     currentHost: licenseCheck.host,
     licenseValid: licenseCheck.valid,
+    licenseInfo: domainLicense.licenseInfo,
     canManageSidebar: Boolean(req.session?.isAdmin),
     menuConfigs: sidebarMenuSvc.getConfigMenus()
   });

@@ -1,0 +1,41 @@
+/**
+ * Informasi komersial lisensi domain ZenRadius.
+ * Satu sumber kebenaran untuk harga, kontak Developer, dan teks order,
+ * agar tidak perlu mengubah di banyak tempat (settings, halaman kunci, banner).
+ */
+const LICENSE_PRICE = 150000;
+const LICENSE_PRICE_LABEL = 'Rp 150.000';
+const LICENSE_WA_NUMBER = '6285178008881'; // format internasional tanpa +
+const LICENSE_WA_DISPLAY = '+62 851-7800-8881';
+
+/** Masa tenggang (hari) sebelum akses dikunci penuh saat lisensi tidak valid. */
+const LICENSE_GRACE_DAYS = 7;
+
+function buildOrderMessage(domain) {
+  return [
+    'Halo Developer ZenRadius,',
+    '',
+    'Saya ingin memesan Lisensi Premium Seumur Hidup (Lifetime) ZenRadius untuk domain berikut:',
+    '',
+    `🌐 DOMAIN: ${domain || '-'}`,
+    `💰 HARGA: ${LICENSE_PRICE_LABEL} (1 domain, seumur hidup)`,
+    '',
+    'Mohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.',
+    '',
+    'Terima kasih atas dedikasinya mengembangkan ZenRadius.'
+  ].join('\n');
+}
+
+function buildOrderUrl(domain) {
+  return `https://wa.me/${LICENSE_WA_NUMBER}?text=${encodeURIComponent(buildOrderMessage(domain))}`;
+}
+
+module.exports = {
+  LICENSE_PRICE,
+  LICENSE_PRICE_LABEL,
+  LICENSE_WA_NUMBER,
+  LICENSE_WA_DISPLAY,
+  LICENSE_GRACE_DAYS,
+  buildOrderMessage,
+  buildOrderUrl
+};

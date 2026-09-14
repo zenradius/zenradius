@@ -1,3 +1,4 @@
+<% const licInfo = (typeof licenseInfo !== 'undefined' && licenseInfo) ? licenseInfo : { LICENSE_PRICE_LABEL: 'Rp 150.000', LICENSE_WA_NUMBER: '6285178008881' }; %>
 <!DOCTYPE html>
 <html lang="<%= lang || 'id' %>">
 <head>
@@ -182,7 +183,7 @@
 
         <!-- Lisensi Domain (Seumur Hidup) -->
         <% const licActive = (typeof licenseValid !== 'undefined') && licenseValid; %>
-        <div class="card mb16" <% if (licActive) { %>style="border-color:rgba(52,211,153,.4)"<% } %>>
+        <div class="card mb16" id="license" <% if (licActive) { %>style="border-color:rgba(52,211,153,.4)"<% } %>>
           <div class="card-hd" style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
             <h6><i class="bi bi-shield-lock"></i> Lisensi Domain (Seumur Hidup)</h6>
             <% if (licActive) { %>
@@ -1070,7 +1071,7 @@ modalDiv.innerHTML = `
       <div class="lic-price">
         <div>
           <div class="lic-price-label">Lisensi Resmi &bull; 1 Domain</div>
-          <div class="lic-price-value">Rp 150.000 <span>/ seumur hidup</span></div>
+          <div class="lic-price-value"><%= licInfo.LICENSE_PRICE_LABEL %> <span>/ seumur hidup</span></div>
           <div class="lic-price-note">Sekali bayar &bull; Pembaruan berkelanjutan &bull; Tanpa biaya tersembunyi</div>
         </div>
         <span class="lic-price-badge"><i class="bi bi-infinity"></i> Lifetime</span>
@@ -1130,9 +1131,9 @@ window.submitLicenseActivationOrder = function() {
   const domain = input.value.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
   
   // Teks pesanan eksklusif yang sangat profesional
-  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Seumur Hidup (Lifetime) ZenRadius untuk domain berikut:\n\n🌐 DOMAIN: ${domain}\n💰 HARGA: Rp 150.000 (1 domain, seumur hidup)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
+  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Seumur Hidup (Lifetime) ZenRadius untuk domain berikut:\n\n🌐 DOMAIN: ${domain}\n💰 HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 domain, seumur hidup)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
   
-  const waUrl = `https://wa.me/6285178008881?text=${encodeURIComponent(message)}`;
+  const waUrl = `https://wa.me/<%= licInfo.LICENSE_WA_NUMBER %>?text=${encodeURIComponent(message)}`;
   window.open(waUrl, '_blank');
   closeLicenseActivationModal();
 };
