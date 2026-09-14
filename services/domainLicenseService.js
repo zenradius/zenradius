@@ -2,7 +2,7 @@
  * Domain License Service
  * Verifikasi lisensi seumur hidup berbasis domain (HMAC-SHA256).
  * Kunci dihasilkan oleh generator di https://licensi.zenradius.net
- * dengan Master Secret yang sama dengan ZENRADIUS_LICENSE_SECRET.
+ * dengan Master Secret yang sama dengan MASTER_SECRET di bawah.
  */
 const crypto = require('crypto');
 const { getSetting, saveSettings } = require('../config/settingsManager');
