@@ -12,3 +12,8 @@ npm-debug.log*
 Thumbs.db
 
 data/
+
+# Developer tooling (separate repos: zenradius/license, zenradius/license-api)
+licensi/
+license/
+license-api/
