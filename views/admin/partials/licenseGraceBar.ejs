@@ -9,13 +9,13 @@
       <span class="dom"><i class="bi bi-globe2"></i><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></span>
     </div>
     <div class="bd">
-      ZenRadius dikembangkan dan dirawat oleh Developer independen dengan dedikasi penuh. Lisensi resmi Anda menjaga pembaruan, keamanan, dan dukungan teknis tetap berjalan &mdash; sekali bayar <strong style="color:var(--text)"><%= __licPrice %></strong>, berlaku selamanya untuk 1 domain.
+      ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen dengan dedikasi penuh. Lisensi resmi Anda menjaga pembaruan, keamanan, dan bantuan teknis tetap berjalan &mdash; sekali bayar <strong style="color:#edf7f5"><%= __licPrice %></strong>, berlaku selamanya untuk 1 domain.
       <div class="cnt"><b><%= __licDays %></b><span>hari tersisa sebelum akses dibatasi</span></div>
     </div>
     <div class="ft">
-      <a class="a1" href="/admin/settings#license"><i class="bi bi-key-fill"></i> Masukkan Kunci Lisensi</a>
+      <a class="a1" href="/admin/settings#license" onclick="licToInput(event)"><i class="bi bi-key-fill"></i> Aktivasi Lisensi</a>
       <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
-      <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order Lisensi via WhatsApp</a>
+      <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener" id="licOrderBtn"><i class="bi bi-cart-plus"></i> Order Lisensi</a>
       <% } %>
       <button type="button" class="a3" onclick="licModalClose()">Lanjutkan tanpa aktivasi</button>
     </div>
@@ -27,6 +27,15 @@
   var m = document.getElementById('licModal');
   if (!m) return;
   window.licModalClose = function(){ m.classList.remove('show'); try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){} };
+  window.licToInput = function(e){
+    e.preventDefault();
+    licModalClose();
+    window.location.href = '/admin/settings#license';
+    setTimeout(function(){
+      var input = document.getElementsByName('domain_license_key')[0];
+      if(input){ input.focus(); input.select(); }
+    }, 150);
+  };
   function show(){ m.classList.add('show'); try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){} }
   var last = 0; try{ last = parseInt(localStorage.getItem(KEY) || '0', 10) || 0; }catch(e){}
   var wait = Math.max(0, INTERVAL - (Date.now() - last));
