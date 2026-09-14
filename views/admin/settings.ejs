@@ -951,46 +951,76 @@ style.textContent = `
   .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
   tr:hover { background-color: rgba(0,0,0,0.02) !important; }
   
-  /* ── License Purchase Modal (selaras admin.css) ── */
+  /* ── License Purchase Modal (mobile-first, selaras admin.css) ── */
   .lic-modal {
     display: none; position: fixed; inset: 0; z-index: 1000;
     background: rgba(10, 30, 38, 0.72); backdrop-filter: blur(6px);
-    padding: 16px; align-items: center; justify-content: center;
+    padding: 0; align-items: flex-end; justify-content: center;
   }
   .lic-dialog {
-    width: min(100%, 480px); background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 12px; box-shadow: 0 20px 50px rgba(3, 14, 20, 0.5); overflow: hidden;
-    animation: licFadeIn .22s ease forwards;
+    width: 100%; max-height: calc(100dvh - 24px); display: flex; flex-direction: column;
+    background: var(--bg2); border: 1px solid var(--border); border-bottom: 0;
+    border-radius: 18px 18px 0 0; box-shadow: 0 -12px 40px rgba(3, 14, 20, 0.5); overflow: hidden;
+    animation: licSlideUp .26s cubic-bezier(.2,.8,.2,1) forwards;
   }
+  @keyframes licSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes licFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .lic-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .lic-grip { width: 40px; height: 4px; border-radius: 99px; background: rgba(190,239,255,.28); margin: 10px auto 0; flex-shrink: 0; }
+  .lic-head { padding: 10px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
   .lic-head h6 { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; margin: 0; color: var(--text); }
   .lic-head h6 i { color: var(--primary); }
-  .lic-close { background: transparent; border: 0; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 2px 4px; border-radius: 6px; }
-  .lic-close:hover { color: var(--text); background: var(--btn-g-bg); }
-  .lic-brand { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 18px 6px; text-align: center; }
-  .lic-brand img { width: min(180px, 70%); max-height: 54px; object-fit: contain; display: block; }
-  .lic-brand small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; font-weight: 500; }
-  .lic-body { padding: 18px; text-align: left; }
-  .lic-desc { font-size: 13px; color: var(--muted); line-height: 1.65; margin: 0 0 14px; }
+  .lic-close { background: transparent; border: 0; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; margin-right: -6px; }
+  .lic-close:hover, .lic-close:active { color: var(--text); background: var(--btn-g-bg); }
+  .lic-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; flex: 1 1 auto; min-height: 0; }
+  .lic-brand { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 16px 4px; text-align: center; }
+  .lic-brand img { width: min(150px, 60%); max-height: 46px; object-fit: contain; display: block; }
+  .lic-brand small { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; font-weight: 500; }
+  .lic-body { padding: 14px 16px 16px; text-align: left; }
+  .lic-desc { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin: 0 0 12px; }
   .lic-price {
     background: linear-gradient(145deg, var(--pdim) 0%, var(--bg3) 70%); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;
   }
-  .lic-price-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
-  .lic-price-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .lic-price-label { font-size: 10.5px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
+  .lic-price-value { font-size: 21px; font-weight: 700; color: var(--text); line-height: 1.1; }
   .lic-price-value span { font-size: 12px; font-weight: 500; color: var(--muted); }
-  .lic-price-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
-  .lic-price-badge { flex-shrink: 0; background: var(--sdim); color: var(--success); border: 1px solid rgba(52,211,153,.35); border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .lic-price-note { font-size: 10.5px; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+  .lic-price-badge { align-self: flex-start; background: var(--sdim); color: var(--success); border: 1px solid rgba(52,211,153,.35); border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
   .lic-note {
     background: var(--pdim); border: 1px solid rgba(34,211,238,.28); border-radius: 8px;
-    padding: 11px 14px; margin-bottom: 14px; color: var(--text); font-size: 12.5px; line-height: 1.55; display: flex; gap: 8px; align-items: flex-start;
+    padding: 10px 12px; margin-bottom: 12px; color: var(--text); font-size: 12px; line-height: 1.55; display: flex; gap: 8px; align-items: flex-start;
   }
-  .lic-note i { color: var(--primary); font-size: 14px; margin-top: 1px; }
+  .lic-note i { color: var(--primary); font-size: 14px; margin-top: 1px; flex-shrink: 0; }
   .lic-wrap { position: relative; }
   .lic-wrap > i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 14px; pointer-events: none; }
-  .lic-wrap .fc { padding-left: 34px; font-family: monospace; }
-  .lic-actions { display: flex; gap: 8px; justify-content: flex-end; padding: 14px 18px; border-top: 1px solid var(--border); background: rgba(27,70,86,.35); }
+  .lic-wrap .fc { padding-left: 34px; font-family: monospace; font-size: 16px; min-height: 44px; }
+  .lic-actions {
+    display: flex; flex-direction: column-reverse; gap: 8px; padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: rgba(27,70,86,.35); flex-shrink: 0;
+  }
+  .lic-actions .btn { width: 100%; justify-content: center; min-height: 44px; }
+
+  /* ≥640px: dialog terpusat ala desktop */
+  @media (min-width: 640px) {
+    .lic-modal { padding: 16px; align-items: center; }
+    .lic-dialog {
+      width: min(100%, 480px); max-height: calc(100vh - 32px); border-bottom: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 20px 50px rgba(3, 14, 20, 0.5); animation: licFadeIn .22s ease forwards;
+    }
+    .lic-grip { display: none; }
+    .lic-head { padding: 14px 18px; }
+    .lic-brand { padding: 22px 18px 6px; gap: 8px; }
+    .lic-brand img { width: min(180px, 70%); max-height: 54px; }
+    .lic-body { padding: 18px; }
+    .lic-desc { font-size: 13px; margin-bottom: 14px; }
+    .lic-price { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-bottom: 14px; }
+    .lic-price-value { font-size: 22px; }
+    .lic-price-badge { align-self: center; flex-shrink: 0; }
+    .lic-note { padding: 11px 14px; margin-bottom: 14px; font-size: 12.5px; }
+    .lic-wrap .fc { font-size: 13px; min-height: 0; }
+    .lic-actions { flex-direction: row; justify-content: flex-end; padding: 14px 18px; }
+    .lic-actions .btn { width: auto; min-height: 0; }
+  }
 `;
 document.head.appendChild(style);
 
@@ -1000,10 +1030,12 @@ modalDiv.id = 'licenseActivationModal';
 modalDiv.className = 'lic-modal';
 modalDiv.innerHTML = `
   <div class="lic-dialog" role="dialog" aria-modal="true" aria-labelledby="licModalTitle">
+    <div class="lic-grip"></div>
     <div class="lic-head">
       <h6 id="licModalTitle"><i class="bi bi-shield-lock"></i> Aktivasi Lisensi Domain</h6>
       <button type="button" class="lic-close" onclick="closeLicenseActivationModal()" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
     </div>
+    <div class="lic-scroll">
     <div class="lic-brand">
       <img src="/img/logo.png?v=zenradius" alt="ZenRadius" onerror="this.style.display='none'">
       <small>Lisensi Resmi Seumur Hidup</small>
@@ -1029,9 +1061,10 @@ modalDiv.innerHTML = `
         <label class="fl" for="lic_domain_input">Domain yang Didaftarkan</label>
         <div class="lic-wrap">
           <i class="bi bi-globe2"></i>
-          <input type="text" id="lic_domain_input" class="fc" placeholder="domainanda.com" autocomplete="off" spellcheck="false">
+          <input type="text" id="lic_domain_input" class="fc" placeholder="domainanda.com" autocomplete="off" autocapitalize="none" inputmode="url" spellcheck="false">
         </div>
       </div>
+    </div>
     </div>
     <div class="lic-actions">
       <button type="button" class="btn btn-g" onclick="closeLicenseActivationModal()">Batal</button>
@@ -1048,11 +1081,12 @@ window.openLicenseActivationModal = function() {
   const input = document.getElementById('lic_domain_input');
   if (modal) {
     modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
     if (input) {
       // Ambil domain saat ini di browser sebagai rujukan default
       const currentLoc = window.location.hostname;
       input.value = currentLoc === 'localhost' || currentLoc === '127.0.0.1' ? '' : currentLoc;
-      input.focus();
+      if (window.matchMedia('(min-width: 640px)').matches) input.focus();
     }
   }
 };
@@ -1060,6 +1094,7 @@ window.openLicenseActivationModal = function() {
 window.closeLicenseActivationModal = function() {
   const modal = document.getElementById('licenseActivationModal');
   if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
 };
 
 window.submitLicenseActivationOrder = function() {
