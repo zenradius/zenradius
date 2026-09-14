@@ -178,24 +178,16 @@
       const eyeBtn = document.createElement('button');
       eyeBtn.type = 'button';
       eyeBtn.className = 'password-eye-btn';
+      eyeBtn.setAttribute('aria-label', 'Tampilkan password');
+      eyeBtn.setAttribute('title', 'Tampilkan password');
       eyeBtn.style.cssText = `
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: rgba(168, 190, 194, 0.7);
-        cursor: pointer;
-        z-index: 10;
-        padding: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        transition: color 0.15s ease;
+        position:absolute;right:8px;top:50%;transform:translateY(-50%);
+        width:34px;height:34px;background:transparent;border:1px solid transparent;
+        border-radius:8px;color:rgba(168,190,194,.78);cursor:pointer;z-index:10;
+        padding:0;display:flex;align-items:center;justify-content:center;font-size:15px;
+        transition:color .15s ease,background .15s ease,border-color .15s ease;
       `;
-      eyeBtn.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
+      eyeBtn.innerHTML = '<i class="bi bi-eye-slash-fill" aria-hidden="true"></i>';
 
       // Sembunyikan padding agar input tidak tertutup ikon mata
       const currentPadding = getComputedStyle(pwdInput).paddingRight;
@@ -203,16 +195,18 @@
         pwdInput.style.paddingRight = '38px';
       }
 
+      eyeBtn.addEventListener('mouseenter', function(){ eyeBtn.style.color='var(--primary)'; eyeBtn.style.background='var(--pdim)'; });
+      eyeBtn.addEventListener('mouseleave', function(){ if(pwdInput.type==='password'){ eyeBtn.style.color='rgba(168,190,194,.78)'; eyeBtn.style.background='transparent'; } });
       eyeBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        if (pwdInput.type === 'password') {
-          pwdInput.type = 'text';
-          eyeBtn.innerHTML = '<i class="bi bi-eye-fill" style="color:var(--primary)"></i>';
-        } else {
-          pwdInput.type = 'password';
-          eyeBtn.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
-        }
+        const visible = pwdInput.type === 'password';
+        pwdInput.type = visible ? 'text' : 'password';
+        eyeBtn.innerHTML = visible ? '<i class="bi bi-eye-fill" aria-hidden="true"></i>' : '<i class="bi bi-eye-slash-fill" aria-hidden="true"></i>';
+        eyeBtn.setAttribute('aria-label', visible ? 'Sembunyikan password' : 'Tampilkan password');
+        eyeBtn.setAttribute('title', visible ? 'Sembunyikan password' : 'Tampilkan password');
+        eyeBtn.style.color = visible ? 'var(--primary)' : 'rgba(168,190,194,.78)';
+        eyeBtn.style.background = visible ? 'var(--pdim)' : 'transparent';
       });
 
       parent.appendChild(eyeBtn);

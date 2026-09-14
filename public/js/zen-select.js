@@ -72,16 +72,20 @@
       document.querySelectorAll('.zs.open').forEach((z) => z !== wrap && z.classList.remove('open'));
       wrap.classList.add('open');
       btn.setAttribute('aria-expanded', 'true');
-      // posisi: buka ke atas jika ruang bawah kurang
+      // Buka ke atas bila ruang bawah kurang; batasi tinggi sesuai viewport.
       const r = btn.getBoundingClientRect();
       const spaceBelow = window.innerHeight - r.bottom;
-      wrap.classList.toggle('up', spaceBelow < 260 && r.top > spaceBelow);
+      const spaceAbove = r.top;
+      const openUp = spaceBelow < 260 && spaceAbove > spaceBelow;
+      wrap.classList.toggle('up', openUp);
+      menu.style.maxHeight = `${Math.max(140, Math.min(280, (openUp ? spaceAbove : spaceBelow) - 16))}px`;
       const act = menu.querySelector('.zs-item.active');
       if (act) act.scrollIntoView({ block: 'nearest' });
     }
     function close() {
       wrap.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
+      menu.style.maxHeight = '';
     }
 
     btn.addEventListener('click', (e) => {
