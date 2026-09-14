@@ -1,20 +1,26 @@
-<% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace) { %>
-<div class="lic-grace-bar" role="alert">
-  <div class="ic"><i class="bi bi-shield-exclamation"></i></div>
-  <div class="txt">
-    <div class="ttl">
-      <span>Lisensi belum aktif</span>
-      <span class="dom"><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></span>
+<% const __licOnSettings = (typeof activePage !== 'undefined' && activePage === 'settings'); %>
+<% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace && !__licOnSettings) { %>
+<div class="lic-modal" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
+  <div class="lic-card">
+    <div class="hd">
+      <div class="ic"><i class="bi bi-shield-exclamation"></i></div>
+      <h3 id="licTitle">Lisensi Belum Aktif</h3>
+      <span class="dom"><i class="bi bi-globe2"></i><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></span>
     </div>
-    <div class="sub">
-      Akses penuh akan dikunci dalam <span class="days"><i class="bi bi-hourglass-split"></i><%= licenseGrace.daysLeft %> hari</span> — aktifkan sekarang agar layanan tidak terganggu.
+    <div class="bd">
+      Sistem berjalan dalam masa tenggang. Aktifkan lisensi sekarang agar seluruh fitur tetap dapat digunakan tanpa gangguan.
+      <div class="cnt"><b><%= licenseGrace.daysLeft %></b><span>hari tersisa sebelum akses dikunci</span></div>
     </div>
-  </div>
-  <div class="acts">
-    <a class="a1" href="/admin/settings#license"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi</a>
-    <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
-    <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order Lisensi</a>
-    <% } %>
+    <div class="ft">
+      <a class="a1" href="/admin/settings#license"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi Sekarang</a>
+      <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
+      <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order Lisensi via WhatsApp</a>
+      <% } %>
+      <button type="button" class="a3" onclick="document.getElementById('licModal').classList.add('hide')">Nanti saja, lanjutkan ke halaman</button>
+    </div>
   </div>
 </div>
+<script>
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ var m=document.getElementById('licModal'); if(m) m.classList.add('hide'); } });
+</script>
 <% } %>

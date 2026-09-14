@@ -7,21 +7,27 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
 </script>
 <% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace) { %>
 <style>
-  .lic-grace-bar{position:relative;overflow:hidden;margin:14px 16px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px 14px 18px;border-radius:14px;background:linear-gradient(135deg,rgba(251,191,36,.16) 0%,rgba(249,115,22,.10) 60%,rgba(15,23,42,0) 100%),var(--bg2,#0f172a);border:1px solid rgba(251,191,36,.35);box-shadow:0 8px 28px -12px rgba(251,191,36,.35);color:#e2e8f0;font-size:13px;line-height:1.55}
-  .lic-grace-bar::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#fbbf24,#f97316)}
-  .lic-grace-bar .ic{width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);color:#fbbf24;font-size:20px;animation:licPulse 2.4s ease-in-out infinite}
-  @keyframes licPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.45)}50%{box-shadow:0 0 0 8px rgba(251,191,36,0)}}
-  .lic-grace-bar .txt{flex:1 1 260px;min-width:0}
-  .lic-grace-bar .ttl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:800;font-size:14px;color:#fff;margin-bottom:3px}
-  .lic-grace-bar .dom{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fde68a}
-  .lic-grace-bar .sub{color:#cbd5e1;font-size:12.5px}
-  .lic-grace-bar .days{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;background:rgba(249,115,22,.18);border:1px solid rgba(249,115,22,.45);color:#fdba74;font-weight:800;font-size:12px;white-space:nowrap}
-  .lic-grace-bar .acts{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
-  .lic-grace-bar .acts a{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;font-size:12.5px;font-weight:700;text-decoration:none;white-space:nowrap;transition:transform .15s,filter .15s}
-  .lic-grace-bar .acts a:hover{transform:translateY(-1px);filter:brightness(1.1)}
-  .lic-grace-bar .a1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e1b0a;border:1px solid rgba(251,191,36,.7);box-shadow:0 6px 16px -6px rgba(251,191,36,.6)}
-  .lic-grace-bar .a2{background:rgba(52,211,153,.12);color:#6ee7b7;border:1px solid rgba(52,211,153,.4)}
-  @media (max-width:640px){.lic-grace-bar{margin:10px 10px 0;padding:12px}.lic-grace-bar .acts{margin-left:0;width:100%}.lic-grace-bar .acts a{flex:1;justify-content:center}}
+  .lic-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:licFade .25s ease}
+  .lic-modal.hide{display:none}
+  @keyframes licFade{from{opacity:0}to{opacity:1}}
+  @keyframes licUp{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+  .lic-card{position:relative;width:100%;max-width:440px;border-radius:20px;overflow:hidden;background:var(--bg2,#0f172a);border:1px solid rgba(251,191,36,.35);box-shadow:0 30px 80px -20px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04) inset;color:#e2e8f0;animation:licUp .3s cubic-bezier(.2,.8,.2,1)}
+  .lic-card .hd{padding:28px 24px 18px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,rgba(251,191,36,.22),rgba(15,23,42,0) 70%)}
+  .lic-card .ic{width:64px;height:64px;margin:0 auto 14px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(251,191,36,.25),rgba(249,115,22,.15));border:1px solid rgba(251,191,36,.5);color:#fbbf24;font-size:30px;animation:licPulse 2.4s ease-in-out infinite}
+  @keyframes licPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.45)}50%{box-shadow:0 0 0 12px rgba(251,191,36,0)}}
+  .lic-card h3{margin:0 0 6px;font-size:19px;font-weight:800;color:#fff;letter-spacing:-.01em}
+  .lic-card .dom{display:inline-flex;align-items:center;gap:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fde68a}
+  .lic-card .bd{padding:0 24px 8px;text-align:center;color:#cbd5e1;font-size:13.5px;line-height:1.6}
+  .lic-card .cnt{margin:14px auto 0;display:flex;align-items:baseline;justify-content:center;gap:6px;padding:12px 18px;border-radius:14px;background:rgba(249,115,22,.10);border:1px solid rgba(249,115,22,.35);width:fit-content}
+  .lic-card .cnt b{font-size:34px;line-height:1;font-weight:900;color:#fdba74;letter-spacing:-.02em}
+  .lic-card .cnt span{font-size:12.5px;color:#fed7aa;font-weight:600}
+  .lic-card .ft{padding:18px 24px 22px;display:flex;flex-direction:column;gap:9px}
+  .lic-card .ft a,.lic-card .ft button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;font-size:13.5px;font-weight:700;text-decoration:none;cursor:pointer;border:1px solid transparent;transition:transform .15s,filter .15s;font-family:inherit}
+  .lic-card .ft a:hover,.lic-card .ft button:hover{transform:translateY(-1px);filter:brightness(1.08)}
+  .lic-card .a1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e1b0a;box-shadow:0 10px 24px -8px rgba(251,191,36,.6)}
+  .lic-card .a2{background:rgba(52,211,153,.12);color:#6ee7b7;border-color:rgba(52,211,153,.4)}
+  .lic-card .a3{background:transparent;color:#94a3b8;font-weight:600;font-size:12.5px;padding:8px}
+  .lic-card .a3:hover{color:#e2e8f0}
 </style>
 <% } %>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
