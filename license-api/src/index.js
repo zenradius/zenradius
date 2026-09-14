@@ -10,8 +10,8 @@
  *   GET  /health
  *
  * Secrets (wrangler secret put):
- *   ADMIN_TOKEN     token dashboard KeyGen
- *   MASTER_SECRET   sama dengan MASTER_SECRET di domainLicenseService.js
+ *   MASTER_SECRET   sama dengan MASTER_SECRET di domainLicenseService.js.
+ *                   Dipakai untuk (1) verifikasi HMAC serial, (2) autentikasi admin dashboard (Bearer).
  * Vars:
  *   ALLOWED_ORIGIN  origin KeyGen (CORS), mis. https://license.zenradius.net
  */
@@ -56,7 +56,8 @@ function corsHeaders(env, req) {
 function isAdmin(env, req) {
   const auth = req.headers.get('authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-  return Boolean(env.ADMIN_TOKEN) && token.length > 0 && timingSafeEqual(token, env.ADMIN_TOKEN);
+  const secret = env.MASTER_SECRET || '';
+  return secret.length > 0 && token.length > 0 && timingSafeEqual(token, secret);
 }
 
 function timingSafeEqual(a, b) {
@@ -127,8 +128,10 @@ export default {
         return json({ ok: true, valid: Boolean(valid) }, 200, cors);
       }
 
-      // ── Semua di bawah ini butuh Admin token ──
+      // ── Semua di bawah ini butuh Master Secret (Bearer) ──
       if (!isAdmin(env, req)) return json({ error: 'unauthorized' }, 401, cors);
+
+      if (path === '/api/auth' && req.method === 'GET') return json({ ok: true }, 200, cors);
 
       if (path === '/api/issue' && req.method === 'POST') {
         const body = await readJson(req);
