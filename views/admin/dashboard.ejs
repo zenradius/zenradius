@@ -785,7 +785,7 @@ async function showDetail(tag) {
       <div style="padding:14px 16px;border-radius:12px;margin-bottom:16px;font-weight:700;border:1px solid var(--border);background:${isOn ? 'rgba(16,185,129,.10)' : 'rgba(239,68,68,.10)'};color:${isOn ? 'var(--success)' : 'var(--danger)'}">
         <i class="bi bi-circle-fill" style="font-size:10px"></i>
         ${isOn ? I18N.online : I18N.offline}
-        <span style="color:var(--muted);font-weight:600">â€” ${I18N.lastInform}: ${lastInformText} | ${I18N.lastSync}: ${lastSyncText} | Queue: ${syncStateText}</span>
+        <span style="color:var(--muted);font-weight:600">— ${I18N.lastInform}: ${lastInformText} | ${I18N.lastSync}: ${lastSyncText} | Queue: ${syncStateText}</span>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">

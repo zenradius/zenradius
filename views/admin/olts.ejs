@@ -225,7 +225,7 @@
             <% if (olts.length === 0) { %>
               <option value=""><%= t('admin.olts.no_data', 'Tidak ada data OLT') %></option>
             <% } else { %>
-              <option value="all">ðŸŒ Semua OLT (Ringkasan Total)</option>
+              <option value="all">🌐 Semua OLT (Ringkasan Total)</option>
               <% olts.forEach(olt => { %>
                 <option value="<%= olt.id %>" <%= olt.is_active ? '' : 'disabled' %>><%= olt.name %> (<%= olt.host %>)</option>
               <% }) %>
@@ -611,7 +611,7 @@
         <div id="wan_goapi_extra" style="display:none">
           <div class="form-row">
             <div class="fg"><label class="fl">CVLAN (opsional)</label><input type="number" id="wan_cvlan" class="fc" min="1" max="4094" placeholder="Default = VLAN"></div>
-            <div class="fg"><label class="fl">Priority (0â€“7)</label><input type="number" id="wan_priority" class="fc" min="0" max="7" value="0"></div>
+            <div class="fg"><label class="fl">Priority (0–7)</label><input type="number" id="wan_priority" class="fc" min="0" max="7" value="0"></div>
           </div>
           <div class="fg">
             <label class="fl">VLAN mode</label>

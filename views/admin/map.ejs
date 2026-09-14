@@ -342,13 +342,13 @@
   // Layers
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: 'Â© OpenStreetMap'
+    attribution: '© OpenStreetMap'
   });
 
   const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-    attribution: 'Â© Google Satellite'
+    attribution: '© Google Satellite'
   });
 
   osm.addTo(map);

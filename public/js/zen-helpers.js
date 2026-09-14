@@ -166,15 +166,15 @@
       if (pwdInput.dataset.hasToggle) return;
       pwdInput.dataset.hasToggle = '1';
 
-      // Buat container wrapper relatif
-      const parent = pwdInput.parentElement;
-      if (!parent) return;
+      // Bungkus input secara langsung agar posisi ikon selalu mengikuti field,
+      // bukan mengikuti tinggi seluruh form/group.
+      const field = document.createElement('div');
+      field.className = 'password-field';
+      field.style.cssText = 'position:relative;display:block;width:100%;min-width:0;';
+      pwdInput.parentNode.insertBefore(field, pwdInput);
+      field.appendChild(pwdInput);
 
-      if (getComputedStyle(parent).position === 'static') {
-        parent.style.position = 'relative';
-      }
-
-      // Buat icon mata
+      // Buat icon mata di dalam wrapper field
       const eyeBtn = document.createElement('button');
       eyeBtn.type = 'button';
       eyeBtn.className = 'password-eye-btn';
@@ -209,7 +209,7 @@
         eyeBtn.style.background = visible ? 'var(--pdim)' : 'transparent';
       });
 
-      parent.appendChild(eyeBtn);
+      field.appendChild(eyeBtn);
     });
   }
 

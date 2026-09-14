@@ -590,7 +590,7 @@
       const lngStr = Number(lng).toFixed(8);
       document.getElementById('reg_lat').value = latStr;
       document.getElementById('reg_lng').value = lngStr;
-      document.getElementById('coordText').innerText = `Lat: ${latStr} � Lng: ${lngStr}`;
+      document.getElementById('coordText').innerText = `Lat: ${latStr} • Lng: ${lngStr}`;
     }
 
     function openPicker() {
@@ -682,7 +682,7 @@
                 <div class="gps-accuracy">
                   <div class="accuracy-label">Akurasi</div>
                   <div class="accuracy-value ${data.accuracyClass}">
-                    �${data.accuracy.toFixed(0)}m
+                    ±${data.accuracy.toFixed(0)}m
                   </div>
                   <div class="accuracy-status">${data.accuracyText}</div>
                 </div>

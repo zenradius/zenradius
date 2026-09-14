@@ -91,8 +91,8 @@
                     <div style="font-size:11px;color:var(--muted)"><%= r.customer_phone || '' %></div>
                   </td>
                   <td style="font-size:12px">
-                    <div>Invoice <code>#<%= r.invoice_id %></code> â€¢ <span class="badge bm"><%= r.period_month %>/<%= r.period_year %></span></div>
-                    <div style="font-size:11px;color:var(--muted)"><%= r.invoice_status %> â€¢ Rp <%= Number(r.invoice_amount||0).toLocaleString('id-ID') %></div>
+                    <div>Invoice <code>#<%= r.invoice_id %></code> • <span class="badge bm"><%= r.period_month %>/<%= r.period_year %></span></div>
+                    <div style="font-size:11px;color:var(--muted)"><%= r.invoice_status %> • Rp <%= Number(r.invoice_amount||0).toLocaleString('id-ID') %></div>
                     <% if (r.customer_address) { %><div style="font-size:11px;color:var(--muted)"><%= r.customer_address %></div><% } %>
                     <% if (r.lat && r.lng) { %><div><a target="_blank" href="https://www.google.com/maps?q=<%= encodeURIComponent(r.lat + ',' + r.lng) %>">Map</a></div><% } %>
                   </td>

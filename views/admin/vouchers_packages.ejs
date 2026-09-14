@@ -40,7 +40,7 @@
         <i class="bi bi-ticket-perforated-fill sc-icon"></i>
         <div class="sc-label"><%= t('admin.voucher_packages.stats.total', 'Total Paket Voucher') %></div>
         <div class="sc-val" id="vp-stat-total">-</div>
-        <div class="sc-sub"><span id="vp-stat-active">-</span> <%= t('common.active', 'Aktif').toLowerCase() %> Â· <span id="vp-stat-inactive">-</span> <%= t('common.inactive', 'Nonaktif').toLowerCase() %></div>
+        <div class="sc-sub"><span id="vp-stat-active">-</span> <%= t('common.active', 'Aktif').toLowerCase() %> · <span id="vp-stat-inactive">-</span> <%= t('common.inactive', 'Nonaktif').toLowerCase() %></div>
       </div>
       <div class="sc s">
         <i class="bi bi-cash-coin sc-icon"></i>
@@ -288,7 +288,7 @@ function renderVpStats(rows) {
   set('vp-stat-routers', new Set(rows.map(r => r.router_id || r.router_name || 'all')).size);
   const vals = [...new Set(rows.map(r => String(r.validity || '').trim()).filter(Boolean))];
   set('vp-stat-validity', vals.length);
-  if (vals.length) set('vp-stat-validity-sub', vals.slice(0, 5).join(' Â· ') + (vals.length > 5 ? ' â€¦' : ''));
+  if (vals.length) set('vp-stat-validity-sub', vals.slice(0, 5).join(' · ') + (vals.length > 5 ? ' …' : ''));
 }
 
 function filterVpTable() {

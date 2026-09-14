@@ -266,6 +266,9 @@ body{font-family:'Inter',sans-serif;
 .fg{margin-bottom:14px}
 .fl{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
 .fc,.fs{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 13px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .22s ease,box-shadow .22s ease;appearance:none;-webkit-appearance:none;-moz-appearance:none}
+.password-field{position:relative;display:block;width:100%;min-width:0}
+.password-field>.fc{display:block;width:100%;padding-right:44px}
+.password-eye-btn:focus-visible{outline:2px solid var(--primary);outline-offset:1px;background:var(--pdim)!important;color:var(--primary)!important}
 .fs{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2322D3EE' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px;padding-right:34px;cursor:pointer}
 .fc:focus,.fs:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--pdim),0 0 10px rgba(34,211,238,0.18)}
 .fc::placeholder{color:var(--muted)}

@@ -1070,7 +1070,7 @@ async function testConn(id) {
   try {
     const res = await fetch('/admin/api/routers/' + id + '/test');
     const data = await res.json();
-    alert(data.success ? 'âœ… ' + data.message : 'âŒ ' + data.error);
+    alert(data.success ? '✅ ' + data.message : '❌ ' + data.error);
     loadRouterLiveSummary({ id });
   } catch (e) { alert(I18N.systemError); }
 }
@@ -1122,7 +1122,7 @@ async function openIsolirScriptModal(routerId = null) {
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Gagal');
     ta.value = data.script || '';
-    meta.textContent = (data.appUrl ? ('app_url: ' + data.appUrl + ' | ') : '') + 'IP Server: ' + (data.billingIp || '-') + ' | NAT â†’ HTTP:' + (data.httpNatPort ?? '-') + ' HTTPS:' + (data.httpsNatPort ?? '-');
+    meta.textContent = (data.appUrl ? ('app_url: ' + data.appUrl + ' | ') : '') + 'IP Server: ' + (data.billingIp || '-') + ' | NAT → HTTP:' + (data.httpNatPort ?? '-') + ' HTTPS:' + (data.httpsNatPort ?? '-');
   } catch (e) {
     ta.value = '';
     meta.textContent = e.message || 'Error';

@@ -421,12 +421,12 @@ router.post('/sell-voucher', requireAgentSession, requireMenuAccess('agent_vouch
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
         if (whatsappStatus.connection === 'open') {
           const msg =
-            `ðŸŽ« *VOUCHER HOTSPOT*\n\n` +
-            `ðŸ“¦ *Paket:* ${result.receipt.profile}\n` +
-            `${result.receipt.validity ? `â±ï¸ *Masa Aktif:* ${result.receipt.validity}\n` : ''}` +
-            `ðŸ‘¤ *User:* ${result.receipt.code}\n` +
-            `ðŸ”‘ *Pass:* ${result.receipt.password}\n` +
-            `ðŸ’° *Harga:* Rp ${Number(result.receipt.sell_price || 0).toLocaleString('id-ID')}\n\n` +
+            `🎫 *VOUCHER HOTSPOT*\n\n` +
+            `📦 *Paket:* ${result.receipt.profile}\n` +
+            `${result.receipt.validity ? `⏱️ *Masa Aktif:* ${result.receipt.validity}\n` : ''}` +
+            `👤 *User:* ${result.receipt.code}\n` +
+            `🔑 *Pass:* ${result.receipt.password}\n` +
+            `💰 *Harga:* Rp ${Number(result.receipt.sell_price || 0).toLocaleString('id-ID')}\n\n` +
             `Simpan voucher ini.`;
           await sendWA(buyerPhone, msg);
           waSent = true;
@@ -476,13 +476,13 @@ router.post('/pulsa', requireAgentSession, requireMenuAccess('agent_pulsa'), exp
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
         if (whatsappStatus.connection === 'open') {
           const msg =
-            `${isSuccess ? 'âœ…' : isFailed ? 'âŒ' : 'â³'} *TRANSAKSI PULSA*\n\n` +
-            `ðŸ“¦ *SKU:* ${sku}\n` +
-            `ðŸŽ¯ *Target:* ${target}\n` +
-            `ðŸ§¾ *Ref ID:* ${result?.tx?.digi_ref_id || '-'}\n` +
-            `ðŸ“¡ *Status:* ${status.toUpperCase()}\n` +
-            `${result?.tx?.digi_sn ? `ðŸ”¢ *SN:* ${result.tx.digi_sn}\n` : ''}` +
-            `${result?.tx?.digi_message ? `ðŸ’¬ *Pesan:* ${result.tx.digi_message}\n` : ''}` +
+            `${isSuccess ? '✅' : isFailed ? '❌' : '⏳'} *TRANSAKSI PULSA*\n\n` +
+            `📦 *SKU:* ${sku}\n` +
+            `🎯 *Target:* ${target}\n` +
+            `🧾 *Ref ID:* ${result?.tx?.digi_ref_id || '-'}\n` +
+            `📡 *Status:* ${status.toUpperCase()}\n` +
+            `${result?.tx?.digi_sn ? `🔢 *SN:* ${result.tx.digi_sn}\n` : ''}` +
+            `${result?.tx?.digi_message ? `💬 *Pesan:* ${result.tx.digi_message}\n` : ''}` +
             `\nTerima kasih.`;
           await sendWA(buyerPhone, msg);
           waSent = true;
@@ -535,14 +535,14 @@ router.post('/api/pulsa/order', requireAgentSession, requireMenuAccess('agent_pu
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
         if (whatsappStatus.connection === 'open') {
           const msg =
-            `${isSuccess ? 'âœ…' : isFailed ? 'âŒ' : 'â³'} *TRANSAKSI PULSA*\n\n` +
-            `ðŸ“¦ *SKU:* ${sku}\n` +
-            `ðŸŽ¯ *Target:* ${target}\n` +
-            `ðŸ’° *Harga:* Rp ${Number(result?.tx?.amount_sell || 0).toLocaleString('id-ID')}\n` +
-            `ðŸ§¾ *Ref ID:* ${result?.tx?.digi_ref_id || '-'}\n` +
-            `ðŸ“¡ *Status:* ${status.toUpperCase()}\n` +
-            `${result?.tx?.digi_sn ? `ðŸ”¢ *SN:* ${result.tx.digi_sn}\n` : ''}` +
-            `${result?.tx?.digi_message ? `ðŸ’¬ *Pesan:* ${result.tx.digi_message}\n` : ''}` +
+            `${isSuccess ? '✅' : isFailed ? '❌' : '⏳'} *TRANSAKSI PULSA*\n\n` +
+            `📦 *SKU:* ${sku}\n` +
+            `🎯 *Target:* ${target}\n` +
+            `💰 *Harga:* Rp ${Number(result?.tx?.amount_sell || 0).toLocaleString('id-ID')}\n` +
+            `🧾 *Ref ID:* ${result?.tx?.digi_ref_id || '-'}\n` +
+            `📡 *Status:* ${status.toUpperCase()}\n` +
+            `${result?.tx?.digi_sn ? `🔢 *SN:* ${result.tx.digi_sn}\n` : ''}` +
+            `${result?.tx?.digi_message ? `💬 *Pesan:* ${result.tx.digi_message}\n` : ''}` +
             `\nTerima kasih.`;
           await sendWA(buyerPhone, msg);
           waSent = true;

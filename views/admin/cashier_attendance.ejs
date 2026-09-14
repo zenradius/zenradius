@@ -118,9 +118,9 @@
       <div class="card-bd">
         <% if (todayAttendance) { %>
           <% if (todayAttendance.status === 'checked_in') { %>
-            <span class="status-badge status-checked-in">âœ“ Sudah Check-in</span>
+            <span class="status-badge status-checked-in">✓ Sudah Check-in</span>
           <% } else { %>
-            <span class="status-badge status-checked-out">âœ“ Sudah Check-out</span>
+            <span class="status-badge status-checked-out">✓ Sudah Check-out</span>
           <% } %>
 
           <div class="info-row">
@@ -205,7 +205,7 @@
           <% } %>
 
         <% } else { %>
-          <span class="status-badge status-not-checked-in">âœ— Belum Check-in</span>
+          <span class="status-badge status-not-checked-in">✕ Belum Check-in</span>
           <p style="color: var(--muted); margin: 16px 0;">Silakan lakukan check-in untuk memulai hari kerja Anda.</p>
           
           <textarea id="checkinNote" class="note-input" placeholder="Catatan check-in (opsional)"></textarea>
@@ -236,7 +236,7 @@
         <% } %>
 
         <div id="locationInfo" class="location-info" style="display: none;">
-          ðŸ“ Mengambil lokasi GPS...
+          📍 Mengambil lokasi GPS...
         </div>
       </div>
     </div>
@@ -722,7 +722,7 @@
           };
           if (locInfo) {
             locInfo.className = 'location-info';
-            locInfo.innerHTML = `ðŸ“ GPS Aktif: ${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}`;
+            locInfo.innerHTML = `📍 GPS Aktif: ${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}`;
           }
           refreshAllPhotoPreviews();
         },
@@ -734,7 +734,7 @@
           if (locInfo) {
             locInfo.style.background = 'rgba(239, 68, 68, 0.15)';
             locInfo.style.color = '#ef4444';
-            locInfo.innerHTML = `âš ï¸ ${msg}`;
+            locInfo.innerHTML = `⚠️ ${msg}`;
           }
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -743,7 +743,7 @@
       if (locInfo) {
         locInfo.style.background = 'rgba(239, 68, 68, 0.15)';
         locInfo.style.color = '#ef4444';
-        locInfo.innerHTML = 'âš ï¸ Browser Anda tidak mendukung GPS Geolocation.';
+        locInfo.innerHTML = '⚠️ Browser Anda tidak mendukung GPS Geolocation.';
       }
     }
   });

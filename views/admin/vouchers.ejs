@@ -306,12 +306,12 @@
       empty: { header: '', row: '', footer: '' },
       simple: {
         header: `<style>\n@page{size:A4;margin:6mm}\n*{box-sizing:border-box}\nbody{margin:0;font-family:Arial,sans-serif;color:#0f172a}\n.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}\n.card{border:1.5px solid #334155;border-radius:10px;padding:8px 8px 22px;min-height:110px;position:relative;break-inside:avoid}\n.hd{font-weight:800;font-size:11px}\n.code{font-weight:900;font-size:22px;letter-spacing:2px;margin-top:6px;font-family:Consolas,monospace}\n.meta{font-size:10px;color:#334155;margin-top:4px}\n.wa{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);font-size:9.5px;color:#334155;white-space:nowrap}\n</style>\n<div class="grid">`,
-        row: `<div class="card">\n  <div class="hd">%company%</div>\n  <div class="meta">%profile% â€¢ %validityText% â€¢ %currency% %priceText%</div>\n  <div class="code">%username%</div>\n  <div class="meta">%password%</div>\n  <div class="wa">WA: %phone%</div>\n</div>`,
+        row: `<div class="card">\n  <div class="hd">%company%</div>\n  <div class="meta">%profile% • %validityText% • %currency% %priceText%</div>\n  <div class="code">%username%</div>\n  <div class="meta">%password%</div>\n  <div class="wa">WA: %phone%</div>\n</div>`,
         footer: `</div>`
       },
       mks: {
         header: `<style>\n@page{size:A4;margin:6mm}\n*{box-sizing:border-box}\nbody{margin:0;font-family:Arial,sans-serif;color:#0f172a}\n.v-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}\n.vc{border:1px solid #0f172a;border-radius:10px;min-height:110px;padding:8px;position:relative;break-inside:avoid;overflow:hidden}\n.vc:before{content:\"\";position:absolute;inset:0;background:linear-gradient(120deg,rgba(59,130,246,.03),rgba(16,185,129,.025))}\n.vc>*{position:relative}\n.vh{font-weight:900;font-size:11px;letter-spacing:.2px}\n.vp{position:absolute;top:8px;right:8px;font-size:10.5px;font-weight:800;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.35);padding:2px 7px;border-radius:999px}\n.vm{font-size:10px;color:#334155;margin-top:6px}\n.vu{font-weight:950;font-size:18px;letter-spacing:1px;margin-top:8px;font-family:Consolas,monospace}\n.vf{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);font-size:9.5px;color:#334155;white-space:nowrap}\n</style>\n<div class="v-grid">`,
-        row: `<div class="vc">\n  <div class="vh">%company%</div>\n  <div class="vp">%currency% %priceText%</div>\n  <div class="vm">%profile% â€¢ %validityText%</div>\n  <div class="vu">%credential%</div>\n  <div class="vf">WA: %phone%</div>\n</div>`,
+        row: `<div class="vc">\n  <div class="vh">%company%</div>\n  <div class="vp">%currency% %priceText%</div>\n  <div class="vm">%profile% • %validityText%</div>\n  <div class="vu">%credential%</div>\n  <div class="vf">WA: %phone%</div>\n</div>`,
         footer: `</div>`
       }
     };
@@ -396,7 +396,7 @@
     }
     sel.insertAdjacentHTML('beforeend', '<option value="">-- Pilih Profile --</option>');
     for (const x of filtered) {
-      const label = `${x.raw.name} (Rp ${Number(x.meta.price || 0).toLocaleString('id-ID')} â€¢ ${x.meta.validity})`;
+      const label = `${x.raw.name} (Rp ${Number(x.meta.price || 0).toLocaleString('id-ID')} • ${x.meta.validity})`;
       sel.insertAdjacentHTML('beforeend', `<option value="${x.raw.name}">${label}</option>`);
     }
     document.getElementById('profileHint').innerText = '';
@@ -414,7 +414,7 @@
     const raw = profilesCache.find(p => p.name === name);
     const meta = raw ? parseMikhmonOnLogin(raw.onLogin || raw['on-login']) : null;
     if (!meta) return document.getElementById('profileHint').innerText = '';
-    document.getElementById('profileHint').innerText = `${I18N.profilePricePrefix} Rp ${Number(meta.price||0).toLocaleString('id-ID')} â€¢ ${I18N.profileDurationPrefix} ${meta.validity}`;
+    document.getElementById('profileHint').innerText = `${I18N.profilePricePrefix} Rp ${Number(meta.price||0).toLocaleString('id-ID')} • ${I18N.profileDurationPrefix} ${meta.validity}`;
     const priceEl = document.getElementById('price');
     if (priceEl && (priceEl.value === '' || Number(priceEl.value) === 0)) {
       priceEl.value = Number(meta.price || 0) ? String(Number(meta.price || 0)) : '';
@@ -575,7 +575,7 @@
       const st = String(v.status || '-');
       const usedAt = v.used_at ? new Date(v.used_at).toLocaleString('id-ID') : '-';
       const seenAt = v.last_seen_at ? new Date(v.last_seen_at).toLocaleString('id-ID') : '-';
-      const seen = (v.last_seen_uptime || v.last_seen_comment) ? `${(v.last_seen_uptime || '-')}${v.last_seen_comment ? ' â€¢ ' + v.last_seen_comment : ''}` : '-';
+      const seen = (v.last_seen_uptime || v.last_seen_comment) ? `${(v.last_seen_uptime || '-')}${v.last_seen_comment ? ' • ' + v.last_seen_comment : ''}` : '-';
       const stClass = st === 'used' ? 's' : (st === 'created' ? 'w' : (st === 'missing' ? 'd' : 'w'));
       return `
         <tr>
