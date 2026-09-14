@@ -1462,6 +1462,21 @@ app.post(['/donasi/confirm', '/api/donasi/confirm'], async (req, res) => {
 });
 
 const acsServerService = require('./services/acsServerService');
+// GET /acs hanya untuk pengecekan manusia/monitoring. Perangkat TR-069 memakai POST.
+app.get('/acs', (req, res) => {
+  const enabled = !!getSetting('use_builtin_acs', false);
+  const proto = req.headers['x-forwarded-proto'] || req.protocol;
+  res.status(enabled ? 200 : 503).type('text/plain; charset=utf-8').send(
+    [
+      `ZenRadius Built-in ACS (TR-069/CWMP): ${enabled ? 'AKTIF' : 'NONAKTIF'}`,
+      `Endpoint CWMP : POST ${proto}://${req.get('host')}/acs`,
+      '',
+      'Endpoint ini menerima SOAP XML dari ONT/ONU (POST), bukan untuk dibuka di browser.',
+      'Isi URL di atas pada menu TR-069 / ACS URL perangkat, Periodic Inform = Enable (300 detik).',
+      enabled ? '' : 'Aktifkan dulu di Admin > GenieACS Pro > "Gunakan Built-in ACS Server (TR-069)".'
+    ].filter(Boolean).join('\n')
+  );
+});
 app.post('/acs', express.raw({ type: ['text/xml', 'application/soap+xml', 'application/xml', 'text/plain'], limit: '2mb' }), acsServerService.handleCwmpRequest);
 
 // Lisensi domain seumur hidup — blokir portal jika kode lisensi tidak cocok dengan domain.
