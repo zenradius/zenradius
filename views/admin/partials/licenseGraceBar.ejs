@@ -44,7 +44,7 @@
       </ul>
     </div>
     <div class="licg-actions">
-      <button type="button" class="btn btn-g" onclick="licModalClose()">Nanti Saja</button>
+      <button type="button" class="btn btn-g" onclick="licModalClose()"><i class="bi bi-clock"></i> Nanti Saja</button>
       <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
       <a class="btn btn-s" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener" id="licOrderBtn"><i class="bi bi-cart-plus"></i> Order Lisensi</a>
       <% } %>
