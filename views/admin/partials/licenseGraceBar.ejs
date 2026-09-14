@@ -3,20 +3,26 @@
 <div class="lic-modal" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
   <div class="lic-card">
     <div class="hd">
-      <div class="ic"><i class="bi bi-shield-exclamation"></i></div>
-      <h3 id="licTitle">Lisensi Belum Aktif</h3>
-      <span class="dom"><i class="bi bi-globe2"></i><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></span>
+      <div class="ic"><i class="bi bi-shield-lock-fill"></i></div>
+      <h3 id="licTitle">Aktivasi Lisensi ZenRadius</h3>
+      <span class="dom"><i class="bi bi-globe2"></i> <%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></span>
     </div>
     <div class="bd">
-      Sistem berjalan dalam masa tenggang. Aktifkan lisensi sekarang agar seluruh fitur tetap dapat digunakan tanpa gangguan.
-      <div class="cnt"><b><%= licenseGrace.daysLeft %></b><span>hari tersisa sebelum akses dikunci</span></div>
+      <p>Sistem billing ZenRadius terdeteksi belum memiliki lisensi aktif untuk domain ini. Masa uji coba (trial) Anda hampir habis.</p>
+      <div class="cnt">
+        <b><%= licenseGrace.daysLeft %></b>
+        <div class="lbl">
+          <span class="t1">Hari Tersisa</span>
+          <span class="t2">Batas Akhir Masa Tenggang</span>
+        </div>
+      </div>
     </div>
     <div class="ft">
-      <a class="a1" href="/admin/settings#license"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi Sekarang</a>
+      <a class="a1" href="/admin/settings#license"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi Saya</a>
       <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
-      <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order Lisensi via WhatsApp</a>
+      <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Hubungi Sales (Rp 300.000 / Selamanya)</a>
       <% } %>
-      <button type="button" class="a3" onclick="document.getElementById('licModal').classList.add('hide')">Nanti saja, lanjutkan ke halaman</button>
+      <button type="button" class="a3" onclick="document.getElementById('licModal').classList.add('hide')">Nanti saja, lanjutkan navigasi</button>
     </div>
   </div>
 </div>

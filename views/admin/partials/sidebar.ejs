@@ -7,27 +7,32 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
 </script>
 <% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace) { %>
 <style>
-  .lic-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:licFade .25s ease}
+  .lic-modal{position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:licFade .22s cubic-bezier(.4, 0, .2, 1)}
   .lic-modal.hide{display:none}
   @keyframes licFade{from{opacity:0}to{opacity:1}}
-  @keyframes licUp{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
-  .lic-card{position:relative;width:100%;max-width:440px;border-radius:20px;overflow:hidden;background:var(--bg2,#0f172a);border:1px solid rgba(251,191,36,.35);box-shadow:0 30px 80px -20px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04) inset;color:#e2e8f0;animation:licUp .3s cubic-bezier(.2,.8,.2,1)}
-  .lic-card .hd{padding:28px 24px 18px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,rgba(251,191,36,.22),rgba(15,23,42,0) 70%)}
-  .lic-card .ic{width:64px;height:64px;margin:0 auto 14px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(251,191,36,.25),rgba(249,115,22,.15));border:1px solid rgba(251,191,36,.5);color:#fbbf24;font-size:30px;animation:licPulse 2.4s ease-in-out infinite}
-  @keyframes licPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.45)}50%{box-shadow:0 0 0 12px rgba(251,191,36,0)}}
-  .lic-card h3{margin:0 0 6px;font-size:19px;font-weight:800;color:#fff;letter-spacing:-.01em}
-  .lic-card .dom{display:inline-flex;align-items:center;gap:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fde68a}
-  .lic-card .bd{padding:0 24px 8px;text-align:center;color:#cbd5e1;font-size:13.5px;line-height:1.6}
-  .lic-card .cnt{margin:14px auto 0;display:flex;align-items:baseline;justify-content:center;gap:6px;padding:12px 18px;border-radius:14px;background:rgba(249,115,22,.10);border:1px solid rgba(249,115,22,.35);width:fit-content}
-  .lic-card .cnt b{font-size:34px;line-height:1;font-weight:900;color:#fdba74;letter-spacing:-.02em}
-  .lic-card .cnt span{font-size:12.5px;color:#fed7aa;font-weight:600}
-  .lic-card .ft{padding:18px 24px 22px;display:flex;flex-direction:column;gap:9px}
-  .lic-card .ft a,.lic-card .ft button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;font-size:13.5px;font-weight:700;text-decoration:none;cursor:pointer;border:1px solid transparent;transition:transform .15s,filter .15s;font-family:inherit}
-  .lic-card .ft a:hover,.lic-card .ft button:hover{transform:translateY(-1px);filter:brightness(1.08)}
-  .lic-card .a1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e1b0a;box-shadow:0 10px 24px -8px rgba(251,191,36,.6)}
-  .lic-card .a2{background:rgba(52,211,153,.12);color:#6ee7b7;border-color:rgba(52,211,153,.4)}
-  .lic-card .a3{background:transparent;color:#94a3b8;font-weight:600;font-size:12.5px;padding:8px}
-  .lic-card .a3:hover{color:#e2e8f0}
+  @keyframes licUp{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
+  .lic-card{position:relative;width:100%;max-width:480px;border-radius:24px;overflow:hidden;background:#1e293b;border:1px solid rgba(251,191,36,.3);box-shadow:0 25px 50px -12px rgba(0,0,0,.6);color:#e2e8f0;animation:licUp .28s cubic-bezier(.34, 1.56, .64, 1)}
+  .lic-card .hd{padding:32px 28px 20px;text-align:center;background:radial-gradient(100% 100% at 50% 0%,rgba(251,191,36,.12) 0%,rgba(30,41,59,0) 80%)}
+  .lic-card .ic{width:68px;height:64px;margin:0 auto 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:#fbbf24;font-size:32px}
+  .lic-card h3{margin:0 0 8px;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em}
+  .lic-card .dom{display:inline-flex;align-items:center;gap:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;font-weight:700;padding:4px 12px;border-radius:10px;background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.08);color:#fde68a}
+  .lic-card .bd{padding:0 32px 12px;text-align:center;color:#94a3b8;font-size:14px;line-height:1.6}
+  .lic-card .bd p{margin:0 0 16px;color:#cbd5e1}
+  .lic-card .cnt{margin:0 auto;display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 20px;border-radius:16px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);width:fit-content;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .lic-card .cnt b{font-size:32px;line-height:1;font-weight:900;color:#f97316;letter-spacing:-.02em}
+  .lic-card .cnt .lbl{display:flex;flex-direction:column;align-items:flex-start;text-align:left;line-height:1.2}
+  .lic-card .cnt .lbl .t1{font-size:12.5px;color:#fdba74;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+  .lic-card .cnt .lbl .t2{font-size:11px;color:#94a3b8;font-weight:500}
+  .lic-card .ft{padding:20px 32px 28px;display:flex;flex-direction:column;gap:10px}
+  .lic-card .ft a,.lic-card .ft button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;border:1px solid transparent;transition:all .15s ease;font-family:inherit}
+  .lic-card .ft a:hover,.lic-card .ft button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+  .lic-card .ft a:active,.lic-card .ft button:active{transform:none}
+  .lic-card .a1{background:#f59e0b;color:#1e293b;border-color:#d97706}
+  .lic-card .a1:hover{background:#fbbf24}
+  .lic-card .a2{background:rgba(16,185,129,.1);color:#34d399;border-color:rgba(16,185,129,.25)}
+  .lic-card .a2:hover{background:rgba(16,185,129,.18);border-color:rgba(16,185,129,.4)}
+  .lic-card .a3{background:transparent;color:#64748b;font-weight:600;font-size:13px;padding:8px;border:none}
+  .lic-card .a3:hover{color:#94a3b8}
 </style>
 <% } %>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
