@@ -1135,7 +1135,23 @@ export async function startWhatsAppBot() {
 
       if (isLoggedOut) {
         reconnectAttempts = 0;
-        logger.warn(`WhatsApp terputus (kode ${code}). Sesi logout — hapus folder auth dan pindai QR lagi di /admin/whatsapp.`);
+        logger.warn(`WhatsApp terputus (kode ${code}). Sesi logout — membersihkan kredensial lama dan menyiapkan QR baru...`);
+        // Bersihkan ISI folder auth (bukan foldernya — di Docker ini bind-mount,
+        // rmdir mount point akan gagal EBUSY). Lalu restart agar QR baru muncul.
+        try {
+          for (const entry of fs.readdirSync(authFolder)) {
+            fs.rmSync(path.join(authFolder, entry), { recursive: true, force: true });
+          }
+          logger.info('[WA] Kredensial sesi lama dihapus otomatis.');
+        } catch (e) {
+          logger.error(`[WA] Gagal membersihkan sesi lama: ${e.message}`);
+        }
+        if (!reconnectTimer) {
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            startWhatsAppBot();
+          }, 3000);
+        }
       } else if (isRestartRequired) {
         reconnectAttempts = 0;
         logger.warn(`WhatsApp restart required (kode ${code}) — reconnect segera...`);

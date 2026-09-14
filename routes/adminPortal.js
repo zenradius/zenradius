@@ -6365,8 +6365,14 @@ router.post('/whatsapp/reset', requireAdminSession, restrictToAdmin, (req, res) 
     const folderPath = path.resolve(__dirname, '..', authFolder);
     
     if (fs.existsSync(folderPath)) {
-      fs.rmSync(folderPath, { recursive: true, force: true });
-      logger.info(`[WA] Session reset by admin. Folder ${authFolder} deleted.`);
+      // Hapus ISI folder, bukan foldernya. Di Docker folder ini adalah bind-mount
+      // sehingga rmdir pada mount point akan gagal dengan EBUSY.
+      let removed = 0;
+      for (const entry of fs.readdirSync(folderPath)) {
+        fs.rmSync(path.join(folderPath, entry), { recursive: true, force: true });
+        removed++;
+      }
+      logger.info(`[WA] Session reset by admin. ${removed} item(s) dihapus dari ${authFolder}.`);
       
       import('../services/whatsappBot.mjs').then(m => m.restartWhatsAppBot()).catch(e => {
         logger.error('Failed to trigger WA restart:', e.message);
@@ -6379,7 +6385,7 @@ router.post('/whatsapp/reset', requireAdminSession, restrictToAdmin, (req, res) 
     res.redirect('/admin/whatsapp');
   } catch (e) {
     logger.error('Failed to reset WA session:', e.message);
-    req.session._msg = { text: 'Gagal menghapus sesi: ' + e.message + '. (Kemungkinan file sedang digunakan, silakan matikan aplikasi dulu lalu hapus folder ' + getSetting('whatsapp_auth_folder', 'auth_info_baileys') + ' secara manual)', type: 'danger' };
+    req.session._msg = { text: 'Gagal menghapus sesi: ' + e.message + '. (Kemungkinan file sedang digunakan, silakan matikan aplikasi dulu lalu kosongkan folder ' + getSetting('whatsapp_auth_folder', 'auth_info_baileys') + ' secara manual)', type: 'danger' };
     res.redirect('/admin/whatsapp');
   }
 });
