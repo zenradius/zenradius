@@ -3,8 +3,8 @@
  * Satu sumber kebenaran untuk harga, kontak Developer, dan teks order,
  * agar tidak perlu mengubah di banyak tempat (settings, halaman kunci, banner).
  */
-const LICENSE_PRICE = 150000;
-const LICENSE_PRICE_LABEL = 'Rp 150.000';
+const LICENSE_PRICE = 300000;
+const LICENSE_PRICE_LABEL = 'Rp 300.000 (Lifetime)';
 const LICENSE_WA_NUMBER = '6285178008881'; // format internasional tanpa +
 const LICENSE_WA_DISPLAY = '+62 851-7800-8881';
 
