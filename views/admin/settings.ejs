@@ -968,6 +968,9 @@ style.textContent = `
   .lic-head h6 i { color: var(--primary); }
   .lic-close { background: transparent; border: 0; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 2px 4px; border-radius: 6px; }
   .lic-close:hover { color: var(--text); background: var(--btn-g-bg); }
+  .lic-brand { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 18px 6px; text-align: center; }
+  .lic-brand img { width: min(180px, 70%); max-height: 54px; object-fit: contain; display: block; }
+  .lic-brand small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; font-weight: 500; }
   .lic-body { padding: 18px; text-align: left; }
   .lic-desc { font-size: 13px; color: var(--muted); line-height: 1.65; margin: 0 0 14px; }
   .lic-price {
@@ -1001,6 +1004,10 @@ modalDiv.innerHTML = `
       <h6 id="licModalTitle"><i class="bi bi-shield-lock"></i> Aktivasi Lisensi Domain</h6>
       <button type="button" class="lic-close" onclick="closeLicenseActivationModal()" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
     </div>
+    <div class="lic-brand">
+      <img src="/img/logo.png?v=zenradius" alt="ZenRadius" onerror="this.style.display='none'">
+      <small>Lisensi Resmi Seumur Hidup</small>
+    </div>
     <div class="lic-body">
       <p class="lic-desc">ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen dengan dedikasi penuh. Lisensi resmi Anda bukan sekadar kunci aktivasi &mdash; melainkan bentuk apresiasi nyata yang menjaga pembaruan, keamanan, dan dukungan teknis tetap berjalan untuk seluruh pengguna.</p>
       
@@ -1022,7 +1029,7 @@ modalDiv.innerHTML = `
         <label class="fl" for="lic_domain_input">Domain yang Didaftarkan</label>
         <div class="lic-wrap">
           <i class="bi bi-globe2"></i>
-          <input type="text" id="lic_domain_input" class="fc" placeholder="contoh: billing.perusahaan.id" autocomplete="off" spellcheck="false">
+          <input type="text" id="lic_domain_input" class="fc" placeholder="domainanda.com" autocomplete="off" spellcheck="false">
         </div>
       </div>
     </div>
