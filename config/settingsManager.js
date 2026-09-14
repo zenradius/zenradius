@@ -131,6 +131,9 @@ function startSettingsWatcher() {
         logger.error(`[settings] Gagal memuat ulang settings.json: ${error.message}`);
       }
     });
+    // Jangan membuat proses one-shot seperti `node -e "require('./config/database')"`
+    // tertahan hanya karena fs.watch masih membuka event loop.
+    if (typeof watcher.unref === 'function') watcher.unref();
 
     logger.info('[settings] Memantau perubahan settings.json');
   } catch (error) {
