@@ -192,9 +192,10 @@
               <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="Format: XXXX-XXXX-XXXX-XXXX" pattern="^([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})?$" autocomplete="off" style="font-family:monospace">
               <small class="text-muted">
                 <% if (typeof licenseValid !== 'undefined') { %>
-                  Status: <% if (licenseValid) { %><span style="color:#2dd4bf">● Valid</span><% } else { %><span style="color:#f87171">● Tidak valid / belum diisi</span><% } %> —
+                  Status: <% if (licenseValid) { %><span style="color:#2dd4bf">● Valid</span> — Terima kasih telah mendukung pengembangan ZenRadius. Lisensi resmi Anda turut menjaga keberlanjutan inovasi dan dukungan teknis berkualitas bagi seluruh pengguna.<% } else { %><span style="color:#f87171">● Tidak valid / belum diisi</span> — Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Hubungi Developer Resmi untuk mendaftarkan domain Anda dan miliki kode lisensi premium seumur hidup.<% } %>
+                <% } else { %>
+                  Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Hubungi Developer Resmi untuk mendaftarkan domain Anda dan miliki kode lisensi premium seumur hidup.
                 <% } %>
-                Hubungi Developer Resmi untuk mendaftarkan instansi domain Anda dan mendapatkan kode lisensi premium seumur hidup.
               </small>
             </div>
           </div>
@@ -977,6 +978,14 @@ style.textContent = `
     border-radius: 10px; padding: 12px; margin-bottom: 18px; color: #fcd34d; font-size: 12px; line-height: 1.5;
   }
   .lic-warn i { font-size: 14px; margin-right: 6px; color: #fbbf24; }
+  .lic-price {
+    background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(45, 212, 191, 0.3);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; text-align: center;
+  }
+  .lic-price-label { font-size: 11px; font-weight: 700; color: rgba(217, 255, 251, 0.75); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+  .lic-price-value { font-size: 24px; font-weight: 800; color: #2dd4bf; line-height: 1.2; }
+  .lic-price-value span { font-size: 12px; font-weight: 600; color: rgba(237, 250, 250, 0.7); }
+  .lic-price-note { font-size: 11px; color: rgba(237, 250, 250, 0.6); margin-top: 6px; }
   .lic-fg { margin-bottom: 18px; }
   .lic-fl { display: block; font-size: 11px; font-weight: 700; color: #d9fffb; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
   .lic-wrap { position: relative; }
@@ -1018,11 +1027,17 @@ modalDiv.innerHTML = `
       <div class="lic-title">Formulir Pesanan Lisensi Premium</div>
     </div>
     <div class="lic-body">
-      <p class="lic-desc">Daftarkan domain unik Anda secara permanen untuk membebaskan seluruh batas dan mengaktifkan fitur server carrier billing premium ZenRadius seumur hidup.</p>
+      <p class="lic-desc">Dukung keberlanjutan pengembangan ZenRadius dengan lisensi resmi. Daftarkan domain Anda secara permanen untuk membuka seluruh fitur premium, pembaruan berkelanjutan, dan dukungan teknis prioritas — sekali bayar, berlaku seumur hidup.</p>
+      
+      <div class="lic-price">
+        <div class="lic-price-label">Investasi Lisensi Seumur Hidup</div>
+        <div class="lic-price-value">Rp 150.000 <span>/ 1 domain</span></div>
+        <div class="lic-price-note">Tanpa biaya bulanan &bull; Tanpa perpanjangan &bull; Pembaruan gratis</div>
+      </div>
       
       <div class="lic-warn">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        <strong>Perhatian:</strong> Lisensi seumur hidup melekat secara permanen dan <strong>hanya berlaku untuk 1 Domain utama</strong> yang didaftarkan. Harap teliti kembali saat memasukkan nama domain agar tidak terjadi kesalahan registrasi.
+        <strong>Perhatian:</strong> Lisensi melekat secara permanen dan <strong>hanya berlaku untuk 1 domain utama</strong> yang didaftarkan. Mohon periksa kembali penulisan nama domain sebelum melanjutkan agar registrasi berjalan tepat.
       </div>
       
       <div class="lic-fg">
@@ -1070,7 +1085,7 @@ window.submitLicenseActivationOrder = function() {
   const domain = input.value.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
   
   // Teks pesanan eksklusif yang sangat profesional
-  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Seumur Hidup (Lifetime) untuk instansi domain berikut:\n\n🌐 DOMAIN: ${domain}\n\nHarap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya. Terima kasih.`;
+  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Seumur Hidup (Lifetime) ZenRadius untuk domain berikut:\n\n🌐 DOMAIN: ${domain}\n💰 HARGA: Rp 150.000 (1 domain, seumur hidup)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
   
   const waUrl = `https://wa.me/6285178008881?text=${encodeURIComponent(message)}`;
   window.open(waUrl, '_blank');
