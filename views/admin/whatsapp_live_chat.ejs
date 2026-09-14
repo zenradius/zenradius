@@ -44,6 +44,7 @@
 <body>
 <%- include('partials/sidebar', { activePage: 'whatsapp_live_chat', company }) %>
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
@@ -239,7 +240,7 @@ async function openChat(phone, name) {
   activePhone = phone;
   document.getElementById('activePhone').value = phone;
   document.getElementById('chatHeaderTitle').innerHTML = `<i class="bi bi-person-fill"></i> ${escapeHtml(name)}`;
-  document.getElementById('chatHeaderSub').innerText = `📱 ${phone}`;
+  document.getElementById('chatHeaderSub').innerText = `ðŸ“± ${phone}`;
   
   const inputEl = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendBtn');
@@ -273,7 +274,7 @@ async function loadChatMessages(phone, showSpinner = false) {
         const isOutbound = m.direction === 'outbound';
         const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
         const gatewayBadge = m.gateway === 'meta' ? 'Meta API' : 'Baileys';
-        const statusIcon = m.status === 'read' ? '✓✓' : m.status === 'delivered' ? '✓✓' : '✓';
+        const statusIcon = m.status === 'read' ? 'âœ“âœ“' : m.status === 'delivered' ? 'âœ“âœ“' : 'âœ“';
         
         return `
           <div class="msg-bubble ${isOutbound ? 'outbound' : 'inbound'}">

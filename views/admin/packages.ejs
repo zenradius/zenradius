@@ -18,6 +18,7 @@
 <%- include('partials/sidebar', { activePage: 'packages', company }) %>
 
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
@@ -51,7 +52,7 @@
         <i class="bi bi-wifi sc-icon"></i>
         <div class="sc-label"><%= t('admin.packages.stats.total', 'Total Paket') %></div>
         <div class="sc-val"><%= pkgs.length %></div>
-        <div class="sc-sub"><%= pkgActive %> <%= t('common.active', 'Aktif').toLowerCase() %> · <%= pkgs.length - pkgActive %> <%= t('common.inactive', 'Nonaktif').toLowerCase() %></div>
+        <div class="sc-sub"><%= pkgActive %> <%= t('common.active', 'Aktif').toLowerCase() %> Â· <%= pkgs.length - pkgActive %> <%= t('common.inactive', 'Nonaktif').toLowerCase() %></div>
       </div>
       <div class="sc s">
         <i class="bi bi-people-fill sc-icon"></i>
@@ -63,13 +64,13 @@
         <i class="bi bi-cash-stack sc-icon"></i>
         <div class="sc-label"><%= t('admin.packages.stats.mrr', 'Estimasi Omzet / Bulan') %></div>
         <div class="sc-val" style="font-size:20px">Rp&nbsp;<%= pkgMrr.toLocaleString('id-ID') %></div>
-        <div class="sc-sub"><%= t('admin.packages.stats.mrr_sub', 'Harga normal × pelanggan') %></div>
+        <div class="sc-sub"><%= t('admin.packages.stats.mrr_sub', 'Harga normal Ã— pelanggan') %></div>
       </div>
       <div class="sc i">
         <i class="bi bi-tags-fill sc-icon"></i>
         <div class="sc-label"><%= t('admin.packages.stats.type', 'Prabayar / Promo') %></div>
         <div class="sc-val"><%= pkgPrepaid %> <span style="font-size:14px;color:var(--muted);font-weight:600">/ <%= pkgPromo %></span></div>
-        <div class="sc-sub"><%= pkgs.length - pkgPrepaid %> <%= t('admin.packages.postpaid', 'Pascabayar').toLowerCase() %> · <%= pkgPromo %> <%= t('admin.packages.stats.with_promo', 'dengan promo') %></div>
+        <div class="sc-sub"><%= pkgs.length - pkgPrepaid %> <%= t('admin.packages.postpaid', 'Pascabayar').toLowerCase() %> Â· <%= pkgPromo %> <%= t('admin.packages.stats.with_promo', 'dengan promo') %></div>
       </div>
     </div>
 

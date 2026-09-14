@@ -196,6 +196,7 @@
 <%- include('partials/sidebar', { activePage: 'olts', company }) %>
 
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
@@ -224,7 +225,7 @@
             <% if (olts.length === 0) { %>
               <option value=""><%= t('admin.olts.no_data', 'Tidak ada data OLT') %></option>
             <% } else { %>
-              <option value="all">🌐 Semua OLT (Ringkasan Total)</option>
+              <option value="all">ðŸŒ Semua OLT (Ringkasan Total)</option>
               <% olts.forEach(olt => { %>
                 <option value="<%= olt.id %>" <%= olt.is_active ? '' : 'disabled' %>><%= olt.name %> (<%= olt.host %>)</option>
               <% }) %>
@@ -503,7 +504,7 @@
             <div class="fg"><label class="fl">Telnet port</label><input type="number" name="telnet_port" class="fc" value="23" min="1" max="65535"></div>
             <div class="fg"><label class="fl">Enable password (ZTE)</label><input type="password" name="enable_password" class="fc" placeholder="zxr10 (opsional)"></div>
         </div>
-        <div class="fg"><label class="fl">API Base URL (go-api-c320 ZTE)</label><input type="url" name="api_base_url" class="fc" placeholder="http://127.0.0.1:8081 — kosong jika tidak pakai"></div>
+        <div class="fg"><label class="fl">API Base URL (go-api-c320 ZTE)</label><input type="url" name="api_base_url" class="fc" placeholder="http://127.0.0.1:8081 â€” kosong jika tidak pakai"></div>
         <div class="fg"><label class="fl"><%= t('admin.olts.form.description', 'Deskripsi / Lokasi') %></label><textarea name="description" class="fc" rows="2"></textarea></div>
       </div>
       <div class="mf">
@@ -610,7 +611,7 @@
         <div id="wan_goapi_extra" style="display:none">
           <div class="form-row">
             <div class="fg"><label class="fl">CVLAN (opsional)</label><input type="number" id="wan_cvlan" class="fc" min="1" max="4094" placeholder="Default = VLAN"></div>
-            <div class="fg"><label class="fl">Priority (0–7)</label><input type="number" id="wan_priority" class="fc" min="0" max="7" value="0"></div>
+            <div class="fg"><label class="fl">Priority (0â€“7)</label><input type="number" id="wan_priority" class="fc" min="0" max="7" value="0"></div>
           </div>
           <div class="fg">
             <label class="fl">VLAN mode</label>

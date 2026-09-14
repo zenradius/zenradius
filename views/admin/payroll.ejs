@@ -46,6 +46,7 @@
 <%- include('partials/sidebar', { activePage: 'payroll', company }) %>
 
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
@@ -78,7 +79,7 @@
     <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="sc p"><i class="bi bi-people sc-icon"></i><div class="sc-label">Total Karyawan</div><div class="sc-val"><%= employees.length %></div><div class="sc-sub">Aktif</div></div>
       <div class="sc s"><i class="bi bi-wallet2 sc-icon"></i><div class="sc-label">Total Gaji Bersih</div><div class="sc-val">Rp <%= summary.total_net.toLocaleString('id-ID') %></div><div class="sc-sub"><%= selectedMonth %>/<%= selectedYear %></div></div>
-      <div class="sc p"><i class="bi bi-file-earmark-text sc-icon"></i><div class="sc-label">Slip Gaji</div><div class="sc-val"><%= summary.total_slips %></div><div class="sc-sub"><span style="color:#7d8590"><%= summary.draft_count %> draft</span> · <span style="color:#3b82f6"><%= summary.approved_count %> approved</span> · <span style="color:#22c55e"><%= summary.paid_count %> paid</span></div></div>
+      <div class="sc p"><i class="bi bi-file-earmark-text sc-icon"></i><div class="sc-label">Slip Gaji</div><div class="sc-val"><%= summary.total_slips %></div><div class="sc-sub"><span style="color:#7d8590"><%= summary.draft_count %> draft</span> Â· <span style="color:#3b82f6"><%= summary.approved_count %> approved</span> Â· <span style="color:#22c55e"><%= summary.paid_count %> paid</span></div></div>
       <div class="sc d"><i class="bi bi-cash-stack sc-icon"></i><div class="sc-label">Total Potongan</div><div class="sc-val">Rp <%= summary.total_deductions.toLocaleString('id-ID') %></div><div class="sc-sub"><%= selectedMonth %>/<%= selectedYear %></div></div>
     </div>
 
@@ -96,7 +97,7 @@
         </div>
         <div class="card-bd">
           <% if (employees.length === 0) { %>
-          <div style="text-align:center;padding:40px"><div style="font-size:48px;opacity:.3">👤</div><p style="color:var(--muted)">Belum ada karyawan aktif</p></div>
+          <div style="text-align:center;padding:40px"><div style="font-size:48px;opacity:.3">ðŸ‘¤</div><p style="color:var(--muted)">Belum ada karyawan aktif</p></div>
           <% } else { %>
           <% employees.forEach(emp => { %>
           <div class="emp-card type-<%= emp.employee_type %>">
@@ -104,7 +105,7 @@
               <div class="emp-avatar"><%= emp.name.charAt(0).toUpperCase() %></div>
               <div>
                 <div class="emp-name"><%= emp.name %></div>
-                <div class="emp-role"><%= emp.employee_type %> · ID #<%= emp.id %></div>
+                <div class="emp-role"><%= emp.employee_type %> Â· ID #<%= emp.id %></div>
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:12px">
@@ -137,7 +138,7 @@
     <div class="tab-content" id="tab-slips">
       <div class="card">
         <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-          <h6><i class="bi bi-receipt"></i> Slip Gaji — <%= selectedMonth %>/<%= selectedYear %></h6>
+          <h6><i class="bi bi-receipt"></i> Slip Gaji â€” <%= selectedMonth %>/<%= selectedYear %></h6>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <form method="GET" action="/admin/payroll" style="display:flex;gap:6px;align-items:center">
               <select name="month" class="fc" style="width:auto;padding:6px 10px">
@@ -155,7 +156,7 @@
         </div>
         <div class="card-bd">
           <% if (slips.length === 0) { %>
-          <div style="text-align:center;padding:40px"><div style="font-size:48px;opacity:.3">📭</div><p style="color:var(--muted)">Belum ada slip gaji untuk periode ini</p><p style="color:var(--muted);font-size:12px">Klik "Generate Semua" untuk membuat slip gaji otomatis</p></div>
+          <div style="text-align:center;padding:40px"><div style="font-size:48px;opacity:.3">ðŸ“­</div><p style="color:var(--muted)">Belum ada slip gaji untuk periode ini</p><p style="color:var(--muted);font-size:12px">Klik "Generate Semua" untuk membuat slip gaji otomatis</p></div>
           <% } else { %>
 
           <!-- Bulk Actions -->
@@ -181,7 +182,7 @@
                 <strong><%= slip.employee_name %></strong>
                 <span class="slip-status slip-<%= slip.status %>"><%= slip.status.toUpperCase() %></span>
               </div>
-              <span style="color:var(--muted);font-size:12px"><%= slip.employee_type %> · <%= slip.period_month %>/<%= slip.period_year %></span>
+              <span style="color:var(--muted);font-size:12px"><%= slip.employee_type %> Â· <%= slip.period_month %>/<%= slip.period_year %></span>
             </div>
             <div class="slip-breakdown">
               <span class="label">Gaji Pokok</span><span class="value">Rp <%= slip.base_salary.toLocaleString('id-ID') %></span>
@@ -198,7 +199,7 @@
               <% if(slip.late_deduction){%><span class="label">Potongan Terlambat (<%= slip.late_days %> hari)</span><span class="value" style="color:#f85149">-Rp <%= slip.late_deduction.toLocaleString('id-ID') %></span><%}%>
               <% if(slip.other_deduction){%><span class="label">Potongan Lain (<%= slip.other_deduction_note || '-' %>)</span><span class="value" style="color:#f85149">-Rp <%= slip.other_deduction.toLocaleString('id-ID') %></span><%}%>
               <div class="sep"></div>
-              <span class="label">Hadir: <%= slip.working_days %> hari · Absen: <%= slip.absent_days %> hari</span><span class="value"></span>
+              <span class="label">Hadir: <%= slip.working_days %> hari Â· Absen: <%= slip.absent_days %> hari</span><span class="value"></span>
               <span class="label total"><strong>GAJI BERSIH</strong></span><span class="value total" style="color:var(--primary);font-size:18px"><strong>Rp <%= slip.net_salary.toLocaleString('id-ID') %></strong></span>
             </div>
             <div class="action-row">
@@ -257,7 +258,7 @@ function switchTab(name){
 }
 
 function editPayroll(type, id, name){
-  document.getElementById('modalTitle').textContent = 'Set Gaji — ' + name;
+  document.getElementById('modalTitle').textContent = 'Set Gaji â€” ' + name;
   document.getElementById('f_type').value = type;
   document.getElementById('f_id').value = id;
   const d = payrollData[type+'_'+id];
@@ -281,13 +282,13 @@ function editDeduction(id){
   if(amount===null) return;
   const note = prompt('Keterangan potongan:','');
   fetch('/admin/payroll/slip/'+id+'/deduction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({other_deduction:amount,other_deduction_note:note||''})})
-    .then(r=>r.json()).then(d=>{if(d.success){alert('✓ Berhasil');location.reload()}else alert('✗ '+d.message)}).catch(e=>alert('Error: '+e.message));
+    .then(r=>r.json()).then(d=>{if(d.success){alert('âœ“ Berhasil');location.reload()}else alert('âœ— '+d.message)}).catch(e=>alert('Error: '+e.message));
 }
 
 function sendSlipWA(id){
   if(!confirm('Kirim slip gaji via WhatsApp?')) return;
   fetch('/admin/payroll/slip/'+id+'/send-wa',{method:'POST'})
-    .then(r=>r.json()).then(d=>{alert(d.success?'✓ Terkirim':'✗ '+(d.message||'Gagal'))}).catch(e=>alert('Error: '+e.message));
+    .then(r=>r.json()).then(d=>{alert(d.success?'âœ“ Terkirim':'âœ— '+(d.message||'Gagal'))}).catch(e=>alert('Error: '+e.message));
 }
 
 document.getElementById('payrollModal').addEventListener('click',function(e){if(e.target===this)closeModal()});

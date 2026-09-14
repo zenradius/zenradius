@@ -294,6 +294,7 @@
 <%- include('partials/sidebar', { activePage: activePage || 'monitoring', company }) %>
 
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="tb-title">
@@ -391,7 +392,7 @@
               </div>
             </div>
             <small class="text-muted fs10 db">
-              <%= healthStatus.metrics.system.cpu.cores %> cores • <%= healthStatus.metrics.system.cpu.model %>
+              <%= healthStatus.metrics.system.cpu.cores %> cores â€¢ <%= healthStatus.metrics.system.cpu.model %>
             </small>
           </div>
           <!-- Memory -->
@@ -417,7 +418,7 @@
               </div>
             </div>
             <small class="text-muted fs10 db">
-              5m: <%= healthStatus.metrics.system.loadAverage['5min'] %> • 15m: <%= healthStatus.metrics.system.loadAverage['15min'] %>
+              5m: <%= healthStatus.metrics.system.loadAverage['5min'] %> â€¢ 15m: <%= healthStatus.metrics.system.loadAverage['15min'] %>
             </small>
           </div>
           <!-- Disk Usage -->

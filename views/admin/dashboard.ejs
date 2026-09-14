@@ -6,34 +6,34 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
   <style>
-    /* ── ONU STATUS DOT ── */
+    /* â”€â”€ ONU STATUS DOT â”€â”€ */
     .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
     .dot-on{background:var(--success);box-shadow:0 0 6px var(--success)}
     .dot-off{background:var(--danger)}
 
-    /* ── PULSE ANIMATION (online) ── */
+    /* â”€â”€ PULSE ANIMATION (online) â”€â”€ */
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
     .pulse{animation:pulse 2s infinite}
 
-    /* ── MONITORING SECTION ── */
+    /* â”€â”€ MONITORING SECTION â”€â”€ */
     #monitoring-section{display:none}
     #dashboard-section{display:block}
 
-    /* ── NAV TABS ── */
+    /* â”€â”€ NAV TABS â”€â”€ */
     .tab-bar{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:20px;width:fit-content}
     .tab-btn{padding:8px 20px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s}
     .tab-btn.active{background:linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);color:#f4fffd;border:1px solid rgba(126,231,219,.48);box-shadow:0 8px 20px rgba(10,41,50,.24)}
     .tab-btn i{margin-right:6px}
 
-    /* ── DEVICE STATUS BADGE ── */
+    /* â”€â”€ DEVICE STATUS BADGE â”€â”€ */
     .ds-on{background:rgba(63,185,80,.15);color:#3fb950;border:1px solid rgba(63,185,80,.3)}
     .ds-off{background:rgba(248,81,73,.15);color:#f85149;border:1px solid rgba(248,81,73,.3)}
 
-    /* ── LIVE INDICATOR ── */
+    /* â”€â”€ LIVE INDICATOR â”€â”€ */
     .live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 1.5s infinite}
     .realtime-bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
 
-    /* ── CHART WRAPPER ── */
+    /* â”€â”€ CHART WRAPPER â”€â”€ */
     #donut-wrap{position:relative;width:160px;height:160px;margin:0 auto}
     .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
     .donut-num{font-size:28px;font-weight:700;line-height:1}
@@ -45,6 +45,7 @@
 <%- include('partials/sidebar', { activePage: activePage || 'dashboard', company }) %>
 
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="tb-title">
@@ -81,9 +82,9 @@
       </button>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <!-- DASHBOARD SECTION                                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="dashboard-section">
 
       <!-- ONU Stats -->
@@ -174,7 +175,7 @@
                 <span id="leg-offline" class="fw6" style="color:var(--danger)">-</span>
               </div>
             </div>
-            <div style="font-size:11px;color:var(--muted);text-align:center" id="last-update-time">—</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center" id="last-update-time">â€”</div>
           </div>
         </div>
 
@@ -234,9 +235,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <!-- MONITORING ONU SECTION                                  -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="monitoring-section" style="display:none">
 
       <!-- Stats mini -->
@@ -316,7 +317,7 @@
   </div>
 </div>
 
-<!-- ── MODAL DETAIL DEVICE ── -->
+<!-- â”€â”€ MODAL DETAIL DEVICE â”€â”€ -->
 <div class="mo" id="deviceModal">
   <div class="mb" style="max-width:920px">
     <div class="mh">
@@ -328,7 +329,7 @@
   </div>
 </div>
 
-<!-- ── MODAL EDIT SSID ── -->
+<!-- â”€â”€ MODAL EDIT SSID â”€â”€ -->
 <div class="mo" id="ssidModal">
   <div class="mb">
     <div class="mh"><span class="mt"><i class="bi bi-wifi"></i> <%= t('admin.dashboard.edit_ssid', 'Ubah SSID') %></span><button class="mc" onclick="closeModal('ssidModal')">&times;</button></div>
@@ -346,7 +347,7 @@
   </div>
 </div>
 
-<!-- ── MODAL EDIT PASSWORD ── -->
+<!-- â”€â”€ MODAL EDIT PASSWORD â”€â”€ -->
 <div class="mo" id="passwordModal">
   <div class="mb">
     <div class="mh"><span class="mt"><i class="bi bi-key"></i> <%= t('admin.dashboard.edit_wifi_password', 'Ubah Password WiFi') %></span><button class="mc" onclick="closeModal('passwordModal')">&times;</button></div>
@@ -364,7 +365,7 @@
   </div>
 </div>
 
-<!-- ── MODAL GENIEACS SETTINGS ── -->
+<!-- â”€â”€ MODAL GENIEACS SETTINGS â”€â”€ -->
 <div class="mo" id="genieacsModal">
   <div class="mb" style="max-width:600px">
     <div class="mh">
@@ -429,9 +430,9 @@
 
 <script>
 /*
- * ═══════════════════════════════════════════════════════════════════════════
+ * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
  * DASHBOARD ONU MONITORING - AUTO-REFRESH DISABLED
- * ═══════════════════════════════════════════════════════════════════════════
+ * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
  * 
  * AUTO-REFRESH INTENTIONALLY DISABLED TO PREVENT CONTINUOUS POLLING
  * 
@@ -445,10 +446,10 @@
  * - NOT refresh automatically during operations
  * 
  * If you need to update the data, click the "Refresh" button in the UI.
- * ═══════════════════════════════════════════════════════════════════════════
+ * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
  */
 
-// ── STATE ──────────────────────────────────────────────────────
+// â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let devicesData = [];
 let donutChart = null;
 let fastRefreshTimer = null;
@@ -506,7 +507,7 @@ const I18N = {
   syncRunning: "Sinkronisasi berjalan"
 };
 
-// ── TABS ───────────────────────────────────────────────────────
+// â”€â”€ TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showTab(tab) {
   const isDash = tab === 'dashboard';
   document.getElementById('dashboard-section').style.display = isDash ? 'block' : 'none';
@@ -517,12 +518,12 @@ function showTab(tab) {
   if (!isDash) loadDevices();
 }
 
-// ── MODAL HELPERS ──────────────────────────────────────────────
+// â”€â”€ MODAL HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
 
-// ── LOAD STATS ─────────────────────────────────────────────────
+// â”€â”€ LOAD STATS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadStats() {
   try {
     const res = await fetch('/admin/api/stats');
@@ -554,7 +555,7 @@ async function loadStats() {
   } catch(e) { console.error('Stats error:', e); }
 }
 
-// ── DONUT CHART ────────────────────────────────────────────────
+// â”€â”€ DONUT CHART â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function updateDonut(online, offline) {
   const ctx = document.getElementById('donutChart');
   if (donutChart) { donutChart.data.datasets[0].data = [online, offline]; donutChart.update(); return; }
@@ -576,7 +577,7 @@ function updateDonut(online, offline) {
   });
 }
 
-// ── LOAD DEVICES ───────────────────────────────────────────────
+// â”€â”€ LOAD DEVICES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadDevices() {
   const tbody   = document.getElementById('devices-tbody');
   const loading = document.getElementById('loading-devices');
@@ -737,7 +738,7 @@ async function loadDevices() {
   }
 }
 
-// ── OFFLINE LIST (dashboard) ───────────────────────────────────
+// â”€â”€ OFFLINE LIST (dashboard) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderOfflineList(offlineDevices) {
   const el = document.getElementById('offline-list');
   if (!el) return;
@@ -768,7 +769,7 @@ function timeSince(date) {
   return Math.floor(sec/86400) + ' ' + I18N.daysAgo;
 }
 
-// ── DEVICE ACTIONS ─────────────────────────────────────────────
+// â”€â”€ DEVICE ACTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function showDetail(tag) {
   openModal('deviceModal');
   document.getElementById('device-detail').innerHTML = '<div class="text-muted text-center" style="padding:20px">' + I18N.loading + '</div>';
@@ -784,7 +785,7 @@ async function showDetail(tag) {
       <div style="padding:14px 16px;border-radius:12px;margin-bottom:16px;font-weight:700;border:1px solid var(--border);background:${isOn ? 'rgba(16,185,129,.10)' : 'rgba(239,68,68,.10)'};color:${isOn ? 'var(--success)' : 'var(--danger)'}">
         <i class="bi bi-circle-fill" style="font-size:10px"></i>
         ${isOn ? I18N.online : I18N.offline}
-        <span style="color:var(--muted);font-weight:600">— ${I18N.lastInform}: ${lastInformText} | ${I18N.lastSync}: ${lastSyncText} | Queue: ${syncStateText}</span>
+        <span style="color:var(--muted);font-weight:600">â€” ${I18N.lastInform}: ${lastInformText} | ${I18N.lastSync}: ${lastSyncText} | Queue: ${syncStateText}</span>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
@@ -921,14 +922,14 @@ document.getElementById('btn-save-password').addEventListener('click', async fun
   }
 });
 
-// ── SEARCH DEBOUNCE ────────────────────────────────────────────
+// â”€â”€ SEARCH DEBOUNCE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const searchEl = document.getElementById('search-device');
 if (searchEl) {
   let st;
   searchEl.addEventListener('input', () => { clearTimeout(st); st = setTimeout(loadDevices, 400); });
 }
 
-// ── TOAST NOTIFICATION ─────────────────────────────────────────
+// â”€â”€ TOAST NOTIFICATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showToast(msg, type = 's') {
   const old = document.querySelector('.toast-notif');
   if (old) old.remove();
@@ -952,7 +953,7 @@ function showToast(msg, type = 's') {
   setTimeout(() => { if(t.parentElement) t.style.animation = 'slideOutRight .3s ease forwards'; setTimeout(() => t.remove(), 300); }, 5000);
 }
 
-// ── REFRESH ALL ────────────────────────────────────────────────
+// â”€â”€ REFRESH ALL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DEPRECATED: This function is kept for backward compatibility but is disabled
 // Use manualRefreshAll() for user-initiated refreshes only
 function refreshAll() {
@@ -988,14 +989,14 @@ loadDevices();
 // NOTE: AUTO-REFRESH HAS BEEN COMPLETELY DISABLED
 // Users must manually click the "Refresh" button to update device list
 
-// ── CHECK IF SHOULD GO TO MONITORING TAB (from sidebar link) ──
+// â”€â”€ CHECK IF SHOULD GO TO MONITORING TAB (from sidebar link) â”€â”€
 if (window.location.hash === '#monitoring') showTab('monitoring');
 window.addEventListener('hashchange', () => {
   if (window.location.hash === '#monitoring') showTab('monitoring');
   else if (window.location.hash === '#dashboard' || !window.location.hash) showTab('dashboard');
 });
 
-// ── GENIEACS SETTINGS FUNCTIONS ────────────────────────────────
+// â”€â”€ GENIEACS SETTINGS FUNCTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openGenieACSSettings() {
   openModal('genieacsModal');
 }

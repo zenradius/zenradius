@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -28,6 +28,7 @@
 <body data-connected-label="<%= t('admin.whatsapp.connected', 'Terhubung') %>" data-need-scan-label="<%= t('admin.whatsapp.need_scan', 'Perlu Pemindaian') %>">
 <%- include('partials/sidebar', { activePage: 'whatsapp', company }) %>
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-whatsapp"></i> <%= t('admin.whatsapp.status_title', 'Status WhatsApp') %></div>
     <div class="tb-right">
@@ -68,11 +69,11 @@
           <div class="fg">
             <label class="fl">Pilihan Provider / Gateway WhatsApp</label>
             <select class="fs" name="wa_gateway_type" id="wa_gateway_type" onchange="toggleGatewayFields()">
-              <option value="baileys" <%= waGatewayType === 'baileys' ? 'selected' : '' %>>🌐 Baileys Web (Gratis & Scan QR)</option>
-              <option value="meta" <%= waGatewayType === 'meta' ? 'selected' : '' %>>🟢 Meta Cloud API (Official - Anti-Banned)</option>
-              <option value="fonnte" <%= waGatewayType === 'fonnte' ? 'selected' : '' %>>🔵 Fonnte (HTTP Gateway - Rp 50rb/bln)</option>
-              <option value="wablas" <%= waGatewayType === 'wablas' ? 'selected' : '' %>>🟣 Wablas (HTTP Gateway - Rp 45rb/bln)</option>
-              <option value="http" <%= waGatewayType === 'http' ? 'selected' : '' %>>🟡 Custom HTTP Gateway</option>
+              <option value="baileys" <%= waGatewayType === 'baileys' ? 'selected' : '' %>>?? Baileys Web (Gratis & Scan QR)</option>
+              <option value="meta" <%= waGatewayType === 'meta' ? 'selected' : '' %>>?? Meta Cloud API (Official - Anti-Banned)</option>
+              <option value="fonnte" <%= waGatewayType === 'fonnte' ? 'selected' : '' %>>?? Fonnte (HTTP Gateway - Rp 50rb/bln)</option>
+              <option value="wablas" <%= waGatewayType === 'wablas' ? 'selected' : '' %>>?? Wablas (HTTP Gateway - Rp 45rb/bln)</option>
+              <option value="http" <%= waGatewayType === 'http' ? 'selected' : '' %>>?? Custom HTTP Gateway</option>
             </select>
             <div style="font-size:11px;color:var(--muted);margin-top:4px">Baileys = gratis tapi risiko banned. HTTP gateway (Fonnte/Wablas/Custom) = provider handle anti-ban, cukup isi token. Meta = official 100% anti-banned.</div>
           </div>
@@ -112,20 +113,20 @@
           <div class="fw6 mb12" style="color: var(--text); font-size: 13px;"><i class="bi bi-cloud-arrow-up"></i> Kredensial Fonnte</div>
           <div class="fg mb12">
             <label class="fl">Fonnte Authorization Token *</label>
-            <input class="fc" name="fonnte_token" value="<%= (metaSettings.fonnte_token || '') %>" placeholder="Dapat dari fonnte.com → Device → Token">
+            <input class="fc" name="fonnte_token" value="<%= (metaSettings.fonnte_token || '') %>" placeholder="Dapat dari fonnte.com ? Device ? Token">
           </div>
           <div class="fg">
             <label class="fl">Fonnte API URL</label>
             <input class="fc" name="fonnte_url" value="<%= (metaSettings.fonnte_url || 'https://api.fonnte.com/send') %>" placeholder="https://api.fonnte.com/send">
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:8px">Daftar di <a href="https://fonnte.com" target="_blank">fonnte.com</a> → hubungkan WA → copy token → paste di sini.</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px">Daftar di <a href="https://fonnte.com" target="_blank">fonnte.com</a> ? hubungkan WA ? copy token ? paste di sini.</div>
           <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
             <div style="font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 6px;"><i class="bi bi-inbox"></i> Webhook Inbound — balasan masuk Live Chat</div>
             <div style="display:flex;gap:6px;align-items:center;">
               <code style="flex:1;background: var(--bg3); padding: 6px 10px; border-radius: 6px; font-size: 11px; user-select: all; word-break: break-all; border: 1px solid var(--border); color: var(--text);">POST http://<%= host %>/api/webhook/fonnte</code>
               <button type="button" class="btn btn-g btn-sm" onclick="navigator.clipboard.writeText('http://<%= host %>/api/webhook/fonnte').then(()=>{this.innerHTML='<i class=\'bi bi-check-lg\'></i>'; setTimeout(()=>this.innerHTML='<i class=\'bi bi-clipboard\'></i>',1500)})" title="Salin URL"><i class="bi bi-clipboard"></i></button>
             </div>
-            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Paste URL ini di Fonnte → Device → Webhook URL.</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Paste URL ini di Fonnte ? Device ? Webhook URL.</div>
           </div>
         </div>
 
@@ -145,7 +146,7 @@
               <code style="flex:1;background: var(--bg3); padding: 6px 10px; border-radius: 6px; font-size: 11px; user-select: all; word-break: break-all; border: 1px solid var(--border); color: var(--text);">POST http://<%= host %>/api/webhook/wablas</code>
               <button type="button" class="btn btn-g btn-sm" onclick="navigator.clipboard.writeText('http://<%= host %>/api/webhook/wablas').then(()=>{this.innerHTML='<i class=\'bi bi-check-lg\'></i>'; setTimeout(()=>this.innerHTML='<i class=\'bi bi-clipboard\'></i>',1500)})" title="Salin URL"><i class="bi bi-clipboard"></i></button>
             </div>
-            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Paste URL ini di Wablas → Webhook URL.</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Paste URL ini di Wablas ? Webhook URL.</div>
           </div>
         </div>
 

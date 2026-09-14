@@ -10,6 +10,7 @@
 <%- include('partials/sidebar', { activePage: 'cashiers_reports', company }) %>
 
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
@@ -88,7 +89,7 @@
                     <% } else { %>
                       <div class="fw6"><%= r.customer_name || '-' %></div>
                       <div style="font-size:11px;color:var(--muted)">
-                        <%= r.customer_phone || '' %><%= r.period_month && r.period_year ? (' • ' + r.period_month + '/' + r.period_year) : '' %><%= r.package_name ? (' • ' + r.package_name) : '' %>
+                        <%= r.customer_phone || '' %><%= r.period_month && r.period_year ? (' â€¢ ' + r.period_month + '/' + r.period_year) : '' %><%= r.package_name ? (' â€¢ ' + r.package_name) : '' %>
                       </div>
                     <% } %>
                   </td>

@@ -1,0 +1,15 @@
+<% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace) { %>
+<div class="lic-grace-bar" role="alert">
+  <i class="bi bi-exclamation-triangle-fill lead"></i>
+  <div class="txt">
+    <strong>Lisensi domain <%= typeof licenseHost !== 'undefined' ? licenseHost : '' %> belum aktif.</strong>
+    Akses penuh akan dikunci dalam <strong><%= licenseGrace.daysLeft %> hari</strong>. Aktifkan sekarang untuk menghindari gangguan layanan.
+  </div>
+  <div class="acts">
+    <a class="a1" href="/admin/settings#license"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi</a>
+    <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
+    <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order Lisensi</a>
+    <% } %>
+  </div>
+</div>
+<% } %>

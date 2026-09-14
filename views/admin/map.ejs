@@ -133,6 +133,7 @@
 <%- include('partials/sidebar', { activePage: 'map', company }) %>
 
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
@@ -341,13 +342,13 @@
   // Layers
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: '© OpenStreetMap'
+    attribution: 'Â© OpenStreetMap'
   });
 
   const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-    attribution: '© Google Satellite'
+    attribution: 'Â© Google Satellite'
   });
 
   osm.addTo(map);

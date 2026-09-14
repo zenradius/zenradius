@@ -25,6 +25,7 @@
 <body>
 <%- include('partials/sidebar', { activePage: 'mikrotik', company }) %>
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-router"></i> <%= t('admin.nav.mikrotik_monitoring', 'Monitoring MikroTik') %></div>
     <div class="tb-right" style="display:flex;align-items:center;gap:15px">

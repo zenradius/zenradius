@@ -20,6 +20,7 @@
 <body>
 <%- include('partials/sidebar', { activePage: 'whatsapp', company }) %>
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-whatsapp"></i> <%= title %></div>
     <div class="tb-right">
@@ -96,7 +97,7 @@
         <div class="card-bd" style="border-top: 1px solid var(--border); background: var(--bg2); display: flex; flex-wrap:wrap; gap:10px; justify-content: space-between; align-items: center;">
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button type="button" class="btn btn-g btn-sm" onclick="fillSpintaxPreset()"><i class="bi bi-magic"></i> Apply Spintax Anti-Ban Presets</button>
-            <button type="button" class="btn btn-w btn-sm" onclick="showMetaConverter()"><i class="bi bi-meta"></i> 🪄 Konversi Format Meta Cloud API</button>
+            <button type="button" class="btn btn-w btn-sm" onclick="showMetaConverter()"><i class="bi bi-meta"></i> ðŸª„ Konversi Format Meta Cloud API</button>
           </div>
           <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Template</button>
         </div>
@@ -144,9 +145,9 @@
 function fillSpintaxPreset() {
   if (!confirm('Isi otomatis form template dengan format Anti-Ban (Spintax)? Teks lama di form akan digantikan.')) return;
   const company = "<%- company %>";
-  document.querySelector('[name="whatsapp_auto_billing_message"]').value = `{Halo|Selamat Pagi|Yth.} Pelanggan {{nama}},\n\n{Ini adalah|Berikut} pengingat {sebelum tanggal jatuh tempo|pembayaran tagihan internet} Anda.\n\n📌 *Paket:* {{paket}}\n📌 *Total Tagihan:* Rp {{tagihan}}\n📌 *Periode:* {{rincian}}\n\n{Mohon|Silakan} {segera lakukan|lakukan} pembayaran melalui pusat layanan pelanggan: {{link}}\n\n{Terima kasih atas perhatian dan kerja samanya.|Terima kasih.}\nSalam,\nAdmin ` + company;
+  document.querySelector('[name="whatsapp_auto_billing_message"]').value = `{Halo|Selamat Pagi|Yth.} Pelanggan {{nama}},\n\n{Ini adalah|Berikut} pengingat {sebelum tanggal jatuh tempo|pembayaran tagihan internet} Anda.\n\nðŸ“Œ *Paket:* {{paket}}\nðŸ“Œ *Total Tagihan:* Rp {{tagihan}}\nðŸ“Œ *Periode:* {{rincian}}\n\n{Mohon|Silakan} {segera lakukan|lakukan} pembayaran melalui pusat layanan pelanggan: {{link}}\n\n{Terima kasih atas perhatian dan kerja samanya.|Terima kasih.}\nSalam,\nAdmin ` + company;
 
-  document.querySelector('[name="whatsapp_billing_qris_message"]').value = `{Halo|Selamat Pagi|Yth.} Pelanggan {{nama}},\n\n{Berikut|Ini adalah} pengingat tagihan internet Anda:\n📌 *Paket:* {{paket}}\n📌 *Total Tagihan:* Rp {{tagihan}}\n📌 *Periode:* {{rincian}}\n\n{Silakan scan|Mohon scan} QRIS terlampir atau buka link berikut: {{link}}\n\nTerima kasih.`;
+  document.querySelector('[name="whatsapp_billing_qris_message"]').value = `{Halo|Selamat Pagi|Yth.} Pelanggan {{nama}},\n\n{Berikut|Ini adalah} pengingat tagihan internet Anda:\nðŸ“Œ *Paket:* {{paket}}\nðŸ“Œ *Total Tagihan:* Rp {{tagihan}}\nðŸ“Œ *Periode:* {{rincian}}\n\n{Silakan scan|Mohon scan} QRIS terlampir atau buka link berikut: {{link}}\n\nTerima kasih.`;
 
   document.querySelector('[name="whatsapp_payment_success_message"]').value = `{Terima kasih|Alhamdulillah}, {{nama}}!\n\nPembayaran tagihan internet periode *{{periode}}* sebesar *Rp {{total}}* melalui {{metode}} telah kami terima.\n\nStatus: *LUNAS*. Layanan internet Anda aktif.\n\nSalam,\nAdmin ` + company;
 
@@ -196,7 +197,7 @@ function convertCurrentTemplate() {
   if (varMatches.length === 0) {
     document.getElementById('metaParamMapping').innerHTML = `<span class="text-muted">Tidak ada variabel {{variabel}} dalam template ini.</span>`;
   } else {
-    document.getElementById('metaParamMapping').innerHTML = varMatches.map(v => `<b>{{${v.index}}}</b> ➔ ${v.name}`).join('<br>');
+    document.getElementById('metaParamMapping').innerHTML = varMatches.map(v => `<b>{{${v.index}}}</b> âž” ${v.name}`).join('<br>');
   }
 }
 

@@ -14,6 +14,7 @@
 <body>
 <%- include('partials/sidebar', { activePage: (typeof activePage !== 'undefined' && activePage ? activePage : 'settings'), company }) %>
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-gear"></i> <%= t('admin.settings.system_title', 'Pengaturan Sistem') %></div>
     <div class="tb-right">
@@ -78,22 +79,22 @@
           <div style="background: rgba(0, 0, 0, 0.02); padding: 16px; border-radius: 10px; margin-bottom: 24px; border: 1px solid var(--border);">
             <div style="display: grid; grid-template-columns: 2fr 2fr 1fr auto; gap: 12px; align-items: flex-end;">
               <div class="fg" style="margin-bottom: 0;">
-                <label class="fl">🔍 Service Filter</label>
+                <label class="fl">ðŸ” Service Filter</label>
                 <select class="fs" id="ew_service" onchange="loadEwalletLogs()" style="margin-bottom: 0;">
                   <option value="">Semua Service</option>
-                  <option value="Tripay">🔵 Tripay</option>
-                  <option value="Midtrans">🟢 Midtrans</option>
-                  <option value="Xendit">🟡 Xendit</option>
-                  <option value="Duitku">🟣 Duitku</option>
-                  <option value="E-Wallet">📱 E-Wallet</option>
+                  <option value="Tripay">ðŸ”µ Tripay</option>
+                  <option value="Midtrans">ðŸŸ¢ Midtrans</option>
+                  <option value="Xendit">ðŸŸ¡ Xendit</option>
+                  <option value="Duitku">ðŸŸ£ Duitku</option>
+                  <option value="E-Wallet">ðŸ“± E-Wallet</option>
                 </select>
               </div>
               <div class="fg" style="margin-bottom: 0;">
-                <label class="fl">🔎 Search Content</label>
+                <label class="fl">ðŸ”Ž Search Content</label>
                 <input class="fc" id="ew_q" placeholder="Cari nominan, reference, atau konten..." onchange="loadEwalletLogs()" style="margin-bottom: 0;">
               </div>
               <div class="fg" style="margin-bottom: 0;">
-                <label class="fl">📊 Limit</label>
+                <label class="fl">ðŸ“Š Limit</label>
                 <input class="fc" type="number" id="ew_limit" value="200" min="10" max="1000" onchange="loadEwalletLogs()" style="margin-bottom: 0;">
               </div>
               <div style="display: flex; gap: 8px;">
@@ -121,13 +122,13 @@
             <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
               <thead>
                 <tr style="background: linear-gradient(90deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.03) 100%); border-bottom: 1px solid var(--border);">
-                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 165px;">📅 Waktu</th>
-                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 110px;">🏢 Service</th>
-                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 125px;">💰 Nominal</th>
-                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 90px;">✓ Status</th>
-                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 140px;">🔗 Matched</th>
-                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted);">📝 Content</th>
-                  <th style="padding: 14px; text-align: center; font-weight: 700; color: var(--muted); min-width: 50px;">⚙️</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 165px;">ðŸ“… Waktu</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 110px;">ðŸ¢ Service</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 125px;">ðŸ’° Nominal</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 90px;">âœ“ Status</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted); min-width: 140px;">ðŸ”— Matched</th>
+                  <th style="padding: 14px; text-align: left; font-weight: 700; color: var(--muted);">ðŸ“ Content</th>
+                  <th style="padding: 14px; text-align: center; font-weight: 700; color: var(--muted); min-width: 50px;">âš™ï¸</th>
                 </tr>
               </thead>
               <tbody id="ew_logs_body">
@@ -215,9 +216,9 @@
               </div>
               <small class="text-muted">
                 <% if (licActive) { %>
-                  Status: <span style="color:#2dd4bf">● Valid</span> — Lisensi terverifikasi. Simpan kode ini dengan aman; kode hanya berlaku untuk domain di atas.
+                  Status: <span style="color:#2dd4bf">â— Valid</span> â€” Lisensi terverifikasi. Simpan kode ini dengan aman; kode hanya berlaku untuk domain di atas.
                 <% } else if (typeof licenseValid !== 'undefined') { %>
-                  Status: <span style="color:#f87171">● Tidak valid / belum diisi</span> — Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Sudah memiliki kode? Masukkan di atas lalu klik <strong>Aktivasi Lisensi</strong>. Belum memiliki? Klik <strong>Order Lisensi</strong> untuk memesan.
+                  Status: <span style="color:#f87171">â— Tidak valid / belum diisi</span> â€” Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Sudah memiliki kode? Masukkan di atas lalu klik <strong>Aktivasi Lisensi</strong>. Belum memiliki? Klik <strong>Order Lisensi</strong> untuk memesan.
                 <% } else { %>
                   Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Sudah memiliki kode? Masukkan di atas lalu klik <strong>Aktivasi Lisensi</strong>. Belum memiliki? Klik <strong>Order Lisensi</strong> untuk memesan.
                 <% } %>
@@ -320,7 +321,7 @@
               <label class="fl">Kredensial Admin</label>
               <% if (!settings.admin_password) { %>
               <div class="hint" style="margin-bottom:8px;color:var(--danger)">
-                <i class="bi bi-exclamation-triangle"></i> Login masih menggunakan kredensial bawaan dari <code>.env</code>. Isi username & password di bawah lalu simpan — kredensial bawaan akan otomatis dinonaktifkan.
+                <i class="bi bi-exclamation-triangle"></i> Login masih menggunakan kredensial bawaan dari <code>.env</code>. Isi username & password di bawah lalu simpan â€” kredensial bawaan akan otomatis dinonaktifkan.
               </div>
               <% } else { %>
               <div class="hint" style="margin-bottom:8px">
@@ -976,7 +977,7 @@ style.textContent = `
   .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
   tr:hover { background-color: rgba(0,0,0,0.02) !important; }
   
-  /* ── License Purchase Modal (mobile-first, selaras admin.css) ── */
+  /* â”€â”€ License Purchase Modal (mobile-first, selaras admin.css) â”€â”€ */
   .lic-modal {
     display: none; position: fixed; inset: 0; z-index: 1000;
     background: rgba(10, 30, 38, 0.72); backdrop-filter: blur(6px);
@@ -1025,7 +1026,7 @@ style.textContent = `
   }
   .lic-actions .btn { width: 100%; justify-content: center; min-height: 44px; }
 
-  /* ≥640px: dialog terpusat ala desktop */
+  /* â‰¥640px: dialog terpusat ala desktop */
   @media (min-width: 640px) {
     .lic-modal { padding: 16px; align-items: center; }
     .lic-dialog {
@@ -1131,7 +1132,7 @@ window.submitLicenseActivationOrder = function() {
   const domain = input.value.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
   
   // Teks pesanan eksklusif yang sangat profesional
-  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Aktif Selamanya (Lifetime) ZenRadius untuk domain berikut:\n\n🌐 DOMAIN: ${domain}\n💰 HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 domain, selamanya)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
+  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Aktif Selamanya (Lifetime) ZenRadius untuk domain berikut:\n\nðŸŒ DOMAIN: ${domain}\nðŸ’° HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 domain, selamanya)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
   
   const waUrl = `https://wa.me/<%= licInfo.LICENSE_WA_NUMBER %>?text=${encodeURIComponent(message)}`;
   window.open(waUrl, '_blank');

@@ -113,6 +113,7 @@
 <body>
 <%- include('partials/sidebar', { activePage: 'onu_provision', company }) %>
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
@@ -182,7 +183,7 @@
             </div>
             <div class="fg">
               <label class="fl">Password</label>
-              <input type="password" class="fc" name="password" value="<%= oltConfig?.password || '' %>" placeholder="••••••" required>
+              <input type="password" class="fc" name="password" value="<%= oltConfig?.password || '' %>" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" required>
             </div>
           </div>
           <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
@@ -381,7 +382,7 @@
                     </div>
                     <div class="fg" style="margin:0">
                       <label class="fl">WiFi Password</label>
-                      <input type="password" class="fc" name="wifiPassword" placeholder="••••••••" minlength="8">
+                      <input type="password" class="fc" name="wifiPassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" minlength="8">
                     </div>
                   </div>
                 </div>
@@ -416,7 +417,7 @@
                       </div>
                       <div class="fg" style="margin:0">
                         <label class="fl">PPPoE Password</label>
-                        <input type="password" class="fc" name="pppoePassword" placeholder="••••••••">
+                        <input type="password" class="fc" name="pppoePassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
                       </div>
                     </div>
                   </div>
@@ -443,7 +444,7 @@
                     </div>
                     <div class="fg" style="margin:0">
                       <label class="fl">PPPoE Password</label>
-                      <input type="password" class="fc" name="mikrotikPppoePassword" placeholder="••••••••">
+                      <input type="password" class="fc" name="mikrotikPppoePassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
                     </div>
                     <div class="fg" style="margin:0">
                       <label class="fl">Bandwidth Profile</label>
@@ -479,7 +480,7 @@
                       </div>
                       <div class="fg" style="margin:0">
                         <label class="fl">ACS Password (Optional)</label>
-                        <input type="password" class="fc" name="tr069AcsPassword" placeholder="••••••••">
+                        <input type="password" class="fc" name="tr069AcsPassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
                       </div>
                     </div>
                     <div class="fg" style="margin:0">

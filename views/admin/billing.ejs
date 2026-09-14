@@ -13,6 +13,7 @@
 <body>
 <%- include('partials/sidebar', { activePage: 'billing', company }) %>
 <div class="mw">
+<%- include('partials/licenseGraceBar') %>
   <div class="topbar">
     <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-receipt"></i> <%= t('admin.billing.manage_title', 'Manajemen Tagihan') %></div>
     <div class="tb-right">
@@ -431,7 +432,7 @@ document.getElementById('bulkPayBtn')?.addEventListener('click', function() {
     div.innerHTML = `
       <input type="checkbox" name="invoice_ids" value="${id}" id="bulk_inv_${id}" checked style="width:16px; height:16px">
       <label for="bulk_inv_${id}" style="font-size:13px; cursor:pointer">
-        ${customerName ? `<strong>${customerName}</strong> • ` : ''}${I18N.periodPrefix} ${period}
+        ${customerName ? `<strong>${customerName}</strong> â€¢ ` : ''}${I18N.periodPrefix} ${period}
         <span class="text-muted">(${pkg || I18N.packageFallback})</span> -
         <strong style="color:var(--success)">Rp ${amt.toLocaleString('id-ID')}</strong>
       </label>
@@ -474,12 +475,12 @@ async function sendInvoicePdfWa(invoiceId, btn) {
     });
     const data = await res.json();
     if (data.success) {
-      alert('✅ ' + data.message);
+      alert('âœ… ' + data.message);
     } else {
-      alert('❌ ' + data.message);
+      alert('âŒ ' + data.message);
     }
   } catch (err) {
-    alert('❌ Error: ' + err.message);
+    alert('âŒ Error: ' + err.message);
   } finally {
     btn.disabled = false;
     btn.innerHTML = oldHtml;
