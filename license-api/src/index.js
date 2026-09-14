@@ -6,8 +6,10 @@
  *   POST /api/heartbeat   (publik, tervalidasi HMAC + rate limit) ping harian dari server ZenRadius
  *   GET  /api/list        (Admin token)  daftar lisensi + instalasi
  *   GET  /api/stats       (Admin token)  ringkasan angka
- *   DELETE /api/license/:domain (Admin token)
+ *   DELETE /api/license/:domain (Admin token) hapus seluruh jejak domain
+ *   POST /api/purge       (Admin token)  hapus instalasi tanpa lisensi yang idle >= 30 hari
  *   GET  /health
+ *   cron harian           purge otomatis (sama dengan /api/purge)
  *
  * Secrets (wrangler secret put):
  *   MASTER_SECRET   sama dengan MASTER_SECRET di domainLicenseService.js.
@@ -209,13 +211,44 @@ export default {
       const m = path.match(/^\/api\/license\/([^/]+)$/);
       if (m && req.method === 'DELETE') {
         const domain = normalizeDomain(decodeURIComponent(m[1]));
-        await env.DB.prepare('DELETE FROM licenses WHERE domain = ?1').bind(domain).run();
+        // Hapus seluruh jejak domain (catatan terbit + data instalasi)
+        await env.DB.batch([
+          env.DB.prepare('DELETE FROM licenses WHERE domain = ?1').bind(domain),
+          env.DB.prepare('DELETE FROM installs WHERE domain = ?1').bind(domain)
+        ]);
         return json({ ok: true, domain }, 200, cors);
+      }
+
+      // Bersihkan manual: instalasi tanpa lisensi yang tidak aktif >= 30 hari
+      if (path === '/api/purge' && req.method === 'POST') {
+        const r = await purgeStale(env);
+        return json({ ok: true, ...r }, 200, cors);
       }
 
       return json({ error: 'not_found' }, 404, cors);
     } catch (e) {
       return json({ error: 'server_error', detail: String(e && e.message || e) }, 500, cors);
     }
+  },
+
+  // Cron harian (lihat wrangler.toml [triggers])
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(purgeStale(env));
   }
 };
+
+/**
+ * Hapus otomatis "sampah": domain yang belum berlisensi (license_valid = 0),
+ * belum pernah diterbitkan serialnya, dan tidak mengirim heartbeat >= 30 hari.
+ * Domain yang pernah diterbitkan serialnya TIDAK dihapus otomatis.
+ */
+async function purgeStale(env) {
+  const cutoff = Date.now() - 30 * 86400000;
+  const res = await env.DB.prepare(`
+    DELETE FROM installs
+    WHERE license_valid = 0
+      AND last_seen < ?1
+      AND domain NOT IN (SELECT domain FROM licenses)
+  `).bind(cutoff).run();
+  return { purged: res.meta?.changes || 0, cutoff };
+}

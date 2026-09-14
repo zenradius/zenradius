@@ -9,6 +9,10 @@ routes = [
 [vars]
 ALLOWED_ORIGIN = "https://license.zenradius.net"
 
+# Pembersihan otomatis harian (03:00 UTC): hapus instalasi tanpa lisensi yang idle >= 30 hari
+[triggers]
+crons = ["0 3 * * *"]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "zenradius-license"
