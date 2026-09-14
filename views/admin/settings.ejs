@@ -181,20 +181,39 @@
         <% } %>
 
         <!-- Lisensi Domain (Seumur Hidup) -->
-        <div class="card mb16">
-          <div class="card-hd" style="display:flex; justify-content:space-between; align-items:center;">
+        <% const licActive = (typeof licenseValid !== 'undefined') && licenseValid; %>
+        <div class="card mb16" <% if (licActive) { %>style="border-color:rgba(52,211,153,.4)"<% } %>>
+          <div class="card-hd" style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
             <h6><i class="bi bi-shield-lock"></i> Lisensi Domain (Seumur Hidup)</h6>
-            <button type="button" class="btn btn-s" onclick="openLicenseActivationModal()" style="font-size:11px; padding:4px 10px; height:auto; margin:0;"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi</button>
+            <% if (licActive) { %>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:var(--sdim);color:var(--success);border:1px solid rgba(52,211,153,.35);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap;"><i class="bi bi-patch-check-fill"></i> Lisensi Aktif</span>
+            <% } else { %>
+              <button type="button" class="btn btn-s" onclick="openLicenseActivationModal()" style="font-size:11px; padding:4px 10px; height:auto; margin:0;"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi</button>
+            <% } %>
           </div>
           <div class="card-bd">
-            <div class="fg">
+            <% if (licActive) { %>
+              <div style="display:flex;gap:10px;align-items:flex-start;background:var(--sdim);border:1px solid rgba(52,211,153,.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+                <i class="bi bi-check-circle-fill" style="color:var(--success);font-size:18px;flex-shrink:0;margin-top:1px"></i>
+                <div style="font-size:12.5px;line-height:1.6;color:var(--text)">
+                  <strong>Terima kasih telah mendukung pengembangan ZenRadius.</strong><br>
+                  Lisensi resmi untuk domain <code><%= typeof currentHost !== 'undefined' ? currentHost : '' %></code> telah aktif dan berlaku <strong>seumur hidup</strong>. Dukungan Anda menjaga keberlanjutan pembaruan, keamanan, dan layanan teknis bagi seluruh pengguna.
+                </div>
+              </div>
+            <% } %>
+            <div class="fg" style="<%= licActive ? 'margin-bottom:0' : '' %>">
               <label class="fl">Kode Lisensi untuk domain <code><%= typeof currentHost !== 'undefined' ? currentHost : '' %></code></label>
-              <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="Format: XXXX-XXXX-XXXX-XXXX" pattern="^([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})?$" autocomplete="off" style="font-family:monospace">
+              <div style="position:relative">
+                <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="Format: XXXX-XXXX-XXXX-XXXX" pattern="^([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})?$" autocomplete="off" autocapitalize="characters" spellcheck="false" style="font-family:monospace;letter-spacing:1px;text-transform:uppercase;<%= licActive ? 'padding-right:38px;border-color:rgba(52,211,153,.45)' : '' %>" oninput="this.value=this.value.toUpperCase()">
+                <% if (licActive) { %><i class="bi bi-patch-check-fill" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--success);font-size:16px;pointer-events:none"></i><% } %>
+              </div>
               <small class="text-muted">
-                <% if (typeof licenseValid !== 'undefined') { %>
-                  Status: <% if (licenseValid) { %><span style="color:#2dd4bf">● Valid</span> — Terima kasih telah mendukung pengembangan ZenRadius. Lisensi resmi Anda turut menjaga keberlanjutan inovasi dan dukungan teknis berkualitas bagi seluruh pengguna.<% } else { %><span style="color:#f87171">● Tidak valid / belum diisi</span> — Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Hubungi Developer Resmi untuk mendaftarkan domain Anda dan miliki kode lisensi premium seumur hidup.<% } %>
+                <% if (licActive) { %>
+                  Status: <span style="color:#2dd4bf">● Valid</span> — Lisensi terverifikasi. Simpan kode ini dengan aman; kode hanya berlaku untuk domain di atas.
+                <% } else if (typeof licenseValid !== 'undefined') { %>
+                  Status: <span style="color:#f87171">● Tidak valid / belum diisi</span> — Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Sudah memiliki kode? Masukkan di atas lalu klik <strong>Simpan</strong>. Belum memiliki? Klik <strong>Aktivasi Lisensi</strong> untuk memesan.
                 <% } else { %>
-                  Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Hubungi Developer Resmi untuk mendaftarkan domain Anda dan miliki kode lisensi premium seumur hidup.
+                  Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Sudah memiliki kode? Masukkan di atas lalu klik <strong>Simpan</strong>. Belum memiliki? Klik <strong>Aktivasi Lisensi</strong> untuk memesan.
                 <% } %>
               </small>
             </div>
