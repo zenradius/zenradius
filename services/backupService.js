@@ -6,8 +6,16 @@ const { getSetting, getCurrentDateInTimezone, getNowLocalISO } = require('../con
 
 const projectRoot = path.join(__dirname, '..');
 const backupDir = path.join(projectRoot, 'backups');
-const dbPath = path.join(projectRoot, 'database', 'zenradius.db');
 const settingsPath = path.join(projectRoot, 'settings.json');
+
+/** Path file database live — mengikuti resolusi config/database.js (termasuk override ZENRADIUS_DB_PATH). */
+function getLiveDbPath() {
+  try {
+    const liveDb = require('../config/database');
+    if (liveDb && liveDb.dbPath) return liveDb.dbPath;
+  } catch (e) { /* fallback di bawah */ }
+  return path.join(projectRoot, 'database', 'zenradius.db');
+}
 
 if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir, { recursive: true });
@@ -28,34 +36,66 @@ function getBackupTimestamp() {
   return `${year}${month}${day}_${hours}${minutes}${seconds}`;
 }
 
-/** Backup database SQLite */
-function backupDatabase() {
+/** Hapus file sidecar SQLite (-wal/-shm/-journal) yang tertinggal di samping file backup. */
+function removeSidecarFiles(filePath) {
+  for (const suffix of ['-wal', '-shm', '-journal']) {
+    try {
+      if (fs.existsSync(filePath + suffix)) fs.unlinkSync(filePath + suffix);
+    } catch (e) {
+      logger.warn(`[Backup] Gagal menghapus sidecar ${path.basename(filePath + suffix)}: ${e.message}`);
+    }
+  }
+}
+
+function isSidecarFile(fileName) {
+  return /\.(db|sqlite)-(wal|shm|journal)$/i.test(fileName);
+}
+
+/**
+ * Verifikasi file SQLite: integrity_check harus 'ok'. Dibuka readonly dan
+ * dipaksa journal_mode=DELETE agar tidak meninggalkan -wal/-shm.
+ */
+function verifyBackupFile(filePath) {
+  try {
+    const Database = require('better-sqlite3');
+    const verifyDb = new Database(filePath, { fileMustExist: true });
+    let result;
+    try {
+      verifyDb.pragma('journal_mode = DELETE');
+      result = verifyDb.pragma('integrity_check');
+    } finally {
+      verifyDb.close();
+    }
+    removeSidecarFiles(filePath);
+    const ok = Array.isArray(result) && result.length === 1 && result[0].integrity_check === 'ok';
+    return { ok, error: ok ? null : 'integrity_check tidak melaporkan ok' };
+  } catch (e) {
+    removeSidecarFiles(filePath);
+    return { ok: false, error: e.message };
+  }
+}
+
+/** Backup database SQLite (snapshot konsisten via better-sqlite3 backup API). */
+async function backupDatabase() {
   try {
     const timestamp = getBackupTimestamp();
     const backupFileName = `billing_db_${timestamp}.db`;
     const backupFilePath = path.join(backupDir, backupFileName);
 
-    try {
-      const liveDb = require('../config/database');
-      liveDb.pragma('wal_checkpoint(TRUNCATE)');
-    } catch (checkpointErr) {
-      logger.warn(`[Backup] WAL checkpoint sebelum backup gagal (lanjut backup): ${checkpointErr.message}`);
+    const liveDb = require('../config/database');
+    if (liveDb && typeof liveDb.backup === 'function' && liveDb.open) {
+      await liveDb.backup(backupFilePath);
+    } else {
+      // Fallback: checkpoint lalu salin file mentah.
+      try { liveDb.pragma('wal_checkpoint(TRUNCATE)'); } catch (e) {
+        logger.warn(`[Backup] WAL checkpoint sebelum backup gagal (lanjut backup): ${e.message}`);
+      }
+      fs.copyFileSync(getLiveDbPath(), backupFilePath);
     }
 
-    fs.copyFileSync(dbPath, backupFilePath);
-
-    let verified = false;
-    let verifyError = null;
-    try {
-      const Database = require('better-sqlite3');
-      const verifyDb = new Database(backupFilePath, { readonly: true, fileMustExist: true });
-      const result = verifyDb.pragma('integrity_check');
-      verifyDb.close();
-      verified = Array.isArray(result) && result.length === 1 && result[0].integrity_check === 'ok';
-      if (!verified) verifyError = 'integrity_check tidak melaporkan ok';
-    } catch (e) {
-      verifyError = e.message;
-    }
+    const verify = verifyBackupFile(backupFilePath);
+    const verified = verify.ok;
+    const verifyError = verify.error;
     if (!verified) {
       logger.error(`[Backup] Verifikasi integritas backup GAGAL untuk ${backupFileName}: ${verifyError}`);
     }
@@ -124,8 +164,8 @@ function backupSettings() {
 /**
  * Backup semua (database + settings)
  */
-function backupAll() {
-  const dbResult = backupDatabase();
+async function backupAll() {
+  const dbResult = await backupDatabase();
   const settingsResult = backupSettings();
 
   return {
@@ -138,35 +178,71 @@ function backupAll() {
 /**
  * Restore database dari backup
  */
-function restoreDatabase(backupFileName) {
+async function restoreDatabase(backupFileName) {
   try {
-    const backupFilePath = path.join(backupDir, backupFileName);
+    const safeName = path.basename(String(backupFileName || ''));
+    const backupFilePath = path.resolve(backupDir, safeName);
 
-    if (!fs.existsSync(backupFilePath)) {
+    if (!safeName || path.dirname(backupFilePath) !== path.resolve(backupDir) || !fs.existsSync(backupFilePath)) {
       return {
         success: false,
         error: `Backup file not found: ${backupFileName}`
       };
     }
 
-    const preRestoreBackup = backupDatabase();
+    // Tolak file yang bukan SQLite valid sebelum menimpa database live.
+    const verify = verifyBackupFile(backupFilePath);
+    if (!verify.ok) {
+      return {
+        success: false,
+        error: `File backup tidak lolos integrity_check: ${verify.error}`
+      };
+    }
+
+    const preRestoreBackup = await backupDatabase();
     if (!preRestoreBackup.success) {
       logger.warn('[Backup] Failed to create pre-restore backup');
     }
 
-    fs.copyFileSync(backupFilePath, dbPath);
+    const dbPath = getLiveDbPath();
+    let restoredVia = 'copy';
+    try {
+      // Utamakan SQLite Online Backup API dari file backup -> database live.
+      // Aman terhadap koneksi yang sedang terbuka (WAL/mmap) di semua OS,
+      // berbeda dengan copyFile yang bisa gagal/korup saat file sedang dipakai.
+      const Database = require('better-sqlite3');
+      const src = new Database(backupFilePath, { readonly: true, fileMustExist: true });
+      try {
+        await src.backup(dbPath);
+      } finally {
+        src.close();
+      }
+      removeSidecarFiles(backupFilePath);
+      restoredVia = 'sqlite-backup-api';
+    } catch (apiErr) {
+      logger.warn(`[Backup] Restore via backup API gagal (${apiErr.message}); fallback ke copyFile.`);
+      try {
+        const liveDb = require('../config/database');
+        if (liveDb && liveDb.open) liveDb.pragma('wal_checkpoint(TRUNCATE)');
+      } catch (e) {
+        logger.warn(`[Backup] WAL checkpoint sebelum restore gagal: ${e.message}`);
+      }
+      fs.copyFileSync(backupFilePath, dbPath);
+      removeSidecarFiles(dbPath);
+    }
 
     const stats = fs.statSync(dbPath);
     const sizeKB = Math.round(stats.size / 1024);
 
-    logger.info(`[Backup] Database restored from: ${backupFileName} (${sizeKB} KB)`);
+    logger.warn(`[Backup] Database restored from: ${safeName} (${sizeKB} KB, via ${restoredVia}). Restart aplikasi diperlukan agar koneksi memakai data hasil restore.`);
 
     return {
       success: true,
-      fileName: backupFileName,
+      fileName: safeName,
       size: stats.size,
       timestamp: getNowLocalISO(),
-      preRestoreBackup: preRestoreBackup.fileName
+      preRestoreBackup: preRestoreBackup.fileName,
+      restartRequired: true
     };
   } catch (e) {
     logger.error(`[Backup] Failed to restore database: ${e.message}`);
@@ -228,8 +304,10 @@ function listBackups() {
     const backups = [];
 
     for (const file of files) {
+      if (isSidecarFile(file)) continue; // artefak SQLite, bukan backup
       const filePath = path.join(backupDir, file);
       const stats = fs.statSync(filePath);
+      if (!stats.isFile()) continue;
 
       let backupDate = null;
       let backupType = null;
@@ -401,14 +479,17 @@ function scheduleAutoBackup() {
     return;
   }
 
-  nodeCron.schedule(schedule, () => {
+  nodeCron.schedule(schedule, async () => {
     logger.info('[Backup] Starting scheduled backup...');
-    const result = backupAll();
-
-    if (result.database.success && result.settings.success) {
-      logger.info('[Backup] Scheduled backup completed successfully');
-    } else {
-      logger.error('[Backup] Scheduled backup failed');
+    try {
+      const result = await backupAll();
+      if (result.database.success && result.settings.success) {
+        logger.info(`[Backup] Scheduled backup completed successfully: ${result.database.fileName}`);
+      } else {
+        logger.error(`[Backup] Scheduled backup failed: ${result.database.error || result.settings.error || 'unknown'}`);
+      }
+    } catch (e) {
+      logger.error(`[Backup] Scheduled backup error: ${e.message}`);
     }
   });
 
@@ -424,5 +505,6 @@ module.exports = {
   listBackups,
   cleanupOldBackups,
   checkBackupCapacity,
-  scheduleAutoBackup
+  scheduleAutoBackup,
+  verifyBackupFile
 };

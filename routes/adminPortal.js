@@ -4428,15 +4428,19 @@ router.get('/backup/download/:fileName', requireAdminSession, restrictToAdmin, (
   }
 });
 
-router.post('/backup/create', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
+router.post('/backup/create', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const { type } = req.body;
     let result;
 
     if (type === 'all') {
-      result = backupSvc.backupAll();
+      const all = await backupSvc.backupAll();
+      const ok = all.database.success && all.settings.success;
+      result = ok
+        ? { success: true, fileName: `${all.database.fileName}, ${all.settings.fileName}` }
+        : { success: false, error: all.database.error || all.settings.error || 'Unknown error' };
     } else if (type === 'database') {
-      result = backupSvc.backupDatabase();
+      result = await backupSvc.backupDatabase();
     } else if (type === 'settings') {
       result = backupSvc.backupSettings();
     } else {
@@ -4455,13 +4459,13 @@ router.post('/backup/create', requireAdminSession, restrictToAdmin, express.urle
   res.redirect('/admin/backup');
 });
 
-router.post('/backup/restore', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
+router.post('/backup/restore', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const { fileName, type } = req.body;
     let result;
 
     if (type === 'database') {
-      result = backupSvc.restoreDatabase(fileName);
+      result = await backupSvc.restoreDatabase(fileName);
     } else if (type === 'settings') {
       result = backupSvc.restoreSettings(fileName);
     } else {
@@ -4470,7 +4474,10 @@ router.post('/backup/restore', requireAdminSession, restrictToAdmin, express.url
     }
 
     if (result.success) {
-      req.session._msg = { type: 'success', text: `Restore berhasil: ${fileName}` };
+      const restartNote = result.restartRequired
+        ? ' Restart aplikasi (pm2 restart / docker compose restart) diperlukan agar data hasil restore aktif.'
+        : '';
+      req.session._msg = { type: result.restartRequired ? 'warning' : 'success', text: `Restore berhasil: ${fileName}.${restartNote}` };
     } else {
       req.session._msg = { type: 'error', text: `Gagal restore: ${result.error}` };
     }
@@ -4480,7 +4487,7 @@ router.post('/backup/restore', requireAdminSession, restrictToAdmin, express.url
   res.redirect('/admin/backup');
 });
 
-router.post('/backup/upload-restore', requireAdminSession, restrictToAdmin, upload.single('backupFile'), (req, res) => {
+router.post('/backup/upload-restore', requireAdminSession, restrictToAdmin, upload.single('backupFile'), async (req, res) => {
   try {
     const file = req.file;
     if (!file || !file.buffer || !file.originalname) {
@@ -4503,7 +4510,15 @@ router.post('/backup/upload-restore', requireAdminSession, restrictToAdmin, uplo
       savedFileName = `uploaded_db_${timestamp}_${originalName}`;
       const savePath = path.join(backupDir, savedFileName);
       fs.writeFileSync(savePath, file.buffer);
-      result = backupSvc.restoreDatabase(savedFileName);
+
+      // Validasi SQLite sebelum menimpa database live (restoreDatabase juga memverifikasi).
+      const verify = backupSvc.verifyBackupFile(savePath);
+      if (!verify.ok) {
+        fs.unlinkSync(savePath);
+        throw new Error('File database tidak valid / rusak (integrity_check gagal): ' + verify.error);
+      }
+
+      result = await backupSvc.restoreDatabase(savedFileName);
     } else if (ext === '.json' || originalName.includes('settings')) {
       savedFileName = `uploaded_settings_${timestamp}_${originalName}`;
       const savePath = path.join(backupDir, savedFileName);
@@ -4522,9 +4537,12 @@ router.post('/backup/upload-restore', requireAdminSession, restrictToAdmin, uplo
     }
 
     if (result && result.success) {
-      req.session._msg = { 
-        type: 'success', 
-        text: `File backup "${originalName}" berhasil di-upload dan di-restore! Backup otomatis sebelum restore telah dibuat (${result.preRestoreBackup || '-'}).` 
+      const restartNote = result.restartRequired
+        ? ' Restart aplikasi (pm2 restart / docker compose restart) diperlukan agar data hasil restore aktif.'
+        : '';
+      req.session._msg = {
+        type: result.restartRequired ? 'warning' : 'success',
+        text: `File backup "${originalName}" berhasil di-upload dan di-restore! Backup otomatis sebelum restore telah dibuat (${result.preRestoreBackup || '-'}).${restartNote}`
       };
     } else {
       req.session._msg = { type: 'error', text: `Gagal restore: ${result ? result.error : 'Error tidak diketahui'}` };

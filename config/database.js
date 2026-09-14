@@ -1193,3 +1193,4 @@ console.log('[DB] Schema migration complete');
 module.exports = db;
 module.exports.getAppSetting = getAppSetting;
 module.exports.saveAppSetting = saveAppSetting;
+module.exports.dbPath = dbPath;

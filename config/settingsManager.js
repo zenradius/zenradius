@@ -291,6 +291,10 @@ function ensureDefaultSettings() {
       
       company_header: 'ZenRadius',
       footer_info: 'ZenRadius - All Rights Reserved',
+
+      // Backup otomatis (satu-satunya jalur backup terjadwal, lihat backupService.scheduleAutoBackup)
+      auto_backup_enabled: true,
+      auto_backup_schedule: '0 2 * * *',
       
       wa_gateway_type: 'baileys',
       whatsapp_broadcast_delay: 5,

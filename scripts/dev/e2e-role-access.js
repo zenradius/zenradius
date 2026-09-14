@@ -1,10 +1,12 @@
 // E2E check: admin sidebar menus + per-user permission enforcement across portals.
-const db = require('../config/database');
+// Jalankan dari root repo saat aplikasi berjalan di localhost:3001: node scripts/dev/e2e-role-access.js
+const path = require('path');
+const db = require('../../config/database');
 const fs = require('fs');
-const settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
-const sidebar = require('../services/sidebarMenuService');
-const userMgmt = require('../services/userManagementService');
-const permSvc = require('../services/userPermissionService');
+const settings = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'settings.json'), 'utf8'));
+const sidebar = require('../../services/sidebarMenuService');
+const userMgmt = require('../../services/userManagementService');
+const permSvc = require('../../services/userPermissionService');
 
 const BASE = 'http://localhost:3001';
 function client() {

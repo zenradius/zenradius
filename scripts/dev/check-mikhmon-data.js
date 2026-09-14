@@ -2,7 +2,7 @@
 const path = require('path');
 const Database = require('better-sqlite3');
 
-const dbPath = path.join(__dirname, '../database/zenradius.db');
+const dbPath = path.join(__dirname, '../../database/zenradius.db');
 const db = new Database(dbPath);
 
 console.log('=== MEMERIKSA DATA MIKHMON DI DATABASE ===\n');

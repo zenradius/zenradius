@@ -6,8 +6,8 @@ const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const SRC = path.join(__dirname, '..', 'database', 'zenradius.db');
-const OUT_DIR = path.join(__dirname, '..', 'database', 'seed');
+const SRC = path.join(__dirname, '..', '..', 'database', 'zenradius.db');
+const OUT_DIR = path.join(__dirname, '..', '..', 'database', 'seed');
 const OUT = path.join(OUT_DIR, 'zenradius-seed.db');
 
 // Tabel yang isinya DIHAPUS pada seed (data runtime / sensitif / transaksi)
