@@ -4361,6 +4361,26 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
         require('../services/telegramBot').initTelegram(); 
       }
       req.session._msg = { type: 'success', text: 'Pengaturan berhasil disimpan.' };
+
+      // Umpan balik khusus aktivasi lisensi domain
+      if (typeof newSettings.domain_license_key === 'string') {
+        const host = domainLicense.normalizeDomain(req.hostname || req.headers.host);
+        const key = newSettings.domain_license_key;
+        if (!key) {
+          req.session._msg = { type: 'success', text: 'Pengaturan disimpan. Kode lisensi dikosongkan.' };
+        } else if (['localhost', '127.0.0.1', '::1', '0.0.0.0'].includes(host)) {
+          req.session._msg = { type: 'success', text: 'Kode lisensi tersimpan. Verifikasi domain otomatis dilewati pada mode lokal (localhost).' };
+        } else {
+          const check = domainLicense.verifyLicense(host, key);
+          if (check.valid) {
+            req.session._msg = { type: 'success', text: `Lisensi berhasil diaktifkan untuk domain ${host}. Terima kasih telah mendukung pengembangan ZenRadius.` };
+          } else if (check.reason === 'format') {
+            req.session._msg = { type: 'error', text: 'Format kode lisensi tidak valid. Gunakan format XXXX-XXXX-XXXX-XXXX.' };
+          } else {
+            req.session._msg = { type: 'error', text: `Kode lisensi tidak cocok untuk domain ${host}. Pastikan domain yang didaftarkan saat order sama persis dengan domain ini.` };
+          }
+        }
+      }
     } else {
       req.session._msg = { type: 'error', text: 'Gagal menyimpan pengaturan' };
     }

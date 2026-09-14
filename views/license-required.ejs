@@ -179,7 +179,7 @@
     </div>
 
     <h3><i class="bi bi-shield-lock-fill"></i> Aktivasi Lisensi</h3>
-    <p class="lock-copy">Untuk terus menikmati seluruh fungsionalitas dan pemantauan jaringan premium, instansi ZenRadius ini memerlukan lisensi domain aktif.</p>
+    <p class="lock-copy">ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen. Untuk terus menikmati seluruh fitur premium, instansi ini memerlukan lisensi resmi yang terdaftar pada domain berikut.</p>
 
     <div class="domain-badge">
       <i class="bi bi-globe"></i> <%= domain %>
@@ -188,24 +188,24 @@
     <% if (hasKey) { %>
       <div class="alert-mismatch">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        <span>Kode lisensi yang terpasang di sistem tidak cocok dengan domain ini.</span>
+        <span>Kode lisensi yang terpasang tidak cocok dengan domain ini. Lisensi hanya berlaku untuk 1 domain yang didaftarkan.</span>
       </div>
     <% } %>
 
     <div class="steps-container">
       <ol>
-        <li>Hubungi <strong>Developer via WhatsApp</strong> untuk mendaftarkan domain Anda dan mendapatkan kunci lisensi premium seumur hidup.</li>
-        <li>Login sebagai Super Admin, buka menu <strong>Akses Role / Pengaturan → Lisensi</strong>.</li>
-        <li>Tempel kode kunci lisensi tersebut, lalu simpan pengaturan.</li>
+        <li><strong>Order Lisensi</strong> via WhatsApp Developer resmi — <strong>Rp 150.000</strong> untuk 1 domain, berlaku seumur hidup (sekali bayar, pembaruan berkelanjutan).</li>
+        <li>Login sebagai Super Admin, buka <strong>Pengaturan → Lisensi Domain</strong>.</li>
+        <li>Tempel kode <code>XXXX-XXXX-XXXX-XXXX</code> lalu klik <strong>Aktivasi Lisensi</strong>.</li>
       </ol>
     </div>
 
     <div class="actions-grid">
       <a class="btn btn-primary" href="/admin/settings">
-        <i class="bi bi-gear-fill"></i> Masukkan Lisensi Sekarang
+        <i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi
       </a>
-      <a class="btn btn-whatsapp" href="https://wa.me/6281234567890?text=Halo%20Developer%20ZenRadius,%20saya%20ingin%20meminta%20kunci%20lisensi%20premium%20seumur%20hidup%20untuk%20domain%20<%= encodeURIComponent(domain) %>" target="_blank" rel="noopener noreferrer">
-        <i class="bi bi-whatsapp"></i> Hubungi WhatsApp Developer
+      <a class="btn btn-whatsapp" href="https://wa.me/6285178008881?text=<%= encodeURIComponent('Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Seumur Hidup (Lifetime) ZenRadius untuk domain berikut:\n\n🌐 DOMAIN: ' + domain + '\n💰 HARGA: Rp 150.000 (1 domain, seumur hidup)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.') %>" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-whatsapp"></i> Order Lisensi
       </a>
     </div>
 
