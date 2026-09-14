@@ -1,29 +1,48 @@
 <% const __licOnSettings = (typeof activePage !== 'undefined' && activePage === 'settings'); %>
 <% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace && !__licOnSettings) { %>
+<% const __licDays = Number(licenseGrace.daysLeft) || 0; const __licTotal = Number(licenseGrace.totalDays) || 7; const __licPct = Math.max(4, Math.min(100, Math.round((__licDays / __licTotal) * 100))); const __licPrice = (typeof licenseInfo !== 'undefined' && licenseInfo && licenseInfo.LICENSE_PRICE_LABEL) ? String(licenseInfo.LICENSE_PRICE_LABEL).replace(/\s*\(.*?\)\s*/g,'').trim() : 'Rp 300.000'; %>
 <div class="lic-modal" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
   <div class="lic-card">
     <div class="hd">
-      <div class="ic"><i class="bi bi-shield-lock-fill"></i></div>
-      <h3 id="licTitle">Aktivasi Lisensi ZenRadius</h3>
-      <span class="dom"><i class="bi bi-globe2"></i> <%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></span>
-    </div>
-    <div class="bd">
-      <p>Sistem billing ZenRadius terdeteksi belum memiliki lisensi aktif untuk domain ini. Masa uji coba (trial) Anda hampir habis.</p>
-      <div class="cnt">
-        <b><%= licenseGrace.daysLeft %></b>
-        <div class="lbl">
-          <span class="t1">Hari Tersisa</span>
-          <span class="t2">Batas Akhir Masa Tenggang</span>
+      <div class="ic"><i class="bi bi-shield-lock"></i></div>
+      <div class="hd-t">
+        <h3 id="licTitle">Aktivasi Lisensi Diperlukan</h3>
+        <div class="hd-s">
+          <span class="dom"><i class="bi bi-globe2"></i><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></span>
+          <span class="pill"><i class="bi bi-hourglass-split"></i>Masa Tenggang</span>
         </div>
       </div>
     </div>
-    <div class="ft">
-      <a class="a1" href="/admin/settings#license"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi Saya</a>
-      <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
-      <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Hubungi Sales (Rp 300.000 / Selamanya)</a>
-      <% } %>
-      <button type="button" class="a3" onclick="document.getElementById('licModal').classList.add('hide')">Nanti saja, lanjutkan navigasi</button>
+
+    <div class="bd">
+      <p>ZenRadius pada domain ini berjalan tanpa lisensi aktif. Seluruh fitur masih dapat digunakan selama masa tenggang, namun akses akan dibatasi secara otomatis setelah periode berakhir.</p>
+
+      <div class="cnt">
+        <b><%= __licDays %></b>
+        <div>
+          <div class="t1">hari tersisa sebelum akses dibatasi</div>
+          <div class="t2">Aktifkan lisensi sebelum tenggat agar layanan billing, monitoring, dan notifikasi pelanggan Anda tetap berjalan tanpa jeda.</div>
+          <div class="bar"><i style="width:<%= __licPct %>%"></i></div>
+        </div>
+      </div>
+
+      <p class="m">Lisensi ZenRadius berlaku <strong style="color:var(--text)">selamanya</strong> untuk satu domain, dengan sekali pembayaran <strong style="color:var(--text)"><%= __licPrice %></strong>. Setiap aktivasi secara langsung mendukung developer independen untuk terus memelihara, mengamankan, dan mengembangkan ZenRadius bagi seluruh pengguna.</p>
+
+      <div class="val">
+        <div><i class="bi bi-infinity"></i><strong>Lisensi Seumur Hidup</strong>Bayar sekali, tanpa biaya berulang.</div>
+        <div><i class="bi bi-arrow-repeat"></i><strong>Pembaruan Berkelanjutan</strong>Perbaikan bug &amp; fitur baru rutin.</div>
+        <div><i class="bi bi-headset"></i><strong>Dukungan Prioritas</strong>Bantuan langsung dari developer.</div>
+      </div>
     </div>
+
+    <div class="ft">
+      <a class="btn btn-p" href="/admin/settings#license"><i class="bi bi-key-fill"></i> Masukkan Kunci Lisensi</a>
+      <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
+      <a class="btn btn-wa" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Dapatkan Lisensi</a>
+      <% } %>
+      <button type="button" class="later" onclick="document.getElementById('licModal').classList.add('hide')">Lanjutkan tanpa aktivasi</button>
+    </div>
+    <div class="foot"><i class="bi bi-info-circle"></i><span>Sudah memiliki kunci lisensi? Buka <strong>Pengaturan &rsaquo; Lisensi</strong>, tempel kunci Anda, dan simpan. Aktivasi berlaku seketika tanpa perlu restart.</span></div>
   </div>
 </div>
 <script>
