@@ -4375,6 +4375,7 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
           const check = domainLicense.verifyLicense(host, key);
           if (check.valid) {
             req.session._msg = { type: 'success', text: `Lisensi berhasil diaktifkan untuk domain ${host}. Terima kasih telah mendukung pengembangan ZenRadius.` };
+            try { require('../services/licenseHeartbeatService').sendHeartbeat({ force: true }).catch(() => {}); } catch (_) {}
           } else if (check.reason === 'format') {
             req.session._msg = { type: 'error', text: 'Format kode lisensi tidak valid. Gunakan format XXXX-XXXX-XXXX-XXXX.' };
           } else {

@@ -51,6 +51,9 @@ function addMessageVariation(message, index) {
 
 function startCronJobs() {
   
+  // Heartbeat registry lisensi (harian, fail-silent)
+  try { require('./licenseHeartbeatService').scheduleHeartbeat(cron); } catch (e) { logger.debug(`[heartbeat] tidak dijadwalkan: ${e.message}`); }
+
   cron.schedule('1 0 1 * *', () => {
     const now = new Date();
     const month = now.getMonth() + 1;
