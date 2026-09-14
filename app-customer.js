@@ -1247,6 +1247,17 @@ app.get('/admin/manifest.webmanifest', (req, res) => {
     ]
   });
 });
+// Logo/ikon custom (di-upload dari admin) disajikan dari public/uploads/branding
+// (volume persisten) dan menimpa file default di public/img.
+const brandAssets = require('./utils/brandAssets');
+app.get(['/img/logo.png', '/img/icon.png'], (req, res) => {
+  const name = path.basename(req.path);
+  const file = brandAssets.resolveBrandFile(name);
+  if (!fs.existsSync(file)) return res.status(404).end();
+  res.setHeader('Cache-Control', 'no-cache');
+  res.type('png');
+  res.sendFile(file);
+});
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
     const name = path.basename(filePath);

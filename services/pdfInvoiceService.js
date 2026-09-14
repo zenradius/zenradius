@@ -49,7 +49,7 @@ function generateInvoicePdfBuffer(invoice, customer, settings = {}) {
 
       let y = 35;
 
-      const logoPath = path.join(__dirname, '../public/img/logo.png');
+      const logoPath = require('../utils/brandAssets').resolveBrandFile('logo.png');
       let logoDrawn = false;
       if (fs.existsSync(logoPath)) {
         try {

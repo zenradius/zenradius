@@ -3778,13 +3778,10 @@ router.post('/settings/logo-upload', requireAdminSession, restrictToAdmin, qrisU
       throw new Error('Format file tidak didukung. Gunakan PNG/JPG/WebP');
     }
 
-    const dir = path.join(__dirname, '../public/img');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-    const fullPath = path.join(dir, 'logo.png');
-    fs.writeFileSync(fullPath, f.buffer);
-
-    fs.writeFileSync(path.join(dir, 'icon.png'), PWA_ICON_SVG, 'utf8');
+    // Simpan ke volume persisten (public/uploads/branding), bukan public/img:
+    // di Docker /app/public/img read-only untuk user `node` dan hilang saat rebuild.
+    const brandAssets = require('../utils/brandAssets');
+    brandAssets.saveBrandLogo(f.buffer);
 
     req.session._msg = { type: 'success', text: 'Logo aplikasi berhasil diperbarui! Ikon PWA & favicon juga sudah disinkronkan.' };
   } catch (e) {
