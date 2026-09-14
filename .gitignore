@@ -17,3 +17,6 @@ data/
 licensi/
 license/
 license-api/
+
+!database/seed/
+!database/seed/zenradius-seed.db

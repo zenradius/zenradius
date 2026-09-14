@@ -20,6 +20,18 @@ if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 const dbPath = resolveDbPath();
 
+// Instalasi baru: jika database belum ada, salin database contoh (seed) yang ikut repo
+// agar pengguna langsung mendapat data awal (paket, kategori pengeluaran, dsb).
+try {
+  const seedPath = path.join(__dirname, '../database/seed/zenradius-seed.db');
+  if (!fs.existsSync(dbPath) && fs.existsSync(seedPath)) {
+    fs.copyFileSync(seedPath, dbPath);
+    console.log('[DB] Database baru dibuat dari seed:', seedPath);
+  }
+} catch (e) {
+  console.warn('[DB] Gagal menyalin seed database:', e.message);
+}
+
 let db;
 try {
   db = new Database(dbPath);
