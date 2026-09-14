@@ -476,7 +476,7 @@
     <!-- BRANDING LOGO -->
     <div class="site-header">
       <a href="/">
-        <img class="logo-img" src="/img/logo.png?v=zenradius" alt="Logo <%= company %>">
+        <img class="logo-img" src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="Logo <%= company %>">
       </a>
     </div>
 

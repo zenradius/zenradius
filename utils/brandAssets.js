@@ -40,4 +40,16 @@ function saveBrandLogo(buffer) {
 
 function hasCustomLogo() { return fs.existsSync(customPath('logo.png')); }
 
-module.exports = { BRANDING_DIR, ensureBrandingDir, resolveBrandFile, saveBrandLogo, hasCustomLogo };
+/**
+ * Versi cache-buster untuk URL logo/ikon. Berubah setiap kali file logo
+ * diganti (berbasis mtime), sehingga CDN/Cloudflare & browser mengambil ulang.
+ */
+function getBrandVersion() {
+  try {
+    return String(Math.floor(fs.statSync(resolveBrandFile('logo.png')).mtimeMs));
+  } catch {
+    return 'zenradius';
+  }
+}
+
+module.exports = { BRANDING_DIR, ensureBrandingDir, resolveBrandFile, saveBrandLogo, hasCustomLogo, getBrandVersion };

@@ -12,8 +12,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="/img/icon.png">
-  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>">
+  <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
   <link rel="stylesheet" href="/css/unified.css">
   <style>
     body {
@@ -132,7 +132,7 @@
     <div class="otp-card">
       <div class="otp-header">
         <div class="logo-container">
-          <img src="/img/logo.png" alt="Logo">
+          <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="Logo">
         </div>
         <h4 class="mb-1 fw-bold">Verifikasi OTP</h4>
         <p class="mb-0 opacity-75">Masukkan kode OTP dari WhatsApp</p>

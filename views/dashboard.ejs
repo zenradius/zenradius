@@ -14,8 +14,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="/img/icon.png">
-  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>">
+  <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
   <link rel="stylesheet" href="/css/unified.css">
 
   <style>
@@ -1091,7 +1091,7 @@
 
       <div class="navbar-brand-wrap">
         <span class="navbar-brand">
-          <img src="/img/logo.png" alt="Logo ZenRadius" class="brand-logo">
+          <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="Logo ZenRadius" class="brand-logo">
           <span class="brand-text"><%= t('customer.dashboard.portal', 'Pusat Layanan Pelanggan') %></span>
         </span>
       </div>

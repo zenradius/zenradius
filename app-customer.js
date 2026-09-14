@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const brandAssets = require('./utils/brandAssets');
 const dns = require('dns');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const crypto = require('crypto');
@@ -182,6 +183,7 @@ app.use((req, res, next) => {
   }
 
   res.locals.brandName = brandName;
+  res.locals.brandVersion = brandAssets.getBrandVersion();
   res.locals.footerInfo = footerInfo;
   res.locals.footerPoweredBy = footerPoweredBy;
   res.locals.footerDefault = 'ZenRadius - All Rights Reserved';
@@ -1249,14 +1251,18 @@ app.get('/admin/manifest.webmanifest', (req, res) => {
 });
 // Logo/ikon custom (di-upload dari admin) disajikan dari public/uploads/branding
 // (volume persisten) dan menimpa file default di public/img.
-const brandAssets = require('./utils/brandAssets');
 app.get(['/img/logo.png', '/img/icon.png'], (req, res) => {
   const name = path.basename(req.path);
   const file = brandAssets.resolveBrandFile(name);
   if (!fs.existsSync(file)) return res.status(404).end();
-  res.setHeader('Cache-Control', 'no-cache');
+  // no-store + CDN-Cache-Control agar Cloudflare/proxy tidak menahan logo lama.
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  res.setHeader('Cloudflare-CDN-Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.type('png');
-  res.sendFile(file);
+  res.sendFile(file, { cacheControl: false, etag: true, lastModified: true });
 });
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {

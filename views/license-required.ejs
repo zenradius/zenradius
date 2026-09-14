@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#173945">
   <meta name="robots" content="noindex, nofollow">
   <title>Aktivasi Lisensi Diperlukan - ZenRadius</title>
-  <link rel="icon" href="/img/icon.png" type="image/png">
+  <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <style>
@@ -95,7 +95,7 @@
 
   <main class="lock-card" role="main">
     <div class="brand">
-      <img src="/img/logo.png?v=zenradius" alt="ZenRadius" onerror="this.src='/img/icon.png'">
+      <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="ZenRadius" onerror="this.src='/img/icon.png'">
       <small>Lisensi Resmi Seumur Hidup</small>
     </div>
 

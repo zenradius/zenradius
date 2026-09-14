@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= t('customer.otp_title', 'Verifikasi OTP') %> | <%= settings.company_header || 'ZenRadius - Pusat Layanan' %></title>
-    <link rel="icon" href="/img/icon.png" type="image/png">
+    <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#173945">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="/img/icon.png">
+    <link rel="apple-touch-icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>">
     <style>
         :root {
             --bg: #173945;
@@ -273,7 +273,7 @@
 <body>
     <div class="wrap">
         <div class="card">
-            <img class="logo" src="/img/logo.png?v=zenradius" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.src='/img/icon.png'">
+            <img class="logo" src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.src='/img/icon.png'">
             <p class="sub">Verifikasi OTP</p>
             <p class="copy">Selesaikan verifikasi untuk masuk ke pusat layanan pelanggan.</p>
 

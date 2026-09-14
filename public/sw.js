@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zenradius-pwa-v8';
+const CACHE_NAME = 'zenradius-pwa-v9';
 const PRECACHE_URLS = [
   '/css/style.css',
   '/css/unified.css',
@@ -138,11 +138,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Brand images & manifests - stale-while-revalidate so logo/icon changes
-  // uploaded from admin panel reach installed PWA users without clearing cache.
+  // Brand images & manifests - network-first so a logo uploaded from admin
+  // is shown immediately; cached copy only used when offline.
   if (path === '/img/logo.png' || path === '/img/icon.png' ||
       path === '/manifest.webmanifest' || path === '/manifest-admin.webmanifest') {
-    event.respondWith(staleWhileRevalidate(req));
+    event.respondWith(networkFirst(req));
     return;
   }
 
