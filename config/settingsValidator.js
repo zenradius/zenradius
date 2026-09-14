@@ -183,6 +183,7 @@ const VALIDATION_RULES = {
     type: 'string',
       pattern: /^([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})?$/,
       description: 'Lifetime domain license key (XXXX-XXXX-XXXX-XXXX format)'
+  },
   tripay_enabled: {
     type: 'boolean',
     description: 'Enable Tripay'

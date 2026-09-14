@@ -374,12 +374,12 @@ router.post('/pay-invoice', requireAgentSession, requireMenuAccess('agent_billin
         const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
         if (whatsappStatus.connection === 'open') {
           const msg =
-            `âœ… *PEMBAYARAN BERHASIL*\n\n` +
-            `ðŸ‘¤ *Pelanggan:* ${customer.name}\n` +
-            `ðŸ§¾ *Invoice:* #${result.invoice.id}\n` +
-            `ðŸ“… *Periode:* ${result.invoice.period_month}/${result.invoice.period_year}\n` +
-            `ðŸ’° *Nominal Tagihan:* Rp ${Number(result.invoice.amount || 0).toLocaleString('id-ID')}\n` +
-            `ðŸ·ï¸ *Dibayar Via:* Agent ${result.agent.name}\n\n` +
+            `✅ *PEMBAYARAN BERHASIL*\n\n` +
+            `👤 *Pelanggan:* ${customer.name}\n` +
+            `🧾 *Invoice:* #${result.invoice.id}\n` +
+            `📅 *Periode:* ${result.invoice.period_month}/${result.invoice.period_year}\n` +
+            `💰 *Nominal Tagihan:* Rp ${Number(result.invoice.amount || 0).toLocaleString('id-ID')}\n` +
+            `🏷️ *Dibayar Via:* Agent ${result.agent.name}\n\n` +
             `Terima kasih.`;
           await sendWA(customer.phone, msg);
           waSent = true;
