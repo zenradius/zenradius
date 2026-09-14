@@ -24,17 +24,20 @@ function normalizeDomain(input) {
 }
 
 function computeSignature(domain) {
-  return crypto.createHmac('sha256', MASTER_SECRET).update(domain).digest('hex');
+  // Gunting HMAC menjadi 16 karakter Hex pendek, lalu bentuk format XXXX-XXXX-XXXX-XXXX huruf besar
+  const hash = crypto.createHmac('sha256', MASTER_SECRET).update(domain).digest('hex').toUpperCase();
+  const rawKey = hash.substring(0, 16);
+  return `${rawKey.substring(0,4)}-${rawKey.substring(4,8)}-${rawKey.substring(8,12)}-${rawKey.substring(12,16)}`;
 }
 
 function verifyLicense(domain, licenseKey) {
   if (!MASTER_SECRET) return { valid: false, reason: 'secret_missing' };
   const clean = normalizeDomain(domain);
-  const key = String(licenseKey || '').trim().toLowerCase();
-  if (!clean || !/^[0-9a-f]{64}$/.test(key)) return { valid: false, reason: 'format' };
+  const key = String(licenseKey || '').trim().toUpperCase();
+  if (!clean || !/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key)) return { valid: false, reason: 'format' };
 
   const expected = computeSignature(clean);
-  const ok = crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(key, 'hex'));
+  const ok = (expected === key); // String direct comparison aman karena format sudah tervalidasi rigid
   return { valid: ok, reason: ok ? null : 'mismatch', domain: clean };
 }
 

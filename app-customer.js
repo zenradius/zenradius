@@ -1447,6 +1447,14 @@ app.post(['/donasi/confirm', '/api/donasi/confirm'], async (req, res) => {
 const acsServerService = require('./services/acsServerService');
 app.post('/acs', express.raw({ type: ['text/xml', 'application/soap+xml', 'application/xml', 'text/plain'], limit: '2mb' }), acsServerService.handleCwmpRequest);
 
+// Lisensi domain seumur hidup — blokir portal jika kode lisensi tidak cocok dengan domain
+const domainLicense = require('./services/domainLicenseService');
+if (String(process.env.ZENRADIUS_LICENSE_SECRET || '').trim()) {
+  app.use(domainLicense.requireDomainLicense());
+} else {
+  logger.warn('[license] ZENRADIUS_LICENSE_SECRET belum diset — pengecekan lisensi domain dinonaktifkan');
+}
+
 const mobileApi = require('./routes/mobileApi');
 app.use('/api/mobile/v1', mobileApi);
 

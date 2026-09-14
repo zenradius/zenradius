@@ -15,6 +15,7 @@ const userMgmtSvc = require('../services/userManagementService');
 const { requireAuth, requireRole } = require('../middleware/authz');
 const oltSvc = require('../services/oltService');
 const odpSvc = require('../services/odpService');
+const domainLicense = require('../services/domainLicenseService');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -3667,11 +3668,14 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
   const baseUrl = (settings && settings.app_url ? String(settings.app_url) : `${protocol}://${host}`).replace(/\/+$/, '');
   const digiflazzWebhookUrl = `${baseUrl}/webhook/digiflazz`;
   const paymentWebhookUrl = `${baseUrl}/customer/payment/callback`;
+  const licenseCheck = domainLicense.checkRequestLicense(req);
   res.render('admin/settings', {
     title: 'Pengaturan Sistem', company: company(), activePage: 'settings',
     settings, msg: flashMsg(req),
     digiflazzWebhookUrl,
     paymentWebhookUrl,
+    currentHost: licenseCheck.host,
+    licenseValid: licenseCheck.valid,
     canManageSidebar: Boolean(req.session?.isAdmin),
     menuConfigs: sidebarMenuSvc.getConfigMenus()
   });
@@ -4308,6 +4312,7 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
     if (newSettings.digiflazz_markup !== undefined) newSettings.digiflazz_markup = parseInt(newSettings.digiflazz_markup) || 0;
     
     if (newSettings.login_otp_enabled !== undefined) newSettings.login_otp_enabled = (newSettings.login_otp_enabled === 'true');
+    if (typeof newSettings.domain_license_key === 'string') newSettings.domain_license_key = newSettings.domain_license_key.trim().toUpperCase();
     if (newSettings.telegram_enabled !== undefined) newSettings.telegram_enabled = (newSettings.telegram_enabled === 'true');
     if (newSettings.auto_backup_enabled !== undefined) newSettings.auto_backup_enabled = (newSettings.auto_backup_enabled === 'true');
     if (newSettings.use_builtin_acs !== undefined) newSettings.use_builtin_acs = (newSettings.use_builtin_acs === 'true' || newSettings.use_builtin_acs === true);
