@@ -1,23 +1,42 @@
 <% const __licOnSettings = (typeof activePage !== 'undefined' && activePage === 'settings'); %>
 <% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace && !__licOnSettings) { %>
 <% const __licDays = Number(licenseGrace.daysLeft) || 0; const __licPrice = (typeof licenseInfo !== 'undefined' && licenseInfo && licenseInfo.LICENSE_PRICE_LABEL) ? String(licenseInfo.LICENSE_PRICE_LABEL).replace(/\s*\(.*?\)\s*/g,'').trim() : 'Rp 300.000'; %>
-<div class="lic-modal" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
-  <div class="lic-card">
-    <div class="hd">
-      <div class="ic"><i class="bi bi-shield-lock"></i></div>
-      <h3 id="licTitle">Aktivasi Lisensi Diperlukan</h3>
-      <span class="dom"><i class="bi bi-globe2"></i><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></span>
+<div class="licg-modal" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
+  <div class="licg-dialog">
+    <div class="licg-grip"></div>
+    <div class="licg-head">
+      <h6 id="licTitle"><i class="bi bi-shield-lock"></i> Aktivasi Lisensi Domain</h6>
+      <button type="button" class="licg-close" onclick="licModalClose()" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
     </div>
-    <div class="bd">
-      ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen dengan dedikasi penuh. Lisensi resmi Anda menjaga pembaruan, keamanan, dan bantuan teknis tetap berjalan &mdash; sekali bayar <strong style="color:#edf7f5"><%= __licPrice %></strong>, berlaku selamanya untuk 1 domain.
-      <div class="cnt"><b><%= __licDays %></b><span>hari tersisa sebelum akses dibatasi</span></div>
+    <div class="licg-scroll">
+      <div class="licg-brand">
+        <img src="/img/logo.png?v=zenradius" alt="ZenRadius" onerror="this.style.display='none'">
+        <small>Lisensi Aktif Selamanya</small>
+      </div>
+      <div class="licg-body">
+        <p class="licg-desc">ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen dengan dedikasi penuh. Lisensi resmi Anda bukan sekadar kunci aktivasi &mdash; melainkan bentuk apresiasi nyata yang menjaga pembaruan, keamanan, dan dukungan teknis tetap berjalan untuk seluruh pengguna.</p>
+
+        <div class="licg-price">
+          <div>
+            <div class="licg-price-label">Masa Tenggang &bull; <%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></div>
+            <div class="licg-price-value"><%= __licDays %> <span>hari tersisa</span></div>
+            <div class="licg-price-note">Setelah masa tenggang berakhir, akses admin akan dibatasi hingga lisensi diaktifkan.</div>
+          </div>
+          <span class="licg-price-badge"><i class="bi bi-infinity"></i> <%= __licPrice %> / Lifetime</span>
+        </div>
+
+        <div class="licg-note">
+          <i class="bi bi-info-circle-fill"></i>
+          <div>Sudah memiliki kode lisensi? Klik <strong>Aktivasi Lisensi</strong> untuk memasukkannya. Belum memiliki? Klik <strong>Order Lisensi</strong> &mdash; lisensi melekat permanen pada domain <code><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></code>.</div>
+        </div>
+      </div>
     </div>
-    <div class="ft">
-      <a class="a1" href="/admin/settings#license" onclick="licToInput(event)"><i class="bi bi-key-fill"></i> Aktivasi Lisensi</a>
+    <div class="licg-actions">
+      <button type="button" class="btn btn-g" onclick="licModalClose()">Nanti Saja</button>
       <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
-      <a class="a2" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener" id="licOrderBtn"><i class="bi bi-cart-plus"></i> Order Lisensi</a>
+      <a class="btn btn-s" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener" id="licOrderBtn"><i class="bi bi-cart-plus"></i> Order Lisensi</a>
       <% } %>
-      <button type="button" class="a3" onclick="licModalClose()">Lanjutkan tanpa aktivasi</button>
+      <a class="btn btn-p" href="/admin/settings#license" onclick="licToInput(event)"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi</a>
     </div>
   </div>
 </div>

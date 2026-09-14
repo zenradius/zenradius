@@ -7,29 +7,53 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
 </script>
 <% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace) { %>
 <style>
-  .lic-modal{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(8,26,32,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:licFade .22s ease}
-  .lic-modal.show{display:flex}
-  @keyframes licFade{from{opacity:0}to{opacity:1}}
-  @keyframes licUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-  .lic-card{position:relative;width:100%;max-width:440px;border-radius:12px;overflow:hidden;background:#173945;border:1px solid rgba(190,239,255,0.22);box-shadow:0 24px 60px -20px rgba(0,0,0,.65);color:#edf7f5;font-family:'Inter',sans-serif;animation:licUp .24s cubic-bezier(.2,.8,.2,1)}
-  .lic-card .hd{padding:28px 24px 16px;text-align:center;background:linear-gradient(180deg,rgba(34,211,238,0.14) 0%,rgba(23,57,69,0) 100%)}
-  .lic-card .ic{width:60px;height:60px;margin:0 auto 14px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,0.14);border:1px solid rgba(34,211,238,0.35);color:#22D3EE;font-size:28px;animation:licPulse 2.6s ease-in-out infinite}
-  @keyframes licPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.35)}50%{box-shadow:0 0 0 12px rgba(34,211,238,0)}}
-  .lic-card h3{margin:0 0 8px;font-size:18px;font-weight:700;color:#edf7f5;letter-spacing:-.01em}
-  .lic-card .dom{display:inline-flex;align-items:center;gap:6px;font-family:'Monaco','Menlo','Consolas',monospace;font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px;background:rgba(190,239,255,0.08);border:1px solid rgba(190,239,255,0.22);color:#edf7f5}
-  .lic-card .dom i{color:#22D3EE}
-  .lic-card .bd{padding:0 24px 8px;text-align:center;color:#a8bec2;font-size:13px;line-height:1.6}
-  .lic-card .cnt{margin:14px auto 0;display:flex;align-items:baseline;justify-content:center;gap:7px;padding:12px 18px;border-radius:12px;background:linear-gradient(145deg,rgba(34,211,238,0.14) 0%,#1b4656 70%);border:1px solid rgba(190,239,255,0.22);width:fit-content}
-  .lic-card .cnt b{font-size:32px;line-height:1;font-weight:700;color:#22D3EE;letter-spacing:-.02em}
-  .lic-card .cnt span{font-size:12.5px;color:#edf7f5;font-weight:500}
-  .lic-card .ft{padding:18px 24px 22px;display:flex;flex-direction:column;gap:9px}
-  .lic-card .ft a,.lic-card .ft button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;border:1px solid transparent;transition:all .22s;font-family:inherit}
-  .lic-card .a1{background:linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);color:#f4fffd;border-color:rgba(126,231,219,.48);box-shadow:0 8px 20px rgba(10,41,50,.24)}
-  .lic-card .a1:hover{background:linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%);border-color:rgba(166,247,235,.72);color:#fff}
-  .lic-card .a2{background:rgba(52,211,153,0.14);color:#34D399;border-color:rgba(52,211,153,0.35)}
-  .lic-card .a2:hover{background:rgba(52,211,153,0.24)}
-  .lic-card .a3{background:transparent;color:#a8bec2;font-weight:600;font-size:12.5px;padding:8px}
-  .lic-card .a3:hover{color:#edf7f5}
+  /* ── License Grace Modal — identik dengan Order Lisensi modal (settings.ejs) ── */
+  .licg-modal{display:none;position:fixed;inset:0;z-index:20000;background:rgba(10,30,38,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:0;align-items:flex-end;justify-content:center}
+  .licg-modal.show{display:flex}
+  .licg-dialog{width:100%;max-height:calc(100dvh - 24px);display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--border);border-bottom:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px rgba(3,14,20,.5);overflow:hidden;animation:licgSlideUp .26s cubic-bezier(.2,.8,.2,1) forwards;color:var(--text);font-family:'Inter',sans-serif}
+  @keyframes licgSlideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes licgFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .licg-grip{width:40px;height:4px;border-radius:99px;background:rgba(190,239,255,.28);margin:10px auto 0;flex-shrink:0}
+  .licg-head{padding:10px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+  .licg-head h6{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;margin:0;color:var(--text)}
+  .licg-head h6 i{color:var(--primary)}
+  .licg-close{background:transparent;border:0;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;margin-right:-6px}
+  .licg-close:hover{color:var(--text);background:var(--btn-g-bg)}
+  .licg-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;flex:1 1 auto;min-height:0}
+  .licg-brand{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 16px 4px;text-align:center}
+  .licg-brand img{width:min(150px,60%);max-height:46px;object-fit:contain;display:block}
+  .licg-brand small{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:500}
+  .licg-body{padding:14px 16px 16px;text-align:left}
+  .licg-desc{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0 0 12px}
+  .licg-price{background:linear-gradient(145deg,var(--pdim) 0%,var(--bg3) 70%);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+  .licg-price-label{font-size:10.5px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  .licg-price-value{font-size:21px;font-weight:700;color:var(--text);line-height:1.1}
+  .licg-price-value span{font-size:12px;font-weight:500;color:var(--muted)}
+  .licg-price-note{font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+  .licg-price-badge{align-self:flex-start;background:var(--sdim);color:var(--success);border:1px solid rgba(52,211,153,.35);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+  .licg-note{background:var(--pdim);border:1px solid rgba(34,211,238,.28);border-radius:8px;padding:10px 12px;margin-bottom:0;color:var(--text);font-size:12px;line-height:1.55;display:flex;gap:8px;align-items:flex-start}
+  .licg-note i{color:var(--primary);font-size:14px;margin-top:1px;flex-shrink:0}
+  .licg-note code{font-family:'Monaco','Menlo','Consolas',monospace;font-size:11.5px;background:var(--btn-g-bg);border:1px solid var(--btn-g-border);border-radius:5px;padding:1px 6px;color:var(--text)}
+  .licg-actions{display:flex;flex-direction:column-reverse;gap:8px;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:rgba(27,70,86,.35);flex-shrink:0}
+  .licg-actions .btn{width:100%;justify-content:center;min-height:44px}
+  .licg-actions .btn-s{background:var(--sdim);color:var(--success);border-color:rgba(52,211,153,.35)}
+  .licg-actions .btn-s:hover{background:rgba(52,211,153,.24)}
+  @media (min-width:640px){
+    .licg-modal{padding:16px;align-items:center}
+    .licg-dialog{width:min(100%,480px);max-height:calc(100vh - 32px);border-bottom:1px solid var(--border);border-radius:12px;box-shadow:0 20px 50px rgba(3,14,20,.5);animation:licgFadeIn .22s ease forwards}
+    .licg-grip{display:none}
+    .licg-head{padding:14px 18px}
+    .licg-brand{padding:22px 18px 6px;gap:8px}
+    .licg-brand img{width:min(180px,70%);max-height:54px}
+    .licg-body{padding:18px}
+    .licg-desc{font-size:13px;margin-bottom:14px}
+    .licg-price{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;margin-bottom:14px}
+    .licg-price-value{font-size:22px}
+    .licg-price-badge{align-self:center;flex-shrink:0}
+    .licg-note{padding:11px 14px;font-size:12.5px}
+    .licg-actions{flex-direction:row;justify-content:flex-end;padding:14px 18px}
+    .licg-actions .btn{width:auto;min-height:0}
+  }
 </style>
 <% } %>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
