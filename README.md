@@ -168,7 +168,14 @@ cd zenradius
 cp .env.example .env    # Linux/Mac
 copy .env.example .env  # Windows CMD/PowerShell
 ```
-Sesuaikan nilai `.env` sesuai kebutuhan (kredensial admin, secret webhook, port, dll).
+Sesuaikan nilai `.env` sesuai kebutuhan (kredensial admin, secret webhook, port, dll). Pada `NODE_ENV=production` aplikasi **menolak start** jika `SESSION_SECRET` atau `SETTINGS_MASTER_KEY` masih kosong/placeholder — isi keduanya dengan string acak yang panjang.
+
+Buat juga `settings.json` awal **sebelum** container dijalankan (nilai lain diisi otomatis oleh aplikasi saat start). `compose.yaml` me-mount berkas ini secara bind; jika berkas belum ada, Docker akan membuat **direktori** kosong bernama `settings.json` dan aplikasi gagal membaca konfigurasi:
+```bash
+echo '{"server_port": 3001}' > settings.json                    # Linux/Mac
+Set-Content settings.json '{"server_port": 3001}' -Encoding ascii  # Windows PowerShell
+```
+Nilai `server_port` harus sama dengan `PORT` di `.env` dan port yang dipublikasikan di `compose.yaml`.
 
 ### Langkah 3: Build & Jalankan Container
 ```bash

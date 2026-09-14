@@ -1025,8 +1025,11 @@ try {
   logger.error('[DB] Database init failed:', e.message);
 }
 
+// Port: settings.json (server_port) tetap sumber utama. Jika belum diisi (instalasi baru
+// via Docker/.env), pakai PORT dari .env agar sinkron dengan compose.yaml/Nginx, baru 4555.
+const envPort = Number.parseInt(String(process.env.PORT || '').trim(), 10);
 global.appSettings = {
-  port: getSetting('server_port', 4555),
+  port: getSetting('server_port', Number.isInteger(envPort) && envPort > 0 ? envPort : 4555),
   host: getSetting('server_host', 'localhost'),
   genieacsUrl: getSetting('genieacs_url', 'http://localhost:7557'),
   genieacsUsername: getSetting('genieacs_username', ''),
