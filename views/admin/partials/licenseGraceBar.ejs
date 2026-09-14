@@ -1,6 +1,6 @@
 <% const __licOnSettings = (typeof activePage !== 'undefined' && activePage === 'settings'); %>
 <% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace && !__licOnSettings) { %>
-<% const __licDays = Number(licenseGrace.daysLeft) || 0; const __licPrice = (typeof licenseInfo !== 'undefined' && licenseInfo && licenseInfo.LICENSE_PRICE_LABEL) ? String(licenseInfo.LICENSE_PRICE_LABEL).replace(/\s*\(.*?\)\s*/g,'').trim() : 'Rp 300.000'; %>
+<% const __licDays = Number(licenseGrace.daysLeft) || 0; const __licPrice = (typeof licenseInfo !== 'undefined' && licenseInfo && licenseInfo.LICENSE_PRICE_LABEL) ? String(licenseInfo.LICENSE_PRICE_LABEL).replace(/\s*\(.*?\)\s*/g,'').trim() : 'Rp 300.000'; const __licHost = (typeof licenseHost !== 'undefined' ? licenseHost : ''); const __licTotal = (typeof licenseInfo !== 'undefined' && licenseInfo && licenseInfo.LICENSE_GRACE_DAYS) ? Number(licenseInfo.LICENSE_GRACE_DAYS) : 7; const __licPct = Math.max(4, Math.min(100, Math.round((__licDays / __licTotal) * 100))); const __licEnd = licenseGrace.endsAt ? new Date(licenseGrace.endsAt) : null; const __licEndStr = __licEnd ? __licEnd.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : ''; %>
 <div class="licg-modal" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
   <div class="licg-dialog">
     <div class="licg-grip"></div>
@@ -13,18 +13,26 @@
         <div class="licg-hero-ic"><i class="bi bi-shield-lock-fill"></i></div>
         <div class="licg-hero-t">
           <h4>Lisensi Belum Diaktifkan</h4>
-          <p>Domain <code><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></code> sedang berjalan dalam masa tenggang.</p>
+          <div class="licg-domain"><i class="bi bi-globe2"></i><%= __licHost %></div>
+          <p>Domain ini sedang berjalan dalam <strong>masa tenggang</strong>.</p>
         </div>
       </div>
 
-      <div class="licg-stats">
-        <div class="licg-stat">
-          <span class="licg-stat-l"><i class="bi bi-hourglass-split"></i> Sisa Masa Tenggang</span>
-          <span class="licg-stat-v"><%= __licDays %> <small>hari</small></span>
+      <div class="licg-grace">
+        <div class="licg-grace-top">
+          <div>
+            <div class="licg-stat-l"><i class="bi bi-hourglass-split"></i> Sisa Masa Tenggang</div>
+            <div class="licg-grace-v"><%= __licDays %> <small>hari</small></div>
+          </div>
+          <div class="licg-grace-right">
+            <div class="licg-stat-l"><i class="bi bi-infinity"></i> Lisensi Resmi</div>
+            <div class="licg-grace-p"><%= __licPrice %> <small>/ selamanya</small></div>
+          </div>
         </div>
-        <div class="licg-stat">
-          <span class="licg-stat-l"><i class="bi bi-infinity"></i> Lisensi Resmi</span>
-          <span class="licg-stat-v"><%= __licPrice %> <small>/ selamanya</small></span>
+        <div class="licg-bar"><i style="width:<%= __licPct %>%"></i></div>
+        <div class="licg-grace-meta">
+          <% if (__licEndStr) { %><span><i class="bi bi-calendar-event"></i> Berakhir <%= __licEndStr %></span><% } %>
+          <span><i class="bi bi-lock"></i> Setelah itu akses admin dibatasi hingga lisensi aktif</span>
         </div>
       </div>
 
