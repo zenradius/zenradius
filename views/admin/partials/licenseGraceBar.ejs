@@ -8,28 +8,33 @@
       <h6 id="licTitle"><i class="bi bi-shield-lock"></i> Aktivasi Lisensi Domain</h6>
       <button type="button" class="licg-close" onclick="licModalClose()" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
     </div>
-    <div class="licg-scroll">
-      <div class="licg-brand">
-        <img src="/img/logo.png?v=zenradius" alt="ZenRadius" onerror="this.style.display='none'">
-        <small>Lisensi Aktif Selamanya</small>
-      </div>
-      <div class="licg-body">
-        <p class="licg-desc">ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen dengan dedikasi penuh. Lisensi resmi Anda bukan sekadar kunci aktivasi &mdash; melainkan bentuk apresiasi nyata yang menjaga pembaruan, keamanan, dan dukungan teknis tetap berjalan untuk seluruh pengguna.</p>
-
-        <div class="licg-price">
-          <div>
-            <div class="licg-price-label">Masa Tenggang &bull; <%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></div>
-            <div class="licg-price-value"><%= __licDays %> <span>hari tersisa</span></div>
-            <div class="licg-price-note">Setelah masa tenggang berakhir, akses admin akan dibatasi hingga lisensi diaktifkan.</div>
-          </div>
-          <span class="licg-price-badge"><i class="bi bi-infinity"></i> <%= __licPrice %> / Lifetime</span>
-        </div>
-
-        <div class="licg-note">
-          <i class="bi bi-info-circle-fill"></i>
-          <div>Sudah memiliki kode lisensi? Klik <strong>Aktivasi Lisensi</strong> untuk memasukkannya. Belum memiliki? Klik <strong>Order Lisensi</strong> &mdash; lisensi melekat permanen pada domain <code><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></code>.</div>
+    <div class="licg-body">
+      <div class="licg-hero">
+        <div class="licg-hero-ic"><i class="bi bi-shield-lock-fill"></i></div>
+        <div class="licg-hero-t">
+          <h4>Lisensi Belum Diaktifkan</h4>
+          <p>Domain <code><%= typeof licenseHost !== 'undefined' ? licenseHost : '' %></code> sedang berjalan dalam masa tenggang.</p>
         </div>
       </div>
+
+      <div class="licg-stats">
+        <div class="licg-stat">
+          <span class="licg-stat-l"><i class="bi bi-hourglass-split"></i> Sisa Masa Tenggang</span>
+          <span class="licg-stat-v"><%= __licDays %> <small>hari</small></span>
+        </div>
+        <div class="licg-stat">
+          <span class="licg-stat-l"><i class="bi bi-infinity"></i> Lisensi Resmi</span>
+          <span class="licg-stat-v"><%= __licPrice %> <small>/ selamanya</small></span>
+        </div>
+      </div>
+
+      <p class="licg-desc">ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen. Lisensi resmi Anda menjaga pembaruan, keamanan, dan dukungan teknis tetap berjalan untuk seluruh pengguna.</p>
+
+      <ul class="licg-list">
+        <li><i class="bi bi-check-circle-fill"></i> Sekali bayar, berlaku selamanya untuk 1 domain</li>
+        <li><i class="bi bi-check-circle-fill"></i> Pembaruan fitur &amp; keamanan berkelanjutan</li>
+        <li><i class="bi bi-check-circle-fill"></i> Dukungan teknis langsung dari Developer</li>
+      </ul>
     </div>
     <div class="licg-actions">
       <button type="button" class="btn btn-g" onclick="licModalClose()">Nanti Saja</button>
