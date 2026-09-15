@@ -313,7 +313,7 @@
           <div class="card-hd"><h6><i class="bi bi-gear"></i> Pengaturan Server</h6></div>
           <div class="card-bd">
             <div class="fg" style="margin-top:15px; border-top: 1px dashed var(--border); padding-top: 15px;">
-              <label class="fl">Ganti Logo Aplikasi (berlaku di seluruh tampilan: landing, login semua role, dashboard, sidebar, invoice, PWA)</label>
+              <label class="fl">Logo: Aplikasi (landing, dashboard, sidebar, invoice)</label>
               <div style="display:flex; gap:10px; align-items:stretch; flex-wrap:wrap">
                 <input class="fc" type="file" id="logo_upload_file" name="logo_file" accept="image/png,image/jpeg,image/jpg,image/webp" style="flex:1 1 200px; margin:0">
                 <button class="btn btn-s" type="button" id="logo_upload_btn" style="flex:none; white-space:nowrap"><i class="bi bi-upload"></i> Upload Logo</button>
@@ -324,12 +324,12 @@
                 <img src="/img/logo.png?v=<%= Date.now() %>" alt="Current Logo" style="height:40px; object-fit:contain; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px; border:1px solid var(--border)">
               </div>
               <div style="margin-top:18px; padding-top:15px; border-top:1px dashed var(--border);">
-                <label class="fl">Upload Favicon / Icon PWA</label>
+                <label class="fl">Icon: (favicon dan App Icon)</label>
                 <div style="display:flex; gap:10px; align-items:stretch; flex-wrap:wrap">
                   <input class="fc" type="file" id="icon_upload_file" name="icon_file" accept="image/png,image/jpeg,image/jpg,image/webp" style="flex:1 1 200px; margin:0">
                   <button class="btn btn-s" type="button" id="icon_upload_btn" style="flex:none; white-space:nowrap"><i class="bi bi-upload"></i> Upload Icon</button>
                 </div>
-                <div style="font-size:10px; color:var(--muted); margin-top:4px">Gunakan gambar persegi, disarankan PNG 512×512. Maksimal 2MB. Tidak mengubah logo landing page.</div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Gunakan gambar persegi, disarankan PNG 512×512. Maksimal 2MB. Dipakai sebagai favicon browser dan ikon aplikasi (PWA).</div>
                 <div style="margin-top:10px; display:flex; gap:12px; align-items:center;">
                   <div style="font-size:10px; color:var(--muted)">Icon Saat Ini:</div>
                   <img src="/img/icon.png?v=<%= Date.now() %>" alt="Current PWA Icon" style="width:40px; height:40px; object-fit:contain; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px; border:1px solid var(--border)">
