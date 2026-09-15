@@ -24,7 +24,7 @@ function buildOrderMessage(domain, installCode = '') {
     ...(installCode ? [`🔑 KODE INSTALASI: ${installCode}`] : []),
     `💰 HARGA: ${LICENSE_PRICE_LABEL} (1 instalasi, seumur hidup)`,
     '',
-    `Mohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan ${isLocal ? 'instalasi lokal berdasarkan Kode Instalasi' : 'domain ini'} dan terbitkan Serial Kunci Aktivasi resminya.`,
+    `Mohon informasikan metode pembayarannya. Setelah pembayaran, harap terbitkan Token Lisensi resmi untuk ${isLocal ? 'Kode Instalasi di atas' : 'domain dan Kode Instalasi di atas'}.`,
     '',
     'Terima kasih atas dedikasinya mengembangkan ZenRadius.'
   ].join('\n');

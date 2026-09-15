@@ -1150,7 +1150,7 @@ window.submitLicenseActivationOrder = function() {
   const domain = input.value.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
   const isLocal = domain === 'local';
   
-  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Aktif Selamanya (Lifetime) ZenRadius untuk ${isLocal ? 'instalasi lokal berikut' : 'domain berikut'}:\n\n${isLocal ? '🖥️ INSTALASI LOKAL: local' : '🌐 DOMAIN: ' + domain}${isLocal ? '\n🔑 KODE INSTALASI: <%= typeof licenseInstallCode !== "undefined" ? licenseInstallCode : "" %>' : ''}\n💰 HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 instalasi, selamanya)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan ${isLocal ? 'instalasi berdasarkan Kode Instalasi' : 'domain ini'} dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
+  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Aktif Selamanya (Lifetime) ZenRadius untuk ${isLocal ? 'instalasi lokal berikut' : 'domain berikut'}:\n\n${isLocal ? '🖥️ INSTALASI LOKAL: local' : '🌐 DOMAIN: ' + domain}\n🔑 KODE INSTALASI: <%= typeof licenseInstallCode !== "undefined" ? licenseInstallCode : "" %>\n💰 HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 instalasi, selamanya)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap terbitkan Token Lisensi resmi untuk ${isLocal ? 'Kode Instalasi di atas' : 'domain dan Kode Instalasi di atas'}.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
   
   const waUrl = `https://wa.me/<%= licInfo.LICENSE_WA_NUMBER %>?text=${encodeURIComponent(message)}`;
   window.open(waUrl, '_blank');
