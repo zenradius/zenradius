@@ -10,6 +10,8 @@ const LICENSE_WA_DISPLAY = '+62 851-7800-8881';
 
 /** Masa tenggang (hari) sebelum akses dikunci penuh saat lisensi tidak valid. */
 const LICENSE_GRACE_DAYS = 7;
+/** Token v3: maksimal hari tanpa kontak registry sebelum lisensi dianggap perlu verifikasi ulang (lalu masuk masa tenggang). */
+const LICENSE_OFFLINE_MAX_DAYS = 45;
 
 function buildOrderMessage(domain, installCode = '') {
   const isLocal = String(domain || '').toLowerCase() === 'local';
@@ -38,6 +40,7 @@ module.exports = {
   LICENSE_WA_NUMBER,
   LICENSE_WA_DISPLAY,
   LICENSE_GRACE_DAYS,
+  LICENSE_OFFLINE_MAX_DAYS,
   buildOrderMessage,
   buildOrderUrl
 };

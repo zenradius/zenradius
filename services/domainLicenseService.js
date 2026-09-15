@@ -1,28 +1,33 @@
 /**
  * Domain License Service
- * Verifikasi lisensi seumur hidup berbasis domain + identitas instalasi (HMAC-SHA256).
- * Kunci dihasilkan oleh generator di https://licensi.zenradius.net
- * dengan Master Secret yang sama dengan MASTER_SECRET di bawah.
+ * Verifikasi lisensi seumur hidup berbasis domain + identitas instalasi.
  *
- * Skema kunci (v2): HMAC(domain + '|' + installCode) → terikat ke instalasi;
- *   tidak bisa dipindah ke server lain meski domain sama.
- * Skema lama (v1): HMAC(domain) → tetap diterima untuk kompatibilitas pelanggan
- *   yang sudah memiliki kode; dapat dimatikan dengan env LICENSE_ACCEPT_LEGACY=off.
- * Instalasi lokal tanpa domain: pakai domain khusus 'local' (kunci v2 saja).
+ * Skema v3 (production): token bertanda tangan Ed25519 `ZRL1.<payload>.<sig>`
+ *   diterbitkan oleh registry (kunci privat hanya di Cloudflare Worker). Aplikasi
+ *   hanya menyimpan kunci publik (config/licenseTrustAnchor.js) → tidak dapat
+ *   dipalsukan meski seluruh source code diketahui. Mendukung revokasi (via
+ *   heartbeat) dan kebijakan offline (LICENSE_OFFLINE_MAX_DAYS).
+ * Skema v2 (legacy): HMAC(domain|installCode) — masih diterima untuk pelanggan lama.
+ * Skema v1 (legacy): HMAC(domain) — hanya domain publik.
+ *   Legacy dapat dimatikan dengan env LICENSE_ACCEPT_LEGACY=off.
+ * Instalasi lokal tanpa domain: pakai subjek khusus 'local' (v2/v3 saja).
  */
 const crypto = require('crypto');
 const { getSetting, saveSettings } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 const licenseInfo = require('../config/licenseInfo');
 const instanceIdentity = require('./instanceIdentityService');
+const tokenSvc = require('./licenseTokenService');
 
-// Secret master yang di-hardcode langsung demi kepraktisan & keamanan internal
+// Secret HMAC legacy (v1/v2). Tidak dipakai untuk penerbitan baru.
 const MASTER_SECRET = '@Du4du4220215@';
 const LOCAL_DOMAIN = 'local';
 
 let cache = { key: null, host: null, valid: false, at: 0 };
 const CACHE_MS = 5000;
 const GRACE_MS = licenseInfo.LICENSE_GRACE_DAYS * 24 * 60 * 60 * 1000;
+/** Token v3 wajib "terlihat" registry minimal sekali dalam N hari; lewat itu → masuk masa tenggang. */
+const OFFLINE_MAX_MS = (Number(process.env.LICENSE_OFFLINE_MAX_DAYS) || licenseInfo.LICENSE_OFFLINE_MAX_DAYS || 45) * 86400000;
 
 const IS_PRODUCTION = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
 /** Bypass localhost hanya untuk pengembangan: NODE_ENV bukan production DAN flag eksplisit. */
@@ -101,17 +106,76 @@ function computeSignatureV2(domain, installCode) {
   return formatKey(hmac16(`${domain}|${String(installCode || '').toUpperCase()}`));
 }
 
+/** Status registry yang disimpan heartbeat: { lid, status: 'active'|'revoked', at } */
+function getRegistryState() {
+  return {
+    lid: String(getSetting('license_registry_lid', '') || ''),
+    status: String(getSetting('license_registry_status', '') || ''),
+    lastOkAt: Number(getSetting('license_registry_ok_at', 0)) || 0,
+    activatedAt: Number(getSetting('license_activated_at', 0)) || 0
+  };
+}
+
+/** Dipanggil heartbeat setelah respons registry berhasil. */
+function recordRegistryResult({ lid, status }) {
+  const patch = { license_registry_ok_at: Date.now() };
+  if (lid) patch.license_registry_lid = String(lid);
+  if (status) patch.license_registry_status = String(status);
+  try { saveSettings(patch); } catch (_) { /* abaikan */ }
+  cache.at = 0; // paksa evaluasi ulang
+}
+
+function verifyToken(clean, token) {
+  const installCode = instanceIdentity.getInstallCode();
+  const r = tokenSvc.verifyToken(token, { subject: clean, installCode });
+  if (!r.valid) return { valid: false, reason: r.reason, domain: clean, scheme: 'v3', payload: r.payload || null };
+
+  const reg = getRegistryState();
+  if (reg.lid === r.payload.lid && reg.status === 'revoked') {
+    return { valid: false, reason: 'revoked', domain: clean, scheme: 'v3', payload: r.payload };
+  }
+  // Kebijakan offline: acuan kontak registry terakhir, atau saat aktivasi jika belum pernah.
+  const ref = Math.max(reg.lastOkAt, reg.activatedAt);
+  if (ref && Date.now() - ref > OFFLINE_MAX_MS) {
+    return { valid: false, reason: 'offline_too_long', domain: clean, scheme: 'v3', payload: r.payload };
+  }
+  return { valid: true, reason: null, domain: clean, scheme: 'v3', payload: r.payload };
+}
+
 function verifyLicense(domain, licenseKey) {
-  if (!MASTER_SECRET) return { valid: false, reason: 'secret_missing' };
   const clean = licenseDomainForHost(domain);
-  const key = String(licenseKey || '').trim().toUpperCase();
-  if (!clean || !/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key)) return { valid: false, reason: 'format', domain: clean };
+  const raw = String(licenseKey || '').trim();
+  if (!clean) return { valid: false, reason: 'format', domain: clean };
+
+  if (tokenSvc.isToken(raw)) return verifyToken(clean, raw);
+
+  const key = raw.toUpperCase();
+  if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key)) return { valid: false, reason: 'format', domain: clean };
+  if (!ACCEPT_LEGACY) return { valid: false, reason: 'legacy_disabled', domain: clean };
 
   const installCode = instanceIdentity.getInstallCode();
   if (computeSignatureV2(clean, installCode) === key) return { valid: true, reason: null, domain: clean, scheme: 'v2' };
-  // Legacy: hanya untuk domain sungguhan (bukan 'local'), agar instalasi lokal wajib kunci terikat instalasi.
-  if (ACCEPT_LEGACY && clean !== LOCAL_DOMAIN && computeSignature(clean) === key) return { valid: true, reason: null, domain: clean, scheme: 'v1' };
+  // Legacy v1: hanya untuk domain sungguhan (bukan 'local').
+  if (clean !== LOCAL_DOMAIN && computeSignature(clean) === key) return { valid: true, reason: null, domain: clean, scheme: 'v1' };
   return { valid: false, reason: 'mismatch', domain: clean };
+}
+
+/** Pesan manusiawi untuk alasan lisensi tidak valid. */
+function describeReason(reason, host) {
+  const target = host === LOCAL_DOMAIN ? 'instalasi lokal ini' : `domain ${host}`;
+  switch (reason) {
+    case 'format': return 'Format lisensi tidak valid. Gunakan token ZRL1… atau serial XXXX-XXXX-XXXX-XXXX.';
+    case 'signature': return 'Tanda tangan token lisensi tidak sah. Pastikan token disalin lengkap dari Developer.';
+    case 'unknown_kid': return 'Token ditandatangani dengan kunci yang tidak dikenal versi aplikasi ini. Perbarui aplikasi.';
+    case 'install_mismatch': return 'Token lisensi terikat ke Kode Instalasi lain. Minta penerbitan ulang dengan Kode Instalasi instalasi ini.';
+    case 'subject_mismatch': return `Token lisensi tidak diterbitkan untuk ${target}.`;
+    case 'expired': return 'Token lisensi telah kedaluwarsa.';
+    case 'revoked': return 'Lisensi ini telah dicabut oleh Developer.';
+    case 'offline_too_long': return 'Instalasi terlalu lama tidak terhubung ke server lisensi. Pastikan server dapat mengakses internet lalu coba lagi.';
+    case 'legacy_disabled': return 'Serial HMAC lama tidak lagi diterima. Minta token lisensi baru.';
+    case 'mismatch': return `Kode lisensi tidak cocok untuk ${target}.`;
+    default: return 'Lisensi tidak valid.';
+  }
 }
 
 /**
@@ -124,7 +188,7 @@ function checkRequestLicense(req) {
   const now = Date.now();
 
   if (cache.key === licenseKey && cache.host === host && now - cache.at < CACHE_MS) {
-    return { valid: cache.valid, host, rawHost, grace: cache.grace || null, installCode: instanceIdentity.getInstallCode() };
+    return { valid: cache.valid, reason: cache.reason || null, host, rawHost, grace: cache.grace || null, installCode: instanceIdentity.getInstallCode() };
   }
 
   // Bypass hanya di mode pengembangan eksplisit (bukan production).
@@ -139,10 +203,21 @@ function checkRequestLicense(req) {
     clearGrace();
   } else {
     grace = getGraceState(host);
-    logger.warn(`[license] Lisensi tidak valid untuk "${host}"${rawHost !== host ? ` (akses via ${rawHost})` : ''}; masa tenggang ${grace.inGrace ? grace.daysLeft + ' hari tersisa' : 'berakhir'}`);
+    logger.warn(`[license] Lisensi tidak valid (${result.reason}) untuk "${host}"${rawHost !== host ? ` (akses via ${rawHost})` : ''}; masa tenggang ${grace.inGrace ? grace.daysLeft + ' hari tersisa' : 'berakhir'}`);
   }
-  cache = { key: licenseKey, host, valid: result.valid, at: now, grace };
+  cache = { key: licenseKey, host, valid: result.valid, at: now, grace, reason: result.reason };
   return { ...result, host, rawHost, grace, installCode: instanceIdentity.getInstallCode() };
+}
+
+/** Ringkasan lisensi tersimpan (untuk UI settings & heartbeat). */
+function getStoredLicenseInfo() {
+  const raw = String(getSetting('domain_license_key', '') || '').trim();
+  if (!raw) return { present: false, scheme: null, lid: null };
+  if (tokenSvc.isToken(raw)) {
+    const p = tokenSvc.parseToken(raw);
+    return { present: true, scheme: 'v3', lid: p.ok ? p.payload.lid : null, exp: p.ok ? p.payload.exp : null, plan: p.ok ? p.payload.plan || null : null, signatureOk: p.ok };
+  }
+  return { present: true, scheme: 'hmac', lid: null };
 }
 
 /**
@@ -191,6 +266,7 @@ function requireDomainLicense(options = {}) {
 
     const result = checkRequestLicense(req);
     res.locals.licenseValid = result.valid;
+    res.locals.licenseReason = result.reason || null;
     res.locals.licenseHost = result.host;
     res.locals.licenseInstallCode = result.installCode;
     res.locals.licenseGrace = (!result.valid && result.grace && result.grace.inGrace) ? result.grace : null;
@@ -199,12 +275,14 @@ function requireDomainLicense(options = {}) {
     if (res.locals.licenseGrace) return next();
 
     if (req.xhr || req.path.startsWith('/api/')) {
-      return res.status(402).json({ error: 'Lisensi tidak valid', domain: result.host, installCode: result.installCode });
+      return res.status(402).json({ error: 'Lisensi tidak valid', reason: result.reason || null, domain: result.host, installCode: result.installCode });
     }
     return res.status(402).render('license-required', {
       domain: result.host,
       installCode: result.installCode,
       hasKey: Boolean(getSetting('domain_license_key', '')),
+      reason: result.reason || null,
+      reasonText: result.reason ? describeReason(result.reason, result.host) : '',
       licenseInfo,
       layout: false
     });
@@ -214,6 +292,7 @@ function requireDomainLicense(options = {}) {
 module.exports = {
   normalizeDomain, licenseDomainForHost, verifyLicense, checkRequestLicense,
   requireDomainLicense, getBackgroundLicenseState, isBackgroundAllowed,
+  getStoredLicenseInfo, recordRegistryResult, getRegistryState, describeReason,
   getInstallCode: () => instanceIdentity.getInstallCode(),
   LOCAL_DOMAIN, licenseInfo
 };

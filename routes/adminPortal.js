@@ -4336,7 +4336,10 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
     if (newSettings.digiflazz_markup !== undefined) newSettings.digiflazz_markup = parseInt(newSettings.digiflazz_markup) || 0;
     
     if (newSettings.login_otp_enabled !== undefined) newSettings.login_otp_enabled = (newSettings.login_otp_enabled === 'true');
-    if (typeof newSettings.domain_license_key === 'string') newSettings.domain_license_key = newSettings.domain_license_key.trim().toUpperCase();
+    if (typeof newSettings.domain_license_key === 'string') {
+      const rawLic = newSettings.domain_license_key.trim();
+      newSettings.domain_license_key = rawLic.startsWith('ZRL1.') ? rawLic : rawLic.toUpperCase();
+    }
     if (newSettings.telegram_enabled !== undefined) newSettings.telegram_enabled = (newSettings.telegram_enabled === 'true');
     if (newSettings.auto_backup_enabled !== undefined) newSettings.auto_backup_enabled = (newSettings.auto_backup_enabled === 'true');
     if (newSettings.use_builtin_acs !== undefined) newSettings.use_builtin_acs = (newSettings.use_builtin_acs === 'true' || newSettings.use_builtin_acs === true);
@@ -4409,13 +4412,11 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
           if (check.valid) {
             const targetLabel = licenseDomain === domainLicense.LOCAL_DOMAIN ? 'instalasi lokal' : `domain ${host}`;
             req.session._msg = { type: 'success', text: `Lisensi berhasil diaktifkan untuk ${targetLabel}. Terima kasih telah mendukung pengembangan ZenRadius.` };
-            // Simpan domain aktivasi agar heartbeat memakai identitas yang benar.
-            try { saveSettings({ domain_license_host: licenseDomain }); } catch (_) {}
+            // Simpan domain aktivasi agar heartbeat memakai identitas yang benar + reset status registry.
+            try { saveSettings({ domain_license_host: licenseDomain, license_activated_at: Date.now(), license_registry_status: '', license_registry_lid: check.payload ? check.payload.lid : '' }); } catch (_) {}
             try { require('../services/licenseHeartbeatService').sendHeartbeat({ force: true, host: licenseDomain }).catch(() => {}); } catch (_) {}
-          } else if (check.reason === 'format') {
-            req.session._msg = { type: 'error', text: 'Format kode lisensi tidak valid. Gunakan format XXXX-XXXX-XXXX-XXXX.' };
           } else {
-            req.session._msg = { type: 'error', text: `Kode lisensi tidak cocok untuk domain ${host}. Pastikan domain yang didaftarkan saat order sama persis dengan domain ini.` };
+            req.session._msg = { type: 'error', text: domainLicense.describeReason(check.reason, licenseDomain) };
           }
         }
       }

@@ -58,9 +58,12 @@ async function sendHeartbeat({ force = false, host = '' } = {}) {
     const last = Number(getSetting('license_heartbeat_at', 0)) || 0;
     if (!force && Date.now() - last < MIN_INTERVAL_MS) return { skipped: 'too_soon' };
 
+    const licenseRaw = String(getSetting('domain_license_key', '') || '').trim();
+    const isToken = licenseRaw.startsWith('ZRL1.');
     const payload = {
       domain,
-      serial: String(getSetting('domain_license_key', '') || '').trim().toUpperCase() || undefined,
+      serial: (!isToken && licenseRaw) ? licenseRaw.toUpperCase() : undefined,
+      token: isToken ? licenseRaw : undefined,
       install_code: instanceIdentity.getInstallCode(),
       instance_id: instanceIdentity.getInstanceId(),
       app_version: readAppVersion(),
@@ -85,6 +88,12 @@ async function sendHeartbeat({ force = false, host = '' } = {}) {
     }
     try { saveSettings({ license_heartbeat_at: Date.now() }); } catch (_) {}
     let data = null; try { data = await res.json(); } catch (_) {}
+    // Registry mengembalikan status lisensi (active/revoked) untuk token v3 → simpan untuk kebijakan offline & revokasi.
+    if (data && isToken) {
+      try {
+        require('./domainLicenseService').recordRegistryResult({ lid: data.license_id || '', status: data.license_status || (data.valid ? 'active' : '') });
+      } catch (_) {}
+    }
     logger.info(`[heartbeat] terkirim ke registry untuk ${domain}`);
     return { ok: true, data };
   } catch (e) {

@@ -207,7 +207,7 @@
               <label class="fl">Kode Lisensi untuk <code><%= typeof currentHost !== 'undefined' && currentHost === 'local' ? 'instalasi lokal' : (typeof currentHost !== 'undefined' ? currentHost : '') %></code></label>
               <div style="display:flex;gap:8px;align-items:stretch">
                 <div style="position:relative;flex:1;min-width:0">
-                  <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="Format: XXXX-XXXX-XXXX-XXXX" pattern="^([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})?$" autocomplete="off" autocapitalize="characters" spellcheck="false" style="font-family:monospace;letter-spacing:1px;text-transform:uppercase;<%= licActive ? 'padding-right:38px;border-color:rgba(52,211,153,.45)' : '' %>" oninput="this.value=this.value.toUpperCase()">
+                  <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="Tempel token lisensi (ZRL1.…) atau serial XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" style="font-family:monospace;letter-spacing:.5px;<%= licActive ? 'padding-right:38px;border-color:rgba(52,211,153,.45)' : '' %>" oninput="if(!this.value.trim().startsWith('ZRL1.'))this.value=this.value.toUpperCase()">
                   <% if (licActive) { %><i class="bi bi-patch-check-fill" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--success);font-size:16px;pointer-events:none"></i><% } %>
                 </div>
                 <% if (!licActive) { %>

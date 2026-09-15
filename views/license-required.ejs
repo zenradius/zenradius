@@ -112,7 +112,7 @@
     <% if (hasKey) { %>
       <div class="alert-mismatch">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        <span>Kode lisensi yang terpasang tidak cocok dengan instalasi atau alamat akses ini. Lisensi hanya berlaku untuk instalasi yang didaftarkan.</span>
+        <span><%= (typeof reasonText !== 'undefined' && reasonText) ? reasonText : 'Kode lisensi yang terpasang tidak cocok dengan instalasi atau alamat akses ini. Lisensi hanya berlaku untuk instalasi yang didaftarkan.' %></span>
       </div>
     <% } %>
 
