@@ -28,6 +28,7 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 - [Konfigurasi Domain & HTTPS](#-konfigurasi-domain--https)
 - [Auto-Start Setelah Reboot Server](#-auto-start-setelah-reboot-server)
 - [Update Aplikasi](#-update-aplikasi-setelah-deploy-ke-vps)
+- [Tutorial Instalasi Lengkap](#-tutorial-instalasi-lengkap)
 - [Akun Akses Default](#-akun-akses-default)
 - [Lisensi](#-lisensi)
 
@@ -365,6 +366,18 @@ Jika belum, clone ulang dan pindahkan folder `database/`, `.env`, `public/upload
 > 💡 **Tip:** Gunakan bagian **Official Release Channel** di halaman yang sama jika ingin proses update yang lebih ketat (verifikasi checksum/signature rilis resmi) dengan restart otomatis + health check pasca-update.
 
 > ⚠️ **Catatan:** Pastikan koneksi internet VPS stabil selama proses update berlangsung, dan hindari menutup halaman sebelum status menunjukkan selesai.
+
+---
+
+## 📘 Tutorial Instalasi Lengkap
+
+Panduan lengkap untuk pengguna yang ingin memasang ZenRadius di VPS dan menyiapkannya untuk production tersedia di:
+
+### 👉 [tutorial.zenradius.net](https://tutorial.zenradius.net)
+
+Tutorial mencakup persiapan server, instalasi via `install.sh`, Docker Compose, konfigurasi domain dan HTTPS, Cloudflare Tunnel, MikroTik, RADIUS, ACS TR-069, WhatsApp, payment gateway, backup, keamanan, troubleshooting, dan checklist go-live.
+
+> Disarankan mengikuti tutorial secara berurutan dari persiapan server hingga checklist go-live.
 
 ---
 
