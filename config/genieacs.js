@@ -246,9 +246,15 @@ let sendMonitoringAlert = null;
   }
 })();
 
-const GENIEACS_URL = process.env.GENIEACS_URL || 'http://localhost:7557';
+// External GenieACS is opt-in. Fresh installs use the built-in ACS instead of
+// probing localhost:7557 when no external URL was configured.
+const GENIEACS_URL = String(process.env.GENIEACS_URL || '').trim();
 const GENIEACS_USERNAME = process.env.GENIEACS_USERNAME;
 const GENIEACS_PASSWORD = process.env.GENIEACS_PASSWORD;
+
+function getConfiguredLegacyUrl() {
+    return String(getSetting('genieacs_url', '') || GENIEACS_URL || '').trim();
+}
 
 function getAllACSServers() {
     try {
@@ -261,7 +267,7 @@ function getAllACSServers() {
             }];
         }
 
-        const legacyUrl = getSetting('genieacs_url', GENIEACS_URL);
+        const legacyUrl = getConfiguredLegacyUrl();
         const legacyUser = getSetting('genieacs_username', GENIEACS_USERNAME);
         const legacyPass = getSetting('genieacs_password', GENIEACS_PASSWORD);
 
@@ -298,7 +304,7 @@ function getACSServer(serverId) {
                 status: 'active'
             };
         }
-        const legacyUrl = getSetting('genieacs_url', GENIEACS_URL);
+        const legacyUrl = getConfiguredLegacyUrl();
         const legacyUser = getSetting('genieacs_username', GENIEACS_USERNAME);
         const legacyPass = getSetting('genieacs_password', GENIEACS_PASSWORD);
         if (legacyUrl) {
@@ -324,7 +330,7 @@ function getACSServer(serverId) {
     }
 
     if (serverId === 'legacy') {
-        const legacyUrl = getSetting('genieacs_url', GENIEACS_URL);
+        const legacyUrl = getConfiguredLegacyUrl();
         const legacyUser = getSetting('genieacs_username', GENIEACS_USERNAME);
         const legacyPass = getSetting('genieacs_password', GENIEACS_PASSWORD);
 

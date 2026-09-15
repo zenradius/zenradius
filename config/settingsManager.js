@@ -307,6 +307,11 @@ function ensureDefaultSettings() {
       fonnte_url: 'https://api.fonnte.com/send',
       http_wa_method: 'POST',
       http_wa_header_name: 'Authorization',
+
+      // Gunakan ACS internal pada instalasi baru; ubah ke false hanya jika
+      // server GenieACS eksternal memang sudah tersedia dan dikonfigurasi.
+      use_builtin_acs: true,
+      genieacs_monitoring_enabled: false,
       
       radius_enabled: '0',
       radius_secret: 'secret123',

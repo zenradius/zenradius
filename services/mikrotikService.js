@@ -433,6 +433,10 @@ async function getPppoeProfiles(routerId = null) {
     setCachedList(ck, mapped);
     return mapped;
   } catch (e) {
+    if (e && e.message === 'MikroTik settings not configured') {
+      logger.warn('[MikroTik] PPPoE profiles dilewati: router belum dikonfigurasi.');
+      return [];
+    }
     logger.error('Error getting PPPoE profiles:', e);
     throw e;
   } finally {
