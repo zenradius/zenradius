@@ -4259,13 +4259,17 @@ router.get('/api/update/check', requireAdminSession, (req, res) => {
 router.post('/update/restart', requireAdminSession, restrictToAdmin, (req, res) => {
   const repoRoot = path.resolve(__dirname, '..');
   const processName = findPm2AppName(repoRoot);
+  const wantsJson = String(req.get('accept') || '').includes('application/json') || req.xhr || String(req.get('sec-fetch-mode') || '') === 'cors';
   if (!processName) {
-    return res.status(503).send('Proses PM2 untuk aplikasi ini tidak ditemukan. Jalankan aplikasi dengan PM2 menggunakan app-customer.js terlebih dahulu.');
+    const errText = 'Proses PM2 untuk aplikasi ini tidak ditemukan. Jalankan aplikasi dengan PM2 menggunakan app-customer.js terlebih dahulu.';
+    return wantsJson ? res.status(503).json({ success: false, message: errText }) : res.status(503).send(errText);
   }
 
   const actor = req.session?.adminUsername || req.session?.username || 'admin';
   logger.info(`[Admin Update] Restart diminta oleh ${actor} untuk proses ${processName}`);
-  res.status(202).send('Restart aplikasi sedang dijalankan. Silakan tunggu beberapa detik, lalu buka kembali halaman update.');
+  const okText = 'Restart aplikasi sedang dijalankan. Silakan tunggu beberapa detik, lalu buka kembali halaman update.';
+  if (wantsJson) res.status(202).json({ success: true, message: okText, process: processName });
+  else res.status(202).send(okText);
 
   setTimeout(() => {
     const result = runCmd('pm2', ['reload', processName], path.resolve(__dirname, '..'));

@@ -109,7 +109,7 @@
           <form method="POST" action="/admin/update/run" onsubmit="return confirmUpdate()">
             <button type="submit" class="btn btn-s" <%= (info && info.error) ? 'disabled' : '' %>><i class="bi bi-cloud-arrow-down"></i> <%= t('admin.update.run', 'Update Sekarang') %></button>
           </form>
-          <form method="POST" action="/admin/update/restart" onsubmit="return confirmRestart()">
+          <form method="POST" action="/admin/update/restart" id="restartForm" onsubmit="return startRestart(event)">
             <button type="submit" class="btn btn-p"><i class="bi bi-arrow-clockwise"></i> Restart Aplikasi</button>
           </form>
         </div>
@@ -131,13 +131,137 @@
   </div>
 </div>
 
+<!-- Restart overlay -->
+<div id="restartOverlay" class="rs-overlay" aria-hidden="true">
+  <div class="rs-card" role="status" aria-live="polite">
+    <div class="rs-ring"><i class="bi bi-arrow-clockwise"></i></div>
+    <h3 id="rsTitle">Merestart Aplikasi</h3>
+    <p id="rsDesc">Proses restart sedang berjalan. Halaman akan terbuka kembali secara otomatis begitu server siap.</p>
+    <div class="rs-steps">
+      <div class="rs-step done" id="rsStep1"><span class="rs-dot"></span> Perintah restart dikirim</div>
+      <div class="rs-step active" id="rsStep2"><span class="rs-dot"></span> Menunggu server hidup kembali</div>
+      <div class="rs-step" id="rsStep3"><span class="rs-dot"></span> Membuka halaman update</div>
+    </div>
+    <div class="rs-bar"><div class="rs-bar-fill" id="rsBar"></div></div>
+    <div class="rs-meta"><span id="rsTimer">0</span> detik &middot; <span id="rsTries">0</span> percobaan</div>
+    <button type="button" class="btn btn-g btn-sm" id="rsManual" style="display:none;margin-top:14px" onclick="location.href='/admin/update'">
+      <i class="bi bi-box-arrow-up-right"></i> Buka Halaman Update
+    </button>
+  </div>
+</div>
+
+<style>
+  .rs-overlay{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(6,18,24,.78);backdrop-filter:blur(8px)}
+  .rs-overlay.show{display:flex;animation:rsFade .25s ease}
+  .rs-card{width:100%;max-width:420px;background:var(--card,#0f1c24);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:20px;padding:32px 28px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.45);color:var(--text,#e6edf3)}
+  .rs-card h3{margin:18px 0 8px;font-size:20px;font-weight:700}
+  .rs-card p{margin:0;font-size:13px;line-height:1.6;color:var(--muted,#8b9aa7)}
+  .rs-ring{width:72px;height:72px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--primary,#22c55e);border:3px solid rgba(34,197,94,.18);border-top-color:var(--primary,#22c55e);animation:rsSpin 1s linear infinite}
+  .rs-ring i{animation:rsSpinRev 1s linear infinite}
+  .rs-overlay.ok .rs-ring{animation:none;border-color:var(--primary,#22c55e);background:rgba(34,197,94,.12)}
+  .rs-overlay.ok .rs-ring i{animation:none}
+  .rs-overlay.fail .rs-ring{animation:none;border-color:#f59e0b;color:#f59e0b;background:rgba(245,158,11,.12)}
+  .rs-overlay.fail .rs-ring i{animation:none}
+  .rs-steps{margin:22px 0 16px;text-align:left;display:grid;gap:8px}
+  .rs-step{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted,#8b9aa7);padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.03)}
+  .rs-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18);flex:none}
+  .rs-step.active{color:var(--text,#e6edf3);background:rgba(34,197,94,.08)}
+  .rs-step.active .rs-dot{background:var(--primary,#22c55e);box-shadow:0 0 0 4px rgba(34,197,94,.18);animation:rsPulse 1.2s ease-in-out infinite}
+  .rs-step.done{color:var(--text,#e6edf3)}
+  .rs-step.done .rs-dot{background:var(--primary,#22c55e)}
+  .rs-bar{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+  .rs-bar-fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--primary,#22c55e),#38bdf8);transition:width .6s ease}
+  .rs-meta{margin-top:10px;font-size:11.5px;color:var(--muted,#8b9aa7);font-variant-numeric:tabular-nums}
+  @keyframes rsSpin{to{transform:rotate(360deg)}}
+  @keyframes rsSpinRev{to{transform:rotate(-360deg)}}
+  @keyframes rsPulse{0%,100%{opacity:1}50%{opacity:.45}}
+  @keyframes rsFade{from{opacity:0}to{opacity:1}}
+</style>
+
 <script>
   function confirmUpdate() {
     return confirm("<%= t('admin.update.confirm', 'Jalankan update dari GitHub sekarang? Pastikan koneksi internet aman dan aplikasi akan direstart setelah selesai.') %>");
   }
 
-  function confirmRestart() {
-    return confirm('Restart aplikasi sekarang? Koneksi panel akan terputus sebentar dan dapat dibuka kembali setelah proses selesai.');
+  async function startRestart(ev) {
+    ev.preventDefault();
+    if (!confirm('Restart aplikasi sekarang? Koneksi panel akan terputus sebentar dan halaman akan terbuka kembali otomatis.')) return false;
+
+    const overlay = document.getElementById('restartOverlay');
+    const title = document.getElementById('rsTitle');
+    const desc = document.getElementById('rsDesc');
+    const step2 = document.getElementById('rsStep2');
+    const step3 = document.getElementById('rsStep3');
+    const bar = document.getElementById('rsBar');
+    const timerEl = document.getElementById('rsTimer');
+    const triesEl = document.getElementById('rsTries');
+    const manualBtn = document.getElementById('rsManual');
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+
+    try {
+      const r = await fetch('/admin/update/restart', { method: 'POST', credentials: 'same-origin' });
+      if (!r.ok && r.status !== 202) {
+        const txt = await r.text();
+        throw new Error(txt || ('HTTP ' + r.status));
+      }
+    } catch (e) {
+      overlay.classList.add('fail');
+      title.textContent = 'Restart Gagal Dijalankan';
+      desc.textContent = String(e.message || e);
+      manualBtn.style.display = 'inline-flex';
+      manualBtn.innerHTML = '<i class="bi bi-arrow-left"></i> Kembali';
+      return false;
+    }
+
+    const start = Date.now();
+    const MAX_MS = 90000;
+    let tries = 0;
+    let wentDown = false;
+
+    const tick = setInterval(() => {
+      const sec = Math.floor((Date.now() - start) / 1000);
+      timerEl.textContent = sec;
+      bar.style.width = Math.min(95, (sec / (MAX_MS / 1000)) * 100) + '%';
+    }, 500);
+
+    // Beri waktu PM2 mengeksekusi reload sebelum mulai polling.
+    await new Promise(r => setTimeout(r, 2500));
+
+    const poll = async () => {
+      tries++;
+      triesEl.textContent = tries;
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 3000);
+        const r = await fetch('/admin/api/update/check?_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store', signal: ctrl.signal });
+        clearTimeout(t);
+        if (r.ok && (wentDown || tries >= 3)) {
+          clearInterval(tick);
+          bar.style.width = '100%';
+          step2.classList.remove('active'); step2.classList.add('done');
+          step3.classList.add('done');
+          overlay.classList.add('ok');
+          title.textContent = 'Aplikasi Aktif Kembali';
+          desc.textContent = 'Restart selesai. Mengalihkan ke halaman update...';
+          setTimeout(() => { location.href = '/admin/update'; }, 900);
+          return;
+        }
+      } catch (_) {
+        wentDown = true;
+      }
+      if (Date.now() - start > MAX_MS) {
+        clearInterval(tick);
+        overlay.classList.add('fail');
+        title.textContent = 'Server Belum Merespons';
+        desc.textContent = 'Restart memakan waktu lebih lama dari biasanya. Coba buka halaman update secara manual atau periksa log PM2 di server.';
+        manualBtn.style.display = 'inline-flex';
+        return;
+      }
+      setTimeout(poll, 1500);
+    };
+    poll();
+    return false;
   }
 </script>
 </body>
