@@ -90,17 +90,22 @@
             <div style="margin-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px;">
               <h6 style="font-size:11px; margin-bottom: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-phone"></i> Webhook Notifikasi SMS/E-Wallet (MacroDroid)</h6>
               <div class="fg">
+                <label class="fl">Webhook Secret Key <span style="color:#ef4444">*wajib diisi min. 8 karakter</span></label>
+                <input class="fc" id="webhook_secret_input" name="webhook_secret" value="<%= settings.webhook_secret || '' %>" placeholder="Buat kata sandi rahasia unik, minimal 8 karakter" type="text">
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Tanpa mengisi ini, semua notifikasi masuk dari MacroDroid akan DITOLAK (403 Forbidden) oleh server.</div>
+              </div>
+              <div class="fg" style="margin-top:10px">
                 <label class="fl">Link Webhook MacroDroid (URL POST)</label>
                 <div style="display:flex;gap:8px">
                   <% 
                     const base = settings.public_base_url ? settings.public_base_url.replace(/\/+$/, '') : '';
-                    const secret = process.env.MY_WEBHOOK_SECRET || '';
+                    const secret = settings.webhook_secret || process.env.MY_WEBHOOK_SECRET || '';
                     const macroWebhookUrl = base ? (base + '/api/webhook/v1/payment-notif?secret_key=' + secret) : '/api/webhook/v1/payment-notif?secret_key=' + secret;
                   %>
                   <input class="fc" id="macro_webhook_url" readonly value="<%= macroWebhookUrl %>">
                   <button type="button" class="btn btn-g" onclick="copyInput('macro_webhook_url', 'Link Webhook')"><i class="bi bi-copy"></i></button>
                 </div>
-                <div style="font-size:10px; color:var(--muted); margin-top:4px">Kirimkan request HTTP POST ke URL ini dari MacroDroid Anda (sudah termasuk kunci rahasia).</div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Kirimkan request HTTP POST ke URL ini dari MacroDroid Anda (sudah termasuk kunci rahasia). Simpan pengaturan dahulu setelah mengisi Secret Key di atas agar link ini ikut terbarui.</div>
               </div>
             </div>
           </div>
