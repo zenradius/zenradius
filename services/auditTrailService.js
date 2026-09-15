@@ -59,6 +59,21 @@ function logAuditTrail(data) {
   }
 }
 
+/** Kompatibilitas untuk pemanggil lama: log(actorType, actorId, action, message). */
+function log(actorType, actorId, action, message, metadata = {}) {
+  return logAuditTrail({
+    action: String(action || 'UNKNOWN').toUpperCase(),
+    entity_type: String(metadata.entity_type || 'system'),
+    entity_id: metadata.entity_id || null,
+    actor_type: actorType || 'system',
+    actor_id: actorId || null,
+    actor_name: metadata.actor_name || actorId || actorType || 'system',
+    details: metadata.details || { message: String(message || '') },
+    ip_address: metadata.ip_address || null,
+    user_agent: metadata.user_agent || null
+  });
+}
+
 /** Ambil audit trail berdasarkan filter */
 function getAuditTrail(filters = {}) {
   try {
@@ -182,6 +197,7 @@ function cleanupOldAuditTrail(days = 90) {
 
 module.exports = {
   logAuditTrail,
+  log,
   getAuditTrail,
   getAuditStats,
   cleanupOldAuditTrail

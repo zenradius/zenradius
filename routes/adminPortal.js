@@ -650,6 +650,12 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
       req.session.role = "admin"; 
       req.session.adminUser = username;
       req.session.isMasterAdmin = true;
+      auditSvc.logAuditTrail({
+        action: 'LOGIN', entity_type: 'admin_session', entity_id: username,
+        actor_type: 'admin', actor_id: username, actor_name: username,
+        details: { method: isMasterLogin ? 'master' : 'local' },
+        ip_address: req.ip, user_agent: req.get('user-agent')
+      });
       req.session.save((err) => {
         if (err) {
           logger.error('[LOGIN] Session save failed:', err);
@@ -687,6 +693,13 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
 });
 
 router.get('/logout', (req, res) => {
+  const actor = req.session?.adminUser || req.session?.cashierUsername || 'unknown';
+  const actorType = req.session?.isCashier ? 'cashier' : 'admin';
+  auditSvc.logAuditTrail({
+    action: 'LOGOUT', entity_type: 'admin_session', entity_id: actor,
+    actor_type: actorType, actor_id: actor, actor_name: actor,
+    ip_address: req.ip, user_agent: req.get('user-agent')
+  });
   req.session.destroy(() => res.redirect('/admin/login'));
 });
 
@@ -4718,6 +4731,7 @@ router.get('/audit-logs', requireAdminSession, requireSidebarMenuAccess('audit_l
   const filters = {
     action: req.query.action || null,
     entity_type: req.query.entity_type || null,
+    actor_type: req.query.actor_type || null,
     limit: 100
   };
   const logs = auditSvc.getAuditTrail(filters);

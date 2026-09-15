@@ -79,6 +79,12 @@
                 <option value="<%= e.entity_type %>" <%= filters.entity_type === e.entity_type ? 'selected' : '' %>><%= e.entity_type %></option>
               <% }) %>
             </select>
+            <select class="fs fs-sm" name="actor_type" onchange="this.form.submit()">
+              <option value="">-- Semua Aktor --</option>
+              <% ['admin','cashier','technician','collector','agent','customer','system'].forEach(t => { %>
+                <option value="<%= t %>" <%= filters.actor_type === t ? 'selected' : '' %>><%= t %></option>
+              <% }) %>
+            </select>
           </form>
         </div>
       </div>
