@@ -1267,6 +1267,15 @@ app.get(['/img/logo.png', '/img/icon.png'], (req, res) => {
   res.type('png');
   res.sendFile(file, { cacheControl: false, etag: true, lastModified: true });
 });
+// Fallback favicon: browser otomatis meminta /favicon.ico jika halaman tidak
+// memasang <link rel="icon"> (banyak view admin belum punya). Layani dari ikon custom.
+app.get('/favicon.ico', (req, res) => {
+  const file = brandAssets.resolveBrandFile('icon.png');
+  if (!fs.existsSync(file)) return res.status(404).end();
+  res.setHeader('Cache-Control', 'no-cache');
+  res.type('png');
+  res.sendFile(file, { cacheControl: false, etag: true, lastModified: true });
+});
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
     const name = path.basename(filePath);
