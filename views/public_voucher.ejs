@@ -58,104 +58,135 @@
     .btn-primary:hover{background:linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%)!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important;filter:brightness(1.04)}
     a{color:#a5f4ed}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18)}
-    .pill-u{background: rgba(248, 81, 73, .12);color:#fca5a5;border-color: rgba(248, 81, 73, .28)}
-    .pill-p{background: rgba(63, 185, 80, .12);color:#86efac;border-color: rgba(63, 185, 80, .28)}
-    
-    /* Redesigned Cards */
-    .voucher-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
-    @media (max-width: 576px){.voucher-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}}
+    /* Redesigned Cards to Match Professional Layout */
+    .voucher-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+    @media (max-width: 576px){.voucher-grid{grid-template-columns:1fr;gap:14px}}
     .voucher-radio{position:absolute;opacity:0;pointer-events:none}
+    
     .voucher-card{
       position:relative;
-      border:1px solid rgba(190,239,255,.18);
-      background:rgba(255,255,255,.03);
-      border-radius:18px;
-      padding:18px;
+      border:2px solid #236060;
+      background:#fff;
+      border-radius:12px;
+      padding:0;
       cursor:pointer;
-      transition:all .28s cubic-bezier(0.4, 0, 0.2, 1);
+      transition:all .25s ease-in-out;
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      justify-content:space-between;
-      min-height:130px;
-    }
-    .voucher-card::before {
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(135deg, rgba(45,212,191,.08) 0%, transparent 100%);
-      opacity:0;
-      transition:opacity .28s ease;
+      min-height:160px;
+      color:#1d2939;
+      box-shadow:0 6px 15px rgba(0,0,0,.15);
     }
     .voucher-card:hover{
-      transform:translateY(-4px);
-      border-color:rgba(45,212,191,.45);
-      background:rgba(255,255,255,.05);
-      box-shadow:0 12px 28px rgba(0,0,0,.25), 0 0 0 1px rgba(45,212,191,.1);
+      transform:translateY(-5px);
+      box-shadow:0 12px 24px rgba(0,0,0,.3);
     }
-    .voucher-card:hover::before { opacity:1; }
     .voucher-radio:checked + .voucher-card{
-      border-color:rgba(45,212,191,.95);
-      background:rgba(45,212,191,.09);
-      box-shadow:0 16px 32px rgba(45,212,191,.18), 0 0 0 1px rgba(45,212,191,.3);
+      border-color:#29d3c5;
+      box-shadow:0 0 0 3px rgba(41,211,197,.3), 0 12px 24px rgba(0,0,0,.3);
     }
-    .voucher-radio:checked + .voucher-card::before { opacity:1; }
-    
-    .v-badge{
-      align-self:flex-start;
-      font-size:10px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.5px;
-      padding:4px 8px;
-      border-radius:8px;
-      background:rgba(190,239,255,.1);
-      border:1px solid rgba(190,239,255,.15);
-      color:rgba(190,239,255,.85);
-      margin-bottom:12px;
-      position:relative;
-      z-index:2;
+
+    /* Top Layout: Brand & Price */
+    .v-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 14px;
+      border-bottom:1px solid #e4e7ec;
     }
-    .voucher-radio:checked + .voucher-card .v-badge{
-      background:rgba(45,212,191,.15);
-      border-color:rgba(45,212,191,.3);
-      color:#2dd4bf;
-    }
-    .voucher-title{
-      font-weight:800;
-      font-size:16px;
-      color:#fff;
-      margin:0 0 4px 0;
-      position:relative;
-      z-index:2;
-      line-height:1.2;
-    }
-    .v-dur{
-      font-size:12px;
-      color:var(--portal-muted);
-      margin-bottom:14px;
+    .v-brand{
       display:flex;
       align-items:center;
-      gap:5px;
-      position:relative;
-      z-index:2;
+      gap:4px;
+      font-size:15px;
+      font-weight:900;
+      color:#007bff;
+      font-style:italic;
+      letter-spacing:-.2px;
+    }
+    .v-brand i{
+      font-size:16px;
+      color:#007bff;
     }
     .voucher-price{
       font-weight:900;
-      font-size:20px;
-      color:#2dd4bf;
-      margin-top:auto;
-      position:relative;
-      z-index:2;
+      font-size:22px;
+      color:#28a745;
       display:flex;
       align-items:baseline;
-      gap:1px;
     }
-    .voucher-price .currency{
-      font-size:12px;
-      font-weight:700;
-      color:rgba(45,212,191,.75);
+    .voucher-price .v-currency{
+      font-size:13px;
+      font-weight:800;
+      margin-right:2px;
     }
+
+    /* Middle Layout: Label, Validity and Info */
+    .v-mid{
+      padding:12px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      flex-grow:1;
+      background:#f8fafc;
+    }
+    .v-label-main{
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.8px;
+      color:#667085;
+    }
+    .voucher-title{
+      font-weight:800;
+      font-size:18px;
+      color:#1d2939;
+      margin:0;
+      line-height:1.2;
+    }
+    .v-dur{
+      font-size:11px;
+      color:#475467;
+      margin-top:6px;
+      display:flex;
+      align-items:center;
+      gap:4px;
+      font-weight:600;
+    }
+    .v-dur i{
+      color:#007bff;
+    }
+
+    /* Footer: CS Info banner matching standard vouchers */
+    .v-foot-cs{
+      background:#28a745; /* Dynamic style handled below */
+      color:#fff;
+      font-size:11px;
+      font-weight:800;
+      padding:6px 12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      letter-spacing:.2px;
+    }
+
+    /* Theme colors matching image pricing levels */
+    .v-theme-green .v-brand, .v-theme-green .v-brand i { color:#18b056; }
+    .v-theme-green .voucher-price { color:#18b056; }
+    .v-theme-green .v-foot-cs { background:#18b056; }
+
+    .v-theme-blue .v-brand, .v-theme-blue .v-brand i { color:#2da4ff; }
+    .v-theme-blue .voucher-price { color:#2da4ff; }
+    .v-theme-blue .v-foot-cs { background:#2da4ff; }
+
+    .v-theme-orange .v-brand, .v-theme-orange .v-brand i { color:#e06d15; }
+    .v-theme-orange .voucher-price { color:#e06d15; }
+    .v-theme-orange .v-foot-cs { background:#e06d15; }
+
+    .v-theme-purple .v-brand, .v-theme-purple .v-brand i { color:#a359eb; }
+    .v-theme-purple .voucher-price { color:#a359eb; }
+    .v-theme-purple .v-foot-cs { background:#a359eb; }
     
     .payment-methods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:12px}
     @media (max-width: 768px){.payment-methods-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}}
@@ -291,30 +322,53 @@
               <div class="muted small mt-1">Belum ada profile voucher (metadata Mikhmon) di MikroTik.</div>
             <% } else { %>
               <div class="voucher-grid mt-1">
-                <% (profiles || []).forEach((p, idx) => { %>
+                <% (profiles || []).forEach((p, idx) => { 
+                  // Tentukan warna tema dinamis berdasarkan level harga layaknya sampel gambar
+                  const price = Number(p.price || 0);
+                  let themeClass = 'v-theme-green';
+                  if (price >= 35000) themeClass = 'v-theme-purple';
+                  else if (price >= 10000) themeClass = 'v-theme-orange';
+                  else if (price >= 4000) themeClass = 'v-theme-blue';
+                %>
                   <input
                     class="voucher-radio"
                     type="radio"
                     name="profile_name"
                     id="vprofile_<%= idx %>"
                     value="<%= p.name %>"
-                    data-price="<%= Number(p.price||0) %>"
+                    data-price="<%= price %>"
                     data-validity="<%= p.validity %>"
                     <%= idx === 0 ? 'required' : '' %>
                   >
-                  <label class="voucher-card" for="vprofile_<%= idx %>" onclick="selectCardAndGo('<%= p.name %>')">
-                    <span class="v-badge">Hotspot</span>
-                    <h3 class="voucher-title"><%= p.name %></h3>
-                    <div class="v-dur">
-                      <i class="bi bi-clock-history"></i> Aktif <%= p.validity %>
+                  <label class="voucher-card <%= themeClass %>" for="vprofile_<%= idx %>" onclick="selectCardAndGo('<%= p.name %>')">
+                    <!-- Top: Brand & Price -->
+                    <div class="v-top">
+                      <span class="v-brand">
+                        <i class="bi bi-wifi"></i> WiFi.NET
+                      </span>
+                      <div class="voucher-price">
+                        <span class="v-currency">Rp</span><%= price.toLocaleString('id-ID') %>
+                      </div>
                     </div>
-                    <div class="voucher-price">
-                      <span class="currency">Rp</span><%= Number(p.price||0).toLocaleString('id-ID') %>
+                    
+                    <!-- Mid: Name & Validity -->
+                    <div class="v-mid">
+                      <span class="v-label-main">VOUCHER</span>
+                      <h3 class="voucher-title"><%= p.name %></h3>
+                      <div class="v-dur">
+                        <i class="bi bi-clock-history"></i> Masa Aktif: <%= p.validity %>
+                      </div>
+                    </div>
+
+                    <!-- Foot: CS Banner -->
+                    <div class="v-foot-cs">
+                      <span>CS: <%= settings.company_phone || 'Customer Service' %></span>
+                      <i class="bi bi-qr-code-scan"></i>
                     </div>
                   </label>
                 <% }) %>
               </div>
-              <div class="muted small mt-2" id="step1Hint">Klik pada salah satu kartu voucher di atas untuk langsung beralih ke halaman pembayaran.</div>
+              <div class="muted small mt-2" id="step1Hint">Klik paket voucher di atas untuk langsung beralih ke halaman pembayaran.</div>
             <% } %>
             <button class="btn btn-primary btnx mt-3 w-100" type="button" id="btnNext" onclick="goStep(2)" <%= (!profiles || profiles.length === 0) ? 'disabled' : '' %>>
               Lanjut ke Pembayaran <i class="bi bi-arrow-right ms-1"></i>
