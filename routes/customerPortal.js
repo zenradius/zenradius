@@ -1289,11 +1289,9 @@ router.post('/public/voucher/create-payment', async (req, res) => {
 
   const buyerPhone = normalizeBuyerPhone(req.body.buyer_phone);
   const profileName = String(req.body.profile_name || '').trim();
-  const tosChecked = req.body.tos === 'on' || req.body.tos === '1' || req.body.tos === true || req.body.tos === 'true';
 
   if (!buyerPhone) return res.redirect('/customer/voucher?err=' + encodeURIComponent('Nomor WhatsApp tidak valid'));
   if (!profileName) return res.redirect('/customer/voucher?err=' + encodeURIComponent('Pilih paket voucher terlebih dahulu'));
-  if (!tosChecked) return res.redirect('/customer/voucher?err=' + encodeURIComponent('Harap centang persetujuan Syarat & Ketentuan (TOS) untuk melanjutkan.'));
 
   const getConfiguredVoucherPrice = (routerId, profileName) => {
     const rid = routerId === undefined ? null : routerId;

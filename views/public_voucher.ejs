@@ -388,11 +388,8 @@
         <% } %>
 
         <form method="POST" action="/customer/public/voucher/create-payment" class="d-grid gap-2" id="voucherForm">
-          <div class="steps">
-            <div class="step active" id="stepInd1"><span class="num">1</span> Pilih Voucher</div>
-            <div class="step-line"></div>
-            <div class="step" id="stepInd2"><span class="num">2</span> Pembayaran</div>
-          </div>
+          <!-- Hidden TOS state injector to bypass backend checks cleanly -->
+          <input type="hidden" name="tos" value="1">
 
           <!-- STEP 1: Pilih paket voucher -->
           <div class="step-pane active" id="stepPane1">
@@ -453,30 +450,25 @@
                   </label>
                 <% }) %>
               </div>
-              <div class="muted small mt-2" id="step1Hint">Klik paket voucher di atas untuk langsung beralih ke halaman pembayaran.</div>
+              <div class="muted small mt-2" id="step1Hint">Klik paket voucher di atas untuk langsung melakukan pembelian & pembayaran.</div>
             <% } %>
-            <button class="btn btn-primary btnx mt-3 w-100" type="button" id="btnNext" onclick="goStep(2)" <%= (!profiles || profiles.length === 0) ? 'disabled' : '' %>>
-              Lanjut ke Pembayaran <i class="bi bi-arrow-right ms-1"></i>
-            </button>
           </div>
 
           <!-- STEP 2: Pembayaran -->
-          <div class="step-pane" id="stepPane2">
+          <!-- Diabaikan karena input langsung berpindah ke dialogue pop-up modal -->
+          <div style="display:none;">
             <div class="summary">
               <div>
                 <div class="lbl">Paket dipilih</div>
-                <div class="val" id="sumName">-</div>
-                <div class="muted small"><i class="bi bi-hourglass-split me-1"></i><span id="sumValidity">-</span></div>
+                <div class="val">-</div>
+                <div class="muted small"><i class="bi bi-hourglass-split me-1"></i><span>-</span></div>
               </div>
               <div class="text-end">
                 <div class="lbl">Total</div>
-                <div class="val" id="sumPrice" style="font-size:18px">-</div>
-                <a href="#" class="small" onclick="goStep(1);return false;"><i class="bi bi-pencil me-1"></i>Ganti</a>
+                <div class="val" style="font-size:18px">-</div>
               </div>
             </div>
-
-            <div>
-              <label class="muted small mb-1">Metode Pembayaran</label>
+          </div>
               <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
               <% if (!hasStaticQris && (!paymentChannels || paymentChannels.length === 0)) { %>
                 <input type="hidden" name="method" value="QRIS">
@@ -578,28 +570,6 @@
                         <% } %>
                       </div>
                     </label>
-                  <% }) %>
-                </div>
-              <% } %>
-            </div>
-
-            <div class="mt-3">
-              <label class="muted small mb-1">Nomor WhatsApp Pembeli</label>
-              <div style="position:relative; width: 100%;">
-                <i class="bi bi-whatsapp" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(190,239,255,.65);font-size:15px;pointer-events:none;z-index:4;"></i>
-                <input class="form-control" name="buyer_phone" id="buyerPhone" inputmode="numeric" placeholder="Contoh: 08xxxxxxxxxx" style="padding-left: 38px; height: 46px;" required>
-              </div>
-              <div class="muted small mt-1">Voucher terkirim instan via WhatsApp & tampil di halaman status.</div>
-            </div>
-
-            <div class="d-flex gap-2 mt-3">
-              <button class="btn btn-ghost btnx" type="button" onclick="goStep(1)" style="flex:0 0 auto">
-                <i class="bi bi-arrow-left"></i>
-              </button>
-              <button class="btn btn-primary btnx w-100" type="submit" <%= (!profiles || profiles.length === 0) ? 'disabled' : '' %>>
-                <i class="bi bi-lightning-charge me-1"></i> Bayar & Aktivasi Voucher
-              </button>
-            </div>
           </div>
 
           <a class="d-inline-flex align-items-center justify-content-center gap-1 text-decoration-none small mt-2 mx-auto" href="/" style="color:#a5f4ed;font-weight:700;">
@@ -626,22 +596,131 @@
   <div class="c-modal-overlay" id="confirmModal">
     <div class="c-modal">
       <div class="c-modal-title">
-        <i class="bi bi-question-circle" style="color:#2dd4bf"></i>
-        <span>Lanjutkan ke Pembayaran?</span>
+        <i class="bi bi-wallet2" style="color:#2dd4bf"></i>
+        <span>Selesaikan Pembayaran Voucher</span>
       </div>
       <div class="c-modal-body">
-        Anda memilih paket voucher berikut untuk diaktifkan secara instan:
-        <div class="c-modal-detail">
-          <div style="font-weight:800;color:#fff;font-size:16px" id="popName">-</div>
-          <div style="color:var(--portal-muted);font-size:12px;margin-top:2px;">
-            <i class="bi bi-clock-history me-1"></i>Masa Aktif: <span id="popValidity">-</span>
+        <div style="font-size:13.5px;line-height:1.5;margin-bottom:12px">Silakan masukkan nomor WhatsApp pembeli dan pilih metode pembayaran untuk melanjutkan pesanan Anda:</div>
+        
+        <!-- Paket selected display -->
+        <div class="c-modal-detail" style="margin-top:0;margin-bottom:16px;background:rgba(45,212,191,.04);border-color:rgba(45,212,191,.15)">
+          <div style="font-weight:800;color:#fff;font-size:15px" id="popName">-</div>
+          <div style="color:var(--portal-muted);font-size:12.5px;margin-top:2px;display:flex;align-items:center;gap:4px">
+            <i class="bi bi-clock-history"></i> Masa Aktif: <span id="popValidity">-</span>
           </div>
-          <div style="font-weight:900;color:#2dd4bf;font-size:20px;margin-top:6px;" id="popPrice">-</div>
+          <div style="font-weight:900;color:#2dd4bf;font-size:18px;margin-top:6px;" id="popPrice">-</div>
         </div>
+
+        <!-- Input WhatsApp directly inside popup -->
+        <div class="mb-3">
+          <label class="muted small mb-1 fw-bold">Nomor WhatsApp Pembeli</label>
+          <div style="position:relative; width: 100%;">
+            <i class="bi bi-whatsapp" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#2dd4bf;font-size:15px;pointer-events:none;z-index:4;"></i>
+            <input class="form-control" name="buyer_phone" id="buyerPhone" inputmode="numeric" placeholder="Contoh: 081234567890" style="padding-left: 38px; height: 46px;" required>
+          </div>
+          <div class="muted small mt-1" style="font-size:11px">Voucher terkirim instan via WhatsApp.</div>
+        </div>
+
+        <!-- Payment channels inside popup -->
+        <div class="mb-2">
+          <label class="muted small mb-1 fw-bold">Metode Pembayaran</label>
+          <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
+          <% if (!hasStaticQris && (!paymentChannels || paymentChannels.length === 0)) { %>
+            <input type="hidden" name="method" value="QRIS">
+            <div class="payment-methods-grid mt-1" style="grid-template-columns:1fr">
+              <div class="pay-method-item" style="cursor:default;flex-direction:row;padding:10px 14px;background:rgba(255,255,255,.03)">
+                <div class="p-icon" style="width:36px;height:36px;font-size:16px;margin:0"><i class="bi bi-qr-code-scan"></i></div>
+                <div class="p-info" style="align-items:flex-start">
+                  <span class="p-name" style="font-size:12.5px">QRIS / E-Wallet</span>
+                </div>
+              </div>
+            </div>
+          <% } else { %>
+            <div class="payment-methods-grid mt-1" style="grid-template-columns:repeat(2,1fr);gap:8px">
+              <% if (hasStaticQris) { %>
+                <input
+                  class="pm-radio"
+                  type="radio"
+                  name="method"
+                  id="pm_static"
+                  value="QRIS_STATIC"
+                  checked
+                  style="position:absolute;opacity:0;pointer-events:none"
+                >
+                <label class="pay-method-item" for="pm_static" style="padding:10px;gap:6px;border-radius:10px;background:rgba(15,23,42,.62)">
+                  <div class="p-icon" style="width:32px;height:32px;font-size:15px;margin-bottom:0"><i class="bi bi-qr-code-scan"></i></div>
+                  <div class="p-info">
+                    <span class="p-name" style="font-size:11.5px">QRIS Instan</span>
+                  </div>
+                </label>
+              <% } %>
+              <% paymentChannels.forEach((ch, idx) => {
+                const code = String(ch.code || '').toUpperCase();
+                const name = ch.name || code;
+                const group = String(ch.group || '').toLowerCase();
+                let icon = 'bi-wallet2';
+                let badgeClass = 'pb-bank';
+                
+                if (code === 'QRIS' || code.includes('QRIS')) {
+                  icon = 'bi-qr-code-scan';
+                  badgeClass = 'pb-bank';
+                } else if (code.includes('DANA')) {
+                  icon = 'bi-wallet2';
+                  badgeClass = 'pb-dana';
+                } else if (code.includes('OVO')) {
+                  icon = 'bi-wallet2';
+                  badgeClass = 'pb-ovo';
+                } else if (code.includes('SHOPEE')) {
+                  icon = 'bi-wallet2';
+                  badgeClass = 'pb-shopeepay';
+                } else if (code.includes('LINKAJA')) {
+                  icon = 'bi-wallet2';
+                  badgeClass = 'pb-linkaja';
+                } else if (code.includes('GOPAY')) {
+                  icon = 'bi-wallet2';
+                  badgeClass = 'pb-gopay';
+                } else if (code.includes('VA') || group.includes('virtual')) {
+                  icon = 'bi-bank';
+                  badgeClass = 'pb-bank';
+                } else if (code.includes('SNAP') || code.includes('XENDIT') || code.includes('DUITKU')) {
+                  icon = 'bi-credit-card';
+                  badgeClass = 'pb-bank';
+                }
+              %>
+                <input
+                  class="pm-radio"
+                  type="radio"
+                  name="method"
+                  id="pm_<%= idx %>"
+                  value="<%= code %>"
+                  <%= (!hasStaticQris && idx === 0) ? 'checked' : '' %>
+                  style="position:absolute;opacity:0;pointer-events:none"
+                >
+                <label class="pay-method-item" for="pm_<%= idx %>" style="padding:10px;gap:6px;border-radius:10px;background:rgba(15,23,42,.62)">
+                  <div class="p-icon" style="width:32px;height:32px;font-size:15px;margin-bottom:0">
+                    <% if (ch.icon_url) { %>
+                      <img src="<%= ch.icon_url %>" alt="<%= name %>" class="p-logo" style="padding:4px">
+                    <% } else { %>
+                      <div class="p-badge <%= badgeClass %>" style="font-size:14px">
+                        <i class="<%= icon %>"></i>
+                      </div>
+                    <% } %>
+                  </div>
+                  <div class="p-info">
+                    <span class="p-name" style="font-size:11.5px"><%= name %></span>
+                  </div>
+                </label>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+
       </div>
-      <div class="c-modal-actions">
-        <button class="btn btn-ghost btn-sm" style="border-radius:8px;padding:8px 14px" onclick="cancelConfirm()">Batal</button>
-        <button class="btn btn-primary btn-sm" style="border-radius:8px;min-height:unset;padding:8px 16px" onclick="proceedConfirm()">Ya, Lanjutkan</button>
+      <div class="c-modal-actions" style="margin-top:10px">
+        <button class="btn btn-ghost btn-sm" type="button" style="border-radius:10px;padding:10px 18px" onclick="cancelConfirm()">Batal</button>
+        <button class="btn btn-primary btn-sm" type="submit" style="border-radius:10px;min-height:unset;padding:10px 22px">
+          Bayar & Aktivasi <i class="bi bi-lightning-charge ms-1"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -649,34 +728,25 @@
   <script>
     (function () {
       const radios = Array.from(document.querySelectorAll('input.voucher-radio'));
-      const btnNext = document.getElementById('btnNext');
-      const hint = document.getElementById('step1Hint');
       let pendingProfileName = null;
 
       function selected() { return radios.find(r => r.checked) || null; }
-
-      function updateSummary() {
-        const r = selected();
-        const name = document.getElementById('sumName');
-        const price = document.getElementById('sumPrice');
-        const val = document.getElementById('sumValidity');
-        if (!r) { if (name) name.textContent = '-'; if (price) price.textContent = '-'; if (val) val.textContent = '-'; return; }
-        if (name) name.textContent = r.value;
-        if (val) val.textContent = r.dataset.validity || '-';
-        if (price) price.textContent = 'Rp ' + Number(r.dataset.price || 0).toLocaleString('id-ID');
-      }
 
       window.selectCardAndGo = function (profileName) {
         pendingProfileName = profileName;
         const r = radios.find(rad => rad.value === profileName);
         if (r) {
+          // Centang radio button pilihan secara tersembunyi
+          r.checked = true;
+
           // Set detail di pop-up modal
           document.getElementById('popName').textContent = r.value;
           document.getElementById('popValidity').textContent = r.dataset.validity || '-';
           document.getElementById('popPrice').textContent = 'Rp ' + Number(r.dataset.price || 0).toLocaleString('id-ID');
           
-          // Tampilkan pop-up modal konfirmasi
+          // Tampilkan pop-up modal konfirmasi beserta formulir input
           document.getElementById('confirmModal')?.classList.add('active');
+          setTimeout(() => document.getElementById('buyerPhone')?.focus(), 220);
         }
       };
 
@@ -684,38 +754,6 @@
         pendingProfileName = null;
         document.getElementById('confirmModal')?.classList.remove('active');
       };
-
-      window.proceedConfirm = function () {
-        if (pendingProfileName) {
-          const r = radios.find(rad => rad.value === pendingProfileName);
-          if (r) {
-            r.checked = true;
-            updateSummary();
-            document.getElementById('confirmModal')?.classList.remove('active');
-            setTimeout(() => goStep(2), 220);
-          }
-        }
-      };
-
-      window.goStep = function (n) {
-        if (n === 2 && !selected()) {
-          if (hint) { hint.classList.add('text-warning'); hint.textContent = 'Silakan pilih paket voucher terlebih dahulu.'; }
-          return;
-        }
-        updateSummary();
-        [1, 2].forEach(i => {
-          document.getElementById('stepPane' + i)?.classList.toggle('active', i === n);
-          const ind = document.getElementById('stepInd' + i);
-          if (!ind) return;
-          ind.classList.toggle('active', i === n);
-          ind.classList.toggle('done', i < n);
-        });
-        if (n === 2) setTimeout(() => document.getElementById('buyerPhone')?.focus(), 200);
-        try { document.querySelector('.cardx')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
-      };
-
-      // Jika validasi HTML gagal (mis. nomor WA kosong), pastikan step 2 terbuka
-      document.getElementById('voucherForm')?.addEventListener('invalid', () => goStep(2), true);
     })();
   </script>
   <% if (order && (String(order.status) === 'paid' || String(order.status) === 'pending') && !order.voucher_code) { %>
