@@ -3790,6 +3790,27 @@ router.post('/settings/logo-upload', requireAdminSession, restrictToAdmin, qrisU
   res.redirect('/admin/settings');
 });
 
+router.post('/settings/icon-upload', requireAdminSession, restrictToAdmin, qrisUpload.single('icon_file'), async (req, res) => {
+  try {
+    const f = req.file;
+    if (!f || !f.buffer || !f.originalname) throw new Error('File favicon/PWA tidak ditemukan');
+
+    const ext = String(path.extname(f.originalname || '') || '').toLowerCase();
+    const allowedExt = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+    const allowedMime = new Set(['image/png', 'image/jpeg', 'image/webp']);
+    if (!allowedExt.has(ext) || !allowedMime.has(String(f.mimetype || '').toLowerCase())) {
+      throw new Error('Format file tidak didukung. Gunakan PNG/JPG/WebP');
+    }
+
+    const brandAssets = require('../utils/brandAssets');
+    brandAssets.saveBrandIcon(f.buffer);
+    req.session._msg = { type: 'success', text: 'Favicon dan ikon PWA berhasil diperbarui.' };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal upload favicon/PWA: ' + (e?.message || e) };
+  }
+  res.redirect('/admin/settings');
+});
+
 router.get('/digiflazz', requireAdminSession, requireSidebarMenuAccess('digiflazz'), restrictToAdmin, async (req, res) => {
   const settings = getSettings();
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;

@@ -88,6 +88,12 @@
       margin-left: 0.75rem;
     }
 
+    .custom-navbar .navbar-brand img {
+      max-height: 42.5px;
+      width: auto;
+      object-fit: contain;
+    }
+
     .custom-navbar .btn-portal-access {
       padding: 0.48rem 0.85rem;
       border-radius: 9px;
@@ -2615,7 +2621,7 @@
         <div class="col-lg-5">
           <div class="glass-card p-4 mb-3 company-info-card">
             <div class="mb-3">
-              <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" style="max-width: 260px; width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 8px 18px rgba(56, 213, 196, 0.18));">
+              <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" style="max-width: 221px; width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 8px 18px rgba(56, 213, 196, 0.18));">
             </div>
             <p class="leading-relaxed mb-0" style="color: #C8D0E0;">
               Solusi internet andal untuk kebutuhan rumah, keluarga, dan bisnis — koneksi stabil, dukungan responsif, dan layanan pemasangan yang terpercaya.

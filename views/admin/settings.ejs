@@ -292,6 +292,20 @@
                 <div style="font-size:10px; color:var(--muted)">Logo Saat Ini:</div>
                 <img src="/img/logo.png?v=<%= Date.now() %>" alt="Current Logo" style="height:40px; object-fit:contain; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px; border:1px solid var(--border)">
               </div>
+              <div style="margin-top:18px; padding-top:15px; border-top:1px dashed var(--border);">
+                <label class="fl">Upload Favicon / Icon PWA</label>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+                  <div style="flex:1 1 200px">
+                    <input class="fc" type="file" id="icon_upload_file" name="icon_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                    <div style="font-size:10px; color:var(--muted); margin-top:4px">Gunakan gambar persegi, disarankan PNG 512×512. Maksimal 2MB. Tidak mengubah logo landing page.</div>
+                  </div>
+                  <button class="btn btn-s" type="button" id="icon_upload_btn"><i class="bi bi-upload"></i> Upload Icon</button>
+                </div>
+                <div style="margin-top:10px; display:flex; gap:12px; align-items:center;">
+                  <div style="font-size:10px; color:var(--muted)">Icon Saat Ini:</div>
+                  <img src="/img/icon.png?v=<%= Date.now() %>" alt="Current PWA Icon" style="width:40px; height:40px; object-fit:contain; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px; border:1px solid var(--border)">
+                </div>
+              </div>
             </div>
             <div class="form-row">
               <div class="fg">
@@ -933,35 +947,38 @@ async function clearEwalletLogs() {
   }
 }
 
-// Logo Upload JavaScript
-(function () {
-  const fileInput = document.getElementById('logo_upload_file');
-  const btn = document.getElementById('logo_upload_btn');
+// Logo / Icon Upload JavaScript
+function bindBrandUpload(inputId, btnId, fieldName, endpoint, label) {
+  const fileInput = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
   if (!fileInput || !btn) return;
+  const idleHtml = btn.innerHTML;
 
   btn.addEventListener('click', async () => {
     const f = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
     if (!f) {
-      alert('Pilih file logo terlebih dahulu');
+      alert('Pilih file ' + label + ' terlebih dahulu');
       return;
     }
     const fd = new FormData();
-    fd.append('logo_file', f);
+    fd.append(fieldName, f);
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
     try {
-      const r = await fetch('/admin/settings/logo-upload', { method: 'POST', body: fd, credentials: 'same-origin' });
-      if (!r.ok) throw new Error('Upload logo gagal');
+      const r = await fetch(endpoint, { method: 'POST', body: fd, credentials: 'same-origin' });
+      if (!r.ok) throw new Error('Upload ' + label + ' gagal');
       window.location.href = '/admin/settings';
     } catch (e) {
       alert(e.message);
       window.location.href = '/admin/settings';
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-upload"></i> Upload Logo';
+      btn.innerHTML = idleHtml;
     }
   });
-})();
+}
+bindBrandUpload('logo_upload_file', 'logo_upload_btn', 'logo_file', '/admin/settings/logo-upload', 'logo');
+bindBrandUpload('icon_upload_file', 'icon_upload_btn', 'icon_file', '/admin/settings/icon-upload', 'favicon/icon PWA');
 
 setTimeout(loadEwalletLogs, 200);
 setTimeout(updateNotifHint, 250);

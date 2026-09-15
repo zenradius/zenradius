@@ -30,12 +30,18 @@ function resolveBrandFile(name) {
   return defaultPath(name);
 }
 
-/** Simpan buffer sebagai logo custom. Ikon PWA ikut disinkronkan dari gambar yang sama. */
+/** Simpan buffer sebagai logo custom. */
 function saveBrandLogo(buffer) {
   ensureBrandingDir();
   fs.writeFileSync(customPath('logo.png'), buffer);
+  return { logo: customPath('logo.png') };
+}
+
+/** Simpan buffer favicon/PWA icon custom secara terpisah dari logo utama. */
+function saveBrandIcon(buffer) {
+  ensureBrandingDir();
   fs.writeFileSync(customPath('icon.png'), buffer);
-  return { logo: customPath('logo.png'), icon: customPath('icon.png') };
+  return { icon: customPath('icon.png') };
 }
 
 function hasCustomLogo() { return fs.existsSync(customPath('logo.png')); }
@@ -45,11 +51,13 @@ function hasCustomLogo() { return fs.existsSync(customPath('logo.png')); }
  * diganti (berbasis mtime), sehingga CDN/Cloudflare & browser mengambil ulang.
  */
 function getBrandVersion() {
-  try {
-    return String(Math.floor(fs.statSync(resolveBrandFile('logo.png')).mtimeMs));
-  } catch {
-    return 'zenradius';
+  let latest = 0;
+  for (const name of ['logo.png', 'icon.png']) {
+    try {
+      latest = Math.max(latest, fs.statSync(resolveBrandFile(name)).mtimeMs);
+    } catch { /* file default mungkin tidak ada */ }
   }
+  return latest > 0 ? String(Math.floor(latest)) : 'zenradius';
 }
 
-module.exports = { BRANDING_DIR, ensureBrandingDir, resolveBrandFile, saveBrandLogo, hasCustomLogo, getBrandVersion };
+module.exports = { BRANDING_DIR, ensureBrandingDir, resolveBrandFile, saveBrandLogo, saveBrandIcon, hasCustomLogo, getBrandVersion };
