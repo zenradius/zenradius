@@ -58,61 +58,74 @@
     .btn-primary:hover{background:linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%)!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important;filter:brightness(1.04)}
     a{color:#a5f4ed}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18)}
-    /* Redesigned Cards to Match Professional Layout */
+    /* Redesigned Cards with Dark Glassmorphism to Match Page Palette */
     .voucher-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
     @media (max-width: 576px){.voucher-grid{grid-template-columns:1fr;gap:14px}}
     .voucher-radio{position:absolute;opacity:0;pointer-events:none}
     
     .voucher-card{
       position:relative;
-      border:2px solid #236060;
-      background:#fff;
-      border-radius:12px;
+      border:1px solid rgba(190,239,255,.18);
+      background:rgba(15,23,42,.62);
+      backdrop-filter:blur(8px);
+      border-radius:14px;
       padding:0;
       cursor:pointer;
       transition:all .25s ease-in-out;
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      min-height:160px;
-      color:#1d2939;
-      box-shadow:0 6px 15px rgba(0,0,0,.15);
+      min-height:165px;
+      color:var(--portal-text);
+      box-shadow:0 6px 20px rgba(0,0,0,.25);
+    }
+    .voucher-card::after {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 100% 0%, rgba(255,255,255,.05) 0%, transparent 60%);
+      pointer-events:none;
     }
     .voucher-card:hover{
       transform:translateY(-5px);
-      box-shadow:0 12px 24px rgba(0,0,0,.3);
+      border-color:rgba(45,212,191,.45);
+      background:rgba(15,23,42,.8);
+      box-shadow:0 12px 28px rgba(0,0,0,.45);
     }
     .voucher-radio:checked + .voucher-card{
       border-color:#29d3c5;
-      box-shadow:0 0 0 3px rgba(41,211,197,.3), 0 12px 24px rgba(0,0,0,.3);
+      background:rgba(45,212,191,.06);
+      box-shadow:0 0 0 3px rgba(41,211,197,.25), 0 12px 28px rgba(0,0,0,.4);
     }
 
-    /* Top Layout: Brand & Price */
+    /* Top Layout: Brand Logo & Price */
     .v-top{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:12px 14px;
-      border-bottom:1px solid #e4e7ec;
+      padding:14px 16px;
+      border-bottom:1px solid rgba(190,239,255,.12);
     }
     .v-brand{
       display:flex;
       align-items:center;
-      gap:4px;
-      font-size:15px;
-      font-weight:900;
-      color:#007bff;
-      font-style:italic;
-      letter-spacing:-.2px;
     }
-    .v-brand i{
-      font-size:16px;
-      color:#007bff;
+    .v-brand-logo{
+      height:22px;
+      width:auto;
+      object-fit:contain;
+      display:block;
+    }
+    .v-brand-text{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      letter-spacing:.2px;
     }
     .voucher-price{
       font-weight:900;
       font-size:22px;
-      color:#28a745;
+      color:#2dd4bf;
       display:flex;
       align-items:baseline;
     }
@@ -120,73 +133,139 @@
       font-size:13px;
       font-weight:800;
       margin-right:2px;
+      color:rgba(45,212,191,.8);
     }
 
     /* Middle Layout: Label, Validity and Info */
     .v-mid{
-      padding:12px 14px;
+      padding:14px 16px;
       display:flex;
       flex-direction:column;
       gap:2px;
       flex-grow:1;
-      background:#f8fafc;
     }
     .v-label-main{
-      font-size:11px;
+      font-size:10px;
       font-weight:800;
       text-transform:uppercase;
-      letter-spacing:.8px;
-      color:#667085;
+      letter-spacing:1px;
+      color:rgba(190,239,255,.5);
     }
     .voucher-title{
       font-weight:800;
       font-size:18px;
-      color:#1d2939;
-      margin:0;
+      color:#fff;
+      margin:2px 0 0 0;
       line-height:1.2;
     }
     .v-dur{
       font-size:11px;
-      color:#475467;
+      color:var(--portal-muted);
       margin-top:6px;
       display:flex;
       align-items:center;
-      gap:4px;
+      gap:5px;
       font-weight:600;
     }
     .v-dur i{
-      color:#007bff;
+      color:#2dd4bf;
     }
 
-    /* Footer: CS Info banner matching standard vouchers */
+    /* Footer: Web Domain Info banner */
     .v-foot-cs{
-      background:#28a745; /* Dynamic style handled below */
-      color:#fff;
-      font-size:11px;
+      background:rgba(255,255,255,.05);
+      border-top:1px solid rgba(190,239,255,.08);
+      color:var(--portal-muted);
+      font-size:10.5px;
       font-weight:800;
-      padding:6px 12px;
+      padding:8px 16px;
       display:flex;
       justify-content:space-between;
       align-items:center;
-      letter-spacing:.2px;
+      letter-spacing:.4px;
+      text-transform:uppercase;
     }
 
-    /* Theme colors matching image pricing levels */
-    .v-theme-green .v-brand, .v-theme-green .v-brand i { color:#18b056; }
-    .v-theme-green .voucher-price { color:#18b056; }
-    .v-theme-green .v-foot-cs { background:#18b056; }
+    /* Modern Theme color palettes for selected vouchers */
+    .v-theme-green .voucher-price { color:#4ade80; }
+    .v-theme-green .voucher-price .v-currency { color:rgba(74,222,128,.8); }
+    .v-theme-green .v-foot-cs { background:rgba(74,222,128,.04); color:#4ade80; border-top-color:rgba(74,222,128,.15); }
+    .v-theme-green.voucher-card:hover, .voucher-radio:checked + .v-theme-green { border-color:rgba(74,222,128,.5); }
 
-    .v-theme-blue .v-brand, .v-theme-blue .v-brand i { color:#2da4ff; }
-    .v-theme-blue .voucher-price { color:#2da4ff; }
-    .v-theme-blue .v-foot-cs { background:#2da4ff; }
+    .v-theme-blue .voucher-price { color:#60a5fa; }
+    .v-theme-blue .voucher-price .v-currency { color:rgba(96,165,250,.8); }
+    .v-theme-blue .v-foot-cs { background:rgba(96,165,250,.04); color:#60a5fa; border-top-color:rgba(96,165,250,.15); }
+    .v-theme-blue.voucher-card:hover, .voucher-radio:checked + .v-theme-blue { border-color:rgba(96,165,250,.5); }
 
-    .v-theme-orange .v-brand, .v-theme-orange .v-brand i { color:#e06d15; }
-    .v-theme-orange .voucher-price { color:#e06d15; }
-    .v-theme-orange .v-foot-cs { background:#e06d15; }
+    .v-theme-orange .voucher-price { color:#f97316; }
+    .v-theme-orange .voucher-price .v-currency { color:rgba(249,115,22,.8); }
+    .v-theme-orange .v-foot-cs { background:rgba(249,115,22,.04); color:#f97316; border-top-color:rgba(249,115,22,.15); }
+    .v-theme-orange.voucher-card:hover, .voucher-radio:checked + .v-theme-orange { border-color:rgba(249,115,22,.5); }
 
-    .v-theme-purple .v-brand, .v-theme-purple .v-brand i { color:#a359eb; }
-    .v-theme-purple .voucher-price { color:#a359eb; }
-    .v-theme-purple .v-foot-cs { background:#a359eb; }
+    .v-theme-purple .voucher-price { color:#c084fc; }
+    .v-theme-purple .voucher-price .v-currency { color:rgba(192,132,252,.8); }
+    .v-theme-purple .v-foot-cs { background:rgba(192,132,252,.04); color:#c084fc; border-top-color:rgba(192,132,252,.15); }
+    .v-theme-purple.voucher-card:hover, .voucher-radio:checked + .v-theme-purple { border-color:rgba(192,132,252,.5); }
+    
+    /* Confirmation Dialog Modal styles */
+    .c-modal-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.85);
+      backdrop-filter:blur(8px);
+      z-index:9999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease;
+    }
+    .c-modal-overlay.active{
+      opacity:1;
+      pointer-events:auto;
+    }
+    .c-modal{
+      background:#173945;
+      border:1px solid rgba(190,239,255,.32);
+      border-radius:16px;
+      padding:24px;
+      max-width:420px;
+      width:90%;
+      box-shadow:0 24px 48px rgba(0,0,0,.5);
+      transform:scale(0.95);
+      transition:transform .25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .c-modal-overlay.active .c-modal{
+      transform:scale(1);
+    }
+    .c-modal-title{
+      font-size:18px;
+      font-weight:800;
+      color:#fff;
+      margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .c-modal-body{
+      font-size:14px;
+      color:var(--portal-muted);
+      line-height:1.5;
+      margin-bottom:20px;
+    }
+    .c-modal-detail{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(190,239,255,.12);
+      border-radius:10px;
+      padding:10px 14px;
+      margin-top:10px;
+    }
+    .c-modal-actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+    }
     
     .payment-methods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:12px}
     @media (max-width: 768px){.payment-methods-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}}
@@ -329,6 +408,11 @@
                   if (price >= 35000) themeClass = 'v-theme-purple';
                   else if (price >= 10000) themeClass = 'v-theme-orange';
                   else if (price >= 4000) themeClass = 'v-theme-blue';
+
+                  // Ambil domain as CS dari konfigurasi
+                  const csDomain = String(settings.public_base_url || '').trim()
+                    .replace(/^https?:\/\//i, '')
+                    .replace(/\/$/i, '') || 'BINUSNET.COM';
                 %>
                   <input
                     class="voucher-radio"
@@ -343,9 +427,10 @@
                   <label class="voucher-card <%= themeClass %>" for="vprofile_<%= idx %>" onclick="selectCardAndGo('<%= p.name %>')">
                     <!-- Top: Brand & Price -->
                     <div class="v-top">
-                      <span class="v-brand">
-                        <i class="bi bi-wifi"></i> WiFi.NET
-                      </span>
+                      <div class="v-brand">
+                        <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" alt="Logo" class="v-brand-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span class="v-brand-text" style="display:none;"><%= settings.company_header || 'WiFi' %></span>
+                      </div>
                       <div class="voucher-price">
                         <span class="v-currency">Rp</span><%= price.toLocaleString('id-ID') %>
                       </div>
@@ -362,7 +447,7 @@
 
                     <!-- Foot: CS Banner -->
                     <div class="v-foot-cs">
-                      <span>CS: <%= settings.company_phone || 'Customer Service' %></span>
+                      <span><%= csDomain %></span>
                       <i class="bi bi-qr-code-scan"></i>
                     </div>
                   </label>
@@ -528,11 +613,45 @@
       </div>
     </div>
   </div>
+        </form>
+
+        <div class="muted small mt-4 text-center" style="line-height:1.55;">
+          &copy; <%= new Date().getFullYear() %> <strong><%- footerInfo %></strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Popup Modal overlay -->
+  <div class="c-modal-overlay" id="confirmModal">
+    <div class="c-modal">
+      <div class="c-modal-title">
+        <i class="bi bi-question-circle" style="color:#2dd4bf"></i>
+        <span>Lanjutkan ke Pembayaran?</span>
+      </div>
+      <div class="c-modal-body">
+        Anda memilih paket voucher berikut untuk diaktifkan secara instan:
+        <div class="c-modal-detail">
+          <div style="font-weight:800;color:#fff;font-size:16px" id="popName">-</div>
+          <div style="color:var(--portal-muted);font-size:12px;margin-top:2px;">
+            <i class="bi bi-clock-history me-1"></i>Masa Aktif: <span id="popValidity">-</span>
+          </div>
+          <div style="font-weight:900;color:#2dd4bf;font-size:20px;margin-top:6px;" id="popPrice">-</div>
+        </div>
+      </div>
+      <div class="c-modal-actions">
+        <button class="btn btn-ghost btn-sm" style="border-radius:8px;padding:8px 14px" onclick="cancelConfirm()">Batal</button>
+        <button class="btn btn-primary btn-sm" style="border-radius:8px;min-height:unset;padding:8px 16px" onclick="proceedConfirm()">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       const radios = Array.from(document.querySelectorAll('input.voucher-radio'));
       const btnNext = document.getElementById('btnNext');
       const hint = document.getElementById('step1Hint');
+      let pendingProfileName = null;
 
       function selected() { return radios.find(r => r.checked) || null; }
 
@@ -548,11 +667,33 @@
       }
 
       window.selectCardAndGo = function (profileName) {
+        pendingProfileName = profileName;
         const r = radios.find(rad => rad.value === profileName);
         if (r) {
-          r.checked = true;
-          updateSummary();
-          setTimeout(() => goStep(2), 220);
+          // Set detail di pop-up modal
+          document.getElementById('popName').textContent = r.value;
+          document.getElementById('popValidity').textContent = r.dataset.validity || '-';
+          document.getElementById('popPrice').textContent = 'Rp ' + Number(r.dataset.price || 0).toLocaleString('id-ID');
+          
+          // Tampilkan pop-up modal konfirmasi
+          document.getElementById('confirmModal')?.classList.add('active');
+        }
+      };
+
+      window.cancelConfirm = function () {
+        pendingProfileName = null;
+        document.getElementById('confirmModal')?.classList.remove('active');
+      };
+
+      window.proceedConfirm = function () {
+        if (pendingProfileName) {
+          const r = radios.find(rad => rad.value === pendingProfileName);
+          if (r) {
+            r.checked = true;
+            updateSummary();
+            document.getElementById('confirmModal')?.classList.remove('active');
+            setTimeout(() => goStep(2), 220);
+          }
         }
       };
 
