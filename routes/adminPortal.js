@@ -4148,11 +4148,21 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
     pushCmd(`git show origin/${branch}:version.txt`, remote);
     if (!remote.ok) throw new Error('Tidak bisa membaca version.txt dari GitHub.');
     const remoteVersion = String(remote.stdout || '').trim() || '-';
+    const localCommitBefore = runCmd('git', ['rev-parse', 'HEAD'], repoRoot);
+    const remoteCommitBefore = runCmd('git', ['rev-parse', `origin/${branch}`], repoRoot);
+    const localCommitSha = String(localCommitBefore.stdout || '').trim();
+    const remoteCommitSha = String(remoteCommitBefore.stdout || '').trim();
+    const commitChanged = Boolean(localCommitSha && remoteCommitSha && localCommitSha !== remoteCommitSha);
 
-    if (remoteVersion !== '-' && remoteVersion === localBefore) {
+    // version.txt bisa tidak berubah pada commit fitur. Tetap terapkan update
+    // bila commit origin berbeda; sebelumnya proses berhenti terlalu dini.
+    if (remoteVersion !== '-' && remoteVersion === localBefore && !commitChanged) {
       req.session._msg = { type: 'success', text: 'Versi sudah terbaru: ' + localBefore };
       req.session._updateLog = log.join('\n');
       return res.redirect('/admin/update');
+    }
+    if (remoteVersion === localBefore && commitChanged) {
+      log.push(`$ version.txt sama (${localBefore}), tetapi commit berbeda — lanjut menerapkan perubahan kode`);
     }
 
     fs.mkdirSync(backupRoot, { recursive: true });
