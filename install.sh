@@ -104,12 +104,11 @@ else
 fi
 command -v npm >/dev/null 2>&1 || fail "npm tidak ditemukan meskipun Node.js sudah terpasang."
 
-# Gunakan npm minimum 12.0.2 agar installer selalu memakai versi tooling yang konsisten.
-# Node.js 20 tetap dipertahankan; npm 12 membutuhkan Node.js >=20.17.0.
-NPM_TARGET_VERSION="12.0.2"
+# Gunakan npm 10.x bawaan/resmi Node.js 20 LTS agar stabil dan selaras dengan runtime Node 20.
+NPM_TARGET_VERSION="10.9.9"
 NPM_CURRENT_VERSION="$(npm --version)"
 if [ "$(printf '%s\n' "$NPM_TARGET_VERSION" "$NPM_CURRENT_VERSION" | sort -V | head -n1)" != "$NPM_TARGET_VERSION" ]; then
-  info "Memperbarui npm dari v${NPM_CURRENT_VERSION} ke v${NPM_TARGET_VERSION}..."
+  info "Memperbarui npm dari v${NPM_CURRENT_VERSION} ke v${NPM_TARGET_VERSION} (npm 10.x untuk Node.js 20 LTS)..."
   npm install --global "npm@${NPM_TARGET_VERSION}"
   ok "npm siap digunakan ($(npm --version))."
 else

@@ -131,7 +131,7 @@ Dalam mode ini, skrip tidak memasang atau menyentuh Nginx maupun Certbot sama se
 ### Apa yang Dilakukan Skrip Ini
 1. Validasi lingkungan — memastikan dijalankan dengan `sudo`, dari folder hasil clone repository yang benar, dan OS Ubuntu/Debian.
 2. Domain wajib untuk mode normal — jika kosong, skrip meminta input interaktif; validasi format domain (menolak URL lengkap). Dilewati sepenuhnya pada mode `--cloudflare`.
-3. Memasang Node.js 20 LTS, memperbarui npm ke **12.0.2** bila versi yang tersedia lebih lama, lalu memasang build tools (`python3`, `make`, `g++`) dan PM2. Nginx & Certbot hanya dipasang pada mode normal.
+3. Memasang Node.js 20 LTS, memperbarui npm ke versi **10.9.9** (npm 10.x selaras Node 20 LTS) bila diperlukan, lalu memasang build tools (`python3`, `make`, `g++`) dan PM2. Nginx & Certbot hanya dipasang pada mode normal.
 4. Memasang dependensi aplikasi (`npm ci`/`npm install` mode production).
 5. Menyiapkan `.env` dari `.env.example` jika belum ada — tidak menimpa `.env` yang sudah dikonfigurasi.
 6. Menjalankan `scripts/verify-database.js`.
@@ -183,7 +183,7 @@ Nilai `server_port` harus sama dengan `PORT` di `.env` dan port yang dipublikasi
 docker compose up -d --build
 ```
 Perintah ini akan:
-* Build image dari `Dockerfile` (Node.js 20 + npm 12.0.2 + dependency native seperti `better-sqlite3`)
+* Build image dari `Dockerfile` (Node.js 20 + npm 10.x + dependency native seperti `better-sqlite3`)
 * Menjalankan container `zenradius-app` di background (`-d`)
 * Mem-bind port `127.0.0.1:3001` ke container (gunakan reverse proxy Nginx/Apache untuk expose ke publik dengan HTTPS)
 * Mount volume persisten: `settings.json`, `database/`, `data/`, `public/uploads/`, `auth_info_baileys/` — sehingga data **tidak hilang** saat container di-rebuild

@@ -1,7 +1,7 @@
 FROM node:20-bookworm-slim
 
-# npm 12.0.2 memerlukan Node.js >=20.17.0; image Node 20 LTS terbaru memenuhi syarat ini.
-RUN npm install --global npm@12.0.2
+# Perbarui npm ke v10.9.9 (versi npm 10.x paling stabil & selaras untuk Node.js 20 LTS)
+RUN npm install --global npm@10.9.9
 
 WORKDIR /app
 
