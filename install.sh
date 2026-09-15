@@ -104,6 +104,18 @@ else
 fi
 command -v npm >/dev/null 2>&1 || fail "npm tidak ditemukan meskipun Node.js sudah terpasang."
 
+# Gunakan npm minimum 12.0.2 agar installer selalu memakai versi tooling yang konsisten.
+# Node.js 20 tetap dipertahankan; npm 12 membutuhkan Node.js >=20.17.0.
+NPM_TARGET_VERSION="12.0.2"
+NPM_CURRENT_VERSION="$(npm --version)"
+if [ "$(printf '%s\n' "$NPM_TARGET_VERSION" "$NPM_CURRENT_VERSION" | sort -V | head -n1)" != "$NPM_TARGET_VERSION" ]; then
+  info "Memperbarui npm dari v${NPM_CURRENT_VERSION} ke v${NPM_TARGET_VERSION}..."
+  npm install --global "npm@${NPM_TARGET_VERSION}"
+  ok "npm siap digunakan ($(npm --version))."
+else
+  ok "npm sudah memenuhi versi minimum ($(npm --version))."
+fi
+
 # better-sqlite3 perlu dikompilasi dari source kalau tidak ada prebuilt
 # binary untuk kombinasi Node.js/OS ini, jadi build tools wajib ada.
 if ! command -v make >/dev/null 2>&1 || ! command -v g++ >/dev/null 2>&1; then

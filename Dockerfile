@@ -1,5 +1,8 @@
 FROM node:20-bookworm-slim
 
+# npm 12.0.2 memerlukan Node.js >=20.17.0; image Node 20 LTS terbaru memenuhi syarat ini.
+RUN npm install --global npm@12.0.2
+
 WORKDIR /app
 
 # Build dependencies for native Node.js modules such as better-sqlite3
