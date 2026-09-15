@@ -70,15 +70,13 @@
               <textarea class="fc" name="qris_static_payload" rows="3" placeholder="000201010211...6304XXXX"><%= settings.qris_static_payload || '' %></textarea>
               <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika diisi, sistem akan membuat QRIS dinamis per transaksi (nominal langsung terisi saat scan). Jika kosong, sistem pakai URL gambar seperti biasa.</div>
             </div>
-            <div style="margin-top:10px">
-              <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
-                <div class="fg" style="min-width:260px; flex: 1 1 260px">
-                  <label class="fl">Upload Gambar QRIS (opsional)</label>
-                  <input class="fc" type="file" id="qris_upload_file" name="qris_file" accept="image/png,image/jpeg,image/jpg,image/webp">
-                  <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika di-upload, sistem akan menyimpan file dan otomatis mengisi URL QRIS.</div>
-                </div>
-                <button class="btn btn-s" type="button" id="qris_upload_btn" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
+            <div class="fg" style="margin-top:10px">
+              <label class="fl">Upload Gambar QRIS (opsional)</label>
+              <div style="display:flex; gap:10px; align-items:stretch; flex-wrap:wrap">
+                <input class="fc" type="file" id="qris_upload_file" name="qris_file" accept="image/png,image/jpeg,image/jpg,image/webp" style="flex:1 1 200px; margin:0">
+                <button class="btn btn-s" type="button" id="qris_upload_btn" style="flex:none; white-space:nowrap"><i class="bi bi-upload"></i> Upload</button>
               </div>
+              <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika di-upload, sistem akan menyimpan file dan otomatis mengisi URL QRIS.</div>
             </div>
             <% if (settings.qris_static_qr_url) { %>
               <div style="margin-top:10px; display:flex; gap:12px; align-items:center; flex-wrap:wrap">
