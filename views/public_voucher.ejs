@@ -448,143 +448,144 @@
           <a class="d-inline-flex align-items-center justify-content-center gap-1 text-decoration-none small mt-2 mx-auto" href="/" style="color:#a5f4ed;font-weight:700;">
             <i class="bi bi-arrow-left"></i> Kembali Halaman
           </a>
+
+          <!-- Confirmation Popup Modal overlay inside the FORM wrapper so inputs submit perfectly -->
+          <div class="c-modal-overlay" id="confirmModal">
+            <div class="c-modal">
+              <div class="c-modal-title">
+                <i class="bi bi-wallet2" style="color:#2dd4bf"></i>
+                <span>Selesaikan Pembayaran Voucher</span>
+              </div>
+              <div class="c-modal-body text-start">
+                <div style="font-size:13.5px;line-height:1.5;margin-bottom:12px">Silakan masukkan nomor WhatsApp pembeli dan pilih metode pembayaran untuk melanjutkan pesanan Anda:</div>
+                
+                <!-- Paket selected display -->
+                <div class="c-modal-detail" style="margin-top:0;margin-bottom:16px;background:rgba(45,212,191,.04);border-color:rgba(45,212,191,.15)">
+                  <div style="font-weight:800;color:#fff;font-size:15px" id="popName">-</div>
+                  <div style="color:var(--portal-muted);font-size:12.5px;margin-top:2px;display:flex;align-items:center;gap:4px">
+                    <i class="bi bi-clock-history"></i> Masa Aktif: <span id="popValidity">-</span>
+                  </div>
+                  <div style="font-weight:900;color:#2dd4bf;font-size:18px;margin-top:6px;" id="popPrice">-</div>
+                </div>
+
+                <!-- Input WhatsApp directly inside popup -->
+                <div class="mb-3">
+                  <label class="muted small mb-1 fw-bold">Nomor WhatsApp Pembeli</label>
+                  <div style="position:relative; width: 100%;">
+                    <i class="bi bi-whatsapp" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#2dd4bf;font-size:15px;pointer-events:none;z-index:4;"></i>
+                    <input class="form-control" name="buyer_phone" id="buyerPhone" inputmode="numeric" placeholder="Contoh: 081234567890" style="padding-left: 38px; height: 46px;" required>
+                  </div>
+                  <div class="muted small mt-1" style="font-size:11px">Voucher terkirim instan via WhatsApp.</div>
+                </div>
+
+                <!-- Payment channels inside popup -->
+                <div class="mb-2">
+                  <label class="muted small mb-1 fw-bold">Metode Pembayaran</label>
+                  <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
+                  <% if (!hasStaticQris && (!paymentChannels || paymentChannels.length === 0)) { %>
+                    <input type="hidden" name="method" value="QRIS">
+                    <div class="payment-methods-grid mt-1" style="grid-template-columns:1fr">
+                      <div class="pay-method-item" style="cursor:default;flex-direction:row;padding:10px 14px;background:rgba(255,255,255,.03)">
+                        <div class="p-icon" style="width:36px;height:36px;font-size:16px;margin:0"><i class="bi bi-qr-code-scan"></i></div>
+                        <div class="p-info" style="align-items:flex-start">
+                          <span class="p-name" style="font-size:12.5px">QRIS / E-Wallet</span>
+                        </div>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <div class="payment-methods-grid mt-1" style="grid-template-columns:repeat(2,1fr);gap:8px">
+                      <% if (hasStaticQris) { %>
+                        <input
+                          class="pm-radio"
+                          type="radio"
+                          name="method"
+                          id="pm_static"
+                          value="QRIS_STATIC"
+                          checked
+                          style="position:absolute;opacity:0;pointer-events:none"
+                        >
+                        <label class="pay-method-item" for="pm_static" style="padding:10px;gap:6px;border-radius:10px;background:rgba(15,23,42,.62)">
+                          <div class="p-icon" style="width:32px;height:32px;font-size:15px;margin-bottom:0"><i class="bi bi-qr-code-scan"></i></div>
+                          <div class="p-info">
+                            <span class="p-name" style="font-size:11.5px">QRIS Instan</span>
+                          </div>
+                        </label>
+                      <% } %>
+                      <% paymentChannels.forEach((ch, idx) => {
+                        const code = String(ch.code || '').toUpperCase();
+                        const name = ch.name || code;
+                        const group = String(ch.group || '').toLowerCase();
+                        let icon = 'bi-wallet2';
+                        let badgeClass = 'pb-bank';
+                        
+                        if (code === 'QRIS' || code.includes('QRIS')) {
+                          icon = 'bi-qr-code-scan';
+                          badgeClass = 'pb-bank';
+                        } else if (code.includes('DANA')) {
+                          icon = 'bi-wallet2';
+                          badgeClass = 'pb-dana';
+                        } else if (code.includes('OVO')) {
+                          icon = 'bi-wallet2';
+                          badgeClass = 'pb-ovo';
+                        } else if (code.includes('SHOPEE')) {
+                          icon = 'bi-wallet2';
+                          badgeClass = 'pb-shopeepay';
+                        } else if (code.includes('LINKAJA')) {
+                          icon = 'bi-wallet2';
+                          badgeClass = 'pb-linkaja';
+                        } else if (code.includes('GOPAY')) {
+                          icon = 'bi-wallet2';
+                          badgeClass = 'pb-gopay';
+                        } else if (code.includes('VA') || group.includes('virtual')) {
+                          icon = 'bi-bank';
+                          badgeClass = 'pb-bank';
+                        } else if (code.includes('SNAP') || code.includes('XENDIT') || code.includes('DUITKU')) {
+                          icon = 'bi-credit-card';
+                          badgeClass = 'pb-bank';
+                        }
+                      %>
+                        <input
+                          class="pm-radio"
+                          type="radio"
+                          name="method"
+                          id="pm_<%= idx %>"
+                          value="<%= code %>"
+                          <%= (!hasStaticQris && idx === 0) ? 'checked' : '' %>
+                          style="position:absolute;opacity:0;pointer-events:none"
+                        >
+                        <label class="pay-method-item" for="pm_<%= idx %>" style="padding:10px;gap:6px;border-radius:10px;background:rgba(15,23,42,.62)">
+                          <div class="p-icon" style="width:32px;height:32px;font-size:15px;margin-bottom:0">
+                            <% if (ch.icon_url) { %>
+                              <img src="<%= ch.icon_url %>" alt="<%= name %>" class="p-logo" style="padding:4px">
+                            <% } else { %>
+                              <div class="p-badge <%= badgeClass %>" style="font-size:14px">
+                                <i class="<%= icon %>"></i>
+                              </div>
+                            <% } %>
+                          </div>
+                          <div class="p-info">
+                            <span class="p-name" style="font-size:11.5px"><%= name %></span>
+                          </div>
+                        </label>
+                      <% }) %>
+                    </div>
+                  <% } %>
+                </div>
+
+              </div>
+              <div class="c-modal-actions" style="margin-top:10px">
+                <button class="btn btn-ghost btn-sm" type="button" style="border-radius:10px;padding:10px 18px" onclick="cancelConfirm()">Batal</button>
+                <button class="btn btn-primary btn-sm" type="submit" style="border-radius:10px;min-height:unset;padding:10px 22px">
+                  Bayar & Aktivasi <i class="bi bi-lightning-charge ms-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
         </form>
 
         <div class="muted small mt-4 text-center" style="line-height:1.55;">
           &copy; <%= new Date().getFullYear() %> <strong><%- footerInfo %></strong>
         </div>
-      </div>
-    </div>
-  </div>
-  <!-- Confirmation Popup Modal overlay -->
-  <div class="c-modal-overlay" id="confirmModal">
-    <div class="c-modal">
-      <div class="c-modal-title">
-        <i class="bi bi-wallet2" style="color:#2dd4bf"></i>
-        <span>Selesaikan Pembayaran Voucher</span>
-      </div>
-      <div class="c-modal-body">
-        <div style="font-size:13.5px;line-height:1.5;margin-bottom:12px">Silakan masukkan nomor WhatsApp pembeli dan pilih metode pembayaran untuk melanjutkan pesanan Anda:</div>
-        
-        <!-- Paket selected display -->
-        <div class="c-modal-detail" style="margin-top:0;margin-bottom:16px;background:rgba(45,212,191,.04);border-color:rgba(45,212,191,.15)">
-          <div style="font-weight:800;color:#fff;font-size:15px" id="popName">-</div>
-          <div style="color:var(--portal-muted);font-size:12.5px;margin-top:2px;display:flex;align-items:center;gap:4px">
-            <i class="bi bi-clock-history"></i> Masa Aktif: <span id="popValidity">-</span>
-          </div>
-          <div style="font-weight:900;color:#2dd4bf;font-size:18px;margin-top:6px;" id="popPrice">-</div>
-        </div>
-
-        <!-- Input WhatsApp directly inside popup -->
-        <div class="mb-3">
-          <label class="muted small mb-1 fw-bold">Nomor WhatsApp Pembeli</label>
-          <div style="position:relative; width: 100%;">
-            <i class="bi bi-whatsapp" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#2dd4bf;font-size:15px;pointer-events:none;z-index:4;"></i>
-            <input class="form-control" name="buyer_phone" id="buyerPhone" inputmode="numeric" placeholder="Contoh: 081234567890" style="padding-left: 38px; height: 46px;" required>
-          </div>
-          <div class="muted small mt-1" style="font-size:11px">Voucher terkirim instan via WhatsApp.</div>
-        </div>
-
-        <!-- Payment channels inside popup -->
-        <div class="mb-2">
-          <label class="muted small mb-1 fw-bold">Metode Pembayaran</label>
-          <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
-          <% if (!hasStaticQris && (!paymentChannels || paymentChannels.length === 0)) { %>
-            <input type="hidden" name="method" value="QRIS">
-            <div class="payment-methods-grid mt-1" style="grid-template-columns:1fr">
-              <div class="pay-method-item" style="cursor:default;flex-direction:row;padding:10px 14px;background:rgba(255,255,255,.03)">
-                <div class="p-icon" style="width:36px;height:36px;font-size:16px;margin:0"><i class="bi bi-qr-code-scan"></i></div>
-                <div class="p-info" style="align-items:flex-start">
-                  <span class="p-name" style="font-size:12.5px">QRIS / E-Wallet</span>
-                </div>
-              </div>
-            </div>
-          <% } else { %>
-            <div class="payment-methods-grid mt-1" style="grid-template-columns:repeat(2,1fr);gap:8px">
-              <% if (hasStaticQris) { %>
-                <input
-                  class="pm-radio"
-                  type="radio"
-                  name="method"
-                  id="pm_static"
-                  value="QRIS_STATIC"
-                  checked
-                  style="position:absolute;opacity:0;pointer-events:none"
-                >
-                <label class="pay-method-item" for="pm_static" style="padding:10px;gap:6px;border-radius:10px;background:rgba(15,23,42,.62)">
-                  <div class="p-icon" style="width:32px;height:32px;font-size:15px;margin-bottom:0"><i class="bi bi-qr-code-scan"></i></div>
-                  <div class="p-info">
-                    <span class="p-name" style="font-size:11.5px">QRIS Instan</span>
-                  </div>
-                </label>
-              <% } %>
-              <% paymentChannels.forEach((ch, idx) => {
-                const code = String(ch.code || '').toUpperCase();
-                const name = ch.name || code;
-                const group = String(ch.group || '').toLowerCase();
-                let icon = 'bi-wallet2';
-                let badgeClass = 'pb-bank';
-                
-                if (code === 'QRIS' || code.includes('QRIS')) {
-                  icon = 'bi-qr-code-scan';
-                  badgeClass = 'pb-bank';
-                } else if (code.includes('DANA')) {
-                  icon = 'bi-wallet2';
-                  badgeClass = 'pb-dana';
-                } else if (code.includes('OVO')) {
-                  icon = 'bi-wallet2';
-                  badgeClass = 'pb-ovo';
-                } else if (code.includes('SHOPEE')) {
-                  icon = 'bi-wallet2';
-                  badgeClass = 'pb-shopeepay';
-                } else if (code.includes('LINKAJA')) {
-                  icon = 'bi-wallet2';
-                  badgeClass = 'pb-linkaja';
-                } else if (code.includes('GOPAY')) {
-                  icon = 'bi-wallet2';
-                  badgeClass = 'pb-gopay';
-                } else if (code.includes('VA') || group.includes('virtual')) {
-                  icon = 'bi-bank';
-                  badgeClass = 'pb-bank';
-                } else if (code.includes('SNAP') || code.includes('XENDIT') || code.includes('DUITKU')) {
-                  icon = 'bi-credit-card';
-                  badgeClass = 'pb-bank';
-                }
-              %>
-                <input
-                  class="pm-radio"
-                  type="radio"
-                  name="method"
-                  id="pm_<%= idx %>"
-                  value="<%= code %>"
-                  <%= (!hasStaticQris && idx === 0) ? 'checked' : '' %>
-                  style="position:absolute;opacity:0;pointer-events:none"
-                >
-                <label class="pay-method-item" for="pm_<%= idx %>" style="padding:10px;gap:6px;border-radius:10px;background:rgba(15,23,42,.62)">
-                  <div class="p-icon" style="width:32px;height:32px;font-size:15px;margin-bottom:0">
-                    <% if (ch.icon_url) { %>
-                      <img src="<%= ch.icon_url %>" alt="<%= name %>" class="p-logo" style="padding:4px">
-                    <% } else { %>
-                      <div class="p-badge <%= badgeClass %>" style="font-size:14px">
-                        <i class="<%= icon %>"></i>
-                      </div>
-                    <% } %>
-                  </div>
-                  <div class="p-info">
-                    <span class="p-name" style="font-size:11.5px"><%= name %></span>
-                  </div>
-                </label>
-              <% }) %>
-            </div>
-          <% } %>
-        </div>
-
-      </div>
-      <div class="c-modal-actions" style="margin-top:10px">
-        <button class="btn btn-ghost btn-sm" type="button" style="border-radius:10px;padding:10px 18px" onclick="cancelConfirm()">Batal</button>
-        <button class="btn btn-primary btn-sm" type="submit" style="border-radius:10px;min-height:unset;padding:10px 22px">
-          Bayar & Aktivasi <i class="bi bi-lightning-charge ms-1"></i>
-        </button>
       </div>
     </div>
   </div>
