@@ -25,25 +25,32 @@ function readAppVersion() {
   try { return String(require('../package.json').version || '').slice(0, 40); } catch (_) { return ''; }
 }
 
-function resolveDomain() {
-  // Prioritas: app_url (yang diisi admin) → fallback hostname mesin
-  const appUrl = String(getSetting('app_url', '') || '').trim();
-  let host = '';
-  if (appUrl) {
-    try { host = new URL(appUrl.includes('://') ? appUrl : `https://${appUrl}`).hostname; } catch (_) {}
-  }
+function hostFromUrl(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+  try { return new URL(s.includes('://') ? s : `https://${s}`).hostname; } catch (_) { return ''; }
+}
+
+function resolveDomain(explicitHost) {
+  // Prioritas: host eksplisit (saat aktivasi) → domain yang tersimpan saat lisensi
+  // terverifikasi → public_base_url → app_url → hostname mesin.
+  let host = String(explicitHost || '').trim();
+  if (!host) host = String(getSetting('domain_license_host', '') || '').trim();
+  if (!host) host = hostFromUrl(getSetting('public_base_url', ''));
+  if (!host) host = hostFromUrl(getSetting('app_url', ''));
   if (!host) {
     try { host = require('os').hostname(); } catch (_) {}
   }
-  return String(host || '').toLowerCase().replace(/^www\./, '');
+  return String(host || '').toLowerCase().replace(/^www\./, '').replace(/:\d+$/, '');
 }
 
-async function sendHeartbeat({ force = false } = {}) {
+async function sendHeartbeat({ force = false, host = '' } = {}) {
   try {
     if (String(process.env.ZENRADIUS_HEARTBEAT || '').toLowerCase() === 'off') return { skipped: 'disabled' };
 
-    const domain = resolveDomain();
+    const domain = resolveDomain(host);
     if (LOCAL_HOSTS.includes(domain) || /^[0-9.]+$/.test(domain) || !domain.includes('.')) {
+      logger.debug(`[heartbeat] dilewati, domain tidak valid: "${domain}"`);
       return { skipped: 'local_or_invalid_domain', domain };
     }
 
@@ -70,15 +77,15 @@ async function sendHeartbeat({ force = false } = {}) {
     } finally { clearTimeout(t); }
 
     if (!res.ok) {
-      logger.debug(`[heartbeat] HTTP ${res.status}`);
+      logger.warn(`[heartbeat] registry menolak (HTTP ${res.status}) untuk ${domain}`);
       return { ok: false, status: res.status };
     }
     try { saveSettings({ license_heartbeat_at: Date.now() }); } catch (_) {}
     let data = null; try { data = await res.json(); } catch (_) {}
-    logger.debug(`[heartbeat] terkirim untuk ${domain}`);
+    logger.info(`[heartbeat] terkirim ke registry untuk ${domain}`);
     return { ok: true, data };
   } catch (e) {
-    logger.debug(`[heartbeat] gagal: ${e && e.message}`);
+    logger.warn(`[heartbeat] gagal: ${e && e.message}`);
     return { ok: false, error: e && e.message };
   }
 }
