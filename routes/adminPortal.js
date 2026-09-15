@@ -4350,8 +4350,19 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
       }
     }
 
+    const waEnabledBefore = !!getSetting('whatsapp_enabled', false);
     const success = saveSettings(newSettings);
     if (success) {
+      // Terapkan perubahan status WhatsApp tanpa perlu pm2 restart
+      if (typeof newSettings.whatsapp_enabled === 'boolean' && newSettings.whatsapp_enabled !== waEnabledBefore) {
+        import('../services/whatsappBot.mjs').then((m) => {
+          if (newSettings.whatsapp_enabled) {
+            logger.info('[Settings] WhatsApp diaktifkan, memulai bot untuk menampilkan QR...');
+            return m.restartWhatsAppBot();
+          }
+          return m.stopWhatsAppBot();
+        }).catch((e) => logger.error('[Settings] Gagal menerapkan status WhatsApp:', e.message));
+      }
       
       if (newSettings.telegram_enabled) {
         require('../services/telegramBot').initTelegram();

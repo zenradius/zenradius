@@ -297,6 +297,10 @@ function ensureDefaultSettings() {
       auto_backup_schedule: '0 2 * * *',
       
       wa_gateway_type: 'baileys',
+      // WhatsApp aktif secara default agar QR pairing langsung muncul
+      // setelah instalasi pertama (install.sh hanya menulis server_port).
+      whatsapp_enabled: true,
+      whatsapp_auth_folder: 'auth_info_baileys',
       whatsapp_broadcast_delay: 5,
       whatsapp_auto_billing_enabled: false,
       whatsapp_billing_to_customer_enabled: true,

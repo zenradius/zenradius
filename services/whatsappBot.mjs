@@ -1018,6 +1018,27 @@ export async function sendWADocument(to, documentBuffer, filename = 'Invoice.pdf
   }
 }
 
+export async function stopWhatsAppBot(reason = 'dinonaktifkan dari pengaturan') {
+  logger.info(`WhatsApp: Menghentikan bot (${reason})...`);
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  if (currentSock) {
+    try {
+      currentSock.ev.removeAllListeners();
+      currentSock.end();
+    } catch (e) {
+      logger.error('WhatsApp: Gagal menghentikan socket:', e.message);
+    }
+    currentSock = null;
+  }
+  whatsappStatus.connection = 'disabled';
+  whatsappStatus.qr = null;
+  whatsappStatus.user = null;
+  whatsappStatus.lastUpdate = getCurrentDateInTimezone();
+}
+
 export async function restartWhatsAppBot() {
   logger.info('WhatsApp: Memulai ulang bot...');
   if (reconnectTimer) {
@@ -1038,6 +1059,13 @@ export async function restartWhatsAppBot() {
 }
 
 export async function startWhatsAppBot() {
+  if (!getSetting('whatsapp_enabled', false)) {
+    logger.warn('WhatsApp: whatsapp_enabled=false, bot tidak dijalankan. Aktifkan di Pengaturan > WhatsApp.');
+    whatsappStatus.connection = 'disabled';
+    whatsappStatus.qr = null;
+    return;
+  }
+  whatsappStatus.connection = 'connecting';
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;

@@ -1597,6 +1597,8 @@ if (getSetting('whatsapp_enabled', false)) {
   import('./services/whatsappBot.mjs')
     .then((mod) => mod.startWhatsAppBot())
     .catch((err) => logger.error('Gagal memulai WhatsApp bot:', err));
+} else {
+  logger.warn('WhatsApp bot tidak dijalankan: whatsapp_enabled=false di settings.json. Aktifkan di Admin > Pengaturan > WhatsApp untuk memunculkan QR.');
 }
 
 if (getSetting('telegram_enabled', false)) {
