@@ -199,12 +199,12 @@
                 <i class="bi bi-check-circle-fill" style="color:var(--success);font-size:18px;flex-shrink:0;margin-top:1px"></i>
                 <div style="font-size:12.5px;line-height:1.6;color:var(--text)">
                   <strong>Terima kasih telah mendukung pengembangan ZenRadius.</strong><br>
-                  Lisensi resmi untuk domain <code><%= typeof currentHost !== 'undefined' ? currentHost : '' %></code> telah aktif dan berlaku <strong>selamanya</strong>. Dukungan Anda menjaga keberlanjutan pembaruan, keamanan, dan layanan teknis bagi seluruh pengguna.
+                  Lisensi resmi untuk <code><%= (typeof licenseValid !== 'undefined' && licenseValid && typeof currentHost !== 'undefined') ? (currentHost === 'local' ? 'instalasi lokal' : currentHost) : (typeof currentHost !== 'undefined' ? currentHost : '') %></code> telah aktif dan berlaku <strong>selamanya</strong>. Dukungan Anda menjaga keberlanjutan pembaruan, keamanan, dan layanan teknis bagi seluruh pengguna.
                 </div>
               </div>
             <% } %>
             <div class="fg" style="<%= licActive ? 'margin-bottom:0' : '' %>">
-              <label class="fl">Kode Lisensi untuk domain <code><%= typeof currentHost !== 'undefined' ? currentHost : '' %></code></label>
+              <label class="fl">Kode Lisensi untuk <code><%= typeof currentHost !== 'undefined' && currentHost === 'local' ? 'instalasi lokal' : (typeof currentHost !== 'undefined' ? currentHost : '') %></code></label>
               <div style="display:flex;gap:8px;align-items:stretch">
                 <div style="position:relative;flex:1;min-width:0">
                   <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="Format: XXXX-XXXX-XXXX-XXXX" pattern="^([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})?$" autocomplete="off" autocapitalize="characters" spellcheck="false" style="font-family:monospace;letter-spacing:1px;text-transform:uppercase;<%= licActive ? 'padding-right:38px;border-color:rgba(52,211,153,.45)' : '' %>" oninput="this.value=this.value.toUpperCase()">
@@ -216,7 +216,7 @@
               </div>
               <small class="text-muted">
                 <% if (licActive) { %>
-                  Status: <span style="color:#2dd4bf">● Valid</span> — Lisensi terverifikasi. Simpan kode ini dengan aman; kode hanya berlaku untuk domain di atas.
+                  Status: <span style="color:#2dd4bf">● Valid</span> — Lisensi terverifikasi. Simpan kode ini dengan aman; kode hanya berlaku untuk <%= typeof currentHost !== 'undefined' && currentHost === 'local' ? 'instalasi ini' : 'domain di atas' %>.
                 <% } else if (typeof licenseValid !== 'undefined') { %>
                   Status: <span style="color:#f87171">● Tidak valid / belum diisi</span> — Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Sudah memiliki kode? Masukkan di atas lalu klik <strong>Aktivasi Lisensi</strong>. Belum memiliki? Klik <strong>Order Lisensi</strong> untuk memesan.
                 <% } else { %>
@@ -1090,7 +1090,14 @@ modalDiv.innerHTML = `
       
       <div class="lic-note">
         <i class="bi bi-info-circle-fill"></i>
-        <div>Lisensi melekat permanen pada <strong>1 domain utama</strong> yang Anda daftarkan. Mohon pastikan penulisan domain sudah benar sebelum melanjutkan.</div>
+        <div>Lisensi dapat diikat ke <strong>domain, IP publik, atau instalasi lokal</strong>. Untuk instalasi lokal, sertakan kode instalasi yang tampil di bawah saat memesan lisensi.</div>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl" for="lic_install_code">Kode Instalasi (untuk order)</label>
+        <div class="lic-wrap">
+          <i class="bi bi-fingerprint"></i>
+          <input type="text" id="lic_install_code" class="fc" value="<%= typeof licenseInstallCode !== 'undefined' ? licenseInstallCode : '' %>" readonly>
+        </div>
       </div>
       
       <div class="fg" style="margin-bottom:0">
@@ -1119,9 +1126,10 @@ window.openLicenseActivationModal = function() {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     if (input) {
-      // Ambil domain saat ini di browser sebagai rujukan default
+      // Akses localhost dan IP privat diperlakukan sebagai satu instalasi lokal.
       const currentLoc = window.location.hostname;
-      input.value = currentLoc === 'localhost' || currentLoc === '127.0.0.1' ? '' : currentLoc;
+      const isLocal = ['localhost', '127.0.0.1', '::1', '0.0.0.0'].includes(currentLoc) || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(currentLoc);
+      input.value = isLocal ? 'local' : currentLoc;
       if (window.matchMedia('(min-width: 640px)').matches) input.focus();
     }
   }
@@ -1140,9 +1148,9 @@ window.submitLicenseActivationOrder = function() {
     return;
   }
   const domain = input.value.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+  const isLocal = domain === 'local';
   
-  // Teks pesanan eksklusif yang sangat profesional
-  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Aktif Selamanya (Lifetime) ZenRadius untuk domain berikut:\n\n🌐 DOMAIN: ${domain}\n💰 HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 domain, selamanya)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
+  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Aktif Selamanya (Lifetime) ZenRadius untuk ${isLocal ? 'instalasi lokal berikut' : 'domain berikut'}:\n\n${isLocal ? '🖥️ INSTALASI LOKAL: local' : '🌐 DOMAIN: ' + domain}${isLocal ? '\n🔑 KODE INSTALASI: <%= typeof licenseInstallCode !== "undefined" ? licenseInstallCode : "" %>' : ''}\n💰 HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 instalasi, selamanya)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan ${isLocal ? 'instalasi berdasarkan Kode Instalasi' : 'domain ini'} dan terbitkan Serial Kunci Aktivasi resminya.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
   
   const waUrl = `https://wa.me/<%= licInfo.LICENSE_WA_NUMBER %>?text=${encodeURIComponent(message)}`;
   window.open(waUrl, '_blank');

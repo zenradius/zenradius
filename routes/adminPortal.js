@@ -3676,6 +3676,7 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
     paymentWebhookUrl,
     currentHost: licenseCheck.host,
     licenseValid: licenseCheck.valid,
+    licenseInstallCode: licenseCheck.installCode,
     licenseInfo: domainLicense.licenseInfo,
     canManageSidebar: Boolean(req.session?.isAdmin),
     menuConfigs: sidebarMenuSvc.getConfigMenus()
@@ -4399,19 +4400,18 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
       // Umpan balik khusus aktivasi lisensi domain
       if (typeof newSettings.domain_license_key === 'string') {
         const host = domainLicense.normalizeDomain(req.hostname || req.headers.host);
+        const licenseDomain = domainLicense.licenseDomainForHost(host);
         const key = newSettings.domain_license_key;
         if (!key) {
           req.session._msg = { type: 'success', text: 'Pengaturan disimpan. Kode lisensi dikosongkan.' };
-        } else if (['localhost', '127.0.0.1', '::1', '0.0.0.0'].includes(host)) {
-          req.session._msg = { type: 'success', text: 'Kode lisensi tersimpan. Verifikasi domain otomatis dilewati pada mode lokal (localhost).' };
         } else {
           const check = domainLicense.verifyLicense(host, key);
           if (check.valid) {
-            req.session._msg = { type: 'success', text: `Lisensi berhasil diaktifkan untuk domain ${host}. Terima kasih telah mendukung pengembangan ZenRadius.` };
-            // Simpan domain aktivasi agar heartbeat ke registry memakai domain yang benar
-            // (bukan hostname mesin VPS), lalu laporkan aktivasi segera.
-            try { saveSettings({ domain_license_host: host }); } catch (_) {}
-            try { require('../services/licenseHeartbeatService').sendHeartbeat({ force: true, host }).catch(() => {}); } catch (_) {}
+            const targetLabel = licenseDomain === domainLicense.LOCAL_DOMAIN ? 'instalasi lokal' : `domain ${host}`;
+            req.session._msg = { type: 'success', text: `Lisensi berhasil diaktifkan untuk ${targetLabel}. Terima kasih telah mendukung pengembangan ZenRadius.` };
+            // Simpan domain aktivasi agar heartbeat memakai identitas yang benar.
+            try { saveSettings({ domain_license_host: licenseDomain }); } catch (_) {}
+            try { require('../services/licenseHeartbeatService').sendHeartbeat({ force: true, host: licenseDomain }).catch(() => {}); } catch (_) {}
           } else if (check.reason === 'format') {
             req.session._msg = { type: 'error', text: 'Format kode lisensi tidak valid. Gunakan format XXXX-XXXX-XXXX-XXXX.' };
           } else {

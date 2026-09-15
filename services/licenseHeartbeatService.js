@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { getSetting, saveSettings } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
+const instanceIdentity = require('./instanceIdentityService');
 
 const ENDPOINT = process.env.ZENRADIUS_REGISTRY_URL || 'https://api.license.zenradius.net/api/heartbeat';
 const MIN_INTERVAL_MS = 20 * 60 * 60 * 1000; // minimal 20 jam antar kirim
@@ -49,9 +50,9 @@ async function sendHeartbeat({ force = false, host = '' } = {}) {
     if (String(process.env.ZENRADIUS_HEARTBEAT || '').toLowerCase() === 'off') return { skipped: 'disabled' };
 
     const domain = resolveDomain(host);
-    if (LOCAL_HOSTS.includes(domain) || /^[0-9.]+$/.test(domain) || !domain.includes('.')) {
-      logger.debug(`[heartbeat] dilewati, domain tidak valid: "${domain}"`);
-      return { skipped: 'local_or_invalid_domain', domain };
+    if (!domain) {
+      logger.debug('[heartbeat] dilewati, domain kosong');
+      return { skipped: 'empty_domain', domain };
     }
 
     const last = Number(getSetting('license_heartbeat_at', 0)) || 0;
@@ -60,6 +61,8 @@ async function sendHeartbeat({ force = false, host = '' } = {}) {
     const payload = {
       domain,
       serial: String(getSetting('domain_license_key', '') || '').trim().toUpperCase() || undefined,
+      install_code: instanceIdentity.getInstallCode(),
+      instance_id: instanceIdentity.getInstanceId(),
       app_version: readAppVersion(),
       node_version: process.version
     };

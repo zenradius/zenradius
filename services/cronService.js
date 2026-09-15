@@ -9,6 +9,7 @@ const usageSvc = require('./usageService');
 const { getSetting } = require('../config/settingsManager');
 const db = require('../config/database');
 const qrisUtil = require('../utils/qrisUtil');
+const domainLicense = require('./domainLicenseService');
 
 function getRandomDelay(baseDelayMs, varianceMs = 3000) {
   const minDelay = Math.max(baseDelayMs - varianceMs, 2000);
@@ -50,11 +51,18 @@ function addMessageVariation(message, index) {
 }
 
 function startCronJobs() {
-  
+  const schedule = (expression, task) => cron.schedule(expression, async (...args) => {
+    if (!domainLicense.isBackgroundAllowed()) {
+      logger.warn(`[CRON] Tugas ${expression} dilewati: lisensi instalasi belum aktif atau masa tenggang berakhir.`);
+      return;
+    }
+    return task(...args);
+  });
+
   // Heartbeat registry lisensi (harian, fail-silent)
   try { require('./licenseHeartbeatService').scheduleHeartbeat(cron); } catch (e) { logger.debug(`[heartbeat] tidak dijadwalkan: ${e.message}`); }
 
-  cron.schedule('1 0 1 * *', () => {
+  schedule('1 0 1 * *', () => {
     const now = new Date();
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
@@ -68,7 +76,7 @@ function startCronJobs() {
     }
   });
 
-  cron.schedule('0 2 * * *', async () => {
+  schedule('0 2 * * *', async () => {
     const now = new Date();
     const today = now.getDate();
     logger.info(`[CRON] Menjalankan pengecekan isolir otomatis harian (Tanggal ${today})`);
@@ -130,7 +138,7 @@ function startCronJobs() {
     logger.info(`[CRON] Selesai pengecekan isolir. Total ${isolatedCount} pelanggan baru di-isolir.`);
   });
 
-  cron.schedule('5 9 * * *', async () => {
+  schedule('5 9 * * *', async () => {
     try {
       const pushSvc = require('./pushNotificationService');
       if (!pushSvc.isConfigured()) return;
@@ -171,7 +179,7 @@ function startCronJobs() {
     }
   });
 
-  cron.schedule('0 9 * * *', async () => {
+  schedule('0 9 * * *', async () => {
     const enabled = getSetting('whatsapp_auto_billing_enabled', false);
     const waEnabled = getSetting('whatsapp_enabled', false);
     const billingEnabled = getSetting('whatsapp_billing_to_customer_enabled', true);
@@ -435,7 +443,7 @@ function startCronJobs() {
     logger.info(`[CRON] Pengingat tagihan otomatis selesai: target=${targetCount}, terkirim=${sent}, gagal=${failed}`);
   });
 
-  cron.schedule('0 0 * * *', async () => {
+  schedule('0 0 * * *', async () => {
     logger.info('[CRON] Memulai Jam Kalong (Night Speed) - Ganti Profile...');
     try {
       let count = 0;
@@ -474,7 +482,7 @@ function startCronJobs() {
     }
   });
 
-  cron.schedule('0 6 * * *', async () => {
+  schedule('0 6 * * *', async () => {
     logger.info('[CRON] Mengakhiri Jam Kalong (Night Speed) - Kembali ke Profile Normal...');
     try {
       let count = 0;
@@ -516,7 +524,7 @@ function startCronJobs() {
   // Backup database otomatis dijadwalkan oleh backupService.scheduleAutoBackup()
   // (setting auto_backup_enabled / auto_backup_schedule) — tidak diduplikasi di sini.
 
-  cron.schedule('*/10 * * * *', async () => {
+  schedule('*/10 * * * *', async () => {
     const enabled = getSetting('usage_tracking_enabled', true);
     if (!enabled) return;
 
@@ -573,7 +581,7 @@ function startCronJobs() {
     }
   });
 
-  cron.schedule('0 * * * *', async () => {
+  schedule('0 * * * *', async () => {
     logger.info('[CRON] Mengecek FUP Pelanggan...');
     try {
       const now = new Date();
@@ -623,7 +631,7 @@ function startCronJobs() {
     }
   });
 
-  cron.schedule('*/5 * * * *', async () => {
+  schedule('*/5 * * * *', async () => {
     const enabled = getSetting('use_builtin_acs', false) === true || getSetting('use_builtin_acs', false) === 'true';
     if (!enabled) return;
 

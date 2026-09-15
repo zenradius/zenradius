@@ -11,23 +11,25 @@ const LICENSE_WA_DISPLAY = '+62 851-7800-8881';
 /** Masa tenggang (hari) sebelum akses dikunci penuh saat lisensi tidak valid. */
 const LICENSE_GRACE_DAYS = 7;
 
-function buildOrderMessage(domain) {
+function buildOrderMessage(domain, installCode = '') {
+  const isLocal = String(domain || '').toLowerCase() === 'local';
   return [
     'Halo Developer ZenRadius,',
     '',
-    'Saya ingin memesan Lisensi Premium Seumur Hidup (Lifetime) ZenRadius untuk domain berikut:',
+    `Saya ingin memesan Lisensi Premium Seumur Hidup (Lifetime) ZenRadius untuk ${isLocal ? 'instalasi lokal berikut' : 'domain berikut'}:`,
     '',
-    `🌐 DOMAIN: ${domain || '-'}`,
-    `💰 HARGA: ${LICENSE_PRICE_LABEL} (1 domain, seumur hidup)`,
+    `${isLocal ? '🖥️ INSTALASI LOKAL' : '🌐 DOMAIN'}: ${domain || '-'}`,
+    ...(installCode ? [`🔑 KODE INSTALASI: ${installCode}`] : []),
+    `💰 HARGA: ${LICENSE_PRICE_LABEL} (1 instalasi, seumur hidup)`,
     '',
-    'Mohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan domain ini dan terbitkan Serial Kunci Aktivasi resminya.',
+    `Mohon informasikan metode pembayarannya. Setelah pembayaran, harap daftarkan ${isLocal ? 'instalasi lokal berdasarkan Kode Instalasi' : 'domain ini'} dan terbitkan Serial Kunci Aktivasi resminya.`,
     '',
     'Terima kasih atas dedikasinya mengembangkan ZenRadius.'
   ].join('\n');
 }
 
-function buildOrderUrl(domain) {
-  return `https://wa.me/${LICENSE_WA_NUMBER}?text=${encodeURIComponent(buildOrderMessage(domain))}`;
+function buildOrderUrl(domain, installCode = '') {
+  return `https://wa.me/${LICENSE_WA_NUMBER}?text=${encodeURIComponent(buildOrderMessage(domain, installCode))}`;
 }
 
 module.exports = {

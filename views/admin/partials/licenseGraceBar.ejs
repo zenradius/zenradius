@@ -46,7 +46,7 @@
     <div class="licg-actions">
       <button type="button" class="btn btn-g" onclick="licModalClose()"><i class="bi bi-clock"></i> Nanti Saja</button>
       <% if (typeof licenseInfo !== 'undefined' && licenseInfo) { %>
-      <a class="btn btn-s" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '') %>" target="_blank" rel="noopener" id="licOrderBtn"><i class="bi bi-cart-plus"></i> Order Lisensi</a>
+      <a class="btn btn-s" href="<%= licenseInfo.buildOrderUrl(typeof licenseHost !== 'undefined' ? licenseHost : '', typeof licenseInstallCode !== 'undefined' ? licenseInstallCode : '') %>" target="_blank" rel="noopener" id="licOrderBtn"><i class="bi bi-cart-plus"></i> Order Lisensi</a>
       <% } %>
       <a class="btn btn-p" href="/admin/settings#license" onclick="licToInput(event)"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi</a>
     </div>

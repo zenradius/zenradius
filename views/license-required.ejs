@@ -91,7 +91,7 @@
 <body>
   <% const li = (typeof licenseInfo !== 'undefined' && licenseInfo) ? licenseInfo : null; %>
   <% const priceLabel = li ? li.LICENSE_PRICE_LABEL : 'Rp 150.000'; %>
-  <% const waUrl = li ? li.buildOrderUrl(domain) : ('https://wa.me/6285178008881?text=' + encodeURIComponent('Halo Developer ZenRadius, saya ingin memesan lisensi untuk domain ' + domain)); %>
+  <% const waUrl = li ? li.buildOrderUrl(domain, installCode || '') : ('https://wa.me/6285178008881?text=' + encodeURIComponent('Halo Developer ZenRadius, saya ingin memesan lisensi untuk ' + (domain === 'local' ? 'instalasi lokal. Kode Instalasi: ' + (installCode || '-') : 'domain ' + domain))); %>
 
   <main class="lock-card" role="main">
     <div class="brand">
@@ -100,14 +100,19 @@
     </div>
 
     <h3><i class="bi bi-shield-lock-fill"></i> Aktivasi Lisensi Diperlukan</h3>
-    <p class="lock-copy">ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen. Untuk terus menikmati seluruh fitur premium, instansi ini memerlukan lisensi resmi yang terdaftar pada domain berikut.</p>
+    <p class="lock-copy">ZenRadius dikembangkan dan dirawat secara berkelanjutan oleh Developer independen. Untuk terus menikmati seluruh fitur premium, instansi ini memerlukan lisensi resmi yang terdaftar pada <%= domain === 'local' ? 'instalasi lokal ini' : 'domain berikut' %>.</p>
 
-    <div class="domain-badge"><i class="bi bi-globe2"></i> <%= domain %></div>
+    <div class="domain-badge"><i class="bi bi-globe2"></i> <%= domain === 'local' ? 'Instalasi Lokal' : domain %></div>
+    <% if (installCode) { %>
+      <div style="margin:10px 0;padding:9px 12px;border:1px solid rgba(96,165,250,.35);border-radius:10px;background:rgba(96,165,250,.10);font-size:12px;text-align:center;">
+        <i class="bi bi-fingerprint"></i> Kode Instalasi: <code><%= installCode %></code>
+      </div>
+    <% } %>
 
     <% if (hasKey) { %>
       <div class="alert-mismatch">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        <span>Kode lisensi yang terpasang tidak cocok dengan domain ini. Lisensi hanya berlaku untuk 1 domain yang didaftarkan.</span>
+        <span>Kode lisensi yang terpasang tidak cocok dengan instalasi atau alamat akses ini. Lisensi hanya berlaku untuk instalasi yang didaftarkan.</span>
       </div>
     <% } %>
 
@@ -122,7 +127,7 @@
 
     <div class="steps">
       <ol>
-        <li><strong>Order Lisensi</strong> via WhatsApp Developer resmi.</li>
+        <li><strong>Order Lisensi</strong> via WhatsApp Developer resmi. Untuk instalasi lokal, sertakan Kode Instalasi di atas.</li>
         <li>Login sebagai Super Admin, buka <strong>Pengaturan &rarr; Lisensi Domain</strong>.</li>
         <li>Tempel kode <code>XXXX-XXXX-XXXX-XXXX</code> lalu klik <strong>Aktivasi Lisensi</strong>.</li>
       </ol>
