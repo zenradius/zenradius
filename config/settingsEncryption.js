@@ -32,6 +32,7 @@ const SENSITIVE_FIELDS = [
   'tripay_private_key',
   'midtrans_server_key',
   'telegram_bot_token',
+  'webhook_secret',
   'xendit_api_key',
   'duitku_api_key',
   'session_secret'
