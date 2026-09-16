@@ -61,158 +61,8 @@
     .pill-u{background: rgba(248, 81, 73, .12);color:#fca5a5;border-color: rgba(248, 81, 73, .28)}
     .pill-p{background: rgba(63, 185, 80, .12);color:#86efac;border-color: rgba(63, 185, 80, .28)}
     
-    /* Redesigned Cards with Dark Glassmorphism to Match Page Palette */
-    .voucher-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
-    @media (max-width: 576px){.voucher-grid{grid-template-columns:1fr;gap:14px}}
-    .voucher-radio{position:absolute;opacity:0;pointer-events:none}
-    
-    .voucher-card{
-      position:relative;
-      border:1px solid rgba(190,239,255,.12);
-      background:rgba(255, 255, 255, 0.02);
-      border-radius:14px;
-      padding:0;
-      cursor:pointer;
-      transition:all .25s ease-in-out;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-height:165px;
-      color:var(--portal-text);
-      box-shadow:0 6px 20px rgba(0,0,0,.2);
-    }
-    .voucher-card::after {
-      content:"";
-      position:absolute;
-      inset:0;
-      background:radial-gradient(circle at 100% 0%, rgba(255,255,255,.03) 0%, transparent 60%);
-      pointer-events:none;
-    }
-    .voucher-card:hover{
-      transform:translateY(-5px);
-      border-color:rgba(45,212,191,.35);
-      background:rgba(255,255,255,.04);
-      box-shadow:0 12px 28px rgba(0,0,0,.35);
-    }
-    .voucher-radio:checked + .voucher-card{
-      border-color:#29d3c5;
-      background:rgba(45,212,191,.05);
-      box-shadow:0 0 0 3px rgba(41,211,197,.2), 0 12px 28px rgba(0,0,0,.3);
-    }
+    /* Voucher card artwork and layout: /css/voucher-cards.css */
 
-    /* Top Layout: Brand Logo & Price */
-    .v-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:14px 16px;
-      border-bottom:1px solid rgba(190,239,255,.08);
-    }
-    .v-brand{
-      display:flex;
-      align-items:center;
-    }
-    .v-brand-logo{
-      height:24px;
-      width:auto;
-      object-fit:contain;
-      display:block;
-      border:none !important;
-      background:transparent !important;
-      padding:0 !important;
-      border-radius:0 !important;
-    }
-    .v-brand-text{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      letter-spacing:.2px;
-    }
-    .voucher-price{
-      font-weight:900;
-      font-size:22px;
-      color:#2dd4bf;
-      display:flex;
-      align-items:baseline;
-    }
-    .voucher-price .v-currency{
-      font-size:13px;
-      font-weight:800;
-      margin-right:2px;
-      color:rgba(45,212,191,.8);
-    }
-
-    /* Middle Layout: Label, Validity and Info */
-    .v-mid{
-      padding:14px 16px;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      flex-grow:1;
-    }
-    .v-label-main{
-      font-size:10px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:1px;
-      color:rgba(190,239,255,.4);
-    }
-    .voucher-title{
-      font-weight:800;
-      font-size:18px;
-      color:#fff;
-      margin:2px 0 0 0;
-      line-height:1.2;
-    }
-    .v-dur{
-      font-size:11px;
-      color:var(--portal-muted);
-      margin-top:6px;
-      display:flex;
-      align-items:center;
-      gap:5px;
-      font-weight:600;
-    }
-    .v-dur i{
-      color:#2dd4bf;
-    }
-
-    /* Footer: Web Domain Info banner */
-    .v-foot-cs{
-      background:rgba(255,255,255,.03);
-      border-top:1px solid rgba(190,239,255,.06);
-      color:var(--portal-muted);
-      font-size:10px;
-      font-weight:800;
-      padding:8px 16px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      letter-spacing:.4px;
-      text-transform:uppercase;
-    }
-
-    /* Modern Theme color palettes for selected vouchers */
-    .v-theme-green .voucher-price { color:#4ade80; }
-    .v-theme-green .voucher-price .v-currency { color:rgba(74,222,128,.8); }
-    .v-theme-green .v-foot-cs { background:rgba(74,222,128,.02); color:#4ade80; border-top-color:rgba(74,222,128,.1); }
-    .v-theme-green.voucher-card:hover, .voucher-radio:checked + .v-theme-green { border-color:rgba(74,222,128,.4); }
-
-    .v-theme-blue .voucher-price { color:#60a5fa; }
-    .v-theme-blue .voucher-price .v-currency { color:rgba(96,165,250,.8); }
-    .v-theme-blue .v-foot-cs { background:rgba(96,165,250,.02); color:#60a5fa; border-top-color:rgba(96,165,250,.1); }
-    .v-theme-blue.voucher-card:hover, .voucher-radio:checked + .v-theme-blue { border-color:rgba(96,165,250,.4); }
-
-    .v-theme-orange .voucher-price { color:#f97316; }
-    .v-theme-orange .voucher-price .v-currency { color:rgba(249,115,22,.8); }
-    .v-theme-orange .v-foot-cs { background:rgba(249,115,22,.02); color:#f97316; border-top-color:rgba(249,115,22,.1); }
-    .v-theme-orange.voucher-card:hover, .voucher-radio:checked + .v-theme-orange { border-color:rgba(249,115,22,.4); }
-
-    .v-theme-purple .voucher-price { color:#c084fc; }
-    .v-theme-purple .voucher-price .v-currency { color:rgba(192,132,252,.8); }
-    .v-theme-purple .v-foot-cs { background:rgba(192,132,252,.02); color:#c084fc; border-top-color:rgba(192,132,252,.1); }
-    .v-theme-purple.voucher-card:hover, .voucher-radio:checked + .v-theme-purple { border-color:rgba(192,132,252,.4); }
-    
     /* Confirmation Dialog Modal styles */
     .c-modal-overlay{
       position:fixed;
@@ -300,6 +150,7 @@
     @media (min-width: 769px){.pay-method-item{flex-direction:row;text-align:left;gap:14px;padding:14px 16px}.p-icon{margin:0 0 0 0}.p-info{align-items:flex-start}.p-sub{justify-content:flex-start}}
     @media (max-width: 576px){.pay-method-item{padding:12px 10px;gap:10px}.p-icon{width:42px;height:42px;font-size:20px;margin-bottom:6px}.p-name{font-size:12px}.p-sub{font-size:9px}.p-chip{padding:2px 6px;font-size:8px}}
   </style>
+  <link rel="stylesheet" href="/css/voucher-cards.css?v=1">
 </head>
 <body>
   <div class="wrap">
@@ -388,18 +239,18 @@
                 <div class="muted small mt-1">Belum ada profile voucher (metadata Mikhmon) di MikroTik.</div>
               <% } else { %>
                 <div class="voucher-grid mt-1">
-                  <% (profiles || []).forEach((p, idx) => { 
-                    // Tentukan warna tema dinamis berdasarkan level harga layaknya sampel gambar
-                    const price = Number(p.price || 0);
-                    let themeClass = 'v-theme-green';
-                    if (price >= 35000) themeClass = 'v-theme-purple';
-                    else if (price >= 10000) themeClass = 'v-theme-orange';
-                    else if (price >= 4000) themeClass = 'v-theme-blue';
-
-                    // Ambil domain as CS dari konfigurasi
-                    const csDomain = String(settings.public_base_url || '').trim()
-                      .replace(/^https?:\/\//i, '')
-                      .replace(/\/$/i, '') || 'BINUSNET.COM';
+                  <%
+                    function formatCardValidity(value) {
+                      const raw = String(value || '-').trim();
+                      const match = raw.match(/^(\d+)\s*([wdhms])$/i);
+                      const units = { w: 'Minggu', d: 'Hari', h: 'Jam', m: 'Menit', s: 'Detik' };
+                      return match ? `${Number(match[1])} ${units[match[2].toLowerCase()]}` : raw;
+                    }
+                    (profiles || []).forEach((p, idx) => {
+                      const price = Number(p.price || 0);
+                      const priceText = price.toLocaleString('id-ID');
+                      const priceClass = priceText.length > 9 ? 'v-price-extra-long' : (priceText.length > 6 ? 'v-price-long' : '');
+                      const validityText = formatCardValidity(p.validity);
                   %>
                     <input
                       class="voucher-radio"
@@ -408,35 +259,45 @@
                       id="vprofile_<%= idx %>"
                       value="<%= p.name %>"
                       data-price="<%= price %>"
-                      data-validity="<%= p.validity %>"
+                      data-validity="<%= validityText %>"
+                      aria-label="<%= p.name %>, Rp <%= priceText %>, <%= validityText %>"
+                      aria-describedby="step1Hint"
                       <%= idx === 0 ? 'required' : '' %>
                     >
-                    <label class="voucher-card <%= themeClass %>" for="vprofile_<%= idx %>" onclick="selectCardAndGo('<%= p.name %>')">
-                      <!-- Top: Brand Logo & Price -->
-                      <div class="v-top">
-                        <div class="v-brand">
-                          <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" alt="Logo" class="v-brand-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                          <span class="v-brand-text" style="display:none;"><%= settings.company_header || 'WiFi' %></span>
-                        </div>
-                        <div class="voucher-price">
-                          <span class="v-currency">Rp</span><%= price.toLocaleString('id-ID') %>
-                        </div>
-                      </div>
-                      
-                      <!-- Mid: Name & Validity -->
-                      <div class="v-mid">
-                        <span class="v-label-main">VOUCHER</span>
-                        <h3 class="voucher-title"><%= p.name %></h3>
-                        <div class="v-dur">
-                          <i class="bi bi-clock-history"></i> Masa Aktif: <%= p.validity %>
+                    <label class="voucher-card" for="vprofile_<%= idx %>">
+                      <span class="v-selected" aria-hidden="true">✓ Dipilih</span>
+                      <div class="v-brand" aria-hidden="true">
+                        <div class="v-brand-logo-container">
+                          <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" alt="Logo" class="v-brand-real-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                          <div class="v-brand-fallback-group" style="display:none">
+                            <span class="v-brand-name"><%= settings.company_header || 'WiFi' %></span>
+                            <span class="v-brand-sub">HOTSPOT</span>
+                          </div>
                         </div>
                       </div>
-
-                      <!-- Foot: CS Banner -->
-                      <div class="v-foot-cs">
-                        <span><%= csDomain %></span>
-                        <i class="bi bi-qr-code-scan"></i>
-                      </div>
+                      <span class="v-tagline">Internet Cepat, Hidup Lebih Mudah</span>
+                      <span class="v-ribbon">VOUCHER INTERNET</span>
+                      <span class="v-offer">
+                        <span class="voucher-price <%= priceClass %>"><span class="v-currency">Rp</span><%= priceText %></span>
+                        <span class="v-divider" aria-hidden="true"></span>
+                        <span class="v-validity <%= validityText.length > 9 ? 'v-validity-long' : '' %>"><%= validityText %></span>
+                      </span>
+                      <span class="v-package" title="<%= p.name %>"><%= p.name %></span>
+                      <span class="v-benefits">
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 1 3 14h8l-1 9 11-14h-8z"/></svg></span>
+                          <span>Akses<br>Cepat</span>
+                        </span>
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6z"/><path d="m7 11 4 4 6-7"/></svg></span>
+                          <span>Aman<br>&amp; Stabil</span>
+                        </span>
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 5h4M11 19h2"/></svg></span>
+                          <span>Semua<br>Perangkat</span>
+                        </span>
+                      </span>
+                      <span class="v-signature" aria-hidden="true">Stay<br>Connected</span>
                     </label>
                   <% }) %>
                 </div>
@@ -593,32 +454,34 @@
   <script>
     (function () {
       const radios = Array.from(document.querySelectorAll('input.voucher-radio'));
-      let pendingProfileName = null;
+      let activeRadio = null;
+      let focusTimer = null;
 
-      function selected() { return radios.find(r => r.checked) || null; }
-
-      window.selectCardAndGo = function (profileName) {
-        pendingProfileName = profileName;
-        const r = radios.find(rad => rad.value === profileName);
-        if (r) {
-          // Centang radio button pilihan secara tersembunyi
-          r.checked = true;
-
-          // Set detail di pop-up modal
-          document.getElementById('popName').textContent = r.value;
-          document.getElementById('popValidity').textContent = r.dataset.validity || '-';
-          document.getElementById('popPrice').textContent = 'Rp ' + Number(r.dataset.price || 0).toLocaleString('id-ID');
-          
-          // Tampilkan pop-up modal konfirmasi beserta formulir input
-          document.getElementById('confirmModal')?.classList.add('active');
-          setTimeout(() => document.getElementById('buyerPhone')?.focus(), 220);
-        }
-      };
+      // Native radio changes support mouse, touch and keyboard without inline profile strings.
+      radios.forEach(r => r.addEventListener('change', function () {
+        if (!r.checked) return;
+        activeRadio = r;
+        document.getElementById('popName').textContent = r.value;
+        document.getElementById('popValidity').textContent = r.dataset.validity || '-';
+        document.getElementById('popPrice').textContent = 'Rp ' + Number(r.dataset.price || 0).toLocaleString('id-ID');
+        document.getElementById('confirmModal')?.classList.add('active');
+        clearTimeout(focusTimer);
+        focusTimer = setTimeout(() => document.getElementById('buyerPhone')?.focus(), 220);
+      }));
 
       window.cancelConfirm = function () {
-        pendingProfileName = null;
+        clearTimeout(focusTimer);
         document.getElementById('confirmModal')?.classList.remove('active');
+        radios.forEach(r => { r.checked = false; });
+        activeRadio?.focus({ preventScroll: true });
+        activeRadio = null;
       };
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && document.getElementById('confirmModal')?.classList.contains('active')) {
+          window.cancelConfirm();
+        }
+      });
     })();
   </script>
   <% if (order && (String(order.status) === 'paid' || String(order.status) === 'pending') && !order.voucher_code) { %>
