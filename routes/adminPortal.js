@@ -4378,7 +4378,13 @@ router.get('/api/update/check', requireAdminSession, (req, res) => {
   }
   const repoRoot = path.resolve(__dirname, '..');
   const info = getUpdateInfo(repoRoot);
-  const out = { needsUpdate: !!info.needsUpdate, localVersion: info.localVersion || '-', remoteVersion: info.remoteVersion || '-', hasError: !!info.error };
+  const out = {
+    needsUpdate: !!info.needsUpdate,
+    localVersion: info.localVersion || '-',
+    remoteVersion: info.remoteVersion || '-',
+    hasError: !!info.error,
+    error: info.error || ''
+  };
   updateCheckCache = { at: now, data: out };
   res.json(out);
 });
