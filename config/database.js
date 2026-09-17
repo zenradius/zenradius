@@ -148,6 +148,14 @@ db.exec(`
     install_date DATE,
     expired_at DATETIME DEFAULT NULL,
     notes TEXT DEFAULT '',
+    registration_source TEXT DEFAULT '',
+    registration_status TEXT DEFAULT '',
+    survey_status TEXT DEFAULT '',
+    survey_notes TEXT DEFAULT '',
+    surveyed_by_tech_id INTEGER REFERENCES technicians(id) ON DELETE SET NULL,
+    surveyed_at DATETIME,
+    registration_approved_by TEXT DEFAULT '',
+    registration_approved_at DATETIME,
     created_at DATETIME DEFAULT (NOW_LOCAL())
   );
 
@@ -851,6 +859,56 @@ try { db.exec("ALTER TABLE packages ADD COLUMN prorate_first_invoice INTEGER DEF
 try { db.exec("ALTER TABLE packages ADD COLUMN router_id INTEGER REFERENCES routers(id) ON DELETE SET NULL"); } catch (e) {}
 try { db.exec("ALTER TABLE packages ADD COLUMN router_id INTEGER"); } catch (e) {}
 try { db.exec("ALTER TABLE customers ADD COLUMN promo_cycles_used INTEGER DEFAULT 0"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN registration_source TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN registration_status TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN survey_status TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN survey_notes TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN surveyed_by_tech_id INTEGER REFERENCES technicians(id) ON DELETE SET NULL"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN surveyed_at DATETIME"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN registration_approved_by TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN registration_approved_at DATETIME"); } catch (e) {}
+
+// Pendaftar sebelum metadata alur registrasi ditambahkan tetap harus masuk antrean survei.
+try {
+  db.exec(`
+    UPDATE customers
+    SET registration_source='online', registration_status='pending_survey', survey_status='pending'
+    WHERE registration_source='' AND status='inactive' AND notes='Pendaftar Baru via Online'
+  `);
+} catch (e) {}
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS installation_invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER NOT NULL UNIQUE REFERENCES customers(id) ON DELETE CASCADE,
+    amount INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'paid',
+    notes TEXT DEFAULT '',
+    created_at DATETIME DEFAULT (NOW_LOCAL()),
+    paid_at DATETIME DEFAULT (NOW_LOCAL())
+  );
+  CREATE INDEX IF NOT EXISTS idx_installation_invoices_customer ON installation_invoices(customer_id);
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS payment_batches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    invoice_ids TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    payment_gateway TEXT DEFAULT '',
+    payment_order_id TEXT DEFAULT '',
+    payment_link TEXT DEFAULT '',
+    payment_reference TEXT DEFAULT '',
+    payment_payload TEXT,
+    payment_expires_at DATETIME,
+    paid_at DATETIME,
+    created_at DATETIME DEFAULT (NOW_LOCAL())
+  );
+  CREATE INDEX IF NOT EXISTS idx_payment_batches_customer_status ON payment_batches(customer_id, status);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_batches_order_id ON payment_batches(payment_order_id) WHERE payment_order_id != '';
+`);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS customer_usage (

@@ -50,7 +50,7 @@
           </div>
           <div>
             <h5 style="margin: 0; font-size: 18px; font-weight: 700;">Log Notifikasi E-Wallet (Webhook)</h5>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted);">Monitor semua payment notifications dari MacroDroid, Tripay, Midtrans, Xendit, Duitku</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--muted);">Monitor semua payment notifications dari MacroDroid, Tripay, Midtrans, Xendit, Duitku, iPaymu</p>
           </div>
         </div>
       </div>
@@ -86,6 +86,7 @@
                   <option value="Midtrans">Midtrans</option>
                   <option value="Xendit">Xendit</option>
                   <option value="Duitku">Duitku</option>
+                  <option value="iPaymu">iPaymu</option>
                   <option value="E-Wallet">E-Wallet</option>
                 </select>
               </div>
@@ -422,6 +423,7 @@
             <div class="fg">
               <label class="fl">Default Gateway</label>
               <select class="fs" name="default_gateway">
+                <option value="ipaymu" <%= settings.default_gateway === 'ipaymu' ? 'selected' : '' %>>iPaymu</option>
                 <option value="tripay" <%= settings.default_gateway === 'tripay' ? 'selected' : '' %>>Tripay</option>
                 <option value="midtrans" <%= settings.default_gateway === 'midtrans' ? 'selected' : '' %>>Midtrans</option>
                 <option value="xendit" <%= settings.default_gateway === 'xendit' ? 'selected' : '' %>>Xendit</option>

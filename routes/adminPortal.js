@@ -1111,6 +1111,8 @@ router.post('/cashiers/:id/delete', requireAdminSession, restrictToAdmin, (req, 
 router.get('/collectors', requireAdminSession, requireSidebarMenuAccess('collectors'), restrictToAdmin, (req, res) => {
   const collectors = adminSvc.getAllCollectors();
   const masterAreas = areaSvc.getAllAreas();
+  // Selalu tampilkan pendaftar online walau admin sedang memfilter router lain.
+  const onlineRegistrations = customerSvc.getOnlineRegistrations();
   res.render('admin/collectors', { title: 'Manajemen Kolektor', company: company(), activePage: 'collectors', collectors, masterAreas, msg: flashMsg(req) });
 });
 
@@ -1794,9 +1796,56 @@ router.get('/customers', requireAdminSession, requireSidebarMenuAccess('customer
 
   res.render('admin/customers', {
     title: 'Data Pelanggan', company: company(), activePage: 'customers',
-    customers, stats, packages, routers, olts, odps, collectors, areas, masterAreas, activeSessionsMap, search, filterStatus, filterArea, selectedRouterId, msg: flashMsg(req),
+    customers, stats, packages, routers, olts, odps, collectors, areas, masterAreas, onlineRegistrations, activeSessionsMap, search, filterStatus, filterArea, selectedRouterId, msg: flashMsg(req),
     settings: getSettings()
   });
+});
+
+router.get('/api/registrations', requireAdminSession, restrictToAdmin, (req, res) => {
+  try {
+    const status = String(req.query.status || 'surveyed').trim();
+    const allowedStatuses = new Set(['pending_survey', 'surveyed', 'approved', 'rejected']);
+    if (!allowedStatuses.has(status)) return res.status(400).json({ error: 'Status pendaftaran tidak valid' });
+    return res.json({ registrations: customerSvc.getOnlineRegistrations(status) });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/customers/:id/registration/approve', requireAdminSession, restrictToAdmin, express.json(), async (req, res) => {
+  try {
+    const approver = String(req.session?.username || req.session?.adminUsername || 'Admin').trim() || 'Admin';
+    const registration = customerSvc.approveOnlineRegistration(req.params.id, approver);
+    await customerSvc.activateCustomer(registration.id);
+
+    const approved = customerSvc.getRegistrationById(registration.id);
+    auditSvc.logAuditTrail({
+      action: 'APPROVE_ONLINE_REGISTRATION',
+      entity_type: 'customer',
+      entity_id: String(registration.id),
+      actor_type: 'admin',
+      actor_id: approver,
+      actor_name: approver,
+      details: { survey_status: approved.survey_status, installation_invoice_id: approved.installation_invoice_id },
+      ip_address: req.ip,
+      user_agent: req.get('user-agent')
+    });
+
+    try {
+      if (getSetting('whatsapp_enabled', false) && approved.phone) {
+        const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
+        if (whatsappStatus?.connection === 'open') {
+          await sendWA(approved.phone, `✅ *PENDAFTARAN DISETUJUI*\n\nHalo *${approved.name}*, pendaftaran Anda telah disetujui setelah survei. Layanan Anda kini aktif.\n\nPaket: *${approved.package_name || '-'}*\nTagihan instalasi: *Gratis*\n\nTerima kasih.`);
+        }
+      }
+    } catch (waErr) {
+      logger.warn(`[Registration] Gagal kirim notifikasi approval WhatsApp: ${waErr.message}`);
+    }
+
+    return res.json({ success: true, registration: approved });
+  } catch (e) {
+    return res.status(400).json({ success: false, error: e.message });
+  }
 });
 
 router.post('/customers', requireAdminSession, express.urlencoded({ extended: true }), async (req, res) => {
@@ -3674,6 +3723,14 @@ router.get('/payment-gateway', requireAdminSession, requireSidebarMenuAccess('pa
   });
 });
 
+router.get('/payment-qris-static', requireAdminSession, requireSidebarMenuAccess('payment_qris_static'), (req, res) => {
+  const settings = getSettings();
+  res.render('admin/payment-qris-static', {
+    title: 'Payment Qris Statis', company: company(), activePage: 'payment_qris_static',
+    settings, msg: flashMsg(req)
+  });
+});
+
 router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'), (req, res) => {
   const settings = getSettings();
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
@@ -3758,7 +3815,9 @@ router.post('/settings/qris-upload', requireAdminSession, restrictToAdmin, qrisU
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal upload QRIS: ' + (e?.message || e) };
   }
-  res.redirect('/admin/settings');
+  const targetRedirect = String(req.query?.redirect || req.body?.redirect || '/admin/payment-qris-static').trim();
+  const safeRedirect = /^\/admin\/[a-z0-9\-\/]*$/i.test(targetRedirect) ? targetRedirect : '/admin/payment-qris-static';
+  res.redirect(safeRedirect);
 });
 
 const PWA_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
@@ -4340,11 +4399,14 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
     if (newSettings.duitku_enabled === 'true') newSettings.duitku_enabled = true;
     else if (newSettings.duitku_enabled === 'false') newSettings.duitku_enabled = false;
 
+    if (newSettings.ipaymu_enabled === 'true') newSettings.ipaymu_enabled = true;
+    else if (newSettings.ipaymu_enabled === 'false') newSettings.ipaymu_enabled = false;
+
     if (newSettings.default_gateway) {
       newSettings.default_gateway = newSettings.default_gateway.toLowerCase();
       
       const gw = newSettings.default_gateway;
-      if (['tripay', 'midtrans', 'xendit', 'duitku'].includes(gw)) {
+      if (['tripay', 'midtrans', 'xendit', 'duitku', 'ipaymu'].includes(gw)) {
         newSettings[gw + '_enabled'] = true;
       }
     }

@@ -56,6 +56,7 @@ const MENU_DEFINITIONS = [
   { key: 'attendance', section: 'user_management', href: '/admin/attendance', icon: 'bi bi-calendar-check', labelKey: 'admin.nav.attendance', labelDefault: 'Absensi Karyawan', roles: ['admin', 'cashier'], activePages: ['attendance'] },
 
   { key: 'payment_gateway', section: 'system', href: '/admin/payment-gateway', icon: 'bi bi-credit-card-2-front', labelKey: 'admin.nav.payment_gateway', labelDefault: 'Payment Gateway', roles: ['admin'], activePages: ['payment_gateway'] },
+  { key: 'payment_qris_static', section: 'system', href: '/admin/payment-qris-static', icon: 'bi bi-qr-code-scan', labelKey: 'admin.nav.payment_qris_static', labelDefault: 'Payment Qris Statis', roles: ['admin'], activePages: ['payment_qris_static'] },
   { key: 'ewallet_logs', section: 'system', href: '/admin/ewallet-logs', icon: 'bi bi-wallet2', labelKey: 'admin.settings.ewallet_logs.title', labelDefault: 'Notifikasi E-Wallet', roles: ['admin'], activePages: ['ewallet_logs'] },
   { key: 'backup', section: 'system', href: '/admin/backup', icon: 'bi bi-hdd-stack', labelKey: 'admin.nav.backup', labelDefault: 'Backup & Recovery', roles: ['admin'], activePages: ['backup'] },
   { key: 'sidebar_settings', section: 'system', href: '/admin/sidebar-settings', icon: 'bi bi-layout-sidebar-inset', labelKey: 'admin.nav.sidebar_settings', labelDefault: 'Pengaturan Sidebar', roles: ['admin'], activePages: ['sidebar_settings'] },
@@ -110,6 +111,7 @@ const DEFAULT_MENU_STATES = {
   expenses: STATE_VISIBLE,
   expense_categories: STATE_VISIBLE,
   payment_gateway: STATE_VISIBLE,
+  payment_qris_static: STATE_VISIBLE,
   cashier_attendance: STATE_VISIBLE,
   technicians: STATE_VISIBLE,
   cashiers: STATE_VISIBLE,

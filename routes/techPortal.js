@@ -243,6 +243,33 @@ router.get('/map', requireTechSession, requireMenuAccess('tech_map'), (req, res)
   });
 });
 
+// API survei pendaftar online. Pendaftar tidak dapat aktif sebelum hasilnya "eligible".
+router.get('/api/registrations', requireTechSession, (req, res) => {
+  try {
+    const status = String(req.query.status || 'pending_survey').trim();
+    const allowedStatuses = new Set(['pending_survey', 'surveyed', 'rejected']);
+    if (!allowedStatuses.has(status)) return res.status(400).json({ error: 'Status pendaftaran tidak valid' });
+    return res.json({ registrations: customerSvc.getOnlineRegistrations(status) });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/api/registrations/:id/survey', requireTechSession, express.json(), (req, res) => {
+  try {
+    const registration = customerSvc.submitRegistrationSurvey(
+      req.params.id,
+      req.session.techId,
+      req.body?.result,
+      req.body?.notes
+    );
+    logger.info(`[Registration] Survey ${registration.survey_status} untuk pendaftar #${registration.id} oleh teknisi #${req.session.techId}`);
+    return res.json({ success: true, registration });
+  } catch (e) {
+    return res.status(400).json({ success: false, error: e.message });
+  }
+});
+
 router.post('/tickets/:id/take', requireTechSession, (req, res) => {
   try {
     techSvc.takeTicket(req.params.id, req.session.techId);

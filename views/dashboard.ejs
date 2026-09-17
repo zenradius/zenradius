@@ -1427,12 +1427,24 @@
         </h2>
         <div id="collapseBilling" class="accordion-collapse collapse show" data-bs-parent="#customerAccordion">
           <div class="accordion-body p-2 p-md-4">
+            <% if (hasUnpaid) { %>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 px-2">
+              <label class="form-check-label small text-white" style="cursor:pointer">
+                <input class="form-check-input me-1" type="checkbox" id="selectAllUnpaid"> Pilih semua tagihan belum bayar
+              </label>
+              <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                <span class="small" id="batchSelectionText" style="color:#cbd5e1">Pilih minimal 2 tagihan untuk pembayaran gabungan.</span>
+                <button type="button" class="btn btn-sm btn-warning fw-bold" id="payBatchBtn" onclick="openBatchPaymentModal()" disabled><i class="bi bi-collection"></i> Bayar Gabungan</button>
+              </div>
+            </div>
+            <% } %>
             <!-- DESKTOP TABLE VIEW (md ke atas) -->
             <div class="table-responsive d-none d-md-block">
               <table class="table table-hover align-middle invoice-table" style="margin-bottom:0;">
                 <thead>
                   <tr style="border-bottom: 2px solid rgba(99,102,241,0.4); background:rgba(30,41,59,0.8);">
                     <th class="text-white text-start fw-bold" style="padding:12px 14px; font-size:13px;">Aksi</th>
+                    <th class="text-white text-center fw-bold" style="padding:12px 8px; font-size:13px;">Pilih</th>
                     <th class="text-white fw-bold" style="padding:12px 14px; font-size:13px;">Periode</th>
                     <th class="text-white fw-bold" style="padding:12px 14px; font-size:13px;">Layanan / Paket</th>
                     <th class="text-white fw-bold" style="padding:12px 14px; font-size:13px;">Jumlah</th>
@@ -1461,6 +1473,11 @@
                             <a href="/customer/invoice/<%= inv.id %>/pdf" class="btn btn-sm text-white fw-bold shadow-sm ms-1" style="background: linear-gradient(135deg, #0284c7, #06b6d4); border:none; border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Unduh PDF">
                               <i class="bi bi-file-earmark-pdf-fill" style="font-size:15px; color:#ffffff;"></i> <span>PDF</span>
                             </a>
+                          <% } %>
+                        </td>
+                        <td class="text-center">
+                          <% if (inv.status !== 'paid') { %>
+                            <input class="form-check-input batch-invoice" type="checkbox" value="<%= inv.id %>" data-amount="<%= Number(itemAmt || 0) %>" aria-label="Pilih invoice <%= inv.id %>">
                           <% } %>
                         </td>
                         <td class="col-periode fw-bold" style="white-space:nowrap;"><%= inv.period_month %>/<%= inv.period_year %></td>
@@ -1498,6 +1515,9 @@
                         <% } %>
                         <span class="fw-bold" style="color:#cbd5e1; font-size:12px;"><i class="bi bi-calendar-event me-1"></i> Periode <%= inv.period_month %>/<%= inv.period_year %></span>
                       </div>
+                      <% if (inv.status !== 'paid') { %>
+                        <label class="small text-white mb-3 d-inline-flex align-items-center" style="cursor:pointer"><input class="form-check-input me-2 batch-invoice" type="checkbox" value="<%= inv.id %>" data-amount="<%= Number(itemAmt || 0) %>"> Gabungkan pembayaran tagihan ini</label>
+                      <% } %>
 
                       <!-- Service & Amount -->
                       <div class="mb-4">
@@ -1605,6 +1625,7 @@
           <div class="text-center mb-4 p-3 rounded-4" style="background:rgba(30,41,59,0.9); border:1px solid rgba(245,158,11,0.4); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);">
             <div class="fw-bold small mb-1" style="color:#cbd5e1; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Total Tagihan Harus Dibayar</div>
             <h2 class="fw-extrabold text-warning mb-0" style="font-size:28px; color:#fbbf24; text-shadow:0 2px 10px rgba(245,158,11,0.3);" id="pay_amount_text">Rp 0</h2>
+            <div class="small mt-1" id="paymentSelectionInfo" style="color:#cbd5e1"></div>
           </div>
 
           <div class="d-grid gap-3">
@@ -1856,10 +1877,12 @@
   <!-- JAVASCRIPT HANDLERS -->
   <script>
     let currentInvId = null;
+    let selectedBatchInvoiceIds = [];
     let pModal = null;
 
     function openPaymentModal(invId, amount) {
       currentInvId = invId;
+      selectedBatchInvoiceIds = [];
       let num = 0;
       if (typeof amount === 'number') {
         num = isNaN(amount) ? 0 : amount;
@@ -1868,14 +1891,84 @@
         num = parseFloat(clean) || 0;
       }
       document.getElementById('pay_amount_text').innerText = 'Rp ' + Math.round(num).toLocaleString('id-ID');
+      const selectionInfo = document.getElementById('paymentSelectionInfo');
+      if (selectionInfo) selectionInfo.textContent = 'Pembayaran untuk satu tagihan.';
       if (!pModal) pModal = new bootstrap.Modal(document.getElementById('paymentModal'));
       pModal.show();
     }
 
     function submitPayment(method) {
+      const methodCode = encodeURIComponent(String(method || 'QRIS'));
+      if (selectedBatchInvoiceIds.length > 1) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/customer/payment/batch/create';
+        for (const invoiceId of selectedBatchInvoiceIds) {
+          const input = document.createElement('input');
+          input.type = 'hidden'; input.name = 'invoice_ids'; input.value = invoiceId;
+          form.appendChild(input);
+        }
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden'; methodInput.name = 'method'; methodInput.value = decodeURIComponent(methodCode);
+        form.appendChild(methodInput);
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
       if (!currentInvId) return;
-      window.location.href = `/customer/payment/create/${currentInvId}?method=${method}`;
+      window.location.href = `/customer/payment/create/${encodeURIComponent(currentInvId)}?method=${methodCode}`;
     }
+
+    function openBatchPaymentModal() {
+      if (selectedBatchInvoiceIds.length < 2) return;
+      const total = Array.from(new Map(Array.from(document.querySelectorAll('.batch-invoice:checked')).map(el => [String(el.value), Number(el.dataset.amount || 0)])).values())
+        .reduce((sum, amount) => sum + amount, 0);
+      currentInvId = null;
+      const amountText = document.getElementById('pay_amount_text');
+      if (amountText) amountText.innerText = 'Rp ' + Math.round(total).toLocaleString('id-ID');
+      const selectionInfo = document.getElementById('paymentSelectionInfo');
+      if (selectionInfo) selectionInfo.textContent = `Pembayaran gabungan ${selectedBatchInvoiceIds.length} tagihan.`;
+      if (!pModal) pModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+      pModal.show();
+    }
+
+    function updateBatchSelection() {
+      const selected = Array.from(document.querySelectorAll('.batch-invoice:checked'));
+      const unique = new Map(selected.map(el => [String(el.value), Number(el.dataset.amount || 0)]));
+      selectedBatchInvoiceIds = Array.from(unique.keys());
+      const total = Array.from(unique.values()).reduce((sum, amount) => sum + amount, 0);
+      const text = document.getElementById('batchSelectionText');
+      const button = document.getElementById('payBatchBtn');
+      if (text) text.textContent = selectedBatchInvoiceIds.length > 1
+        ? `${selectedBatchInvoiceIds.length} tagihan dipilih • Rp ${total.toLocaleString('id-ID')} • tekan Bayar Tagihan untuk melanjutkan.`
+        : 'Pilih minimal 2 tagihan untuk pembayaran gabungan.';
+      if (button) button.disabled = selectedBatchInvoiceIds.length < 2;
+      if (selectedBatchInvoiceIds.length > 1) {
+        currentInvId = null;
+        const amountText = document.getElementById('pay_amount_text');
+        if (amountText) amountText.innerText = 'Rp ' + Math.round(total).toLocaleString('id-ID');
+      }
+    }
+
+    document.querySelectorAll('.batch-invoice').forEach(input => input.addEventListener('change', updateBatchSelection));
+    document.getElementById('selectAllUnpaid')?.addEventListener('change', function () {
+      document.querySelectorAll('.batch-invoice').forEach(input => { input.checked = this.checked; });
+      updateBatchSelection();
+    });
+
+    async function refreshPaymentStatus() {
+      try {
+        const response = await fetch('/customer/payment/status', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+        const status = await response.json();
+        if (response.ok && status.success) {
+          const knownUnpaid = <%= unpaidCount %>;
+          if (Number(status.unpaidCount) < knownUnpaid) window.location.reload();
+        }
+      } catch (_) {}
+    }
+
+    window.addEventListener('focus', refreshPaymentStatus);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshPaymentStatus(); });
 
     function togglePassVisibility() {
       const input = document.getElementById('wifiPassInput');

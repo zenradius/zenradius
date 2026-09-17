@@ -392,6 +392,86 @@ async function createDuitkuTransaction(invoice, customer, method = 'duitku', app
 }
 
 /**
+ * iPaymu: Membuat Direct Payment.
+ * Signature: HMAC-SHA256("POST:VA:SHA256(body):API_KEY", API_KEY).
+ * Ref: https://docs.ipaymu.com/id/docs/payment/direct-payment
+ */
+async function createIpaymuTransaction(invoice, customer, method = 'ipaymu', appUrl = '', opts = {}) {
+  const settings = getSettingsWithCache();
+  const va = String(settings.ipaymu_va || '').trim();
+  const apiKey = String(settings.ipaymu_api_key || '').trim();
+  const isLive = ['live', 'production'].includes(String(settings.ipaymu_mode || '').toLowerCase());
+  if (!va || !apiKey) throw new Error('iPaymu Error: Nomor VA atau API Key belum diatur.');
+
+  const amount = Math.floor(Number(invoice.amount || 0));
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('iPaymu Error: Nominal tagihan tidak valid.');
+
+  const prefix = String(opts.orderPrefix || 'INV').toUpperCase();
+  const referenceId = `${prefix}-${invoice.id}-${Date.now()}`;
+  const finalAppUrl = String(appUrl || settings.app_url || '').replace(/\/+$/, '');
+  if (!finalAppUrl) throw new Error('iPaymu Error: URL aplikasi belum tersedia untuk callback pembayaran.');
+  const callbackPath = String(opts.callbackPath || '/customer/payment/callback');
+  const returnPath = String(opts.returnPath || '/customer/dashboard');
+  const itemName = String(opts.itemName || invoice.item_name || '').trim() || `Pembayaran #${invoice.id}`;
+
+  const methodMap = {
+    QRIS: ['qris', 'mpm'],
+    BCAVA: ['va', 'bca'],
+    BNIVA: ['va', 'bni'],
+    BRIVA: ['va', 'bri'],
+    PERMATAVA: ['va', 'permata'],
+    MANDIRIVA: ['va', 'mandiri'],
+    DANA: ['ewallet', 'dana'],
+    SHOPEEPAY: ['ewallet', 'shopeepay']
+  };
+  const requested = String(method || '').trim().toUpperCase();
+  const [paymentMethod, paymentChannel] = methodMap[requested] || ['qris', 'mpm'];
+  const payload = {
+    name: String(customer.name || 'Pelanggan'),
+    phone: normalizePhone(customer.phone || '0'),
+    email: String(customer.email || getFallbackEmail(customer.phone)).trim(),
+    amount,
+    notifyUrl: `${finalAppUrl}${callbackPath}`,
+    returnUrl: `${finalAppUrl}${returnPath}`,
+    cancelUrl: `${finalAppUrl}${returnPath}`,
+    expired: 24,
+    expiredType: 'hours',
+    comments: itemName,
+    referenceId,
+    paymentMethod,
+    paymentChannel,
+    product: [itemName],
+    qty: [1],
+    price: [amount]
+  };
+  const body = JSON.stringify(payload);
+  const bodyHash = crypto.createHash('sha256').update(body).digest('hex');
+  const signature = crypto.createHmac('sha256', apiKey).update(`POST:${va}:${bodyHash}:${apiKey}`).digest('hex');
+  const timestamp = new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
+  const baseUrl = isLive ? 'https://my.ipaymu.com' : 'https://sandbox.ipaymu.com';
+
+  try {
+    const res = await axios.post(`${baseUrl}/api/v2/payment/direct`, body, {
+      headers: { 'Content-Type': 'application/json', va, signature, timestamp },
+      timeout: 15000
+    });
+    const data = res.data?.Data || res.data?.data || {};
+    if (!(res.data?.Success ?? res.data?.success) || !data.Url && !data.url) {
+      throw new Error(res.data?.Message || res.data?.message || 'Gagal mendapatkan URL pembayaran dari iPaymu');
+    }
+    return {
+      success: true,
+      link: data.Url || data.url,
+      reference: data.ReferenceId || data.referenceId || referenceId,
+      order_id: referenceId,
+      payload: data
+    };
+  } catch (error) {
+    throw formatGatewayError('iPaymu', error);
+  }
+}
+
+/**
  * Verifikasi Webhook Signature (Tripay)
  */
 function verifyTripayWebhook(jsonBody, signature, privateKey) {
@@ -421,6 +501,31 @@ function verifyDuitkuWebhook(body, apiKey) {
     .update(merchantCode + amount + merchantOrderId + apiKey)
     .digest('hex');
   return hash === signature;
+}
+
+/** Verifikasi callback iPaymu dengan VA sebagai secret key. */
+function verifyIpaymuWebhook(body, signature, va) {
+  if (!body || !signature || !va) return false;
+  const integerKeys = new Set(['trx_id', 'status_code', 'transaction_status_code', 'paid_off']);
+  const normalized = {};
+  for (const key of Object.keys(body)) {
+    if (key.toLowerCase() === 'signature') continue;
+    const value = body[key];
+    if (key === 'is_escrow') normalized[key] = value === true || value === 1 || value === '1' || value === 'true';
+    else if (integerKeys.has(key)) normalized[key] = parseInt(value, 10);
+    else if (key === 'additional_info') normalized[key] = value === '[]' ? [] : value;
+    else normalized[key] = String(value ?? '');
+  }
+  if (!Object.prototype.hasOwnProperty.call(normalized, 'additional_info')) normalized.additional_info = [];
+  const sorted = Object.keys(normalized).sort((a, b) => a.localeCompare(b)).reduce((out, key) => {
+    out[key] = normalized[key];
+    return out;
+  }, {});
+  const bodyJson = JSON.stringify(sorted).replace(/\//g, '\\/');
+  const expected = crypto.createHmac('sha256', String(va)).update(bodyJson).digest('hex');
+  const provided = String(signature).trim().toLowerCase();
+  if (expected.length !== provided.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(provided));
 }
 
 /**
@@ -464,9 +569,11 @@ module.exports = {
   createMidtransTransaction,
   createXenditTransaction,
   createDuitkuTransaction,
+  createIpaymuTransaction,
   getTripayChannels,
   verifyTripayWebhook,
   verifyMidtransWebhook,
   verifyDuitkuWebhook,
+  verifyIpaymuWebhook,
   getFallbackEmail
 };

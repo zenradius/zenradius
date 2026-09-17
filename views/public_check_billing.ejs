@@ -258,6 +258,17 @@
                 <input type="hidden" name="method" id="pay_method" value="">
 
                 <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
+                
+                <!-- Integrated Syarat & Ketentuan (TOS) Checkbox -->
+                <div class="mb-3 p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(190, 239, 255, 0.12);">
+                  <div class="form-check d-flex align-items-start gap-2">
+                    <input class="form-check-input flex-shrink-0" type="checkbox" name="tos" id="billing_tos" value="1" style="width: 18px; height: 18px; border-color: rgba(45, 212, 191, 0.4); margin-top: 3px;" required checked>
+                    <label class="form-check-label small muted" for="billing_tos" style="user-select: none; line-height: 1.45;">
+                      Saya menyetujui seluruh <a href="/customer/tos" target="_blank" class="fw-bold" style="color: #2dd4bf; text-decoration: underline;">Syarat & Ketentuan (TOS)</a> dan kebijakan transaksi yang berlaku di <%= settings.company_header || 'ZenRadius' %>.
+                    </label>
+                  </div>
+                </div>
+
                 <% if (hasStaticQris || (paymentChannels && paymentChannels.length > 0)) { %>
                   <div class="pay-scroll">
                     <div class="payment-methods-grid">

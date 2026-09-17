@@ -6,6 +6,7 @@ const billingSvc = require('../services/billingService');
 const pdfSvc = require('../services/pdfInvoiceService');
 const paymentSvc = require('../services/paymentService');
 const customerSvc = require('../services/customerService');
+const { hashPassword } = require('../services/adminService');
 const mikrotikService = require('../services/mikrotikService');
 const { parseMikhmonOnLogin } = require('../utils/mikhmonParser');
 const { logger } = require('../config/logger');
@@ -274,12 +275,19 @@ function isGatewayConfigured(settings, gateway) {
       String(settings.duitku_api_key || '').trim()
     );
   }
+  if (g === 'ipaymu') {
+    return (
+      isEnabledFlag(settings.ipaymu_enabled) &&
+      String(settings.ipaymu_va || '').trim() &&
+      String(settings.ipaymu_api_key || '').trim()
+    );
+  }
   return false;
 }
 
 function resolveConfiguredGateway(settings) {
   const def = String(settings?.default_gateway || 'tripay').toLowerCase();
-  const order = ['tripay', 'midtrans', 'xendit', 'duitku'];
+  const order = ['ipaymu', 'tripay', 'midtrans', 'xendit', 'duitku'];
   if (isGatewayConfigured(settings, def)) return def;
   for (const g of order) {
     if (isGatewayConfigured(settings, g)) return g;
@@ -294,12 +302,13 @@ function resolveConfiguredGatewayForAmount(settings, amount) {
     tripay: 0,
     midtrans: 10000,
     xendit: 1000,
-    duitku: 1000
+    duitku: 1000,
+    ipaymu: 1000
   };
 
   const def = String(settings?.default_gateway || 'tripay').toLowerCase();
   
-  const fallbackOrder = ['qris_static', 'tripay', 'xendit', 'duitku', 'midtrans'];
+  const fallbackOrder = ['qris_static', 'ipaymu', 'tripay', 'xendit', 'duitku', 'midtrans'];
 
   const ok = (g) => {
     
@@ -680,6 +689,10 @@ function resolvePaymentExpiresAt(gateway, result) {
     );
   }
 
+  if (p && g === 'ipaymu') {
+    return tryDate(p.Expired ?? p.expired ?? p.expired_at ?? p.expiredAt);
+  }
+
   return null;
 }
 
@@ -689,7 +702,40 @@ function gatewayDefaultExpiresAtIso(gateway, nowMs = Date.now()) {
 
   if (g === 'xendit') return new Date(base + 86400 * 1000).toISOString();
   if (g === 'duitku') return new Date(base + 1440 * 60 * 1000).toISOString();
+  if (g === 'ipaymu') return new Date(base + 86400 * 1000).toISOString();
   return null;
+}
+
+function getStandardPaymentChannels(gateway) {
+  const base = [
+    { code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true },
+    { code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', active: true },
+    { code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', active: true },
+    { code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', active: true },
+    { code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', active: true },
+    { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', active: true }
+  ];
+  if (gateway === 'midtrans') return [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
+  if (gateway === 'xendit') return [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+  if (gateway === 'duitku') return [{ code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+  if (gateway === 'ipaymu') return [...base, { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true }, { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }];
+  return [];
+}
+
+async function getCustomerPaymentChannels(settings) {
+  const gateway = resolveConfiguredGateway(settings);
+  if (gateway === 'tripay') {
+    try { return await paymentSvc.getTripayChannels(); } catch { return []; }
+  }
+  return getStandardPaymentChannels(gateway);
+}
+
+async function createGatewayPayment(invoiceLike, customer, gateway, method, appUrl, options = {}) {
+  if (gateway === 'midtrans') return paymentSvc.createMidtransTransaction(invoiceLike, customer, method === 'SNAP' ? 'snap' : method, appUrl, options);
+  if (gateway === 'xendit') return paymentSvc.createXenditTransaction(invoiceLike, customer, method === 'XENDIT' ? 'xendit' : method, appUrl, options);
+  if (gateway === 'duitku') return paymentSvc.createDuitkuTransaction(invoiceLike, customer, method === 'DUITKU' ? 'duitku' : method, appUrl, options);
+  if (gateway === 'ipaymu') return paymentSvc.createIpaymuTransaction(invoiceLike, customer, method, appUrl, options);
+  return paymentSvc.createTripayTransaction(invoiceLike, customer, method, appUrl, options);
 }
 
 const pppoeTrafficSamples = new Map();
@@ -895,6 +941,7 @@ router.get('/check-billing', async (req, res) => {
     if (gateway === 'midtrans') paymentChannels = [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'xendit') paymentChannels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'duitku') paymentChannels = [{ code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+    else if (gateway === 'ipaymu') paymentChannels = [{ code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true }, ...base, { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true }, { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }];
   }
 
   if (query) {
@@ -1153,6 +1200,7 @@ router.get('/voucher', async (req, res) => {
       if (gateway === 'midtrans') channels = [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
       else if (gateway === 'xendit') channels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
       else if (gateway === 'duitku') channels = [{ code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+      else if (gateway === 'ipaymu') channels = [{ code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true }, ...base, { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true }, { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }];
       else channels = base;
     }
     
@@ -1494,6 +1542,9 @@ router.post('/public/voucher/create-payment', async (req, res) => {
     } else if (gateway === 'duitku') {
       const allowed = new Set(['DUITKU', 'QRIS', 'BCAVA', 'BNIVA', 'BRIVA', 'PERMATAVA', 'MANDIRIVA']);
       if (!allowed.has(method)) method = 'DUITKU';
+    } else if (gateway === 'ipaymu') {
+      const allowed = new Set(['QRIS', 'BCAVA', 'BNIVA', 'BRIVA', 'PERMATAVA', 'MANDIRIVA', 'DANA', 'SHOPEEPAY']);
+      if (!allowed.has(method)) method = 'QRIS';
     }
 
     const invoiceLike = {
@@ -1518,6 +1569,8 @@ router.post('/public/voucher/create-payment', async (req, res) => {
       result = await paymentSvc.createXenditTransaction(invoiceLike, buyer, method === 'XENDIT' ? 'xendit' : method, appUrl, { returnPath, orderPrefix: 'VOUCHER', description: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     } else if (gateway === 'duitku') {
       result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, method === 'DUITKU' ? 'duitku' : method, appUrl, { returnPath, orderPrefix: 'VOUCHER', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
+    } else if (gateway === 'ipaymu') {
+      result = await paymentSvc.createIpaymuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'VOUCHER', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     } else {
       try {
         result = await paymentSvc.createTripayTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'VOUCHER', itemName: invoiceLike.item_name, sku: invoiceLike.sku, callbackPath: '/customer/payment/callback' });
@@ -1579,20 +1632,29 @@ router.get('/register', (req, res) => {
 router.post('/register', async (req, res) => {
   const settings = getSettingsWithCache();
   const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
-  const { name, phone, email, address, package_id, lat, lng, agree_terms } = req.body;
+  const { name, phone, email, portal_password, confirm_portal_password, address, package_id, lat, lng, agree_terms } = req.body;
 
   try {
-    if (!name || !phone || !address || !package_id) {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const portalPassword = String(portal_password || '');
+    if (!name || !phone || !normalizedEmail || !portalPassword || !address || !package_id) {
       throw new Error('Semua field wajib diisi.');
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) throw new Error('Format email tidak valid.');
+    if (portalPassword.length < 8) throw new Error('Password portal minimal 8 karakter.');
+    if (portalPassword !== String(confirm_portal_password || '')) throw new Error('Konfirmasi password portal tidak sama.');
+    if (db.prepare("SELECT id FROM customers WHERE LOWER(email)=? AND email != '' LIMIT 1").get(normalizedEmail)) {
+      throw new Error('Email ini sudah terdaftar. Gunakan email lain atau login ke portal pelanggan.');
     }
     if (agree_terms !== '1' && agree_terms !== true && agree_terms !== 'true') {
       throw new Error('Anda harus menyetujui Syarat & Ketentuan sebelum mendaftar.');
     }
 
-    const newCustomer = customerSvc.createCustomer({
+    const newCustomer = customerSvc.createOnlineRegistration({
       name,
       phone,
-      email,
+      email: normalizedEmail,
+      portal_password: hashPassword(portalPassword),
       address,
       package_id,
       lat: String(lat || '').trim(),
@@ -1600,19 +1662,6 @@ router.post('/register', async (req, res) => {
       status: 'inactive',
       notes: 'Pendaftar Baru via Online'
     });
-
-    const createdCustomer = customerSvc.getCustomerById(newCustomer.lastInsertRowid || newCustomer.insertId);
-    const generatedPassword = String(createdCustomer?.portal_password || '').trim();
-
-    if (generatedPassword && settings.whatsapp_enabled) {
-      try {
-        const { sendWA } = await import('../services/whatsappBot.mjs');
-        const normalizedPhone = String(phone || '').replace(/\D/g, '');
-        const waPhone = normalizedPhone.startsWith('0') ? '62' + normalizedPhone.slice(1) : normalizedPhone.startsWith('62') ? normalizedPhone : `62${normalizedPhone}`;
-        const confirmMsg = `🔐 *PASSWORD PORTAL PELANGGAN*\n\nHalo *${name}*,\n\nAkun portal pelanggan Anda sudah dibuat.\n\n*Nomor WhatsApp:* ${phone}\n*Password:* *${generatedPassword}*\n\nSilakan login di: ${settings.public_base_url || 'http://localhost:' + (settings.server_port || 3001)}/customer/login`;
-        await sendWA(waPhone, confirmMsg);
-      } catch (e) { logger.warn('[Register] Gagal kirim password portal ke pelanggan: ' + e.message); }
-    }
 
     if (settings.whatsapp_enabled && settings.whatsapp_admin_numbers && settings.whatsapp_admin_numbers.length > 0) {
       const { sendWA } = await import('../services/whatsappBot.mjs');
@@ -1667,7 +1716,7 @@ router.post('/register', async (req, res) => {
 
     res.render('register', { 
       error: null, 
-      success: 'Pendaftaran berhasil! Tim kami akan segera menghubungi Anda melalui WhatsApp.', 
+      success: 'Pendaftaran berhasil! Setelah survey dan approval, gunakan email serta password yang dibuat untuk login ke portal pelanggan.', 
       settings, packages, selectedPackageId: ''
     });
   } catch (err) {
@@ -1701,6 +1750,16 @@ router.post('/login', loginRateLimiter, async (req, res) => {
     const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
     return res.render('customer-login', {
       error: 'Data pelanggan tidak ditemukan. Pastikan nomor WhatsApp sudah benar.',
+      settings,
+      packages
+    });
+  }
+
+  if (customer.registration_source === 'online' && customer.registration_status !== 'approved') {
+    const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
+    return res.render('customer-login', {
+      error: 'Pendaftaran Anda masih menunggu survey dan approval Admin.',
+      success: null,
       settings,
       packages
     });
@@ -1990,6 +2049,7 @@ router.get('/dashboard', async (req, res) => {
     if (gateway === 'midtrans') paymentChannels = [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'xendit') paymentChannels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'duitku') paymentChannels = [{ code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+    else if (gateway === 'ipaymu') paymentChannels = getStandardPaymentChannels('ipaymu');
   }
 
   let trafficMaxDownMbps = 10;
@@ -2751,6 +2811,8 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
       result = await paymentSvc.createXenditTransaction(inv, cust, method === 'XENDIT' ? 'xendit' : method, appUrl);
     } else if (gateway === 'duitku') {
       result = await paymentSvc.createDuitkuTransaction(inv, cust, method === 'DUITKU' ? 'duitku' : method, appUrl);
+    } else if (gateway === 'ipaymu') {
+      result = await paymentSvc.createIpaymuTransaction(inv, cust, method, appUrl);
     } else {
       try {
         result = await paymentSvc.createTripayTransaction(inv, cust, method, appUrl);
@@ -2932,6 +2994,65 @@ router.get('/payment/status/:invoiceId', async (req, res) => {
   }
 });
 
+router.get('/payment/status', (req, res) => {
+  const loginId = req.session && req.session.phone;
+  const profile = loginId ? findCustomerProfileByLoginId(loginId) : null;
+  if (!profile) return res.status(401).json({ error: 'Unauthorized', status: 'error' });
+  const invoices = billingSvc.getInvoicesByAny(profile.pppoe_username || profile.phone || String(profile.id)) || [];
+  const unpaid = invoices.filter(inv => String(inv.status) !== 'paid');
+  return res.json({
+    success: true,
+    hasUnpaid: unpaid.length > 0,
+    unpaidCount: unpaid.length,
+    unpaidTotal: unpaid.reduce((total, inv) => total + (Number(inv.amount) || 0), 0),
+    invoices: invoices.map(inv => ({ id: inv.id, status: inv.status, paid_at: inv.paid_at || null }))
+  });
+});
+
+router.post('/payment/batch/create', express.urlencoded({ extended: true }), async (req, res) => {
+  const loginId = req.session && req.session.phone;
+  const profile = loginId ? findCustomerProfileByLoginId(loginId) : null;
+  const redirectBack = (message) => {
+    req.session._msg = { type: 'error', text: message };
+    return res.redirect('/customer/dashboard#billing-section');
+  };
+  if (!profile) return res.redirect('/customer/login');
+
+  const rawIds = Array.isArray(req.body.invoice_ids) ? req.body.invoice_ids : String(req.body.invoice_ids || '').split(',');
+  const invoiceIds = [...new Set(rawIds.map(v => Number(v)).filter(v => Number.isInteger(v) && v > 0))].slice(0, 12);
+  if (invoiceIds.length < 2) return redirectBack('Pilih minimal dua tagihan untuk pembayaran gabungan.');
+
+  try {
+    const placeholders = invoiceIds.map(() => '?').join(',');
+    const invoices = db.prepare(`SELECT * FROM invoices WHERE id IN (${placeholders}) AND customer_id=? AND status='unpaid'`).all(...invoiceIds, profile.id);
+    if (invoices.length !== invoiceIds.length) throw new Error('Satu atau lebih tagihan tidak valid atau sudah lunas.');
+    const amount = invoices.reduce((sum, invoice) => sum + (Number(invoice.amount) || 0), 0);
+    if (amount <= 0) throw new Error('Total tagihan tidak valid.');
+
+    const settings = getSettingsWithCache();
+    const gateway = resolveConfiguredGatewayForAmount(settings, amount);
+    if (!gateway || gateway === 'qris_static') throw new Error('Pembayaran gabungan memerlukan payment gateway online yang aktif.');
+    const method = String(req.body.method || 'QRIS').toUpperCase();
+    const created = db.prepare('INSERT INTO payment_batches (customer_id, invoice_ids, amount, payment_gateway) VALUES (?, ?, ?, ?)')
+      .run(profile.id, JSON.stringify(invoiceIds), amount, gateway);
+    const batchId = Number(created.lastInsertRowid);
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const appUrl = settings.app_url || `${protocol}://${req.get('host')}`;
+    const invoiceLike = { id: `BATCH${batchId}`, amount, item_name: `Pembayaran ${invoices.length} Tagihan Internet`, sku: `BATCH-${batchId}` };
+    const result = await createGatewayPayment(invoiceLike, profile, gateway, method, appUrl, {
+      orderPrefix: 'BATCH', itemName: invoiceLike.item_name,
+      callbackPath: '/customer/payment/callback', returnPath: '/customer/dashboard#billing-section'
+    });
+    if (!result?.success || !result.link) throw new Error(result?.message || 'Gagal membuat transaksi pembayaran gabungan.');
+    db.prepare(`UPDATE payment_batches SET payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, payment_expires_at=? WHERE id=?`)
+      .run(result.order_id || '', result.link, result.reference || '', result.payload ? JSON.stringify(result.payload) : null, resolvePaymentExpiresAt(gateway, result) || gatewayDefaultExpiresAtIso(gateway), batchId);
+    return res.redirect(result.link);
+  } catch (error) {
+    logger.error(`[Payment Batch] Create error: ${error.message}`);
+    return redirectBack('Gagal membuat pembayaran gabungan: ' + error.message);
+  }
+});
+
 router.get('/payment/create/:invoiceId', async (req, res) => {
   const loginId = req.session && req.session.phone;
   const publicToken = req.query.t;
@@ -3057,6 +3178,7 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
     if (gateway === 'midtrans') result = await paymentSvc.createMidtransTransaction(inv, cust, method, appUrl);
     else if (gateway === 'xendit') result = await paymentSvc.createXenditTransaction(inv, cust, method, appUrl);
     else if (gateway === 'duitku') result = await paymentSvc.createDuitkuTransaction(inv, cust, method, appUrl);
+    else if (gateway === 'ipaymu') result = await paymentSvc.createIpaymuTransaction(inv, cust, method, appUrl);
     else {
       try {
         result = await paymentSvc.createTripayTransaction(inv, cust, method, appUrl);
@@ -3320,6 +3442,7 @@ router.post('/payment/callback', express.json({
   const settings = getSettingsWithCache();
   const tripaySignature = req.headers['x-callback-signature'];
   const midtransSignature = req.headers['x-callback-token']; 
+  const ipaymuSignature = req.headers['x-signature'];
   
   const jsonBody = req.rawBody || JSON.stringify(req.body);
   let gatewayOrderId = null;
@@ -3400,6 +3523,23 @@ router.post('/payment/callback', express.json({
       return res.status(401).json({ success: false, message: 'Invalid signature' });
     }
   }
+  else if (ipaymuSignature && (req.body.reference_id || req.body.referenceId)) {
+    if (paymentSvc.verifyIpaymuWebhook(req.body, ipaymuSignature, settings.ipaymu_va)) {
+      const referenceId = String(req.body.reference_id || req.body.referenceId || '');
+      const parts = referenceId.split('-');
+      gatewayOrderId = referenceId || null;
+      orderPrefix = (parts[0] || '').toUpperCase();
+      targetIdCandidate = parts[1] || null;
+      const statusCode = Number(req.body.status_code ?? req.body.transaction_status_code);
+      status = statusCode === 1 || statusCode === 6 || String(req.body.status || '').toLowerCase() === 'berhasil'
+        ? 'paid'
+        : String(req.body.status || '').toLowerCase();
+      gateway = 'iPaymu';
+    } else {
+      logger.error('[Webhook] Signature iPaymu tidak valid');
+      return res.status(401).json({ success: false, message: 'Invalid signature' });
+    }
+  }
 
   if (gatewayOrderId && status === 'paid') {
     
@@ -3462,6 +3602,32 @@ router.post('/payment/callback', express.json({
               await sendWA(agent.phone, waMsg);
             }
           } catch(waErr) { logger.error('[AgentTopup Webhook] WA error: ' + waErr.message); }
+        }
+      }
+      return res.json({ success: true });
+    }
+
+    if (orderPrefix === 'BATCH' || gatewayOrderId.startsWith('BATCH')) {
+      const batch = db.prepare('SELECT * FROM payment_batches WHERE payment_order_id=? OR id=?').get(gatewayOrderId, targetIdCandidate);
+      if (!batch) return res.json({ success: true });
+      if (String(batch.status) !== 'paid') {
+        let invoiceIds = [];
+        try { invoiceIds = JSON.parse(batch.invoice_ids || '[]'); } catch {}
+        invoiceIds = [...new Set((Array.isArray(invoiceIds) ? invoiceIds : []).map(Number).filter(id => Number.isInteger(id) && id > 0))];
+        if (invoiceIds.length === 0) throw new Error(`Batch pembayaran #${batch.id} tidak memiliki invoice`);
+        const settle = db.transaction(() => {
+          for (const invoiceId of invoiceIds) {
+            const invoice = billingSvc.getInvoiceById(invoiceId);
+            if (invoice && Number(invoice.customer_id) === Number(batch.customer_id) && String(invoice.status) !== 'paid') {
+              billingSvc.markAsPaid(invoiceId, gateway, `Otomatis via Webhook ${gateway} (batch #${batch.id})`);
+            }
+          }
+          db.prepare("UPDATE payment_batches SET status='paid', paid_at=CURRENT_TIMESTAMP WHERE id=? AND status='pending'").run(batch.id);
+        });
+        settle();
+        const customer = customerSvc.getCustomerById(batch.customer_id);
+        if (customer && customer.status === 'suspended' && billingSvc.getUnpaidInvoicesByCustomerId(customer.id).length === 0) {
+          await customerSvc.activateCustomer(customer.id);
         }
       }
       return res.json({ success: true });
@@ -3812,6 +3978,17 @@ router.get('/topup', async (req, res) => {
         { code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', active: true },
         { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', active: true }
       ];
+    } else if (gateway === 'ipaymu') {
+      paymentChannels = [
+        { code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true },
+        { code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true },
+        { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }
+      ];
     }
   } catch(e) {
     logger.error('[TopUp] Error fetching payment channels:', e.message);
@@ -3877,6 +4054,7 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
     if (gateway === 'midtrans') result = await paymentSvc.createMidtransTransaction(invoiceLike, buyer, method === 'SNAP' ? 'snap' : method, appUrl, { returnPath, orderPrefix: 'TOPUP', itemName: invoiceLike.item_name });
     else if (gateway === 'xendit') result = await paymentSvc.createXenditTransaction(invoiceLike, buyer, method === 'XENDIT' ? 'xendit' : method, appUrl, { returnPath, orderPrefix: 'TOPUP', description: invoiceLike.item_name });
     else if (gateway === 'duitku') result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, method === 'DUITKU' ? 'duitku' : method, appUrl, { returnPath, orderPrefix: 'TOPUP', itemName: invoiceLike.item_name });
+    else if (gateway === 'ipaymu') result = await paymentSvc.createIpaymuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'TOPUP', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     else {
       try {
         result = await paymentSvc.createTripayTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'TOPUP', itemName: invoiceLike.item_name, sku: invoiceLike.sku, callbackPath: '/customer/payment/callback' });
@@ -3956,6 +4134,7 @@ router.post('/agent-topup/create', express.urlencoded({ extended: true }), async
     if (gateway === 'midtrans') result = await paymentSvc.createMidtransTransaction(invoiceLike, buyer, 'snap', appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name });
     else if (gateway === 'xendit') result = await paymentSvc.createXenditTransaction(invoiceLike, buyer, 'xendit', appUrl, { returnPath, orderPrefix: 'AGTOP', description: invoiceLike.item_name });
     else if (gateway === 'duitku') result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, 'duitku', appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name });
+    else if (gateway === 'ipaymu') result = await paymentSvc.createIpaymuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     else {
       try {
         result = await paymentSvc.createTripayTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name, sku: invoiceLike.sku, callbackPath: '/customer/payment/callback' });

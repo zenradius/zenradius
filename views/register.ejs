@@ -492,16 +492,28 @@
           </div>
 
           <div class="fg">
-            <label class="fl" for="reg-phone">Nomor WhatsApp Aktif (Menerima Password)</label>
+            <label class="fl" for="reg-phone">Nomor WhatsApp Aktif</label>
             <div class="field"><i class="bi bi-whatsapp"></i><input class="fc" id="reg-phone" name="phone" type="tel" placeholder="Contoh: 081234567890" required></div>
             <small id="phone-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
           </div>
 
           <div class="fg">
-            <label class="fl" for="reg-email">Email (Opsional)</label>
-            <div class="field"><i class="bi bi-envelope"></i><input class="fc" id="reg-email" name="email" type="email" placeholder="Contoh: budi@zenradius.net"></div>
+            <label class="fl" for="reg-email">Email Portal *</label>
+            <div class="field"><i class="bi bi-envelope"></i><input class="fc" id="reg-email" name="email" type="email" placeholder="Contoh: budi@zenradius.net" required></div>
             <small id="email-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
-            <small class="coord-text">Email untuk pengiriman invoice otomatis.</small>
+            <small class="coord-text">Digunakan untuk login portal dan notifikasi invoice.</small>
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="reg-password">Password Portal *</label>
+            <div class="field"><i class="bi bi-lock"></i><input class="fc" id="reg-password" name="portal_password" type="password" minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter" required></div>
+            <small id="password-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="reg-confirm-password">Konfirmasi Password Portal *</label>
+            <div class="field"><i class="bi bi-shield-lock"></i><input class="fc" id="reg-confirm-password" name="confirm_portal_password" type="password" minlength="8" autocomplete="new-password" placeholder="Ulangi password portal" required></div>
+            <small id="confirm-password-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
           </div>
 
           <div class="fg">
@@ -525,14 +537,14 @@
           </div>
 
           <div class="fg">
-            <label class="fl" for="reg-package">Pilih Paket Layanan</label>
+            <label class="fl" for="reg-package">Paket Internet *</label>
             <div class="field" style="position:relative">
               <i class="bi bi-box-seam" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);z-index:1;color:rgba(190,239,255,.7)"></i>
               <select class="fc" id="reg-package" name="package_id" required style="padding-left:40px;cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:rgba(255,255,255,.06);padding-right:14px;font-weight:500">
-                <option value="" disabled selected>Pilih paket...</option>
+                <option value="" disabled <%= !selectedPackageId ? 'selected' : '' %>>-- Pilih Paket --</option>
                 <% packages.forEach(function(pkg) { %>
                   <option value="<%= pkg.id %>" <%= typeof selectedPackageId !== 'undefined' && String(selectedPackageId) === String(pkg.id) ? 'selected' : '' %>>
-                    <%= pkg.name %> - Rp <%= pkg.price.toLocaleString('id-ID') %>/bulan
+                    <%= pkg.name %> — Rp <%= pkg.price.toLocaleString('id-ID') %>
                   </option>
                 <% }) %>
               </select>
@@ -860,6 +872,8 @@
       const name = document.getElementById('reg-name').value.trim();
       const phone = document.getElementById('reg-phone').value.trim();
       const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirmPassword = document.getElementById('reg-confirm-password').value;
       const address = document.getElementById('reg-address').value.trim();
       const packageId = document.getElementById('reg-package').value;
       const agreeTerms = document.getElementById('register-form').querySelector('input[name="agree_terms"]').checked;
@@ -868,11 +882,13 @@
       const nameError = document.getElementById('name-error');
       const phoneError = document.getElementById('phone-error');
       const emailError = document.getElementById('email-error');
+      const passwordError = document.getElementById('password-error');
+      const confirmPasswordError = document.getElementById('confirm-password-error');
       const addressError = document.getElementById('address-error');
       const packageError = document.getElementById('package-error');
       const submitBtn = document.getElementById('submit-register-btn');
       
-      [nameError, phoneError, emailError, addressError, packageError].forEach(el => {
+      [nameError, phoneError, emailError, passwordError, confirmPasswordError, addressError, packageError].forEach(el => {
         if (el) el.style.display = 'none';
       });
       
@@ -902,9 +918,25 @@
         isValid = false;
       }
       
-      if (email && !isValidEmail(email)) {
+      if (!email) {
+        emailError.textContent = 'Email portal wajib diisi.';
+        emailError.style.display = 'block';
+        isValid = false;
+      } else if (!isValidEmail(email)) {
         emailError.textContent = 'Format email tidak valid.';
         emailError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (password.length < 8) {
+        passwordError.textContent = 'Password portal minimal 8 karakter.';
+        passwordError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (password !== confirmPassword) {
+        confirmPasswordError.textContent = 'Konfirmasi password portal tidak sama.';
+        confirmPasswordError.style.display = 'block';
         isValid = false;
       }
       

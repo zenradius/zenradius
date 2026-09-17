@@ -226,6 +226,107 @@ function createCustomer(data) {
   );
 }
 
+/** Buat pendaftar online yang harus melewati survei dan approval sebelum aktif. */
+function createOnlineRegistration(data) {
+  const result = createCustomer({ ...data, status: 'inactive' });
+  const customerId = Number(result.lastInsertRowid || result.insertId);
+  if (!Number.isFinite(customerId) || customerId <= 0) throw new Error('Gagal membuat data pendaftar');
+
+  db.prepare(`
+    UPDATE customers
+    SET registration_source='online', registration_status='pending_survey', survey_status='pending'
+    WHERE id=?
+  `).run(customerId);
+  return result;
+}
+
+function getRegistrationById(id) {
+  return db.prepare(`
+    SELECT c.*, p.name AS package_name,
+           t.name AS surveyed_by_tech_name,
+           ii.id AS installation_invoice_id, ii.amount AS installation_invoice_amount,
+           ii.status AS installation_invoice_status
+    FROM customers c
+    LEFT JOIN packages p ON p.id=c.package_id
+    LEFT JOIN technicians t ON t.id=c.surveyed_by_tech_id
+    LEFT JOIN installation_invoices ii ON ii.customer_id=c.id
+    WHERE c.id=? AND c.registration_source='online'
+  `).get(id);
+}
+
+function getOnlineRegistrations(status = '') {
+  const params = [];
+  let where = "c.registration_source='online'";
+  if (status) {
+    where += ' AND c.registration_status=?';
+    params.push(status);
+  }
+  return db.prepare(`
+    SELECT c.id, c.name, c.phone, c.email, c.address, c.lat, c.lng, c.created_at,
+           c.registration_status, c.survey_status, c.survey_notes, c.surveyed_at,
+           c.registration_approved_by, c.registration_approved_at,
+           p.name AS package_name, t.name AS surveyed_by_tech_name
+    FROM customers c
+    LEFT JOIN packages p ON p.id=c.package_id
+    LEFT JOIN technicians t ON t.id=c.surveyed_by_tech_id
+    WHERE ${where}
+    ORDER BY c.created_at ASC
+  `).all(...params);
+}
+
+function submitRegistrationSurvey(id, technicianId, result, notes) {
+  const customerId = Number(id);
+  const techId = Number(technicianId);
+  const surveyResult = String(result || '').trim().toLowerCase();
+  const surveyNotes = String(notes || '').trim();
+  if (!Number.isFinite(customerId) || customerId <= 0) throw new Error('ID pendaftar tidak valid');
+  if (!Number.isFinite(techId) || techId <= 0) throw new Error('ID teknisi tidak valid');
+  if (!['eligible', 'ineligible'].includes(surveyResult)) throw new Error('Hasil survei harus eligible atau ineligible');
+  if (!surveyNotes) throw new Error('Catatan hasil survei wajib diisi');
+
+  const registrationStatus = surveyResult === 'eligible' ? 'surveyed' : 'rejected';
+  const resultUpdate = db.prepare(`
+    UPDATE customers
+    SET survey_status=?, survey_notes=?, surveyed_by_tech_id=?, surveyed_at=NOW_LOCAL(), registration_status=?
+    WHERE id=? AND registration_source='online' AND registration_status='pending_survey'
+  `).run(surveyResult, surveyNotes, techId, registrationStatus, customerId);
+
+  if (resultUpdate.changes !== 1) {
+    const registration = getRegistrationById(customerId);
+    if (!registration) throw new Error('Pendaftar online tidak ditemukan');
+    throw new Error('Pendaftaran ini sudah diproses dan tidak dapat disurvei ulang');
+  }
+  return getRegistrationById(customerId);
+}
+
+function approveOnlineRegistration(id, approvedBy) {
+  const customerId = Number(id);
+  const approver = String(approvedBy || '').trim() || 'Admin';
+  if (!Number.isFinite(customerId) || customerId <= 0) throw new Error('ID pendaftar tidak valid');
+
+  const approve = db.transaction(() => {
+    const registration = getRegistrationById(customerId);
+    if (!registration) throw new Error('Pendaftar online tidak ditemukan');
+    if (registration.registration_status !== 'surveyed' || registration.survey_status !== 'eligible') {
+      throw new Error('Hanya pendaftar dengan hasil survei layak yang dapat disetujui');
+    }
+
+    const updated = db.prepare(`
+      UPDATE customers
+      SET registration_status='approved', registration_approved_by=?, registration_approved_at=NOW_LOCAL()
+      WHERE id=? AND registration_status='surveyed' AND survey_status='eligible'
+    `).run(approver, customerId);
+    if (updated.changes !== 1) throw new Error('Pendaftaran sudah diproses oleh pengguna lain');
+
+    db.prepare(`
+      INSERT OR IGNORE INTO installation_invoices (customer_id, amount, status, notes)
+      VALUES (?, 0, 'paid', 'Tagihan instalasi gratis - disetujui saat approval pendaftaran')
+    `).run(customerId);
+  });
+  approve();
+  return getRegistrationById(customerId);
+}
+
 function updateCustomer(id, data) {
   const prev = db.prepare('SELECT package_id, expired_at, install_date FROM customers WHERE id=?').get(id);
   const newPkgId = data.package_id ? parseInt(data.package_id, 10) : null;
@@ -712,8 +813,9 @@ async function activateCustomer(id) {
 }
 
 module.exports = {
-  getAllCustomers, getAllCustomerAreas, getCustomerById, createCustomer, updateCustomer, deleteCustomer, getCustomerStats,
+  getAllCustomers, getAllCustomerAreas, getCustomerById, createCustomer, createOnlineRegistration, updateCustomer, deleteCustomer, getCustomerStats,
   getAllPackages, getPackageById, createPackage, updatePackage, deletePackage,
   suspendCustomer, activateCustomer, findCustomerByAny, updateCustomerCablePath,
-  resetPromoCyclesUsed, getEffectiveRouterId, verifyCustomerPortalPassword
+  resetPromoCyclesUsed, getEffectiveRouterId, verifyCustomerPortalPassword,
+  getRegistrationById, getOnlineRegistrations, submitRegistrationSurvey, approveOnlineRegistration
 };

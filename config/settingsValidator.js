@@ -254,6 +254,26 @@ const VALIDATION_RULES = {
     description: 'Duitku mode'
   },
 
+  ipaymu_enabled: {
+    type: 'boolean',
+    description: 'Enable iPaymu'
+  },
+  ipaymu_va: {
+    type: 'string',
+    minLength: 3,
+    description: 'iPaymu Virtual Account number'
+  },
+  ipaymu_api_key: {
+    type: 'string',
+    minLength: 10,
+    description: 'iPaymu API key'
+  },
+  ipaymu_mode: {
+    type: 'string',
+    enum: ['sandbox', 'live', 'production'],
+    description: 'iPaymu mode'
+  },
+
   office_lat: {
     type: 'string',
     pattern: /^-?\d+(\.\d+)?$|^$/,
@@ -267,7 +287,7 @@ const VALIDATION_RULES = {
 
   default_gateway: {
     type: 'string',
-    enum: ['tripay', 'midtrans', 'xendit', 'duitku'],
+    enum: ['tripay', 'midtrans', 'xendit', 'duitku', 'ipaymu'],
     description: 'Default payment gateway'
   },
   auto_backup_enabled: {

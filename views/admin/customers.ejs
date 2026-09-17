@@ -59,6 +59,44 @@
     </div>
     <% } %>
 
+    <% if (typeof onlineRegistrations !== 'undefined' && onlineRegistrations && onlineRegistrations.length > 0) { %>
+    <div class="card" style="margin-bottom:16px;border-color:rgba(99,102,241,.45)">
+      <div class="card-hd">
+        <h6><i class="bi bi-person-lines-fill"></i> Pendaftaran Online (<%= onlineRegistrations.length %>)</h6>
+        <span class="badge bp">Tetap tampil saat filter router aktif</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead><tr><th>Nama</th><th>Kontak</th><th>Paket</th><th>Survey</th><th>Waktu Daftar</th><th>Aksi</th></tr></thead>
+          <tbody>
+          <% onlineRegistrations.forEach(registration => { %>
+            <tr>
+              <td class="fw6"><%= registration.name %></td>
+              <td><div><%= registration.phone || '-' %></div><small class="text-muted"><%= registration.email || '-' %></small></td>
+              <td><%= registration.package_name || '-' %></td>
+              <td>
+                <% if (registration.registration_status === 'pending_survey') { %><span class="badge bw">Menunggu Survey</span>
+                <% } else if (registration.registration_status === 'surveyed') { %><span class="badge bp">Layak — Menunggu Approval</span>
+                <% } else if (registration.registration_status === 'approved') { %><span class="badge bs">Disetujui</span>
+                <% } else { %><span class="badge bd">Tidak Layak</span><% } %>
+                <% if (registration.surveyed_by_tech_name) { %><div style="font-size:11px;margin-top:3px"><%= registration.surveyed_by_tech_name %></div><% } %>
+              </td>
+              <td><%= registration.created_at || '-' %></td>
+              <td>
+                <% if (registration.registration_status === 'surveyed' && registration.survey_status === 'eligible') { %>
+                  <button type="button" class="btn btn-s btn-sm" data-registration-id="<%= registration.id %>" data-registration-name="<%= registration.name %>" onclick="approveOnlineRegistration(Number(this.dataset.registrationId), this.dataset.registrationName)"><i class="bi bi-check2-circle"></i> Approve & Aktifkan</button>
+                <% } else if (registration.registration_status === 'pending_survey') { %>
+                  <span class="text-muted" style="font-size:12px">Menunggu hasil teknisi</span>
+                <% } else { %><span class="text-muted" style="font-size:12px">-</span><% } %>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% } %>
+
     <!-- Stats (Clickable Filter Cards) -->
     <style>
       .sc-clickable { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
@@ -1149,6 +1187,18 @@ function safeParseJSON(elementId, fallback = []) {
   } catch (e) {
     console.warn('Failed to parse JSON for ' + elementId, e);
     return fallback;
+  }
+}
+
+async function approveOnlineRegistration(id, name) {
+  if (!confirm(`Setujui pendaftaran ${name} dan aktifkan layanannya?`)) return;
+  try {
+    const response = await fetch(`/admin/customers/${encodeURIComponent(id)}/registration/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || 'Approval pendaftaran gagal');
+    window.location.reload();
+  } catch (error) {
+    alert(error.message || 'Approval pendaftaran gagal');
   }
 }
 

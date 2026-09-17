@@ -308,6 +308,12 @@ function ensureDefaultSettings() {
       http_wa_method: 'POST',
       http_wa_header_name: 'Authorization',
 
+      // Payment Gateway iPaymu (kredensial diisi melalui Admin > Payment Gateway).
+      ipaymu_enabled: false,
+      ipaymu_va: '',
+      ipaymu_api_key: '',
+      ipaymu_mode: 'sandbox',
+
       // Gunakan ACS internal pada instalasi baru; ubah ke false hanya jika
       // server GenieACS eksternal memang sudah tersedia dan dikonfigurasi.
       use_builtin_acs: true,
