@@ -174,9 +174,9 @@
           </select>
           <% if (typeof routers !== 'undefined' && routers && routers.length > 0) { %>
           <select class="fs" style="width:160px;" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
-            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>>?? Semua Router</option>
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>>📡 Semua Router</option>
             <% routers.forEach(r => { %>
-              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>>?? <%= r.name %></option>
+              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>>📶 <%= r.name %></option>
             <% }) %>
           </select>
           <% } %>
@@ -340,8 +340,8 @@
           <div class="form-row" style="margin-bottom:0;" id="add_radius_select_fg">
             <div class="fg" style="margin-bottom:0;">
               <select class="fs" name="is_radius" id="add_is_radius" style="font-weight:700; height:42px;" onchange="handleAuthModeChange('add', this.value)">
-                <option value="0" selected>? MikroTik API (Lokal /ppp secret - Utama & Default)</option>
-                <option value="1">?? RADIUS Server (Billing Database Only)</option>
+                <option value="0" selected>🌐 MikroTik API (Lokal /ppp secret - Utama & Default)</option>
+                <option value="1">🖧 RADIUS Server (Billing Database Only)</option>
               </select>
               <small class="text-muted" style="font-size:11px; display:block; margin-top:4px;">
                 Mode MikroTik API mengelola kredensial PPP langsung di menu /ppp secret RouterOS MikroTik.
@@ -365,7 +365,11 @@
               <label class="fl"><i class="bi bi-card-text"></i> NIK / No. KTP (Opsional)</label>
               <input class="fc" name="nik" placeholder="Contoh: 3201xxxxxxxxxxxx">
             </div>
-            <div class="fg"><label class="fl">Email (Notifikasi Billing)</label><input class="fc" name="email" type="email" placeholder="customer@zenradius.net"></div>
+            <div class="fg"><label class="fl">Email Portal *</label><input class="fc" name="email" type="email" placeholder="customer@zenradius.net" required></div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label class="fl">Password Portal *</label><input class="fc" name="portal_password" type="password" minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter" required></div>
+            <div class="fg"><label class="fl">Konfirmasi Password Portal *</label><input class="fc" name="confirm_portal_password" type="password" minlength="8" autocomplete="new-password" placeholder="Ulangi password portal" required></div>
           </div>
           <div class="form-row">
             <div class="fg">
@@ -640,8 +644,8 @@
           <div class="form-row" style="margin-bottom:0;" id="e_radius_select_fg">
             <div class="fg" style="margin-bottom:0;">
               <select class="fs" name="is_radius" id="e_is_radius" style="font-weight:700; height:42px;" onchange="handleAuthModeChange('edit', this.value)">
-                <option value="0">? MikroTik API (Lokal /ppp secret - Utama & Default)</option>
-                <option value="1">?? RADIUS Server (Billing Database Only)</option>
+                <option value="0">🌐 MikroTik API (Lokal /ppp secret - Utama & Default)</option>
+                <option value="1">🖧 RADIUS Server (Billing Database Only)</option>
               </select>
               <small class="text-muted" style="font-size:11px; display:block; margin-top:4px;">
                 Mode MikroTik API mengelola kredensial PPP langsung di menu /ppp secret RouterOS MikroTik.
@@ -659,6 +663,10 @@
           <div class="form-row">
             <div class="fg"><label class="fl">Nama Lengkap *</label><input class="fc" name="name" id="e_name" required></div>
             <div class="fg"><label class="fl">No. Telepon / WA *</label><input class="fc" name="phone" id="e_phone" required></div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label class="fl">Password Portal (Kosongkan jika tidak ingin mengganti)</label><input class="fc" name="portal_password" id="e_portal_password" type="password" minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter"></div>
+            <div class="fg"><label class="fl">Konfirmasi Password Portal</label><input class="fc" name="confirm_portal_password" id="e_confirm_portal_password" type="password" minlength="8" autocomplete="new-password" placeholder="Ulangi password portal"></div>
           </div>
           <div class="form-row">
             <div class="fg">
@@ -1227,8 +1235,8 @@ function copyToClipboard(elementId, label) {
     alert('Tidak ada data ' + label + ' untuk disalin.');
     return;
   }
-  navigator.clipboard.writeText(text).then(() => {
-    alert('?? ' + label + ' berhasil disalin: ' + text);
+    navigator.clipboard.writeText(text).then(() => {
+    alert('✅ ' + label + ' berhasil disalin: ' + text);
   }).catch(() => {
     const input = document.createElement('textarea');
     input.value = text;
@@ -1236,7 +1244,7 @@ function copyToClipboard(elementId, label) {
     input.select();
     document.execCommand('copy');
     document.body.removeChild(input);
-    alert('?? ' + label + ' berhasil disalin: ' + text);
+    alert('✅ ' + label + ' berhasil disalin: ' + text);
   });
 }
 
@@ -1578,6 +1586,8 @@ function editCust(idx) {
   document.getElementById('e_notes').value=c.notes||'';
   document.getElementById('e_auto_isolate').value=(c.auto_isolate !== undefined ? c.auto_isolate : 1);
   document.getElementById('e_isolate_day').value=(c.isolate_day || 10);
+  if (document.getElementById('e_portal_password')) document.getElementById('e_portal_password').value = '';
+  if (document.getElementById('e_confirm_portal_password')) document.getElementById('e_confirm_portal_password').value = '';
   toggleConnectionFields('edit');
   openModal('editModal');
   loadRouterLists('edit', c.router_id || '', c.id || '');
@@ -1804,6 +1814,28 @@ async function loadMikrotikProfiles(routerId = '') {
 }
 loadRouterLists('add');
 loadRouterLists('edit');
+
+function validatePortalPasswordForm(form) {
+  const password = form.querySelector('input[name="portal_password"]')?.value || '';
+  const confirmation = form.querySelector('input[name="confirm_portal_password"]')?.value || '';
+  if (!password && !confirmation) return true;
+  if (password.length < 8) {
+    alert('Password portal minimal 8 karakter.');
+    return false;
+  }
+  if (password !== confirmation) {
+    alert('Konfirmasi password portal tidak sama.');
+    return false;
+  }
+  return true;
+}
+
+document.querySelector('#addModal form')?.addEventListener('submit', function(event) {
+  if (!validatePortalPasswordForm(this)) event.preventDefault();
+});
+document.querySelector('#editForm')?.addEventListener('submit', function(event) {
+  if (!validatePortalPasswordForm(this)) event.preventDefault();
+});
 
 setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),4000);
 </script>

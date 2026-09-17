@@ -70,11 +70,11 @@
           <div class="fg">
             <label class="fl">Pilihan Provider / Gateway WhatsApp</label>
             <select class="fs" name="wa_gateway_type" id="wa_gateway_type" onchange="toggleGatewayFields()">
-              <option value="baileys" <%= waGatewayType === 'baileys' ? 'selected' : '' %>>?? Baileys Web (Gratis & Scan QR)</option>
-              <option value="meta" <%= waGatewayType === 'meta' ? 'selected' : '' %>>?? Meta Cloud API (Official - Anti-Banned)</option>
-              <option value="fonnte" <%= waGatewayType === 'fonnte' ? 'selected' : '' %>>?? Fonnte (HTTP Gateway - Rp 50rb/bln)</option>
-              <option value="wablas" <%= waGatewayType === 'wablas' ? 'selected' : '' %>>?? Wablas (HTTP Gateway - Rp 45rb/bln)</option>
-              <option value="http" <%= waGatewayType === 'http' ? 'selected' : '' %>>?? Custom HTTP Gateway</option>
+              <option value="baileys" <%= waGatewayType === 'baileys' ? 'selected' : '' %>>📱 Baileys Web (Gratis & Scan QR)</option>
+              <option value="meta" <%= waGatewayType === 'meta' ? 'selected' : '' %>>🔒 Meta Cloud API (Official - Anti-Banned)</option>
+              <option value="fonnte" <%= waGatewayType === 'fonnte' ? 'selected' : '' %>>☁️ Fonnte (HTTP Gateway - Rp 50rb/bln)</option>
+              <option value="wablas" <%= waGatewayType === 'wablas' ? 'selected' : '' %>>☁️ Wablas (HTTP Gateway - Rp 45rb/bln)</option>
+              <option value="http" <%= waGatewayType === 'http' ? 'selected' : '' %>>🔗 Custom HTTP Gateway</option>
             </select>
             <div style="font-size:11px;color:var(--muted);margin-top:4px">Baileys = gratis tapi risiko banned. HTTP gateway (Fonnte/Wablas/Custom) = provider handle anti-ban, cukup isi token. Meta = official 100% anti-banned.</div>
           </div>

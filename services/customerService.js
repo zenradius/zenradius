@@ -328,7 +328,7 @@ function approveOnlineRegistration(id, approvedBy) {
 }
 
 function updateCustomer(id, data) {
-  const prev = db.prepare('SELECT package_id, expired_at, install_date FROM customers WHERE id=?').get(id);
+  const prev = db.prepare('SELECT package_id, expired_at, install_date, nik, portal_password FROM customers WHERE id=?').get(id);
   const newPkgId = data.package_id ? parseInt(data.package_id, 10) : null;
   const pkgChanged = prev && Number(prev.package_id || 0) !== Number(newPkgId || 0);
 
@@ -342,7 +342,7 @@ function updateCustomer(id, data) {
   }
 
   const result = db.prepare(`
-    UPDATE customers SET nik=?, name=?, phone=?, email=?, address=?, area=?, package_id=?, router_id=?, olt_id=?, odp_id=?, pon_port=?, lat=?, lng=?, genieacs_tag=?, pppoe_username=?, pppoe_password=?, pppoe_remote_address=?, isolir_profile=?, status=?, install_date=?, expired_at=?, notes=?, auto_isolate=?, isolate_day=?, cable_path=?, connection_type=?, static_ip=?, mac_address=?, hotspot_username=?, hotspot_password=?, hotspot_profile=?, collector_id=?, is_radius=?
+    UPDATE customers SET nik=?, name=?, phone=?, email=?, address=?, area=?, package_id=?, router_id=?, olt_id=?, odp_id=?, pon_port=?, lat=?, lng=?, genieacs_tag=?, pppoe_username=?, pppoe_password=?, pppoe_remote_address=?, isolir_profile=?, status=?, install_date=?, expired_at=?, notes=?, auto_isolate=?, isolate_day=?, cable_path=?, connection_type=?, static_ip=?, mac_address=?, hotspot_username=?, hotspot_password=?, hotspot_profile=?, collector_id=?, is_radius=?, portal_password=?
     WHERE id=?
   `).run(
     data.nik !== undefined ? (data.nik ? String(data.nik).trim() : '') : (prev.nik || ''),
@@ -374,6 +374,7 @@ function updateCustomer(id, data) {
     data.hotspot_profile || '',
     data.collector_id ? parseInt(data.collector_id) : null,
     data.is_radius !== undefined ? parseInt(data.is_radius) : 1,
+    data.portal_password !== undefined ? data.portal_password : (prev.portal_password || ''),
     id
   );
 

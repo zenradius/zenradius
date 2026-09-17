@@ -1851,6 +1851,18 @@ router.post('/customers/:id/registration/approve', requireAdminSession, restrict
 
 router.post('/customers', requireAdminSession, express.urlencoded({ extended: true }), async (req, res) => {
   try {
+    const portalPassword = String(req.body.portal_password || '').trim();
+    const confirmPortalPassword = String(req.body.confirm_portal_password || '').trim();
+    const email = String(req.body.email || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Format email tidak valid');
+    if (portalPassword.length < 8) throw new Error('Password portal minimal 8 karakter');
+    if (portalPassword !== confirmPortalPassword) throw new Error('Konfirmasi password portal tidak sama');
+    if (db.prepare("SELECT id FROM customers WHERE LOWER(email)=? AND email != '' LIMIT 1").get(email)) {
+      throw new Error('Email ini sudah terdaftar. Gunakan email lain.');
+    }
+    req.body.email = email;
+    req.body.portal_password = adminSvc.hashPassword(portalPassword);
+
     const connectionType = String(req.body.connection_type || 'pppoe').trim().toLowerCase() || 'pppoe';
     req.body.connection_type = connectionType;
 
@@ -2041,6 +2053,17 @@ router.post('/customers', requireAdminSession, express.urlencoded({ extended: tr
 
 router.post('/customers/:id/update', requireAdminSession, express.urlencoded({ extended: true }), async (req, res) => {
   try {
+    const portalPassword = String(req.body.portal_password || '').trim();
+    const confirmPortalPassword = String(req.body.confirm_portal_password || '').trim();
+    if (portalPassword || confirmPortalPassword) {
+      if (portalPassword.length < 8) throw new Error('Password portal minimal 8 karakter');
+      if (portalPassword !== confirmPortalPassword) throw new Error('Konfirmasi password portal tidak sama');
+      req.body.portal_password = adminSvc.hashPassword(portalPassword);
+    } else {
+      delete req.body.portal_password;
+    }
+    delete req.body.confirm_portal_password;
+
     const customerId = Number(req.params.id);
     const connectionType = String(req.body.connection_type || 'pppoe').trim().toLowerCase() || 'pppoe';
     req.body.connection_type = connectionType;
