@@ -288,9 +288,24 @@ textarea.fc{resize:vertical;min-height:75px}
 .zs-chev{font-size:11px;color:var(--primary);transition:transform .22s ease;flex-shrink:0}
 .zs.open .zs-chev{transform:rotate(180deg)}
 .zs-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:160px;max-height:280px;overflow-y:auto;background:linear-gradient(145deg,rgba(23,57,69,.96) 0%,rgba(13,38,47,.98) 100%);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(190,239,255,.22);border-radius:12px;box-shadow:0 12px 30px rgba(3,14,20,.48),0 0 20px rgba(34,211,238,.1);padding:5px;z-index:300;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s ease,transform .2s ease;scrollbar-width:thin;scrollbar-color:var(--primary) transparent}
-.zs-menu-portal{position:fixed!important;right:auto!important;z-index:1500!important}
+.zs-menu-portal{
+  position:fixed!important;
+  right:auto!important;
+  z-index:1500!important;
+  display:block;
+  visibility:hidden;
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(-8px);
+  transition:opacity .2s ease, transform .2s ease;
+}
 .zs-menu-portal.zs-menu-up{transform:translateY(8px)}
-.zs-menu-portal.zs-menu-open{opacity:1;transform:translateY(0);pointer-events:auto}
+.zs-menu-portal.zs-menu-open{
+  visibility:visible;
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
 .zs.up .zs-menu{top:auto;bottom:calc(100% + 8px);transform:translateY(8px)}
 .zs.open .zs-menu{opacity:1;transform:translateY(0);pointer-events:auto}
 .zs-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:8px;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s ease;white-space:nowrap;overflow:hidden}

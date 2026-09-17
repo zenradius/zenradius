@@ -85,6 +85,8 @@
       menu.style.left = '';
       menu.style.width = '';
       menu.style.bottom = '';
+      menu.style.opacity = '';
+      menu.style.pointerEvents = '';
     }
     function positionMenu() {
       if (!wrap.classList.contains('open')) return;
@@ -100,6 +102,8 @@
       menu.style.bottom = openUp ? `${window.innerHeight - r.top + 8}px` : 'auto';
       menu.style.left = `${r.left}px`;
       menu.style.width = `${Math.max(r.width, 160)}px`;
+      menu.style.opacity = '1';
+      menu.style.pointerEvents = 'auto';
     }
 
     wrap._zsPosition = positionMenu;
