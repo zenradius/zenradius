@@ -1,4 +1,14 @@
 /* Reference-inspired WiFi vouchers. Artwork is local; prices remain live text. */
+:root {
+  --vc-primary: var(--portal-primary-blue, #023E8C);
+  --vc-electric: var(--portal-electric-blue, #016FE8);
+  --vc-turquoise: var(--portal-turquoise, #04D5BF);
+  --vc-primary-dark: var(--portal-primary-dark, #012359);
+  --vc-surface: var(--portal-surface, #FFFFFF);
+  --vc-border: var(--portal-light-border, #DBE4EE);
+  --vc-text-secondary: var(--portal-text-secondary, #6E819A);
+}
+
 .cardx { max-width: 1040px; }
 .cardx::before { pointer-events: none; }
 .voucher-grid {
@@ -25,133 +35,119 @@
   aspect-ratio: 5 / 3;
   margin: 0;
   overflow: hidden;
-  border: 1px solid #c8e6f4;
-  border-radius: 20px;
-  background: #05285f url('/img/voucher-wifi-card.svg') center / 100% 100% no-repeat;
+  border-radius: 16px;
+  border: 1px solid var(--vc-border);
+  background-image: linear-gradient(135deg, var(--vc-primary), var(--vc-electric)), url('/img/voucher-wifi-card.svg');
+  background-size: cover, cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-blend-mode: multiply;
   color: #fff;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 3px 0 #031c3c, 0 12px 22px rgba(0, 12, 35, .28);
-  transition: transform .2s ease, box-shadow .2s ease;
+  box-shadow: 0 8px 24px rgba(2,44,99,0.08);
+  transition: transform .22s ease, box-shadow .22s ease;
   isolation: isolate;
 }
-.voucher-card:hover { transform: translateY(-3px); }
+.voucher-card:hover { transform: translateY(-6px); box-shadow: 0 18px 36px rgba(2,44,99,0.12); }
 .voucher-radio:checked + .voucher-card {
-  box-shadow: 0 0 0 3px #00e1bb, 0 12px 24px rgba(0, 12, 35, .4);
+  box-shadow: 0 0 0 4px rgba(4,213,191,0.12), 0 18px 36px rgba(2,12,35,0.28);
 }
 .voucher-radio:focus-visible + .voucher-card {
-  outline: 3px solid #fff;
-  outline-offset: 5px;
+  outline: 3px solid rgba(255,255,255,0.08);
+  outline-offset: 6px;
 }
 .v-selected {
   position: absolute;
-  top: 4%;
-  right: 4%;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: #00dfc1;
-  color: #032353;
-  font-size: 11px;
+  top: 8px;
+  right: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--vc-turquoise);
+  color: var(--vc-primary-dark);
+  font-size: 12px;
   font-weight: 800;
   opacity: 0;
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 18px rgba(4,213,191,0.12);
+  transform: translateY(0);
+  transition: opacity .18s ease, transform .18s ease;
 }
-.voucher-radio:checked + .voucher-card .v-selected { opacity: 1; }
+.voucher-radio:checked + .voucher-card .v-selected { opacity: 1; transform: translateY(-2px); }
 .v-brand {
   position: absolute;
-  top: 7%;
+  top: 6%;
   left: 6%;
   right: 5%;
-  height: 18.5%;
+  height: 16%;
   display: flex;
   align-items: center;
 }
-.v-brand-logo-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-.v-brand-real-logo {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-  border: none !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-.v-brand-fallback-group {
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
-}
+.v-brand-logo-container { width: 100%; height: 100%; display: flex; align-items: center; }
+.v-brand-real-logo { max-width: 100%; max-height: 100%; object-fit: contain; display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
+.v-brand-fallback-group { display: flex; flex-direction: column; line-height: 1; }
 .v-brand-name {
-  font-size: 8.5cqw;
+  font-size: 1.05rem;
   font-weight: 900;
-  letter-spacing: -.4cqw;
-  background: linear-gradient(30deg, #013175 25%, #0076a3);
-  background-clip: text;
+  letter-spacing: -0.02em;
+  background: linear-gradient(30deg, var(--vc-primary-dark), var(--vc-electric));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.v-brand-sub { margin-top: .4cqw; padding-left: .6cqw; font-size: 2.8cqw; letter-spacing: .60cqw; color: #013175; }
+.v-brand-sub { margin-top: 2px; padding-left: 6px; font-size: .78rem; letter-spacing: .03em; color: rgba(255,255,255,0.9); }
 .v-tagline {
   position: absolute;
-  top: 29%;
-  left: 7%;
-  color: #fff;
-  font-size: 2.85cqw;
+  top: 28%;
+  left: 6%;
+  color: rgba(255,255,255,0.95);
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: .02cqw;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.28);
 }
 .v-ribbon {
   position: absolute;
-  top: 41%;
+  top: 40%;
   left: 6%;
   display: inline-block;
-  padding: .5cqw 4cqw;
-  border-radius: 30px;
-  background: linear-gradient(90deg, #0076ff, #00dfc1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+  padding: .6rem 1.1rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--vc-electric), var(--vc-turquoise));
   color: #fff;
-  font-size: 3.4cqw;
-  line-height: 1.3;
+  font-size: 1.05rem;
+  line-height: 1.1;
   font-weight: 900;
-  letter-spacing: .08cqw;
+  letter-spacing: .02em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .v-offer {
   position: absolute;
-  top: 55%;
+  top: 53%;
   left: 6%;
   right: 6%;
   display: flex;
-  align-items: center;
-  gap: 2cqw;
+  align-items: baseline;
+  gap: 1rem;
   line-height: 1;
 }
 .voucher-price {
   display: flex;
   align-items: baseline;
   flex-shrink: 0;
-  font-size: 15cqw;
+  font-size: 2.6rem;
   font-weight: 900;
-  letter-spacing: -.65cqw;
+  letter-spacing: -0.02em;
   color: #fff;
-  text-shadow: 0 2px 1px rgba(0, 0, 0, .1);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.18);
 }
-.v-currency { margin-right: .5cqw; font-size: 3.5cqw; letter-spacing: 0; }
-.v-price-long { font-size: 11cqw; }
-.v-price-extra-long { font-size: 8.5cqw; }
-.v-divider { flex: 0 0 2px; height: 10cqw; margin: 0 1.5cqw; background: #fff; opacity: 0.6; transform: skew(-15deg); }
-.v-validity { min-width: 0; font-size: 7cqw; font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
-.v-validity-long { font-size: 5cqw; }
-.v-package {
-  display: none;
-}
+.v-currency { margin-right: .45rem; font-size: 1rem; letter-spacing: 0; opacity: .95; }
+.v-price-long { font-size: 1.8rem; }
+.v-price-extra-long { font-size: 1.35rem; }
+.v-divider { flex: 0 0 2px; height: 3rem; margin: 0 .6rem; background: rgba(255,255,255,0.12); transform: skew(-15deg); }
+.v-validity { min-width: 0; font-size: .95rem; font-weight: 800; line-height: 1.1; color: rgba(255,255,255,0.95); overflow-wrap: anywhere; }
+.v-validity-long { font-size: .85rem; }
+.v-package { display: none; }
 .v-benefits {
   position: absolute;
   left: 6%;
@@ -160,28 +156,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1.5cqw;
+  gap: 1rem;
 }
-.v-benefit { display: flex; align-items: center; gap: 1.1cqw; color: #fff; font-size: max(6.5px, 2cqw); line-height: 1.12; }
-.v-benefit + .v-benefit { padding-left: 1.8cqw; border-left: 1px solid rgba(255, 255, 255, 0.3); }
-.v-benefit-icon { display: grid; place-items: center; flex: 0 0 5.4cqw; width: 5.4cqw; height: 5.4cqw; border: 1.2px solid #fff; border-radius: 50%; opacity: 0.9; }
-.v-benefit-icon svg { width: 70%; height: 70%; }
+.v-benefit { display: flex; align-items: center; gap: .6rem; color: rgba(255,255,255,0.95); font-size: .85rem; line-height: 1.12; }
+.v-benefit + .v-benefit { padding-left: 1rem; border-left: 1px solid rgba(255,255,255,0.06); }
+.v-benefit-icon { display: grid; place-items: center; flex: 0 0 2.8rem; width: 2.8rem; height: 2.8rem; border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; background: rgba(255,255,255,0.04); }
+.v-benefit-icon svg { width: 60%; height: 60%; }
 .v-signature {
   position: absolute;
   right: 5%;
   bottom: 18%;
-  transform: rotate(-10deg);
-  color: #fff;
+  transform: rotate(-8deg);
+  color: rgba(255,255,255,0.9);
   font-family: 'Brush Script MT', 'Segoe Script', cursive;
-  font-size: 3.5cqw;
+  font-size: 1.05rem;
   font-style: italic;
   line-height: .95;
   text-align: center;
   opacity: 0.85;
 }
-.v-signature::after { content: ''; display: block; height: .5cqw; margin-top: .5cqw; border-radius: 100%; background: #fff; transform: rotate(-6deg); }
+.v-signature::after { content: ''; display: block; height: .2rem; margin-top: .4rem; border-radius: 100%; background: rgba(255,255,255,0.12); transform: rotate(-6deg); }
 @media (max-width: 760px) {
   .voucher-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 520px; margin-inline: auto; }
+  .voucher-price { font-size: 1.6rem; }
+  .v-offer { top: 50%; }
 }
 @media (max-width: 380px) {
   .wrap { padding: 10px; }
