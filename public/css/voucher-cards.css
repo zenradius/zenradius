@@ -45,15 +45,17 @@
 }
 .v-selected {
   position: absolute;
-  top: 3%;
-  right: 3%;
-  padding: 3px 7px;
+  top: 4%;
+  right: 4%;
+  padding: 4px 10px;
   border-radius: 20px;
-  background: #062f60;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
+  background: #00dfc1;
+  color: #032353;
+  font-size: 11px;
+  font-weight: 800;
   opacity: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 .voucher-radio:checked + .voucher-card .v-selected { opacity: 1; }
 .v-brand {
@@ -90,32 +92,33 @@
   font-size: 8.5cqw;
   font-weight: 900;
   letter-spacing: -.4cqw;
-  background: linear-gradient(30deg, #051d48 25%, #006b92);
+  background: linear-gradient(30deg, #013175 25%, #0076a3);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.v-brand-sub { margin-top: .4cqw; padding-left: .6cqw; font-size: 2.8cqw; letter-spacing: .60cqw; color: #032353; }
+.v-brand-sub { margin-top: .4cqw; padding-left: .6cqw; font-size: 2.8cqw; letter-spacing: .60cqw; color: #013175; }
 .v-tagline {
   position: absolute;
   top: 29%;
   left: 7%;
-  color: #0a235b;
-  font-size: 2.65cqw;
-  font-weight: 600;
+  color: #013773;
+  font-size: 2.85cqw;
+  font-weight: 700;
+  letter-spacing: .02cqw;
 }
 .v-ribbon {
   position: absolute;
-  top: 43%;
+  top: 41%;
   left: 6%;
   display: inline-block;
-  padding: .6cqw 3.2cqw;
+  padding: .5cqw 4cqw;
   border-radius: 30px;
-  background: linear-gradient(100deg, #0068ff, #00cfe2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45);
+  background: linear-gradient(90deg, #0076ff, #00dfc1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
   color: #fff;
   font-size: 3.4cqw;
-  line-height: 1.25;
+  line-height: 1.3;
   font-weight: 900;
   letter-spacing: .08cqw;
 }
@@ -133,57 +136,38 @@
   display: flex;
   align-items: baseline;
   flex-shrink: 0;
-  font-size: 12.5cqw;
+  font-size: 15cqw;
   font-weight: 900;
   letter-spacing: -.65cqw;
   color: #fff;
   text-shadow: 0 2px 1px rgba(0, 0, 0, .1);
 }
-.v-currency { margin-right: .5cqw; font-size: 2.5cqw; letter-spacing: 0; }
-.v-price-long { font-size: 9.5cqw; }
-.v-price-extra-long { font-size: 7cqw; }
-.v-divider { flex: 0 0 1px; height: 8cqw; margin: 0 1cqw; background: #00d4ed; transform: skew(-21deg); }
-.v-validity { min-width: 0; font-size: 5.2cqw; font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
-.v-validity-long { font-size: 3.6cqw; }
+.v-currency { margin-right: .5cqw; font-size: 3.5cqw; letter-spacing: 0; }
+.v-price-long { font-size: 11cqw; }
+.v-price-extra-long { font-size: 8.5cqw; }
+.v-divider { flex: 0 0 2px; height: 10cqw; margin: 0 1.5cqw; background: #fff; opacity: 0.6; transform: skew(-15deg); }
+.v-validity { min-width: 0; font-size: 7cqw; font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
+.v-validity-long { font-size: 5cqw; }
 .v-package {
-  position: absolute;
-  top: 77%;
-  left: 6%;
-  max-width: 88%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #d3efff;
-  font-size: max(8px, 2.3cqw);
-  line-height: 1.3;
+  display: none;
 }
 .v-benefits {
   position: absolute;
   left: 6%;
-  right: 29%;
-  bottom: 7%;
+  right: 6%;
+  bottom: 8%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1.5cqw;
 }
-.v-benefit { display: flex; align-items: center; gap: 1.1cqw; color: #fff; font-size: max(7px, 2.15cqw); line-height: 1.12; }
-.v-benefit + .v-benefit { padding-left: 1.8cqw; border-left: 1px solid #00cfe2; }
-.v-benefit-icon { display: grid; place-items: center; flex: 0 0 5.8cqw; width: 5.8cqw; height: 5.8cqw; border: 1px solid #fff; border-radius: 50%; }
+.v-benefit { display: flex; align-items: center; gap: 1.1cqw; color: #fff; font-size: max(6.5px, 2cqw); line-height: 1.12; }
+.v-benefit + .v-benefit { padding-left: 1.8cqw; border-left: 1px solid rgba(255, 255, 255, 0.3); }
+.v-benefit-icon { display: grid; place-items: center; flex: 0 0 5.4cqw; width: 5.4cqw; height: 5.4cqw; border: 1.2px solid #fff; border-radius: 50%; opacity: 0.9; }
 .v-benefit-icon svg { width: 70%; height: 70%; }
 .v-signature {
-  position: absolute;
-  right: 5%;
-  bottom: 6%;
-  transform: rotate(-10deg);
-  color: #fff;
-  font-family: 'Brush Script MT', 'Segoe Script', cursive;
-  font-size: 4.5cqw;
-  font-style: italic;
-  line-height: .95;
-  text-align: center;
+  display: none;
 }
-.v-signature::after { content: ''; display: block; height: .7cqw; margin-top: .7cqw; border-radius: 100%; background: #fff; transform: rotate(-6deg); }
 @media (max-width: 760px) {
   .voucher-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 520px; margin-inline: auto; }
 }
