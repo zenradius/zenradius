@@ -167,8 +167,19 @@
 .v-benefit-icon { display: grid; place-items: center; flex: 0 0 5.4cqw; width: 5.4cqw; height: 5.4cqw; border: 1.2px solid #fff; border-radius: 50%; opacity: 0.9; }
 .v-benefit-icon svg { width: 70%; height: 70%; }
 .v-signature {
-  display: none;
+  position: absolute;
+  right: 5%;
+  bottom: 18%;
+  transform: rotate(-10deg);
+  color: #fff;
+  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-size: 3.5cqw;
+  font-style: italic;
+  line-height: .95;
+  text-align: center;
+  opacity: 0.85;
 }
+.v-signature::after { content: ''; display: block; height: .5cqw; margin-top: .5cqw; border-radius: 100%; background: #fff; transform: rotate(-6deg); }
 @media (max-width: 760px) {
   .voucher-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 520px; margin-inline: auto; }
 }

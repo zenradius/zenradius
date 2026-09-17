@@ -4427,7 +4427,11 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
       
       const gw = newSettings.default_gateway;
       if (['tripay', 'midtrans', 'xendit', 'duitku', 'ipaymu'].includes(gw)) {
-        newSettings[gw + '_enabled'] = true;
+        // Jangan paksa mengaktifkan (set to true) gateway tersebut jika form mengirimkan status nonaktifnya (false)
+        const enabledField = gw + '_enabled';
+        if (req.body[enabledField] === undefined) {
+          newSettings[enabledField] = true;
+        }
       }
     }
 
