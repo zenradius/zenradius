@@ -2607,7 +2607,7 @@ router.get('/api/vouchers/packages', requireAdminSession, (req, res) => {
 
 router.post('/api/vouchers/packages', requireAdminSession, express.json(), (req, res) => {
   try {
-    const { router_id, profile_name, price, validity, prefix, code_length, charset, is_active } = req.body;
+    const { id, router_id, profile_name, price, validity, prefix, code_length, charset, is_active } = req.body;
     
     if (!router_id || Number(router_id) <= 0) return res.status(400).json({ ok: false, error: 'Router harus dipilih' });
     
@@ -2622,21 +2622,41 @@ router.post('/api/vouchers/packages', requireAdminSession, express.json(), (req,
     const prc = Math.floor(Number(price));
     const len = Math.max(4, Math.min(16, Number(code_length) || 6));
     const act = is_active === false || is_active === 0 || is_active === '0' ? 0 : 1;
+    const packageId = id ? Number(id) : null;
 
-    const stmt = db.prepare(`
-      INSERT INTO voucher_packages (router_id, profile_name, price, validity, prefix, code_length, charset, is_active, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, (NOW_LOCAL()))
-      ON CONFLICT(router_id, profile_name) DO UPDATE SET
-        price=excluded.price,
-        validity=excluded.validity,
-        prefix=excluded.prefix,
-        code_length=excluded.code_length,
-        charset=excluded.charset,
-        is_active=excluded.is_active,
-        updated_at=(NOW_LOCAL())
-    `);
+    if (packageId && packageId > 0) {
+      // Jika disubmit dengan ID (Mode EDIT), lakukan direkt update berdasarkan id utamanya
+      const updateStmt = db.prepare(`
+        UPDATE voucher_packages
+        SET router_id = ?,
+            profile_name = ?,
+            price = ?,
+            validity = ?,
+            prefix = ?,
+            code_length = ?,
+            charset = ?,
+            is_active = ?,
+            updated_at = (NOW_LOCAL())
+        WHERE id = ?
+      `);
+      updateStmt.run(rId, profile_name, prc, String(validity).trim(), String(prefix || '').trim(), len, charset || 'mixed', act, packageId);
+    } else {
+      // Jika mode TAMBAH BARU (Tanpa ID), lakukan INSERT dengan penanganan ON CONFLICT
+      const insertStmt = db.prepare(`
+        INSERT INTO voucher_packages (router_id, profile_name, price, validity, prefix, code_length, charset, is_active, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, (NOW_LOCAL()))
+        ON CONFLICT(router_id, profile_name) DO UPDATE SET
+          price=excluded.price,
+          validity=excluded.validity,
+          prefix=excluded.prefix,
+          code_length=excluded.code_length,
+          charset=excluded.charset,
+          is_active=excluded.is_active,
+          updated_at=(NOW_LOCAL())
+      `);
+      insertStmt.run(rId, profile_name, prc, String(validity).trim(), String(prefix || '').trim(), len, charset || 'mixed', act);
+    }
     
-    stmt.run(rId, profile_name, prc, String(validity).trim(), String(prefix || '').trim(), len, charset || 'mixed', act);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
