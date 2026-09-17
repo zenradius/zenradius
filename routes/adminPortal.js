@@ -1786,6 +1786,7 @@ router.get('/customers', requireAdminSession, requireSidebarMenuAccess('customer
   const collectors = adminSvc.getAllCollectors();
   const areas = customerSvc.getAllCustomerAreas();
   const masterAreas = areaSvc.getAllAreas();
+  const onlineRegistrations = customerSvc.getOnlineRegistrations();
 
   let activeSessionsMap = new Map();
   try {
