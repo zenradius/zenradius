@@ -26,6 +26,24 @@
     </div>
     <% } %>
 
+    <!-- Stat Card QRIS Statis -->
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 24px;">
+      <%
+        const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0');
+      %>
+      <div class="sc <%= hasStaticQris ? 's' : 'w' %>" style="padding-right: 20px;">
+        <div class="sc-icon"><i class="bi bi-qr-code-scan"></i></div>
+        <div class="sc-label">Metode QRIS Mandiri / Statis</div>
+        <div class="sc-val" style="font-size: 22px; display: flex; align-items: center; gap: 8px;">
+          QRIS Statis
+          <span class="pill <%= hasStaticQris ? 'pill-p' : 'pill-u' %>" style="font-size: 10px; padding: 2px 8px; font-weight: 700;">
+            <%= hasStaticQris ? 'Aktif' : 'Nonaktif' %>
+          </span>
+        </div>
+        <div class="sc-sub">Pembayaran mandiri via upload QRIS gambar atau teks payload</div>
+      </div>
+    </div>
+
     <form method="POST" action="/admin/settings">
       <input type="hidden" name="_redirect" value="/admin/payment-qris-static">
 

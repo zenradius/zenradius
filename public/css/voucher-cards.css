@@ -102,10 +102,11 @@
   position: absolute;
   top: 29%;
   left: 7%;
-  color: #013773;
+  color: #fff;
   font-size: 2.85cqw;
   font-weight: 700;
   letter-spacing: .02cqw;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .v-ribbon {
   position: absolute;
