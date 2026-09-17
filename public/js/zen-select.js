@@ -69,24 +69,41 @@
     }
 
     function open() {
-      document.querySelectorAll('.zs.open').forEach((z) => z !== wrap && z.classList.remove('open'));
+      document.querySelectorAll('.zs.open').forEach((z) => z !== wrap && (z._zsClose ? z._zsClose() : z.classList.remove('open')));
       wrap.classList.add('open');
       btn.setAttribute('aria-expanded', 'true');
-      // Buka ke atas bila ruang bawah kurang; batasi tinggi sesuai viewport.
-      const r = btn.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - r.bottom;
-      const spaceAbove = r.top;
-      const openUp = spaceBelow < 260 && spaceAbove > spaceBelow;
-      wrap.classList.toggle('up', openUp);
-      menu.style.maxHeight = `${Math.max(140, Math.min(280, (openUp ? spaceAbove : spaceBelow) - 16))}px`;
+      positionMenu();
       const act = menu.querySelector('.zs-item.active');
       if (act) act.scrollIntoView({ block: 'nearest' });
     }
     function close() {
       wrap.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('zs-menu-open', 'zs-menu-up');
       menu.style.maxHeight = '';
+      menu.style.top = '';
+      menu.style.left = '';
+      menu.style.width = '';
+      menu.style.bottom = '';
     }
+    function positionMenu() {
+      if (!wrap.classList.contains('open')) return;
+      const r = btn.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - r.bottom;
+      const spaceAbove = r.top;
+      const openUp = spaceBelow < 260 && spaceAbove > spaceBelow;
+      const maxHeight = Math.max(140, Math.min(280, (openUp ? spaceAbove : spaceBelow) - 16));
+      menu.classList.toggle('zs-menu-up', openUp);
+      menu.classList.add('zs-menu-open');
+      menu.style.maxHeight = `${maxHeight}px`;
+      menu.style.top = openUp ? 'auto' : `${r.bottom + 8}px`;
+      menu.style.bottom = openUp ? `${window.innerHeight - r.top + 8}px` : 'auto';
+      menu.style.left = `${r.left}px`;
+      menu.style.width = `${Math.max(r.width, 160)}px`;
+    }
+
+    wrap._zsPosition = positionMenu;
+    wrap._zsClose = close;
 
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -113,9 +130,10 @@
     if (select.form) select.form.addEventListener('reset', () => setTimeout(sync, 0));
 
     wrap.appendChild(btn);
-    wrap.appendChild(menu);
     select.parentNode.insertBefore(wrap, select);
     wrap.appendChild(select);
+    menu.classList.add('zs-menu-portal');
+    document.body.appendChild(menu);
     select.classList.add('zs-native');
     select.tabIndex = -1;
 
@@ -128,11 +146,17 @@
   }
 
   document.addEventListener('click', () => {
-    document.querySelectorAll('.zs.open').forEach((z) => z.classList.remove('open'));
+    document.querySelectorAll('.zs.open').forEach((z) => z._zsClose ? z._zsClose() : z.classList.remove('open'));
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') document.querySelectorAll('.zs.open').forEach((z) => z.classList.remove('open'));
+    if (e.key === 'Escape') document.querySelectorAll('.zs.open').forEach((z) => z._zsClose ? z._zsClose() : z.classList.remove('open'));
   });
+  window.addEventListener('resize', () => {
+    document.querySelectorAll('.zs.open').forEach((z) => z._zsPosition && z._zsPosition());
+  });
+  window.addEventListener('scroll', () => {
+    document.querySelectorAll('.zs.open').forEach((z) => z._zsPosition && z._zsPosition());
+  }, true);
 
   // select yang ditambahkan dinamis (modal, tabel) ikut di-enhance
   const bodyObs = new MutationObserver((muts) => {
