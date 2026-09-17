@@ -63,7 +63,7 @@ const MENU_DEFINITIONS = [
   { key: 'monitoring', section: 'system', href: '/admin/monitoring', icon: 'bi bi-activity', labelKey: 'admin.nav.monitoring', labelDefault: 'Monitoring Sistem', roles: ['admin'], activePages: ['monitoring'] },
   { key: 'audit_logs', section: 'system', href: '/admin/audit-logs', icon: 'bi bi-shield-lock', labelKey: 'admin.nav.audit_logs', labelDefault: 'Log Aktivitas', roles: ['admin'], activePages: ['audit_logs'] },
   { key: 'settings', section: 'system', href: '/admin/settings', icon: 'bi bi-gear', labelKey: 'admin.nav.settings', labelDefault: 'Pengaturan', roles: ['admin'], activePages: ['settings'] },
-  { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update GitHub', roles: ['admin'], activePages: ['update'] },
+  { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update System', roles: ['admin'], activePages: ['update'] },
 
   { key: 'tech_dashboard', section: 'tech', href: '/tech', icon: 'bi bi-briefcase-fill', labelKey: 'tech.nav.my_tasks', labelDefault: 'Tugas Saya', roles: ['teknisi'], bottomNav: true, activePages: ['dashboard'] },
   { key: 'tech_pool', section: 'tech', href: '/tech/pool', icon: 'bi bi-inbox-fill', labelKey: 'tech.nav.new_tickets', labelDefault: 'Tiket Baru', roles: ['teknisi'], bottomNav: true, activePages: ['pool'] },

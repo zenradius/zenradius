@@ -181,7 +181,7 @@
         "cashiers": "Cashiers",
         "agents": "Agents",
         "agent_reports": "Reseller Reports",
-        "update": "Update GitHub",
+        "update": "Update System",
         "settings": "Settings",
         "digiflazz": "Digiflazz",
         "cashiers_reports": "Cashier Reports",
@@ -1037,11 +1037,11 @@
       "agents": "Agents",
       "agent_reports": "Reseller Reports",
       "user_management": "Role Access",
-      "update": "GitHub Update",
+      "update": "Update System",
       "settings": "Settings"
     },
     "update": {
-      "title": "GitHub Update",
+      "title": "Update System",
       "status_title": "Version Status",
       "server_version": "Server Version (version.txt)",
       "github_version_prefix": "GitHub Version (origin/",

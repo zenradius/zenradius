@@ -181,7 +181,7 @@
         "cashiers": "Kasir",
         "agents": "Reseller",
         "agent_reports": "Laporan Reseller",
-        "update": "Update GitHub",
+        "update": "Update System",
         "settings": "Pengaturan",
         "digiflazz": "Digiflazz",
         "cashiers_reports": "Laporan Kasir",
@@ -1037,11 +1037,11 @@
       "agents": "Reseller",
       "agent_reports": "Laporan Reseller",
       "user_management": "Akses Role",
-      "update": "Update GitHub",
+      "update": "Update System",
       "settings": "Pengaturan"
     },
     "update": {
-      "title": "Update GitHub",
+      "title": "Update System",
       "status_title": "Status Versi",
       "server_version": "Versi Server (version.txt)",
       "github_version_prefix": "Versi GitHub (origin/",
