@@ -39,11 +39,14 @@
     .rs-mf{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
     @keyframes rsFade{from{opacity:0}to{opacity:1}}
 
-    .det-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 16px}
-    .det-item{display:flex;flex-direction:column;gap:3px;padding:9px 12px;border-radius:10px;background:var(--bg3);border:1px solid var(--border)}
-    .det-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700}
-    .det-v{font-size:13.5px;font-weight:600;word-break:break-word;color:var(--text)}
-    @media (max-width:700px){.det-grid{grid-template-columns:1fr}}
+    .det-list{display:flex;flex-direction:column}
+    .det-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--border)}
+    .det-row:last-child{border-bottom:none}
+    .det-k{font-size:12.5px;color:var(--muted);font-weight:600;flex:0 0 auto;min-width:170px}
+    .det-v{font-size:13px;font-weight:600;word-break:break-word;color:var(--text);text-align:right}
+    .det-section{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;padding:16px 0 6px;border-bottom:1px solid var(--border);margin-bottom:2px}
+    .det-section:first-child{padding-top:0}
+    @media (max-width:520px){.det-row{flex-direction:column;gap:2px}.det-v{text-align:left}.det-k{min-width:0}}
   </style>
 </head>
 <body>
@@ -277,22 +280,31 @@
       else if (o.wa_error) waInfo = `<span class="wa-err"><i class="bi bi-exclamation-triangle"></i> ${o.wa_error}</span>`;
 
       body.innerHTML = `
-        <div class="det-grid">
-          <div class="det-item"><span class="det-k">Order ID</span><span class="det-v mono">#${o.id}</span></div>
-          <div class="det-item"><span class="det-k">Status</span><span class="det-v">${statusBadge(o.status)}</span></div>
-          <div class="det-item"><span class="det-k">No. WhatsApp Pembeli</span><span class="det-v mono">${o.buyer_phone || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Router</span><span class="det-v">${o.router_name || 'Default'}</span></div>
-          <div class="det-item"><span class="det-k">Paket</span><span class="det-v">${o.profile_name || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Durasi</span><span class="det-v">${o.validity || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Harga</span><span class="det-v">${fmtRp(o.price)}</span></div>
-          <div class="det-item"><span class="det-k">Gateway Pembayaran</span><span class="det-v">${o.payment_gateway || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Ref. Pembayaran</span><span class="det-v mono">${o.payment_reference || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Kode Voucher</span><span class="det-v mono">${o.voucher_code || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Status WA</span><span class="det-v">${waInfo}</span></div>
-          <div class="det-item"><span class="det-k">Dibuat</span><span class="det-v">${o.created_at || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Dibayar</span><span class="det-v">${o.paid_at || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Selesai (Fulfilled)</span><span class="det-v">${o.fulfilled_at || '-'}</span></div>
-          <div class="det-item"><span class="det-k">Kedaluwarsa Bayar</span><span class="det-v">${o.payment_expires_at || '-'}</span></div>
+        <div class="det-list">
+          <div class="det-section">Informasi Pesanan</div>
+          <div class="det-row"><span class="det-k">Order ID</span><span class="det-v mono">#${o.id}</span></div>
+          <div class="det-row"><span class="det-k">Status</span><span class="det-v">${statusBadge(o.status)}</span></div>
+          <div class="det-row"><span class="det-k">No. WhatsApp Pembeli</span><span class="det-v mono">${o.buyer_phone || '-'}</span></div>
+          <div class="det-row"><span class="det-k">Router</span><span class="det-v">${o.router_name || 'Default'}</span></div>
+
+          <div class="det-section">Detail Paket</div>
+          <div class="det-row"><span class="det-k">Paket</span><span class="det-v">${o.profile_name || '-'}</span></div>
+          <div class="det-row"><span class="det-k">Durasi</span><span class="det-v">${o.validity || '-'}</span></div>
+          <div class="det-row"><span class="det-k">Harga</span><span class="det-v">${fmtRp(o.price)}</span></div>
+
+          <div class="det-section">Pembayaran</div>
+          <div class="det-row"><span class="det-k">Gateway Pembayaran</span><span class="det-v">${o.payment_gateway || '-'}</span></div>
+          <div class="det-row"><span class="det-k">Ref. Pembayaran</span><span class="det-v mono">${o.payment_reference || '-'}</span></div>
+
+          <div class="det-section">Voucher &amp; Notifikasi</div>
+          <div class="det-row"><span class="det-k">Kode Voucher</span><span class="det-v mono">${o.voucher_code || '-'}</span></div>
+          <div class="det-row"><span class="det-k">Status WA</span><span class="det-v">${waInfo}</span></div>
+
+          <div class="det-section">Riwayat Waktu</div>
+          <div class="det-row"><span class="det-k">Dibuat</span><span class="det-v">${o.created_at || '-'}</span></div>
+          <div class="det-row"><span class="det-k">Dibayar</span><span class="det-v">${o.paid_at || '-'}</span></div>
+          <div class="det-row"><span class="det-k">Selesai (Fulfilled)</span><span class="det-v">${o.fulfilled_at || '-'}</span></div>
+          <div class="det-row"><span class="det-k">Kedaluwarsa Bayar</span><span class="det-v">${o.payment_expires_at || '-'}</span></div>
         </div>
       `;
     } catch (e) {
