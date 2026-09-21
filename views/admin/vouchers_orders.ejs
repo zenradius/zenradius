@@ -22,7 +22,21 @@
     .status-cancelled{background:rgba(148,163,184,.12);color:#94a3b8;border-color:rgba(148,163,184,.3)}
     .wa-ok{color:#4ade80;font-size:11px}
     .wa-err{color:#f87171;font-size:11px}
-    .btn-xs{padding:4px 9px;font-size:11.5px;border-radius:7px}
+    .btn-xs{padding:4px 9px;font-size:11.5px;border-radius:7px;white-space:nowrap}
+    .act-row{display:flex;gap:6px;flex-wrap:wrap}
+    .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
+    .mo.show{display:flex}
+    .mb{background:var(--panel,#0f172a);border:1px solid var(--border);border-radius:14px;max-height:88vh;overflow:auto;width:92%}
+    .mh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+    .mt{font-weight:800;font-size:15px}
+    .mc{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+    .mbody{padding:16px 18px}
+    .mf{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+    .det-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 20px}
+    .det-item{display:flex;flex-direction:column;gap:3px}
+    .det-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700}
+    .det-v{font-size:13.5px;font-weight:600;word-break:break-word}
+    @media (max-width:700px){.det-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -162,14 +176,15 @@
           else if (o.wa_error) waInfo = `<span class="wa-err" title="${(o.wa_error || '').replace(/"/g, '&quot;')}"><i class="bi bi-exclamation-triangle"></i> Gagal</span>`;
         }
 
-        let actions = '';
+        const actions = [`<button class="btn btn-g btn-xs" onclick="showDetail(${o.id})"><i class="bi bi-eye"></i> Detail</button>`];
         if (o.status === 'paid') {
-          actions += `<button class="btn btn-p btn-xs" onclick="retryFulfillment(${o.id})"><i class="bi bi-arrow-repeat"></i> Retry</button> `;
-          actions += `<button class="btn btn-d btn-xs" onclick="cancelOrder(${o.id})"><i class="bi bi-x-lg"></i> Batal</button>`;
+          actions.push(`<button class="btn btn-p btn-xs" onclick="retryFulfillment(${o.id})"><i class="bi bi-arrow-repeat"></i> Retry</button>`);
+          actions.push(`<button class="btn btn-d btn-xs" onclick="cancelOrder(${o.id})"><i class="bi bi-x-lg"></i> Batal</button>`);
         } else if (o.status === 'pending') {
-          actions += `<button class="btn btn-d btn-xs" onclick="cancelOrder(${o.id})"><i class="bi bi-x-lg"></i> Batal</button>`;
-        } else {
-          actions = '<span class="text-muted small">-</span>';
+          actions.push(`<button class="btn btn-d btn-xs" onclick="cancelOrder(${o.id})"><i class="bi bi-x-lg"></i> Batal</button>`);
+        } else if (o.status === 'fulfilled') {
+          actions.push(`<button class="btn btn-g btn-xs" onclick="copyCode('${o.voucher_code || ''}')"><i class="bi bi-clipboard"></i> Salin Kode</button>`);
+          actions.push(`<button class="btn btn-p btn-xs" onclick="resendWa(${o.id})"><i class="bi bi-whatsapp"></i> Kirim Ulang WA</button>`);
         }
 
         return `<tr>
@@ -182,7 +197,7 @@
           <td class="mono">${o.voucher_code || '-'}</td>
           <td>${waInfo}</td>
           <td class="text-muted small">${o.created_at || '-'}</td>
-          <td>${actions}</td>
+          <td><div class="act-row">${actions.join('')}</div></td>
         </tr>`;
       }).join('');
     } catch (e) {
@@ -215,7 +230,83 @@
     }
   }
 
+  async function resendWa(orderId) {
+    if (!confirm(`Kirim ulang notifikasi WhatsApp berisi kode voucher untuk order #${orderId}?`)) return;
+    try {
+      const res = await fetch(`/admin/api/vouchers/orders/${orderId}/resend-wa`, { method: 'POST' });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal mengirim WA');
+      alert('WhatsApp berhasil dikirim ulang.');
+      reloadOrders();
+    } catch (e) {
+      alert('Gagal: ' + e.message);
+    }
+  }
+
+  function copyCode(code) {
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      alert('Kode voucher disalin: ' + code);
+    }).catch(() => {
+      alert('Gagal menyalin. Kode: ' + code);
+    });
+  }
+
+  function openModal(id){ document.getElementById(id)?.classList.add('show'); }
+  function closeModal(id){ document.getElementById(id)?.classList.remove('show'); }
+
+  async function showDetail(orderId) {
+    const body = document.getElementById('detailBody');
+    body.innerHTML = '<div class="text-center text-muted">Memuat...</div>';
+    openModal('detailModal');
+    try {
+      const res = await fetch(`/admin/api/vouchers/orders/${orderId}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal memuat detail');
+      const o = data.order;
+
+      let waInfo = '-';
+      if (Number(o.wa_sent) === 1) waInfo = `<span class="wa-ok"><i class="bi bi-whatsapp"></i> Terkirim ${o.wa_sent_at || ''}</span>`;
+      else if (o.wa_error) waInfo = `<span class="wa-err"><i class="bi bi-exclamation-triangle"></i> ${o.wa_error}</span>`;
+
+      body.innerHTML = `
+        <div class="det-grid">
+          <div class="det-item"><span class="det-k">Order ID</span><span class="det-v mono">#${o.id}</span></div>
+          <div class="det-item"><span class="det-k">Status</span><span class="det-v">${statusBadge(o.status)}</span></div>
+          <div class="det-item"><span class="det-k">No. WhatsApp Pembeli</span><span class="det-v mono">${o.buyer_phone || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Router</span><span class="det-v">${o.router_name || 'Default'}</span></div>
+          <div class="det-item"><span class="det-k">Paket</span><span class="det-v">${o.profile_name || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Durasi</span><span class="det-v">${o.validity || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Harga</span><span class="det-v">${fmtRp(o.price)}</span></div>
+          <div class="det-item"><span class="det-k">Gateway Pembayaran</span><span class="det-v">${o.payment_gateway || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Ref. Pembayaran</span><span class="det-v mono">${o.payment_reference || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Kode Voucher</span><span class="det-v mono">${o.voucher_code || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Status WA</span><span class="det-v">${waInfo}</span></div>
+          <div class="det-item"><span class="det-k">Dibuat</span><span class="det-v">${o.created_at || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Dibayar</span><span class="det-v">${o.paid_at || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Selesai (Fulfilled)</span><span class="det-v">${o.fulfilled_at || '-'}</span></div>
+          <div class="det-item"><span class="det-k">Kedaluwarsa Bayar</span><span class="det-v">${o.payment_expires_at || '-'}</span></div>
+        </div>
+      `;
+    } catch (e) {
+      body.innerHTML = `<div class="text-danger">Gagal memuat detail: ${e.message}</div>`;
+    }
+  }
+
   reloadOrders();
 </script>
+
+<div class="mo" id="detailModal">
+  <div class="mb" style="max-width:720px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-receipt-cutoff"></i> Detail Pesanan Voucher</span>
+      <button class="mc" onclick="closeModal('detailModal')">&times;</button>
+    </div>
+    <div class="mbody" id="detailBody"></div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('detailModal')">Tutup</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

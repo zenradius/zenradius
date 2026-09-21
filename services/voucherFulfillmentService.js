@@ -155,5 +155,6 @@ module.exports = {
   fulfillVoucherOrder,
   createHotspotVoucherUser,
   genPublicVoucherCode,
-  buildVoucherDeliveryMessage
+  buildVoucherDeliveryMessage,
+  sendVoucherDeliveryWa
 };

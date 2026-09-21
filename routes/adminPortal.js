@@ -5349,6 +5349,61 @@ router.post('/api/vouchers/orders/:id/cancel', requireAdminSession, restrictToAd
   }
 });
 
+router.post('/api/vouchers/orders/:id/resend-wa', requireAdminSession, restrictToAdmin, async (req, res) => {
+  try {
+    const orderId = Number(req.params.id);
+    if (!Number.isFinite(orderId) || orderId <= 0) return res.status(400).json({ ok: false, error: 'Order ID tidak valid' });
+
+    const order = db.prepare('SELECT * FROM public_voucher_orders WHERE id = ?').get(orderId);
+    if (!order) return res.status(404).json({ ok: false, error: 'Order tidak ditemukan' });
+    if (String(order.status) !== 'fulfilled' || !order.voucher_code) {
+      return res.status(400).json({ ok: false, error: 'Order belum fulfilled, tidak ada voucher untuk dikirim ulang' });
+    }
+
+    const voucherFulfillmentSvc = require('../services/voucherFulfillmentService');
+    const created = { code: order.voucher_code, pass: order.voucher_password, comment: order.voucher_comment };
+    const methodLabel = order.payment_gateway || 'Kirim Ulang (Admin)';
+    const result = await voucherFulfillmentSvc.sendVoucherDeliveryWa(order, created, methodLabel);
+
+    if (result.ok) {
+      logger.info(`[AdminVoucherOrders] Kirim ulang WA sukses untuk order=${orderId} oleh admin`);
+      return res.json({ ok: true });
+    }
+    return res.status(400).json({ ok: false, error: result.error || 'Gagal mengirim WhatsApp' });
+  } catch (e) {
+    logger.error(`[AdminVoucherOrders] Kirim ulang WA gagal: ${e.message}`);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+router.get('/api/vouchers/orders/:id', requireAdminSession, (req, res) => {
+  try {
+    const orderId = Number(req.params.id);
+    if (!Number.isFinite(orderId) || orderId <= 0) return res.status(400).json({ ok: false, error: 'Order ID tidak valid' });
+
+    const order = db.prepare(`
+      SELECT o.*, r.name AS router_name
+      FROM public_voucher_orders o
+      LEFT JOIN routers r ON r.id = o.router_id
+      WHERE o.id = ?
+    `).get(orderId);
+    if (!order) return res.status(404).json({ ok: false, error: 'Order tidak ditemukan' });
+
+    const orderWithLocalTime = {
+      ...order,
+      created_at: order.created_at ? formatDateLocal(order.created_at, 'YYYY-MM-DD HH:mm:ss') : null,
+      updated_at: order.updated_at ? formatDateLocal(order.updated_at, 'YYYY-MM-DD HH:mm:ss') : null,
+      paid_at: order.paid_at ? formatDateLocal(order.paid_at, 'YYYY-MM-DD HH:mm:ss') : null,
+      fulfilled_at: order.fulfilled_at ? formatDateLocal(order.fulfilled_at, 'YYYY-MM-DD HH:mm:ss') : null,
+      payment_expires_at: order.payment_expires_at ? formatDateLocal(order.payment_expires_at, 'YYYY-MM-DD HH:mm:ss') : null
+    };
+
+    res.json({ ok: true, order: orderWithLocalTime });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 router.get('/api/vouchers/template', requireAdminSession, (req, res) => {
   const settings = getSettings();
   res.json({
