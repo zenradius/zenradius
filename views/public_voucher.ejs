@@ -70,7 +70,71 @@
     .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18)}
     .pill-u{background: rgba(248, 81, 73, .12);color:#fca5a5;border-color: rgba(248, 81, 73, .28)}
     .pill-p{background: rgba(63, 185, 80, .12);color:#86efac;border-color: rgba(63, 185, 80, .28)}
-    
+
+    /* Order Status Card — modern professional redesign */
+    .order-status-card{
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--portal-line);
+      border-radius: 14px;
+      padding: 18px 16px;
+    }
+    .order-status-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .order-status-label{display:block;font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--portal-text)}
+    .order-status-meta{display:block;font-size:12px;color:var(--portal-muted);margin-top:2px}
+    @keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    .spin-slow{display:inline-block;animation:spinSlow 2.2s linear infinite}
+
+    .order-steps{display:flex;align-items:center;margin:18px 0 4px}
+    .order-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;width:88px}
+    .order-step-dot{
+      width:30px;height:30px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      background: rgba(255,255,255,0.06);
+      border:1.5px solid var(--portal-line);
+      color: var(--portal-muted);
+      font-size:14px;
+      transition: all .3s ease;
+    }
+    .order-step.is-done .order-step-dot{
+      background: linear-gradient(135deg, var(--portal-primary), var(--portal-primary-strong));
+      border-color: transparent;
+      color:#062c2a;
+      box-shadow: 0 4px 14px rgba(45,212,191,.35);
+    }
+    .order-step.is-active .order-step-dot{
+      border-color: var(--portal-primary);
+      color: var(--portal-primary);
+      box-shadow: 0 0 0 4px rgba(45,212,191,.14);
+    }
+    .order-step-text{font-size:10.5px;text-align:center;color:var(--portal-muted);font-weight:600;letter-spacing:.2px}
+    .order-step.is-done .order-step-text,.order-step.is-active .order-step-text{color:var(--portal-text)}
+    .order-step-line{flex:1 1 auto;height:2px;background:var(--portal-line);margin:0 -4px;margin-bottom:16px;transition: background .3s ease}
+    .order-step-line.is-done{background: linear-gradient(90deg, var(--portal-primary), var(--portal-primary-strong))}
+
+    .order-detail-row{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:16px;padding-top:14px;border-top:1px solid var(--portal-line)}
+    .order-detail-item{display:flex;flex-direction:column;gap:2px}
+    .order-detail-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--portal-muted);font-weight:700}
+    .order-detail-v{font-size:13.5px;color:var(--portal-text);font-weight:700}
+
+    .order-result{border-radius:12px;padding:14px 16px;border:1px solid var(--portal-line)}
+    .order-result-title{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--portal-text)}
+    .order-result-success{background: rgba(45,212,191,.07);border-color: rgba(45,212,191,.25)}
+    .order-result-info{background: rgba(34,167,240,.07);border-color: rgba(34,167,240,.22)}
+    .order-result-codes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+    .order-code-box{
+      flex:1 1 140px;
+      background: rgba(0,0,0,0.18);
+      border:1px dashed var(--portal-line);
+      border-radius:10px;
+      padding:8px 12px;
+      display:flex;flex-direction:column;gap:2px;
+    }
+    .order-code-k{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--portal-muted);font-weight:700}
+    .order-code-v{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--portal-accent);letter-spacing:.5px;word-break:break-all}
+    .order-progress-bar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+    .order-progress-fill{height:100%;width:40%;border-radius:999px;background:linear-gradient(90deg, var(--portal-primary), var(--portal-primary-strong));animation:progressSlide 1.6s ease-in-out infinite}
+    @keyframes progressSlide{0%{transform:translateX(-100%)}50%{transform:translateX(60%)}100%{transform:translateX(250%)}}
+
     /* Voucher card artwork and layout: /css/voucher-cards.css */
 
     /* Confirmation Dialog Modal styles */
@@ -195,58 +259,96 @@
         <% } %>
 
         <% if (order) { %>
-          <div class="mb-3">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-              <div>
-                <div class="fw-bold">Status Pesanan</div>
-                <div class="muted small">Order #<%= order.id %> &middot; WA: <%= order.buyer_phone %></div>
+          <% const st = String(order.status || 'pending'); %>
+          <div class="order-status-card mb-3">
+            <div class="order-status-head">
+              <div class="order-status-id">
+                <span class="order-status-label">Status Pesanan</span>
+                <span class="order-status-meta">Order #<%= order.id %> &middot; WA <%= order.buyer_phone %></span>
               </div>
-              <div>
-                <% const st = String(order.status || 'pending'); %>
-                <% if (st === 'fulfilled') { %>
-                  <span class="pill pill-p"><i class="bi bi-check-circle"></i> Selesai</span>
-                <% } else if (st === 'paid') { %>
-                  <span class="pill pill-u"><i class="bi bi-hourglass-split"></i> Diproses</span>
-                <% } else { %>
-                  <span class="pill pill-u"><i class="bi bi-clock"></i> Menunggu</span>
-                <% } %>
-              </div>
-            </div>
-            <div class="mt-2">
-              <div class="muted small">Paket: <span class="text-white"><%= order.profile_name %></span> &middot; Durasi: <span class="text-white"><%= order.validity || '-' %></span> &middot; Harga: <span class="text-white">Rp <%= Number(order.price || 0).toLocaleString('id-ID') %></span></div>
-              <% if (String(order.status) === 'fulfilled' && order.voucher_code) { %>
-                <div class="alert alert-success mt-3 mb-0">
-                  <div class="fw-bold mb-1"><i class="bi bi-ticket-perforated me-2"></i>Voucher Siap</div>
-                  <div>User: <b><%= order.voucher_code %></b></div>
-                  <div>Pass: <b><%= order.voucher_password %></b></div>
-                  <% if (Number(order.wa_sent || 0) === 1) { %>
-                    <div class="muted small mt-1">Voucher berhasil dikirim ke WhatsApp pembeli.</div>
-                  <% } else if (order.wa_error) { %>
-                    <div class="text-warning small mt-1">WhatsApp gagal terkirim: <%= order.wa_error %></div>
-                    <div class="muted small">Cadangan: simpan kode voucher yang tampil di halaman ini.</div>
-                  <% } else { %>
-                    <div class="muted small mt-1">Jika WhatsApp gagal terkirim, kode voucher tetap tampil di halaman ini.</div>
-                  <% } %>
-                </div>
-              <% } else if (String(order.status) === 'paid') { %>
-                <div class="alert alert-info mt-3 mb-0">
-                  <div class="fw-bold mb-1"><i class="bi bi-hourglass-split me-2"></i>Pembayaran Berhasil</div>
-                  <div class="muted small">Voucher sedang dibuat di MikroTik. Halaman ini akan diperbarui otomatis.</div>
-                </div>
-              <% } else if (String(order.status) === 'pending' && (String(order.payment_gateway || '') === 'qris_static' || order.qris_amount_unique)) { %>
-                <% if (orderToken) { %>
-                  <a class="btn btn-primary btnx mt-3 w-100" href="/customer/voucher/qris/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
-                    <i class="bi bi-qr-code-scan me-1"></i> Buka QRIS Statis
-                  </a>
-                <% } else { %>
-                  <div class="alert alert-warning mt-3 mb-0">Link QRIS tidak tersedia.</div>
-                <% } %>
-              <% } else if (String(order.status) === 'pending' && order.payment_link) { %>
-                <a class="btn btn-primary btnx mt-3 w-100" href="<%= order.payment_link %>">
-                  <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
-                </a>
+              <% if (st === 'fulfilled') { %>
+                <span class="pill pill-p"><i class="bi bi-check-circle-fill"></i> Selesai</span>
+              <% } else if (st === 'paid') { %>
+                <span class="pill pill-u"><i class="bi bi-arrow-repeat spin-slow"></i> Diproses</span>
+              <% } else { %>
+                <span class="pill pill-u"><i class="bi bi-clock-history"></i> Menunggu Pembayaran</span>
               <% } %>
             </div>
+
+            <!-- Progress Stepper -->
+            <div class="order-steps">
+              <div class="order-step <%= 'is-done' %>">
+                <div class="order-step-dot"><i class="bi bi-check-lg"></i></div>
+                <div class="order-step-text">Pesanan Dibuat</div>
+              </div>
+              <div class="order-step-line <%= (st === 'paid' || st === 'fulfilled') ? 'is-done' : '' %>"></div>
+              <div class="order-step <%= (st === 'paid' || st === 'fulfilled') ? 'is-done' : (st === 'pending' ? 'is-active' : '') %>">
+                <div class="order-step-dot"><i class="bi <%= (st === 'paid' || st === 'fulfilled') ? 'bi-check-lg' : 'bi-credit-card' %>"></i></div>
+                <div class="order-step-text">Pembayaran</div>
+              </div>
+              <div class="order-step-line <%= st === 'fulfilled' ? 'is-done' : '' %>"></div>
+              <div class="order-step <%= st === 'fulfilled' ? 'is-done' : (st === 'paid' ? 'is-active' : '') %>">
+                <div class="order-step-dot"><i class="bi <%= st === 'fulfilled' ? 'bi-check-lg' : 'bi-ticket-perforated' %>"></i></div>
+                <div class="order-step-text">Voucher Siap</div>
+              </div>
+            </div>
+
+            <div class="order-detail-row">
+              <div class="order-detail-item">
+                <span class="order-detail-k">Paket</span>
+                <span class="order-detail-v"><%= order.profile_name %></span>
+              </div>
+              <div class="order-detail-item">
+                <span class="order-detail-k">Durasi</span>
+                <span class="order-detail-v"><%= order.validity || '-' %></span>
+              </div>
+              <div class="order-detail-item">
+                <span class="order-detail-k">Harga</span>
+                <span class="order-detail-v">Rp <%= Number(order.price || 0).toLocaleString('id-ID') %></span>
+              </div>
+            </div>
+
+            <% if (String(order.status) === 'fulfilled' && order.voucher_code) { %>
+              <div class="order-result order-result-success mt-3">
+                <div class="order-result-title"><i class="bi bi-patch-check-fill me-2"></i>Voucher Siap Digunakan</div>
+                <div class="order-result-codes">
+                  <div class="order-code-box">
+                    <span class="order-code-k">Username</span>
+                    <span class="order-code-v"><%= order.voucher_code %></span>
+                  </div>
+                  <div class="order-code-box">
+                    <span class="order-code-k">Password</span>
+                    <span class="order-code-v"><%= order.voucher_password %></span>
+                  </div>
+                </div>
+                <% if (Number(order.wa_sent || 0) === 1) { %>
+                  <div class="muted small mt-2"><i class="bi bi-whatsapp me-1"></i>Voucher berhasil dikirim ke WhatsApp Anda.</div>
+                <% } else if (order.wa_error) { %>
+                  <div class="text-warning small mt-2"><i class="bi bi-exclamation-triangle me-1"></i>Pengiriman WhatsApp gagal, namun voucher tetap aktif dan tersimpan.</div>
+                  <div class="muted small">Silakan catat/screenshot kode voucher di atas sebagai cadangan.</div>
+                <% } else { %>
+                  <div class="muted small mt-2">Simpan halaman ini sebagai cadangan jika notifikasi WhatsApp belum diterima.</div>
+                <% } %>
+              </div>
+            <% } else if (String(order.status) === 'paid') { %>
+              <div class="order-result order-result-info mt-3">
+                <div class="order-result-title"><i class="bi bi-stars me-2"></i>Pembayaran Berhasil Dikonfirmasi</div>
+                <div class="muted small">Voucher Anda sedang disiapkan secara otomatis dan akan tersedia sesaat lagi. Halaman ini akan diperbarui secara otomatis.</div>
+                <div class="order-progress-bar mt-2"><div class="order-progress-fill"></div></div>
+              </div>
+            <% } else if (String(order.status) === 'pending' && (String(order.payment_gateway || '') === 'qris_static' || order.qris_amount_unique)) { %>
+              <% if (orderToken) { %>
+                <a class="btn btn-primary btnx mt-3 w-100" href="/customer/voucher/qris/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
+                  <i class="bi bi-qr-code-scan me-1"></i> Buka QRIS Statis
+                </a>
+              <% } else { %>
+                <div class="alert alert-warning mt-3 mb-0">Link QRIS tidak tersedia.</div>
+              <% } %>
+            <% } else if (String(order.status) === 'pending' && order.payment_link) { %>
+              <a class="btn btn-primary btnx mt-3 w-100" href="<%= order.payment_link %>">
+                <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
+              </a>
+            <% } %>
           </div>
           <hr style="border-color: rgba(148,163,184,.18)">
         <% } %>
