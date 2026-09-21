@@ -13,9 +13,16 @@
 .cardx::before { pointer-events: none; }
 .voucher-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
-  padding: 6px 3px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 4px 2px;
+}
+@media (min-width: 561px) {
+  .voucher-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    padding: 6px 3px;
+  }
 }
 .voucher-radio {
   position: absolute;
@@ -160,8 +167,8 @@
 }
 .v-benefit { display: flex; align-items: center; gap: .6rem; color: rgba(255,255,255,0.95); font-size: .85rem; line-height: 1.12; }
 .v-benefit + .v-benefit { padding-left: 1rem; border-left: 1px solid rgba(255,255,255,0.06); }
-.v-benefit-icon { display: grid; place-items: center; flex: 0 0 2.8rem; width: 2.8rem; height: 2.8rem; border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; background: rgba(255,255,255,0.04); }
-.v-benefit-icon svg { width: 60%; height: 60%; }
+.v-benefit-icon { display: grid; place-items: center; flex: 0 0 2.8rem; width: 2.8rem; height: 2.8rem; border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; background: rgba(255,255,255,0.04); font-size: 1.1rem; color: #fff; }
+.v-benefit-icon i { line-height: 1; }
 .v-signature {
   position: absolute;
   right: 5%;
@@ -177,9 +184,22 @@
 }
 .v-signature::after { content: ''; display: block; height: .2rem; margin-top: .4rem; border-radius: 100%; background: rgba(255,255,255,0.12); transform: rotate(-6deg); }
 @media (max-width: 760px) {
-  .voucher-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 520px; margin-inline: auto; }
+  .voucher-grid { max-width: 520px; margin-inline: auto; }
   .voucher-price { font-size: 1.6rem; }
   .v-offer { top: 50%; }
+}
+@media (max-width: 480px) {
+  .voucher-card { aspect-ratio: 16 / 10; border-radius: 14px; }
+  .voucher-price { font-size: 1.35rem; }
+  .v-currency { font-size: .8rem; }
+  .v-validity { font-size: .78rem; }
+  .v-tagline { font-size: .82rem; top: 27%; }
+  .v-ribbon { font-size: .82rem; padding: .45rem .9rem; top: 39%; }
+  .v-benefit { font-size: .7rem; gap: .4rem; }
+  .v-benefit-icon { flex: 0 0 2.2rem; width: 2.2rem; height: 2.2rem; font-size: .9rem; }
+  .v-benefit + .v-benefit { padding-left: .6rem; }
+  .v-benefits { gap: .5rem; bottom: 7%; }
+  .v-signature { font-size: .85rem; bottom: 16%; }
 }
 @media (max-width: 380px) {
   .wrap { padding: 10px; }
