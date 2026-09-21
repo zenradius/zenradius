@@ -1339,6 +1339,23 @@ router.get('/voucher/status/:orderId', async (req, res) => {
 router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async (req, res) => {
   const settings = getSettingsWithCache();
 
+  // Anti-bot: honeypot field must remain empty (bots that auto-fill all fields get caught here)
+  const honeypot = String(req.body.website || '').trim();
+  if (honeypot) {
+    logger.warn(`[PublicVoucher] Honeypot triggered from IP ${req.ip || req.connection?.remoteAddress || 'unknown'}`);
+    return res.redirect('/customer/voucher?err=' + encodeURIComponent('Permintaan tidak valid. Silakan coba lagi.'));
+  }
+
+  // Anti-bot: reject submissions that happen implausibly fast after page render (scripted/automated abuse)
+  const formTs = Number(req.body.form_ts || 0);
+  if (formTs > 0) {
+    const elapsedMs = Date.now() - formTs;
+    if (elapsedMs >= 0 && elapsedMs < 1500) {
+      logger.warn(`[PublicVoucher] Submisi terlalu cepat (${elapsedMs}ms) dari IP ${req.ip || req.connection?.remoteAddress || 'unknown'}`);
+      return res.redirect('/customer/voucher?err=' + encodeURIComponent('Silakan coba lagi dalam beberapa saat.'));
+    }
+  }
+
   const buyerPhone = normalizeBuyerPhone(req.body.buyer_phone);
   const profileName = String(req.body.profile_name || '').trim();
   const tosChecked = req.body.tos === 'on' || req.body.tos === '1' || req.body.tos === true || req.body.tos === 'true';

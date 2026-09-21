@@ -354,6 +354,9 @@
         <form method="POST" action="/customer/public/voucher/create-payment" class="d-grid gap-2" id="voucherForm">
           <!-- Hidden TOS state injector to bypass backend checks cleanly -->
           <input type="hidden" name="tos" value="1">
+          <!-- Anti-bot: honeypot field (must stay empty) + form render timestamp (rejects instant/scripted submits) -->
+          <input type="text" name="website" id="hp_website" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
+          <input type="hidden" name="form_ts" value="<%= Date.now() %>">
 
           <div class="row g-2">
             <div class="col-12">
