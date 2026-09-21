@@ -17,55 +17,69 @@
       /* Matches landing page (views/login.ejs) portal theme */
       --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
       --font-display: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
-      --portal-bg: #101820;
-      --portal-panel: rgba(17, 29, 36, 0.94);
-      --portal-panel-strong: rgba(12, 23, 30, 0.98);
-      --portal-line: rgba(124, 221, 218, 0.18);
-      --portal-primary: #2dd4bf;
-      --portal-primary-strong: #22a7f0;
-      --portal-accent: #fbbf24;
-      --portal-text: #edf7f5;
-      --portal-muted: #a8bec2;
-      --landing-bg: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
-            radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
-            linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      
+      /* New requested palette variables */
+      --deep-navy: #012359;
+      --navy-blue: #022F71;
+      --royal-blue: #023E8C;
+      --blue: #0158B0;
+      --electric-blue: #016FE8;
+      --sky-blue: #03CAF5;
+      --cyan-turquoise: #04D5BF;
+      --light-cyan: #029DDC;
+      --light-gray-blue: #DBE4EE;
+      --soft-gray-blue: #ACC6DA;
+      --dark-gray-blue: #6E819A;
+      --off-white: #F5F8FB;
+      --surface: #FFFFFF;
+
+      /* System Color Assignments */
+      --portal-bg: var(--off-white);              /* BACKGROUND PERTAMA */
+      --portal-panel: var(--surface);             /* BACKGROUND KEDUA (Card Container) */
+      --portal-panel-strong: var(--light-gray-blue); /* BACKGROUND KETIGA (Header / Modal / Footer) */
+      --portal-line: var(--soft-gray-blue);
+      --portal-primary: var(--electric-blue);
+      --portal-primary-strong: var(--blue);
+      --portal-accent: var(--cyan-turquoise);
+      --portal-text: var(--deep-navy);
+      --portal-muted: var(--dark-gray-blue);
     }
     @keyframes softGlow {
       0%, 100% { box-shadow: 0 0 0 rgba(45, 212, 191, 0.06), 0 8px 18px rgba(23, 57, 69, 0.14); }
       50% { box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.10), 0 12px 22px rgba(45, 212, 191, 0.12); }
     }
     body{
-      background: var(--landing-bg);
+      background: var(--portal-bg);
       color: var(--portal-text);
       font-family: var(--font-sans);
       -webkit-tap-highlight-color: transparent;
     }
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
-    .cardx{background: var(--portal-panel);backdrop-filter: blur(12px);border: 1px solid var(--portal-line);border-radius: 16px;box-shadow: 0 16px 38px rgba(2, 10, 14, 0.32);overflow:hidden;max-width: 720px;width:100%;position: relative;}
-    .cardx::before { content:""; position:absolute; inset:0 auto auto 0; width:100%; height:140%; background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%, rgba(148,163,184,0.04)); pointer-events:none; }
+    .cardx{background: var(--portal-panel);border: 1px solid var(--portal-line);border-radius: 16px;box-shadow: 0 8px 24px rgba(1, 35, 89, 0.05);overflow:hidden;max-width: 720px;width:100%;position: relative;}
+    .cardx::before { content:""; position:absolute; inset:0 auto auto 0; width:100%; height:140%; background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent 40%, rgba(1,35,89,0.02)); pointer-events:none; }
     .head{background:var(--portal-panel-strong);padding:26px 20px;border-bottom:1px solid var(--portal-line)}
     .body{padding:22px 20px}
     .form-control,.form-select{
-      background: rgba(255, 255, 255, 0.06);
+      background: #ffffff;
       border: 1px solid var(--portal-line);
       color: var(--portal-text);
       border-radius: 10px;
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
     .form-control::placeholder{
-      color: rgba(237, 250, 250, 0.38);
+      color: var(--portal-muted);
     }
     .form-control:focus,.form-select:focus{
-      background: rgba(255, 255, 255, 0.09);
+      background: #ffffff;
       border-color: var(--portal-primary);
-      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14);
-      color: #fff;
+      box-shadow: 0 0 0 3px rgba(1, 111, 232, 0.12);
+      color: var(--portal-text);
     }
     .muted{color: var(--portal-muted)}
     .btnx{border-radius:12px;font-weight:700;font-family: var(--font-display);transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; min-height: 46px; padding: 10px 16px; line-height: 1.2;}
     .btnx:hover{transform: translateY(-2px); filter: brightness(1.03);}
-    .btn-primary{background:linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);border:1px solid rgba(45, 212, 191, 0.6);color:#062c2a;box-shadow:0 10px 22px rgba(45, 212, 191, 0.22);animation:softGlow 5s ease-in-out infinite}
-    .btn-primary:hover{filter:brightness(1.05)!important;color:#062c2a!important}
+    .btn-primary{background:linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 100%);border:1px solid var(--navy-blue);color:#ffffff;box-shadow:0 8px 18px rgba(1, 111, 232, 0.12);animation:softGlow 5s ease-in-out infinite}
+    .btn-primary:hover{filter:brightness(1.05)!important;color:#ffffff!important}
     a{color:#a5f4ed}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18)}
     .pill-u{background: rgba(248, 81, 73, .12);color:#fca5a5;border-color: rgba(248, 81, 73, .28)}
@@ -77,8 +91,8 @@
     .c-modal-overlay{
       position:fixed;
       inset:0;
-      background:rgba(6, 14, 18, .82);
-      backdrop-filter:blur(8px);
+      background:rgba(1, 35, 89, .22);
+      backdrop-filter:blur(6px);
       z-index:9999;
       display:flex;
       align-items:center;
@@ -92,13 +106,13 @@
       pointer-events:auto;
     }
     .c-modal{
-      background:var(--portal-panel-strong);
+      background:var(--portal-panel);
       border:1px solid var(--portal-line);
       border-radius:16px;
       padding:24px;
       max-width:480px;
       width:90%;
-      box-shadow:0 24px 48px rgba(2, 10, 14, .5);
+      box-shadow:0 18px 36px rgba(1, 35, 89, .1);
       transform:scale(0.95);
       transition:transform .25s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
@@ -109,7 +123,7 @@
       font-size:18px;
       font-weight:800;
       font-family: var(--font-display);
-      color:#fff;
+      color:var(--portal-text);
       margin-bottom:8px;
       display:flex;
       align-items:center;
@@ -122,7 +136,7 @@
       margin-bottom:20px;
     }
     .c-modal-detail{
-      background:rgba(45, 212, 191, .06);
+      background:var(--portal-bg);
       border:1px solid var(--portal-line);
       border-radius:10px;
       padding:12px 16px;
@@ -474,9 +488,9 @@
           </div>
         </form>
 
-        <footer class="site-footer" style="background:#173945;border-top:1px solid rgba(190,239,255,0.32);padding:26px 0 18px;margin-top:32px;margin-left:-20px;margin-right:-20px;margin-bottom:-20px;border-radius:0 0 16px 16px">
+        <footer class="site-footer" style="background:var(--portal-panel-strong);border-top:1px solid var(--portal-line);padding:26px 0 18px;margin-top:32px;margin-left:-20px;margin-right:-20px;margin-bottom:-20px;border-radius:0 0 16px 16px">
           <div class="container text-center">
-            <div class="footer-bottom text-center" style="font-family:var(--font-sans);font-size:0.8rem;color:rgba(237, 250, 250, 0.72);margin-top:4px;padding-top:0">
+            <div class="footer-bottom text-center" style="font-family:var(--font-sans);font-size:0.8rem;color:var(--portal-muted);margin-top:4px;padding-top:0">
               &copy; <%= new Date().getFullYear() %> <%- footerInfo %>
             </div>
           </div>
