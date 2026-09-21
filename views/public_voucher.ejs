@@ -29,21 +29,33 @@
       --landing-bg: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
             radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
             linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      /* Admin panel palette — dipakai untuk menyelaraskan pop-up pembayaran dengan pop-up Detail Pesanan Voucher di admin */
+      --admin-bg2: #173945;
+      --admin-bg3: #1b4656;
+      --admin-border: rgba(190,239,255,0.22);
+      --admin-primary: #22D3EE;
+      --admin-pdim: rgba(34,211,238,0.14);
+      --admin-btn-bg: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);
+      --admin-btn-color: #f4fffd;
+      --admin-btn-border: rgba(126,231,219,.48);
+      --admin-btn-shadow: 0 8px 20px rgba(10,41,50,.24);
+      --admin-btn-g-bg: rgba(190,239,255,.08);
+      --admin-btn-g-border: rgba(190,239,255,.22);
     }
     @keyframes softGlow {
       0%, 100% { box-shadow: 0 0 0 rgba(45, 212, 191, 0.06), 0 8px 18px rgba(23, 57, 69, 0.14); }
       50% { box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.10), 0 12px 22px rgba(45, 212, 191, 0.12); }
     }
     body{
-      background: var(--landing-bg);
+      background: linear-gradient(160deg, var(--admin-bg2) 0%, #12262f 55%, #0d1c22 100%);
       color: var(--portal-text);
       font-family: var(--font-sans);
       -webkit-tap-highlight-color: transparent;
     }
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
-    .cardx{background: linear-gradient(180deg, rgba(11, 20, 26, 0.96), rgba(16, 24, 32, 0.92));backdrop-filter: blur(12px);border: 1px solid var(--portal-line);border-radius: 16px;box-shadow: 0 16px 38px rgba(2, 10, 14, 0.32);overflow:hidden;max-width: 720px;width:100%;position: relative;}
+    .cardx{background: linear-gradient(180deg, var(--admin-bg2) 0%, var(--admin-bg3) 100%);backdrop-filter: blur(12px);border: 1px solid var(--admin-border);border-radius: 16px;box-shadow: 0 16px 38px rgba(2, 10, 14, 0.32);overflow:hidden;max-width: 720px;width:100%;position: relative;}
     .cardx::before { content:""; position:absolute; inset:0 auto auto 0; width:100%; height:140%; background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%, rgba(148,163,184,0.04)); pointer-events:none; }
-    .head{background:var(--portal-panel-strong);padding:26px 20px;border-bottom:1px solid var(--portal-line)}
+    .head{background:var(--admin-bg3);padding:26px 20px;border-bottom:1px solid var(--admin-border)}
     .body{padding:22px 20px}
     .form-control,.form-select{
       background: rgba(255, 255, 255, 0.06);
@@ -66,6 +78,11 @@
     .btnx:hover{transform: translateY(-2px); filter: brightness(1.03);}
     .btn-primary{background:linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);border:1px solid rgba(45, 212, 191, 0.6);color:#062c2a;box-shadow:0 10px 22px rgba(45, 212, 191, 0.22);animation:softGlow 5s ease-in-out infinite}
     .btn-primary:hover{filter:brightness(1.05)!important;color:#062c2a!important}
+    /* CTA modal pembayaran (Bayar & Batal) — diselaraskan dengan tombol .btn-p / .btn-g admin panel */
+    .c-modal-actions .btn-pay{background:var(--admin-btn-bg);color:var(--admin-btn-color);border:1px solid var(--admin-btn-border);box-shadow:var(--admin-btn-shadow);transition:filter .2s ease,transform .18s ease}
+    .c-modal-actions .btn-pay:hover{filter:brightness(1.12);transform:translateY(-1px);color:var(--admin-btn-color)}
+    .c-modal-actions .btn-cancel{background:var(--admin-btn-g-bg);color:var(--portal-text);border:1px solid var(--admin-btn-g-border);transition:background .2s ease,border-color .2s ease}
+    .c-modal-actions .btn-cancel:hover{background:rgba(190,239,255,.14);border-color:rgba(190,239,255,.34);color:#fff}
     a{color:#a5f4ed}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18)}
     .pill-u{background: rgba(248, 81, 73, .12);color:#fca5a5;border-color: rgba(248, 81, 73, .28)}
@@ -158,8 +175,8 @@
       pointer-events:auto;
     }
     .c-modal{
-      background:var(--portal-panel-strong);
-      border:1px solid var(--portal-line);
+      background:var(--admin-bg2);
+      border:1px solid var(--admin-border);
       border-radius:16px;
       padding:24px;
       max-width:480px;
@@ -188,8 +205,8 @@
       margin-bottom:20px;
     }
     .c-modal-detail{
-      background:rgba(45, 212, 191, .06);
-      border:1px solid var(--portal-line);
+      background:var(--admin-bg3);
+      border:1px solid var(--admin-border);
       border-radius:10px;
       padding:12px 16px;
       margin-top:10px;
@@ -568,8 +585,8 @@
 
               </div>
               <div class="c-modal-actions" style="margin-top:10px">
-                <button class="btn btn-ghost btn-sm" type="button" style="border-radius:10px;padding:10px 18px" onclick="cancelConfirm()"><i class="bi bi-x-lg me-1"></i>Batal</button>
-                <button class="btn btn-primary btn-sm" type="submit" style="border-radius:10px;min-height:unset;padding:10px 22px">
+                <button class="btn btn-cancel btn-sm" type="button" style="border-radius:10px;padding:10px 18px" onclick="cancelConfirm()"><i class="bi bi-x-lg me-1"></i>Batal</button>
+                <button class="btn btn-pay btn-sm" type="submit" style="border-radius:10px;min-height:unset;padding:10px 22px">
                   Bayar & Aktivasi <i class="bi bi-lightning-charge-fill ms-1"></i>
                 </button>
               </div>

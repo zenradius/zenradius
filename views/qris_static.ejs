@@ -29,38 +29,50 @@
       --landing-bg: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
             radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
             linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      /* Admin panel palette — dipakai untuk menyelaraskan halaman QRIS dengan pop-up Detail Pesanan Voucher di admin */
+      --admin-bg2: #173945;
+      --admin-bg3: #1b4656;
+      --admin-border: rgba(190,239,255,0.22);
+      --admin-primary: #22D3EE;
+      --admin-pdim: rgba(34,211,238,0.14);
+      --admin-btn-bg: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);
+      --admin-btn-color: #f4fffd;
+      --admin-btn-border: rgba(126,231,219,.48);
+      --admin-btn-shadow: 0 8px 20px rgba(10,41,50,.24);
+      --admin-btn-g-bg: rgba(190,239,255,.08);
+      --admin-btn-g-border: rgba(190,239,255,.22);
     }
     @keyframes softGlow {
       0%, 100% { box-shadow: 0 0 0 rgba(45, 212, 191, 0.06), 0 8px 18px rgba(23, 57, 69, 0.14); }
       50% { box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.10), 0 12px 22px rgba(45, 212, 191, 0.12); }
     }
     body{
-      background: var(--landing-bg);
+      background: linear-gradient(160deg, var(--admin-bg2) 0%, #12262f 55%, #0d1c22 100%);
       color: var(--portal-text);
       font-family: var(--font-sans);
       -webkit-tap-highlight-color: transparent;
     }
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
-    .cardx{background: linear-gradient(180deg, rgba(11, 20, 26, 0.96), rgba(16, 24, 32, 0.92));backdrop-filter: blur(12px);border: 1px solid var(--portal-line);border-radius: 16px;box-shadow: 0 16px 38px rgba(2, 10, 14, 0.32);overflow:hidden;max-width: 720px;width:100%;position:relative}
+    .cardx{background: linear-gradient(180deg, var(--admin-bg2) 0%, var(--admin-bg3) 100%);backdrop-filter: blur(12px);border: 1px solid var(--admin-border);border-radius: 16px;box-shadow: 0 16px 38px rgba(2, 10, 14, 0.32);overflow:hidden;max-width: 720px;width:100%;position:relative}
     .cardx::before { content:""; position:absolute; inset:0 auto auto 0; width:100%; height:140%; background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%, rgba(148,163,184,0.04)); pointer-events:none; }
-    .head{background:var(--portal-panel-strong);padding:22px 20px;border-bottom:1px solid var(--portal-line)}
+    .head{background:var(--admin-bg3);padding:22px 20px;border-bottom:1px solid var(--admin-border)}
     .body{padding:22px 20px}
     .muted{color: var(--portal-muted)}
     .btnx{border-radius:12px;font-weight:700;font-family: var(--font-display);transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; min-height:46px; padding:10px 16px; line-height:1.2;}
     .btnx:hover{transform: translateY(-2px); filter: brightness(1.03);}
-    .btn-primary{background:linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);border:1px solid rgba(45, 212, 191, 0.6);color:#062c2a;box-shadow:0 10px 22px rgba(45, 212, 191, 0.22);animation:softGlow 5s ease-in-out infinite}
-    .btn-primary:hover{filter:brightness(1.05)!important;color:#062c2a!important}
-    .btn-outline-light{border:1px solid var(--portal-line);color:var(--portal-text);background:transparent}
-    .btn-outline-light:hover{background:rgba(45, 212, 191, 0.12);border-color:rgba(45, 212, 191, 0.5);color:#fff}
+    .btn-primary{background:var(--admin-btn-bg);color:var(--admin-btn-color);border:1px solid var(--admin-btn-border);box-shadow:var(--admin-btn-shadow)}
+    .btn-primary:hover{filter:brightness(1.12)!important;color:var(--admin-btn-color)!important}
+    .btn-outline-light{border:1px solid var(--admin-btn-g-border);color:var(--portal-text);background:var(--admin-btn-g-bg)}
+    .btn-outline-light:hover{background:rgba(190,239,255,.14);border-color:rgba(190,239,255,.34);color:#fff}
     a{color:#a5f4ed}
-    .qris-box{background: rgba(255,255,255,0.03);border: 1px solid var(--portal-line);border-radius: 16px;padding:16px}
+    .qris-box{background: var(--admin-bg3);border: 1px solid var(--admin-border);border-radius: 16px;padding:16px}
     .qrimg{width:100%;max-width:320px;border-radius:16px;background:#fff;padding:10px;box-shadow:0 12px 30px rgba(2,10,14,.45)}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace}
-    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid var(--portal-line)}
-    .pill-u{background: rgba(45,212,191,.12);color:#a5f4ed;border-color: rgba(45,212,191,.28)}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid var(--admin-border)}
+    .pill-u{background: var(--admin-pdim);color:#a5f4ed;border-color: rgba(34,211,238,.28)}
     .form-control{
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--portal-line);
+      border: 1px solid var(--admin-border);
       color: var(--portal-text);
       border-radius: 10px;
     }
