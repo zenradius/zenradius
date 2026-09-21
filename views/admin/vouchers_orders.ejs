@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
+  <title>Pesanan Voucher Pelanggan | <%= company %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .mtabs { display: flex; gap: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .mtab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; }
+    .mtab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .mtab.active { background: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%); color: #f4fffd; border:1px solid rgba(126,231,219,.48); box-shadow:0 8px 20px rgba(10,41,50,.24); }
+    html[data-theme="light"] .mtab { background: transparent; color: var(--muted); }
+    html[data-theme="light"] .mtab:hover { background: rgba(0,0,0,0.04); color: var(--text); }
+    html[data-theme="light"] .mtab.active { background: linear-gradient(135deg,#6366f1 0%,#818cf8 52%,#7c3aed 100%); color: #ffffff; border-color: rgba(99,102,241,.48); box-shadow: 0 8px 20px rgba(99,102,241,.12); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+    .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;border:1px solid transparent}
+    .status-pending{background:rgba(251,191,36,.12);color:#fbbf24;border-color:rgba(251,191,36,.3)}
+    .status-paid{background:rgba(59,130,246,.12);color:#60a5fa;border-color:rgba(59,130,246,.3)}
+    .status-fulfilled{background:rgba(34,197,94,.12);color:#4ade80;border-color:rgba(34,197,94,.3)}
+    .status-cancelled{background:rgba(148,163,184,.12);color:#94a3b8;border-color:rgba(148,163,184,.3)}
+    .wa-ok{color:#4ade80;font-size:11px}
+    .wa-err{color:#f87171;font-size:11px}
+    .btn-xs{padding:4px 9px;font-size:11.5px;border-radius:7px}
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'mikrotik', company }) %>
+<div class="mw">
+<%- include('partials/licenseGraceBar') %>
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-receipt-cutoff"></i> Pesanan Voucher Pelanggan</div>
+    <div class="tb-right" style="display:flex;align-items:center;gap:15px">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+    <% const mTab = 'voucher_orders'; %>
+    <% if (msg) { %>
+      <div class="alert <%= msg.type === 'success' ? 's' : (msg.type === 'error' ? 'd' : 'w') %>"><%= msg.text %></div>
+    <% } %>
+
+    <div class="mtabs">
+      <a href="/admin/mikrotik" class="mtab"><i class="bi bi-router"></i> Monitoring</a>
+      <a href="/admin/vouchers" class="mtab"><i class="bi bi-ticket-perforated"></i> Voucher Hotspot</a>
+      <a href="/admin/vouchers/orders" class="mtab active"><i class="bi bi-receipt-cutoff"></i> Pesanan Voucher</a>
+      <a href="/admin/routers" class="mtab"><i class="bi bi-hdd-network"></i> Router</a>
+    </div>
+
+    <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px">
+      <div class="sc p"><i class="bi bi-collection sc-icon"></i><div class="sc-label">Total</div><div class="sc-val" id="stat-total">0</div></div>
+      <div class="sc w"><i class="bi bi-clock-history sc-icon"></i><div class="sc-label">Menunggu Bayar</div><div class="sc-val" id="stat-pending">0</div></div>
+      <div class="sc s"><i class="bi bi-hourglass-split sc-icon"></i><div class="sc-label">Diproses (Paid)</div><div class="sc-val" id="stat-paid">0</div></div>
+      <div class="sc"><i class="bi bi-check2-circle sc-icon"></i><div class="sc-label">Selesai</div><div class="sc-val" id="stat-fulfilled">0</div></div>
+      <div class="sc d"><i class="bi bi-exclamation-triangle sc-icon"></i><div class="sc-label">Macet / Perlu Aksi</div><div class="sc-val" id="stat-stuck">0</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-bd" style="padding:14px 18px">
+        <div class="filter-title"><i class="bi bi-funnel-fill"></i> Pencarian &amp; Filter</div>
+        <form class="srow" style="margin:0" onsubmit="return false">
+          <div class="sinput" style="max-width:320px">
+            <i class="bi bi-search"></i>
+            <input class="fc" id="vo-search" placeholder="Cari No. WA / Order ID / Kode Voucher..." oninput="debounceReload()">
+          </div>
+          <select class="fs" id="vo-status" style="max-width:220px" onchange="reloadOrders()">
+            <option value="">-- Semua Status --</option>
+            <option value="pending">Menunggu Pembayaran</option>
+            <option value="paid">Dibayar (Diproses)</option>
+            <option value="fulfilled">Selesai</option>
+            <option value="cancelled">Dibatalkan</option>
+          </select>
+          <button class="btn btn-g btn-sm" onclick="reloadOrders()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-check"></i> Daftar Pesanan Voucher</h6>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>WA Pembeli</th>
+              <th>Paket</th>
+              <th>Harga</th>
+              <th>Gateway</th>
+              <th>Status</th>
+              <th>Kode Voucher</th>
+              <th>WA Notif</th>
+              <th>Dibuat</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="orders-list">
+            <tr><td colspan="10" class="text-center text-muted">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function fmtRp(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+
+  function statusBadge(status) {
+    const map = {
+      pending: ['status-pending', 'bi-clock-history', 'Menunggu Bayar'],
+      paid: ['status-paid', 'bi-hourglass-split', 'Diproses'],
+      fulfilled: ['status-fulfilled', 'bi-check2-circle', 'Selesai'],
+      cancelled: ['status-cancelled', 'bi-x-circle', 'Dibatalkan']
+    };
+    const [cls, icon, label] = map[status] || ['status-pending', 'bi-question-circle', status];
+    return `<span class="status-pill ${cls}"><i class="bi ${icon}"></i> ${label}</span>`;
+  }
+
+  let debounceTimer = null;
+  function debounceReload() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(reloadOrders, 350);
+  }
+
+  async function reloadOrders() {
+    const status = document.getElementById('vo-status').value;
+    const q = document.getElementById('vo-search').value.trim();
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (q) params.set('q', q);
+    params.set('limit', '200');
+
+    const tbody = document.getElementById('orders-list');
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Memuat data...</td></tr>';
+
+    try {
+      const res = await fetch('/admin/api/vouchers/orders?' + params.toString());
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal memuat data');
+
+      const stats = data.stats || {};
+      document.getElementById('stat-total').innerText = stats.total || 0;
+      document.getElementById('stat-pending').innerText = stats.pending || 0;
+      document.getElementById('stat-paid').innerText = stats.paid || 0;
+      document.getElementById('stat-fulfilled').innerText = stats.fulfilled || 0;
+      document.getElementById('stat-stuck').innerText = stats.stuck || 0;
+
+      const rows = data.rows || [];
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Belum ada pesanan voucher.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map(o => {
+        let waInfo = '<span class="text-muted small">-</span>';
+        if (o.status === 'fulfilled' || o.status === 'paid') {
+          if (Number(o.wa_sent) === 1) waInfo = '<span class="wa-ok"><i class="bi bi-whatsapp"></i> Terkirim</span>';
+          else if (o.wa_error) waInfo = `<span class="wa-err" title="${(o.wa_error || '').replace(/"/g, '&quot;')}"><i class="bi bi-exclamation-triangle"></i> Gagal</span>`;
+        }
+
+        let actions = '';
+        if (o.status === 'paid') {
+          actions += `<button class="btn btn-p btn-xs" onclick="retryFulfillment(${o.id})"><i class="bi bi-arrow-repeat"></i> Retry</button> `;
+          actions += `<button class="btn btn-d btn-xs" onclick="cancelOrder(${o.id})"><i class="bi bi-x-lg"></i> Batal</button>`;
+        } else if (o.status === 'pending') {
+          actions += `<button class="btn btn-d btn-xs" onclick="cancelOrder(${o.id})"><i class="bi bi-x-lg"></i> Batal</button>`;
+        } else {
+          actions = '<span class="text-muted small">-</span>';
+        }
+
+        return `<tr>
+          <td class="mono">#${o.id}</td>
+          <td class="mono">${o.buyer_phone || '-'}</td>
+          <td>${o.profile_name || '-'}<div class="text-muted small">${o.validity || ''}</div></td>
+          <td>${fmtRp(o.price)}</td>
+          <td>${o.payment_gateway || '-'}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td class="mono">${o.voucher_code || '-'}</td>
+          <td>${waInfo}</td>
+          <td class="text-muted small">${o.created_at || '-'}</td>
+          <td>${actions}</td>
+        </tr>`;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Gagal memuat: ${e.message}</td></tr>`;
+    }
+  }
+
+  async function retryFulfillment(orderId) {
+    if (!confirm(`Coba proses ulang voucher untuk order #${orderId}? Sistem akan membuat user hotspot baru di MikroTik dan mengirim WA.`)) return;
+    try {
+      const res = await fetch(`/admin/api/vouchers/orders/${orderId}/retry-fulfillment`, { method: 'POST' });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal retry');
+      alert(data.already ? 'Order sudah pernah fulfilled sebelumnya.' : 'Voucher berhasil dibuat ulang!');
+      reloadOrders();
+    } catch (e) {
+      alert('Gagal: ' + e.message);
+    }
+  }
+
+  async function cancelOrder(orderId) {
+    if (!confirm(`Batalkan order #${orderId}? Tindakan ini tidak bisa dibatalkan kembali.`)) return;
+    try {
+      const res = await fetch(`/admin/api/vouchers/orders/${orderId}/cancel`, { method: 'POST' });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Gagal membatalkan');
+      reloadOrders();
+    } catch (e) {
+      alert('Gagal: ' + e.message);
+    }
+  }
+
+  reloadOrders();
+</script>
+</body>
+</html>

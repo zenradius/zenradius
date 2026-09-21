@@ -5243,6 +5243,112 @@ router.get('/vouchers', requireAdminSession, (req, res) => {
   });
 });
 
+router.get('/vouchers/orders', requireAdminSession, (req, res) => {
+  const routers = mikrotikService.getAllRouters();
+  const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
+  res.render('admin/vouchers_orders', {
+    title: 'Pesanan Voucher Pelanggan', company: company(), activePage: 'mikrotik',
+    routers, selectedRouterId, msg: flashMsg(req)
+  });
+});
+
+router.get('/api/vouchers/orders', requireAdminSession, (req, res) => {
+  try {
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+    const status = String(req.query.status || '').trim();
+    const q = String(req.query.q || '').trim();
+
+    const where = [];
+    const params = [];
+    if (status) {
+      where.push('o.status = ?');
+      params.push(status);
+    }
+    if (q) {
+      where.push('(o.buyer_phone LIKE ? OR o.profile_name LIKE ? OR o.voucher_code LIKE ? OR CAST(o.id AS TEXT) LIKE ?)');
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
+    }
+
+    const sql = `
+      SELECT o.*, r.name AS router_name
+      FROM public_voucher_orders o
+      LEFT JOIN routers r ON r.id = o.router_id
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+      ORDER BY o.id DESC
+      LIMIT ?
+    `;
+    const rows = db.prepare(sql).all(...params, limit);
+
+    const rowsWithLocalTime = rows.map(row => ({
+      ...row,
+      created_at: row.created_at ? formatDateLocal(row.created_at, 'YYYY-MM-DD HH:mm:ss') : null,
+      paid_at: row.paid_at ? formatDateLocal(row.paid_at, 'YYYY-MM-DD HH:mm:ss') : null,
+      fulfilled_at: row.fulfilled_at ? formatDateLocal(row.fulfilled_at, 'YYYY-MM-DD HH:mm:ss') : null
+    }));
+
+    const stats = db.prepare(`
+      SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) AS pending,
+        SUM(CASE WHEN status='paid' THEN 1 ELSE 0 END) AS paid,
+        SUM(CASE WHEN status='fulfilled' THEN 1 ELSE 0 END) AS fulfilled,
+        SUM(CASE WHEN status='paid' AND wa_sent=0 AND wa_error != '' THEN 1 ELSE 0 END) AS stuck
+      FROM public_voucher_orders
+    `).get();
+
+    res.json({ ok: true, rows: rowsWithLocalTime, stats });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+router.post('/api/vouchers/orders/:id/retry-fulfillment', requireAdminSession, restrictToAdmin, async (req, res) => {
+  try {
+    const orderId = Number(req.params.id);
+    if (!Number.isFinite(orderId) || orderId <= 0) return res.status(400).json({ ok: false, error: 'Order ID tidak valid' });
+
+    const order = db.prepare('SELECT * FROM public_voucher_orders WHERE id = ?').get(orderId);
+    if (!order) return res.status(404).json({ ok: false, error: 'Order tidak ditemukan' });
+    if (String(order.status) === 'fulfilled' && order.voucher_code) {
+      return res.json({ ok: true, already: true, message: 'Order sudah fulfilled sebelumnya' });
+    }
+    if (String(order.status) !== 'paid') {
+      return res.status(400).json({ ok: false, error: `Order berstatus '${order.status}', hanya order 'paid' yang bisa di-retry` });
+    }
+
+    const voucherFulfillmentSvc = require('../services/voucherFulfillmentService');
+    const result = await voucherFulfillmentSvc.fulfillVoucherOrder(orderId, { methodLabel: order.payment_gateway || 'Manual Retry (Admin)' });
+
+    if (result.ok) {
+      logger.info(`[AdminVoucherOrders] Retry fulfillment sukses untuk order=${orderId} oleh admin`);
+      return res.json({ ok: true, created: result.created, wa: result.wa });
+    }
+    return res.status(400).json({ ok: false, error: result.reason || 'Gagal fulfillment' });
+  } catch (e) {
+    logger.error(`[AdminVoucherOrders] Retry fulfillment gagal: ${e.message}`);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+router.post('/api/vouchers/orders/:id/cancel', requireAdminSession, restrictToAdmin, (req, res) => {
+  try {
+    const orderId = Number(req.params.id);
+    if (!Number.isFinite(orderId) || orderId <= 0) return res.status(400).json({ ok: false, error: 'Order ID tidak valid' });
+
+    const order = db.prepare('SELECT id, status FROM public_voucher_orders WHERE id = ?').get(orderId);
+    if (!order) return res.status(404).json({ ok: false, error: 'Order tidak ditemukan' });
+    if (String(order.status) === 'fulfilled') {
+      return res.status(400).json({ ok: false, error: 'Order sudah fulfilled, tidak bisa dibatalkan' });
+    }
+
+    db.prepare(`UPDATE public_voucher_orders SET status='cancelled', updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(orderId);
+    logger.info(`[AdminVoucherOrders] Order=${orderId} dibatalkan manual oleh admin`);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 router.get('/api/vouchers/template', requireAdminSession, (req, res) => {
   const settings = getSettings();
   res.json({

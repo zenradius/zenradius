@@ -51,10 +51,14 @@ function customerWifiActor(req, profile, loginId) {
 }
 
 let loginRateLimiter = (req, res, next) => res.status(503).send('Layanan login sementara tidak tersedia.');
+let voucherPurchaseRateLimiter = (req, res, next) => next();
 try {
   const rlMod = require('../middleware/rateLimiter');
   if (rlMod && typeof rlMod.loginRateLimiter === 'function') {
     loginRateLimiter = rlMod.loginRateLimiter;
+  }
+  if (rlMod && typeof rlMod.voucherPurchaseRateLimiter === 'function') {
+    voucherPurchaseRateLimiter = rlMod.voucherPurchaseRateLimiter;
   }
 } catch (e) {}
 
@@ -1332,7 +1336,7 @@ router.get('/voucher/status/:orderId', async (req, res) => {
   }
 });
 
-router.post('/public/voucher/create-payment', async (req, res) => {
+router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async (req, res) => {
   const settings = getSettingsWithCache();
 
   const buyerPhone = normalizeBuyerPhone(req.body.buyer_phone);

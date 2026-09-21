@@ -77,3 +77,54 @@ try {
 module.exports = {
   loginRateLimiter
 };
+
+let voucherPurchaseRateLimiter = (req, res, next) => next();
+
+try {
+  const rateLimit = require('express-rate-limit');
+  voucherPurchaseRateLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 8,
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: { xForwardedForHeader: false },
+    handler: (req, res) => {
+      const msg = 'Terlalu banyak percobaan pembelian voucher dari perangkat/IP Anda. Silakan coba lagi dalam beberapa menit.';
+      if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(429).json({ ok: false, error: msg });
+      }
+      return res.redirect('/customer/voucher?err=' + encodeURIComponent(msg));
+    }
+  });
+} catch (e) {
+  const WINDOW_MS = 10 * 60 * 1000;
+  const MAX_ATTEMPTS = 8;
+  const hits = new Map();
+
+  voucherPurchaseRateLimiter = (req, res, next) => {
+    const now = Date.now();
+    const ip = String(req.ip || req.connection?.remoteAddress || 'unknown');
+
+    if (hits.size > 5000) {
+      for (const [k, v] of hits) if (now - v.start > WINDOW_MS) hits.delete(k);
+    }
+
+    const rec = hits.get(ip);
+    if (!rec || now - rec.start > WINDOW_MS) {
+      hits.set(ip, { start: now, count: 1 });
+      return next();
+    }
+
+    rec.count++;
+    if (rec.count > MAX_ATTEMPTS) {
+      const msg = 'Terlalu banyak percobaan pembelian voucher dari perangkat/IP Anda. Silakan coba lagi dalam beberapa menit.';
+      if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(429).json({ ok: false, error: msg });
+      }
+      return res.redirect('/customer/voucher?err=' + encodeURIComponent(msg));
+    }
+    return next();
+  };
+}
+
+module.exports.voucherPurchaseRateLimiter = voucherPurchaseRateLimiter;

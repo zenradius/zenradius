@@ -728,6 +728,35 @@ function startCronJobs() {
     }
   });
 
+  // Bersihkan pesanan voucher publik yang kedaluwarsa (status pending, sudah lewat masa berlaku)
+  // agar slot nominal unik QRIS Statis (1-999) tidak habis oleh order basi.
+  schedule('*/15 * * * *', () => {
+    try {
+      const nowIso = new Date().toISOString();
+      const expired = db.prepare(
+        `SELECT id FROM public_voucher_orders
+         WHERE status = 'pending'
+           AND payment_expires_at IS NOT NULL
+           AND payment_expires_at != ''
+           AND payment_expires_at < ?`
+      ).all(nowIso);
+
+      if (expired.length === 0) return;
+
+      const upd = db.prepare(
+        `UPDATE public_voucher_orders SET status='expired', updated_at=CURRENT_TIMESTAMP WHERE id=?`
+      );
+      let count = 0;
+      for (const row of expired) {
+        upd.run(row.id);
+        count++;
+      }
+      logger.info(`[CRON] Pembersihan pesanan voucher kedaluwarsa: ${count} order ditandai 'expired'.`);
+    } catch (e) {
+      logger.error(`[CRON] Error pembersihan pesanan voucher kedaluwarsa: ${e.message}`);
+    }
+  });
+
   logger.info('[CRON] Semua tugas penjadwalan telah aktif.');
 }
 
