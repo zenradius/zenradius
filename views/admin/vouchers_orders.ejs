@@ -28,7 +28,7 @@
     /* Detail modal — palette selaras dengan modal Restart Aplikasi (views/admin/update.ejs) */
     .rs-overlay{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(10,30,38,.72);backdrop-filter:blur(6px)}
     .rs-overlay.show{display:flex;animation:rsFade .25s ease}
-    .rs-card{width:100%;max-width:560px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:0;text-align:left;box-shadow:0 24px 60px rgba(0,0,0,.45);color:var(--text);max-height:88vh;overflow:auto}
+    .rs-card{width:100%;max-width:640px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:0;text-align:left;box-shadow:0 24px 60px rgba(0,0,0,.45);color:var(--text);max-height:88vh;overflow:auto}
     .rs-mh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:20px 24px;border-bottom:1px solid var(--border)}
     .rs-mh-title{display:flex;align-items:center;gap:12px}
     .cf-icon{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--primary);background:var(--pdim);border:1px solid rgba(34,211,238,.35)}
@@ -39,14 +39,31 @@
     .rs-mf{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
     @keyframes rsFade{from{opacity:0}to{opacity:1}}
 
-    .det-list{display:flex;flex-direction:column}
-    .det-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--border)}
-    .det-row:last-child{border-bottom:none}
-    .det-k{font-size:12.5px;color:var(--muted);font-weight:600;flex:0 0 auto;min-width:170px}
-    .det-v{font-size:13px;font-weight:600;word-break:break-word;color:var(--text);text-align:right}
-    .det-section{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;padding:16px 0 6px;border-bottom:1px solid var(--border);margin-bottom:2px}
-    .det-section:first-child{padding-top:0}
-    @media (max-width:520px){.det-row{flex-direction:column;gap:2px}.det-v{text-align:left}.det-k{min-width:0}}
+    /* Invoice-style detail layout — tanpa garis pemisah antar baris */
+    .inv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+    .inv-head-id{font-family:var(--font-display,inherit);font-size:22px;font-weight:800;color:var(--text);letter-spacing:.3px}
+    .inv-head-sub{font-size:12px;color:var(--muted);margin-top:4px}
+    .inv-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+    .inv-col-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin-bottom:8px}
+    .inv-col-body div{font-size:13px;color:var(--text);line-height:1.8}
+    .inv-col-body .muted-line{color:var(--muted);font-size:12px}
+    .inv-table{width:100%;border-collapse:collapse;margin-bottom:18px}
+    .inv-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;text-align:left;padding:0 0 10px;background:none}
+    .inv-table thead th:last-child{text-align:right}
+    .inv-table tbody td{font-size:13.5px;color:var(--text);padding:14px 0;background:var(--bg3);border-top:1px solid var(--bg2)}
+    .inv-table tbody td:first-child{padding-left:14px;border-radius:10px 0 0 10px}
+    .inv-table tbody td:last-child{padding-right:14px;text-align:right;border-radius:0 10px 10px 0;font-weight:700}
+    .inv-table tbody tr td{border-top:none}
+    .inv-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+    .inv-summary{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-bottom:22px}
+    .inv-summary-row{display:flex;justify-content:space-between;gap:40px;width:100%;max-width:280px;font-size:13px;color:var(--muted)}
+    .inv-summary-row.total{font-size:16px;font-weight:800;color:var(--text);margin-top:4px}
+    .inv-foot{display:flex;flex-wrap:wrap;gap:22px}
+    .inv-foot-block{flex:1 1 200px}
+    .inv-foot-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin-bottom:8px}
+    .inv-foot-body div{font-size:12.5px;color:var(--text);line-height:1.9}
+    .inv-foot-body .muted-line{color:var(--muted)}
+    @media (max-width:520px){.inv-cols{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -280,31 +297,64 @@
       else if (o.wa_error) waInfo = `<span class="wa-err"><i class="bi bi-exclamation-triangle"></i> ${o.wa_error}</span>`;
 
       body.innerHTML = `
-        <div class="det-list">
-          <div class="det-section">Informasi Pesanan</div>
-          <div class="det-row"><span class="det-k">Order ID</span><span class="det-v mono">#${o.id}</span></div>
-          <div class="det-row"><span class="det-k">Status</span><span class="det-v">${statusBadge(o.status)}</span></div>
-          <div class="det-row"><span class="det-k">No. WhatsApp Pembeli</span><span class="det-v mono">${o.buyer_phone || '-'}</span></div>
-          <div class="det-row"><span class="det-k">Router</span><span class="det-v">${o.router_name || 'Default'}</span></div>
+        <div class="inv-head">
+          <div>
+            <div class="inv-head-id">Order #${o.id}</div>
+            <div class="inv-head-sub">Dibuat ${o.created_at || '-'}</div>
+          </div>
+          <div>${statusBadge(o.status)}</div>
+        </div>
 
-          <div class="det-section">Detail Paket</div>
-          <div class="det-row"><span class="det-k">Paket</span><span class="det-v">${o.profile_name || '-'}</span></div>
-          <div class="det-row"><span class="det-k">Durasi</span><span class="det-v">${o.validity || '-'}</span></div>
-          <div class="det-row"><span class="det-k">Harga</span><span class="det-v">${fmtRp(o.price)}</span></div>
+        <div class="inv-cols">
+          <div>
+            <div class="inv-col-label">Pembeli</div>
+            <div class="inv-col-body">
+              <div>${o.buyer_phone || '-'}</div>
+              <div class="muted-line">Router: ${o.router_name || 'Default'}</div>
+            </div>
+          </div>
+          <div>
+            <div class="inv-col-label">Pembayaran</div>
+            <div class="inv-col-body">
+              <div>${o.payment_gateway || '-'}</div>
+              <div class="muted-line">Ref: ${o.payment_reference || '-'}</div>
+            </div>
+          </div>
+        </div>
 
-          <div class="det-section">Pembayaran</div>
-          <div class="det-row"><span class="det-k">Gateway Pembayaran</span><span class="det-v">${o.payment_gateway || '-'}</span></div>
-          <div class="det-row"><span class="det-k">Ref. Pembayaran</span><span class="det-v mono">${o.payment_reference || '-'}</span></div>
+        <table class="inv-table">
+          <thead>
+            <tr><th>Paket</th><th>Durasi</th><th>Harga</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${o.profile_name || '-'}<div class="inv-sub">Voucher Hotspot</div></td>
+              <td>${o.validity || '-'}</td>
+              <td>${fmtRp(o.price)}</td>
+            </tr>
+          </tbody>
+        </table>
 
-          <div class="det-section">Voucher &amp; Notifikasi</div>
-          <div class="det-row"><span class="det-k">Kode Voucher</span><span class="det-v mono">${o.voucher_code || '-'}</span></div>
-          <div class="det-row"><span class="det-k">Status WA</span><span class="det-v">${waInfo}</span></div>
+        <div class="inv-summary">
+          <div class="inv-summary-row total"><span>Total</span><span>${fmtRp(o.price)}</span></div>
+        </div>
 
-          <div class="det-section">Riwayat Waktu</div>
-          <div class="det-row"><span class="det-k">Dibuat</span><span class="det-v">${o.created_at || '-'}</span></div>
-          <div class="det-row"><span class="det-k">Dibayar</span><span class="det-v">${o.paid_at || '-'}</span></div>
-          <div class="det-row"><span class="det-k">Selesai (Fulfilled)</span><span class="det-v">${o.fulfilled_at || '-'}</span></div>
-          <div class="det-row"><span class="det-k">Kedaluwarsa Bayar</span><span class="det-v">${o.payment_expires_at || '-'}</span></div>
+        <div class="inv-foot">
+          <div class="inv-foot-block">
+            <div class="inv-foot-label">Voucher &amp; Notifikasi</div>
+            <div class="inv-foot-body">
+              <div>Kode: <strong class="mono">${o.voucher_code || '-'}</strong></div>
+              <div>WA: ${waInfo}</div>
+            </div>
+          </div>
+          <div class="inv-foot-block">
+            <div class="inv-foot-label">Riwayat Waktu</div>
+            <div class="inv-foot-body">
+              <div class="muted-line">Dibayar: ${o.paid_at || '-'}</div>
+              <div class="muted-line">Selesai: ${o.fulfilled_at || '-'}</div>
+              <div class="muted-line">Kedaluwarsa Bayar: ${o.payment_expires_at || '-'}</div>
+            </div>
+          </div>
         </div>
       `;
     } catch (e) {
