@@ -1,12 +1,12 @@
-/* Reference-inspired WiFi vouchers. Artwork is local; prices remain live text. */
+/* Reference-inspired WiFi vouchers. Matches landing page dark-teal portal theme. */
 :root {
-  --vc-primary: var(--portal-primary-blue, #023E8C);
-  --vc-electric: var(--portal-electric-blue, #016FE8);
-  --vc-turquoise: var(--portal-turquoise, #04D5BF);
-  --vc-primary-dark: var(--portal-primary-dark, #012359);
-  --vc-surface: var(--portal-surface, #FFFFFF);
-  --vc-border: var(--portal-light-border, #DBE4EE);
-  --vc-text-secondary: var(--portal-text-secondary, #6E819A);
+  --vc-primary: var(--portal-primary, #2dd4bf);
+  --vc-electric: var(--portal-primary-strong, #22a7f0);
+  --vc-turquoise: var(--portal-primary, #2dd4bf);
+  --vc-primary-dark: #0b2b2a;
+  --vc-surface: var(--portal-panel, rgba(17, 29, 36, 0.94));
+  --vc-border: var(--portal-line, rgba(124, 221, 218, 0.18));
+  --vc-text-secondary: var(--portal-muted, #a8bec2);
 }
 
 .cardx { max-width: 1040px; }
