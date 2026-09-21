@@ -10,6 +10,7 @@ const QRCode = require('qrcode');
 const _jimpMod = require('jimp');
 const Jimp = _jimpMod.Jimp || _jimpMod;
 const qrisUtil = require('./utils/qrisUtil');
+const danaWebhookParser = require('./utils/danaWebhookParser');
 const { logger } = require('./config/logger');
 const db = require('./config/database');
 const customerSvc = require('./services/customerService');
@@ -561,7 +562,131 @@ const waInboundHandler = (req, res) => httpWebhookService.handleInbound(req, res
 app.post('/api/webhook/wa-inbound', waInboundHandler);
 app.post('/api/webhook/fonnte', waInboundHandler);
 app.post('/api/webhook/wablas', waInboundHandler);
-app.get('/api/webhook/wa-inbound', waInboundHandler); 
+app.get('/api/webhook/wa-inbound', waInboundHandler);
+
+/**
+ * DANA Bisnis QRIS Webhook Handler
+ * DANA sends payment notifications directly from their system
+ */
+app.post('/api/webhook/dana', express.json(), async (req, res) => {
+  try {
+    const body = req.body || {};
+    const danaSecret = getSettingsWithCache().dana_webhook_secret || '';
+    const signature = req.get('x-signature') || req.get('x-dana-signature') || '';
+
+    // Verify signature if configured
+    if (danaSecret && !danaWebhookParser.verifyDanaSignature(body, signature, danaSecret)) {
+      logger.warn('[WEBHOOK][DANA] Signature verification failed');
+      return res.status(403).json({ ok: false, error: 'Invalid signature' });
+    }
+
+    // Parse DANA payload
+    const parsed = danaWebhookParser.parseDanaPayload(body);
+    if (!parsed) {
+      logger.info('[WEBHOOK][DANA] Payment status not SUCCESS, skipping');
+      return res.status(200).json({ ok: true, message: 'Acknowledged' });
+    }
+
+    const amount = parsed.amount;
+    logger.info(`[WEBHOOK][DANA] Payment received: ${parsed.txnId} Rp ${amount}`);
+
+    // Try to match with QRIS unique amount (same as generic webhook handler)
+    const invCandidates = db.prepare('SELECT id, customer_id, customer_status FROM invoices WHERE status=? AND qris_amount_unique=? LIMIT 2').all('unpaid', amount);
+    const vCandidates = db.prepare('SELECT id FROM public_voucher_orders WHERE status=? AND qris_amount_unique=? LIMIT 2').all('pending', amount);
+
+    const ip = String(req.get('x-forwarded-for') || req.ip || '');
+    const ua = String(req.get('user-agent') || '');
+
+    // Log notif in webhook_payment_notifs table
+    let notifId = null;
+    try {
+      const r = db.prepare('INSERT INTO webhook_payment_notifs (service, content, parsed_amount, parsed_ok, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?)').run(
+        'dana',
+        JSON.stringify(parsed.rawPayload),
+        amount,
+        1,
+        ip,
+        ua
+      );
+      notifId = Number(r?.lastInsertRowid || 0) || null;
+    } catch (e) {
+      logger.error(`[WEBHOOK][DANA] DB log failed: ${e?.message}`);
+    }
+
+    // Match and process
+    let matched = false;
+
+    if (invCandidates && invCandidates.length === 1) {
+      const inv = invCandidates[0];
+      const invId = Number(inv.id);
+      const custId = Number(inv.customer_id);
+      const markInvoicePaidAppendNote = db.prepare(`
+        UPDATE invoices SET status=?, payment_method=?, paid_at=CURRENT_TIMESTAMP, 
+        notes=COALESCE(notes, '') || ' | ' || ?, qris_paid_notif_id=?
+        WHERE id=?`);
+      markInvoicePaidAppendNote.run('paid', 'QRIS', `AUTO-QRIS: cocok nominal unik Rp ${amount} (service=dana, txn=${parsed.txnId})`, notifId || null, invId);
+      matched = true;
+
+      if (notifId) {
+        try { db.prepare('UPDATE webhook_payment_notifs SET matched_invoice_id=? WHERE id=?').run(invId, notifId); } catch {}
+      }
+
+      // Also mark other unpaid invoices from same customer
+      if (custId > 0) {
+        const otherUnpaid = db.prepare("SELECT id FROM invoices WHERE customer_id=? AND status='unpaid' AND id!=?").all(custId, invId);
+        if (otherUnpaid && otherUnpaid.length > 0) {
+          for (const other of otherUnpaid) {
+            markInvoicePaidAppendNote.run('paid', 'QRIS', `AUTO-QRIS: lunas dari pembayaran gabungan QRIS Rp ${amount}`, notifId || null, other.id);
+          }
+        }
+
+        // Reactivate customer if suspended and now all paid
+        if (String(inv.customer_status || '') === 'suspended') {
+          const cnt = db.prepare("SELECT COUNT(*) as c FROM invoices WHERE customer_id=? AND status='unpaid'").get(custId);
+          const unpaid = Number(cnt?.c || 0);
+          if (unpaid === 0) {
+            try { await customerSvc.activateCustomer(custId); } catch (e) {
+              logger.error(`[WEBHOOK][DANA] Activate customer failed: ${e?.message}`);
+            }
+          }
+        }
+      }
+
+      try { await trySendWaPaymentSuccess(getSettingsWithCache(), invId, 'QRIS (DANA)'); } catch {}
+      logger.info(`[WEBHOOK][DANA] MATCHED invoice=${invId}`);
+    } else if (vCandidates && vCandidates.length === 1) {
+      const ord = vCandidates[0];
+      const ordId = Number(ord.id);
+      db.prepare('UPDATE public_voucher_orders SET status=?, qris_paid_notif_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').run('paid', notifId || null, ordId);
+      matched = true;
+
+      if (notifId) {
+        try { db.prepare('UPDATE webhook_payment_notifs SET matched_voucher_order_id=? WHERE id=?').run(ordId, notifId); } catch {}
+      }
+
+      try {
+        const voucherFulfillmentSvc = require('./services/voucherFulfillmentService');
+        await voucherFulfillmentSvc.fulfillVoucherOrder(ordId, { methodLabel: 'QRIS (DANA)' });
+      } catch (e) {
+        logger.error(`[WEBHOOK][DANA] Voucher fulfill error: ${e?.message}`);
+      }
+
+      logger.info(`[WEBHOOK][DANA] MATCHED voucher_order=${ordId}`);
+    }
+
+    if (!matched && invCandidates && invCandidates.length > 1) {
+      logger.error(`[WEBHOOK][DANA] Ambiguous: ${invCandidates.length} invoices with amount ${amount}`);
+    } else if (!matched && vCandidates && vCandidates.length > 1) {
+      logger.error(`[WEBHOOK][DANA] Ambiguous: ${vCandidates.length} voucher orders with amount ${amount}`);
+    }
+
+    return res.status(200).json({ ok: true, message: 'Processed', matched });
+
+  } catch (err) {
+    logger.error(`[WEBHOOK][DANA] ERROR: ${err?.stack || err}`);
+    return res.status(200).json({ ok: false, error: err?.message });
+  }
+});
 
 app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
   let body = req.body || {};
