@@ -244,28 +244,6 @@ const markVoucherPaid = db.prepare(`
   WHERE id=?
 `);
 
-const selectVoucherOrderById = db.prepare(`SELECT * FROM public_voucher_orders WHERE id = ?`);
-const markVoucherFulfilled = db.prepare(`
-  UPDATE public_voucher_orders
-  SET status='fulfilled',
-      fulfilled_at=NOW_LOCAL(),
-      voucher_code=?,
-      voucher_password=?,
-      voucher_comment=?,
-      updated_at=NOW_LOCAL()
-  WHERE id=?
-`);
-const markVoucherWaSentOk = db.prepare(`
-  UPDATE public_voucher_orders
-  SET wa_sent=1, wa_sent_at=NOW_LOCAL(), wa_error='', updated_at=NOW_LOCAL()
-  WHERE id=?
-`);
-const markVoucherWaSentErr = db.prepare(`
-  UPDATE public_voucher_orders
-  SET wa_sent=0, wa_error=?, updated_at=NOW_LOCAL()
-  WHERE id=?
-`);
-
 const selectDonationOrderByUniqueAmount = db.prepare(`
   SELECT id, status, donor_name, donor_phone, amount, qris_amount_unique, qris_unique_code, notes, activation_code
   FROM public_donation_orders
@@ -403,28 +381,6 @@ function parseRupiahAmountFromNotification(content) {
   return Number.isFinite(amount) ? amount : null;
 }
 
-function genRandomCode(len = 6) {
-  const n = Math.max(1, Math.min(16, Number(len) || 6));
-  let out = '';
-  for (let i = 0; i < n; i++) {
-    out += String(Math.floor(Math.random() * 10));
-  }
-  return out;
-}
-
-function genCustomCode(len, charset) {
-  const n = Math.max(4, Math.min(16, Number(len) || 6));
-  let chars = '0123456789';
-  if (charset === 'letters') chars = 'abcdefghjkmnpqrstuvwxyz';
-  else if (charset === 'mixed') chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let out = '';
-  for (let i = 0; i < n; i++) {
-    out += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  if (charset === 'numbers' && out[0] === '0') out = '1' + out.slice(1);
-  return out;
-}
-
 function normalizeQrisPayload(raw) {
   let s = String(raw || '').replace(/[\r\n\t]+/g, '').trim();
   const idx = s.indexOf('000201');
@@ -522,20 +478,6 @@ async function buildQrisJpgFromSettings(settings, amount) {
   return await Jimp.read(png).then(img => img.quality(90).background(0xffffffff).getBufferAsync(Jimp.MIME_JPEG));
 }
 
-async function trySendWaToBuyer(settings, phone, message, orderId) {
-  if (!settings || !settings.whatsapp_enabled) return;
-  const p = String(phone || '').trim();
-  if (!p) return;
-  try {
-    const { sendWA, whatsappStatus } = await import('./services/whatsappBot.mjs');
-    if (whatsappStatus.connection !== 'open') throw new Error('Bot WhatsApp belum terhubung');
-    await sendWA(p, message);
-    markVoucherWaSentOk.run(orderId);
-  } catch (e) {
-    markVoucherWaSentErr.run(String(e?.message || e || ''), orderId);
-  }
-}
-
 async function trySendWaPaymentSuccess(settings, invoiceId, methodLabel) {
   if (!settings || !settings.whatsapp_enabled) return;
   try {
@@ -563,68 +505,8 @@ async function trySendWaPaymentSuccess(settings, invoiceId, methodLabel) {
 }
 
 async function fulfillVoucherOrder(settings, orderId) {
-  const ord = selectVoucherOrderById.get(orderId);
-  if (!ord) throw new Error('Order tidak ditemukan');
-  if (String(ord.status) === 'fulfilled' && ord.voucher_code) return { ok: true, already: true };
-  if (String(ord.status) !== 'paid') return { ok: false, reason: 'not_paid' };
-
-  let prefix = '';
-  let codeLength = 6;
-  let charset = 'mixed';
-  try {
-    const pkg = db.prepare('SELECT * FROM voucher_packages WHERE router_id IS ? AND profile_name = ?').get(ord.router_id ?? null, ord.profile_name);
-    if (pkg) {
-      prefix = String(pkg.prefix || '').trim();
-      codeLength = Math.max(4, Math.min(16, Number(pkg.code_length) || 6));
-      charset = String(pkg.charset || 'mixed');
-    }
-  } catch (e) {
-    logger.error('[Fulfillment] Gagal query voucher_packages: ' + e.message);
-  }
-
-  let created = null;
-  let attempt = 0;
-  while (attempt < 10) {
-    attempt++;
-    const coreLen = Math.max(4, codeLength - prefix.length);
-    const code = prefix + genCustomCode(coreLen, charset);
-    const pass = code;
-    const comment = `vc-${code}-${ord.profile_name}`;
-    const userData = {
-      server: 'all',
-      name: code,
-      password: pass,
-      profile: ord.profile_name,
-      comment
-    };
-    if (ord.validity) userData['limit-uptime'] = ord.validity;
-
-    try {
-      await mikrotikService.addHotspotUser(userData, ord.router_id ?? null);
-      created = { code, pass, comment };
-      break;
-    } catch (e) {
-      const msg = String(e?.message || e || '').toLowerCase();
-      const isDup = msg.includes('already') || msg.includes('exist') || msg.includes('duplicate');
-      if (isDup) continue;
-      throw e;
-    }
-  }
-  if (!created) throw new Error('Gagal membuat voucher (kode duplikat terlalu sering)');
-
-  markVoucherFulfilled.run(created.code, created.pass, created.comment, orderId);
-
-  const msg =
-    `🎫 *VOUCHER HOTSPOT*\n\n` +
-    `✅ Pembayaran diterima via *QRIS Statis*\n` +
-    `📦 Paket: *${ord.profile_name}* (${ord.validity || '-'})\n` +
-    `💰 Harga: Rp ${Number(ord.price || 0).toLocaleString('id-ID')}\n\n` +
-    `👤 User: *${created.code}*\n` +
-    `🔑 Pass: *${created.pass}*\n\n` +
-    `Terima kasih.`;
-
-  await trySendWaToBuyer(settings, ord.buyer_phone, msg, orderId);
-  return { ok: true, created };
+  const voucherFulfillmentSvc = require('./services/voucherFulfillmentService');
+  return voucherFulfillmentSvc.fulfillVoucherOrder(orderId, { methodLabel: 'QRIS Statis' });
 }
 
 async function fulfillDonationOrder(settings, donationOrderId) {

@@ -3649,94 +3649,9 @@ router.post('/payment/callback', express.json({
           `).run(orderId);
         }
 
-        const fresh = db.prepare('SELECT * FROM public_voucher_orders WHERE id = ?').get(orderId);
-        if (!fresh) return res.json({ success: true });
-        if (String(fresh.status) === 'fulfilled' && fresh.voucher_code) return res.json({ success: true });
-
         try {
-          let created = null;
-          let attempt = 0;
-          
-          let prefix = '';
-          let codeLength = 6;
-          let charset = 'mixed';
-          try {
-            const pkg = db.prepare('SELECT * FROM voucher_packages WHERE router_id IS ? AND profile_name = ?').get(fresh.router_id ?? null, fresh.profile_name);
-            if (pkg) {
-              prefix = String(pkg.prefix || '').trim();
-              codeLength = Math.max(4, Math.min(16, Number(pkg.code_length) || 6));
-              charset = String(pkg.charset || 'mixed');
-            }
-          } catch (pkgErr) {
-            logger.error('[Fulfillment] Gagal query voucher_packages: ' + pkgErr.message);
-          }
-
-          while (attempt < 10) {
-            attempt++;
-            const coreLen = Math.max(4, codeLength - prefix.length);
-            const code = prefix + genCustomCode(coreLen, charset);
-            const pass = code;
-            const comment = `vc-${code}-${fresh.profile_name}`;
-            const userData = {
-              server: 'all',
-              name: code,
-              password: pass,
-              profile: fresh.profile_name,
-              comment
-            };
-            if (fresh.validity) userData['limit-uptime'] = fresh.validity;
-
-            try {
-              await mikrotikService.addHotspotUser(userData, fresh.router_id ?? null);
-              created = { code, pass, comment };
-              break;
-            } catch (e) {
-              const msg = String(e?.message || e || '').toLowerCase();
-              const isDup = msg.includes('already') || msg.includes('exist') || msg.includes('duplicate');
-              if (isDup) continue;
-              throw e;
-            }
-          }
-          if (!created) throw new Error('Gagal membuat voucher (kode duplikat terlalu sering)');
-
-          db.prepare(`
-            UPDATE public_voucher_orders
-            SET status='fulfilled',
-                fulfilled_at=CURRENT_TIMESTAMP,
-                voucher_code=?,
-                voucher_password=?,
-                voucher_comment=?,
-                updated_at=CURRENT_TIMESTAMP
-            WHERE id=?
-          `).run(created.code, created.pass, created.comment, orderId);
-
-          if (settings.whatsapp_enabled) {
-            try {
-              const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
-              if (whatsappStatus.connection !== 'open') throw new Error('Bot WhatsApp belum terhubung');
-              if (!fresh.buyer_phone) throw new Error('Nomor WhatsApp pembeli kosong');
-              const msg =
-                `🎫 *VOUCHER HOTSPOT*\n\n` +
-                `✅ Pembayaran diterima via *${gateway}*\n` +
-                `📦 Paket: *${fresh.profile_name}* (${fresh.validity || '-'})\n` +
-                `💰 Harga: Rp ${Number(fresh.price || 0).toLocaleString('id-ID')}\n\n` +
-                `👤 User: *${created.code}*\n` +
-                `🔑 Pass: *${created.pass}*\n\n` +
-                `Terima kasih.`;
-              await sendWA(fresh.buyer_phone, msg);
-              db.prepare(`
-                UPDATE public_voucher_orders
-                SET wa_sent=1, wa_sent_at=CURRENT_TIMESTAMP, wa_error='', updated_at=CURRENT_TIMESTAMP
-                WHERE id=?
-              `).run(orderId);
-            } catch (waErr) {
-              db.prepare(`
-                UPDATE public_voucher_orders
-                SET wa_sent=0, wa_error=?, updated_at=CURRENT_TIMESTAMP
-                WHERE id=?
-              `).run(String(waErr?.message || waErr || ''), orderId);
-            }
-          }
+          const voucherFulfillmentSvc = require('../services/voucherFulfillmentService');
+          await voucherFulfillmentSvc.fulfillVoucherOrder(orderId, { methodLabel: gateway });
         } catch (e) {
           logger.error(`[Webhook] Voucher fulfill gagal (order=${orderId}): ${e.message}`);
         }
