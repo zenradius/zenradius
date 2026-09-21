@@ -131,6 +131,8 @@
     }
     .order-code-k{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--portal-muted);font-weight:700}
     .order-code-v{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--portal-accent);letter-spacing:.5px;word-break:break-all}
+    .order-code-box-single{flex:1 1 100%;align-items:center;text-align:center;padding:14px 12px}
+    .order-code-box-single .order-code-v{font-size:22px;letter-spacing:2px}
     .order-progress-bar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
     .order-progress-fill{height:100%;width:40%;border-radius:999px;background:linear-gradient(90deg, var(--portal-primary), var(--portal-primary-strong));animation:progressSlide 1.6s ease-in-out infinite}
     @keyframes progressSlide{0%{transform:translateX(-100%)}50%{transform:translateX(60%)}100%{transform:translateX(250%)}}
@@ -312,13 +314,9 @@
               <div class="order-result order-result-success mt-3">
                 <div class="order-result-title"><i class="bi bi-patch-check-fill me-2"></i>Voucher Siap Digunakan</div>
                 <div class="order-result-codes">
-                  <div class="order-code-box">
-                    <span class="order-code-k">Username</span>
+                  <div class="order-code-box order-code-box-single">
+                    <span class="order-code-k">Kode Voucher (Username &amp; Password)</span>
                     <span class="order-code-v"><%= order.voucher_code %></span>
-                  </div>
-                  <div class="order-code-box">
-                    <span class="order-code-k">Password</span>
-                    <span class="order-code-v"><%= order.voucher_password %></span>
                   </div>
                 </div>
                 <% if (Number(order.wa_sent || 0) === 1) { %>

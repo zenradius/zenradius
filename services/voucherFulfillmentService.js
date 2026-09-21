@@ -38,48 +38,34 @@ const markVoucherWaSentErr = db.prepare(`
   WHERE id=?
 `);
 
-/** Generate a voucher code using the same alphabet rules as admin-created batches. */
-function genCustomCode(len, charset) {
-  const n = Math.max(4, Math.min(16, Number(len) || 6));
-  let chars = '0123456789';
-  if (charset === 'letters') chars = 'abcdefghjkmnpqrstuvwxyz';
-  else if (charset === 'mixed') chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let out = '';
-  for (let i = 0; i < n; i++) {
-    out += chars.charAt(Math.floor(Math.random() * chars.length));
+/**
+ * Generate a public-voucher code in the format: 6 random mixed-case letters
+ * followed by the last 3 digits of the buyer's WhatsApp number.
+ * Example: buyer_phone=62812xxxx881 -> "aBrKtZ881"
+ */
+function genPublicVoucherCode(buyerPhone) {
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
+  let letterPart = '';
+  for (let i = 0; i < 6; i++) {
+    letterPart += letters.charAt(Math.floor(Math.random() * letters.length));
   }
-  if (charset === 'numbers' && out[0] === '0') out = '1' + out.slice(1);
-  return out;
+  const digits = String(buyerPhone || '').replace(/\D/g, '');
+  const last3 = digits.length >= 3 ? digits.slice(-3) : digits.padStart(3, '0');
+  return letterPart + last3;
 }
 
-/** Resolve prefix/codeLength/charset from voucher_packages, falling back to defaults. */
-function resolveCodeFormat(routerId, profileName) {
-  let prefix = '';
-  let codeLength = 6;
-  let charset = 'mixed';
-  try {
-    const pkg = db.prepare('SELECT * FROM voucher_packages WHERE router_id IS ? AND profile_name = ?').get(routerId ?? null, profileName);
-    if (pkg) {
-      prefix = String(pkg.prefix || '').trim();
-      codeLength = Math.max(4, Math.min(16, Number(pkg.code_length) || 6));
-      charset = String(pkg.charset || 'mixed');
-    }
-  } catch (e) {
-    logger.error('[VoucherFulfillment] Gagal query voucher_packages: ' + e.message);
-  }
-  return { prefix, codeLength, charset };
-}
-
-/** Create the MikroTik hotspot user, retrying on code collisions. */
+/**
+ * Create the MikroTik hotspot user for a public voucher order.
+ * Code format: 6 random mixed-case letters + last 3 digits of buyer's WhatsApp
+ * number (e.g. "aBrKtZ881"). Username and password are always identical.
+ * Retries on username collisions.
+ */
 async function createHotspotVoucherUser(order) {
-  const { prefix, codeLength, charset } = resolveCodeFormat(order.router_id, order.profile_name);
-
   let created = null;
   let attempt = 0;
   while (attempt < 10) {
     attempt++;
-    const coreLen = Math.max(4, codeLength - prefix.length);
-    const code = prefix + genCustomCode(coreLen, charset);
+    const code = genPublicVoucherCode(order.buyer_phone);
     const pass = code;
     const comment = `vc-${code}-${order.profile_name}`;
     const userData = {
@@ -116,8 +102,8 @@ function buildVoucherDeliveryMessage(order, created, methodLabel) {
     `✅ Pembayaran diterima via *${methodLabel || 'QRIS'}*\n` +
     `📦 Paket: *${order.profile_name}* (${order.validity || '-'})\n` +
     `💰 Harga: Rp ${Number(order.price || 0).toLocaleString('id-ID')}\n\n` +
-    `👤 User: *${created.code}*\n` +
-    `🔑 Pass: *${created.pass}*\n\n` +
+    `🎟️ *Kode Voucher:* *${created.code}*\n` +
+    `(Gunakan kode ini sebagai username maupun password saat login hotspot)\n\n` +
     `Terima kasih.`
   );
 }
@@ -168,7 +154,6 @@ async function fulfillVoucherOrder(orderId, opts = {}) {
 module.exports = {
   fulfillVoucherOrder,
   createHotspotVoucherUser,
-  resolveCodeFormat,
-  genCustomCode,
+  genPublicVoucherCode,
   buildVoucherDeliveryMessage
 };
