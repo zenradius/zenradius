@@ -44,7 +44,7 @@
   overflow: hidden;
   border-radius: 16px;
   border: 1px solid var(--vc-border);
-  background-image: linear-gradient(135deg, var(--vc-primary), var(--vc-electric)), url('/img/voucher-wifi-card.svg');
+  background-image: linear-gradient(135deg, rgba(35, 96, 96, 0.94), rgba(24, 63, 81, 0.96)), url('/img/voucher-wifi-card.svg');
   background-size: cover, cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -91,7 +91,16 @@
   align-items: center;
 }
 .v-brand-logo-container { width: 100%; height: 100%; display: flex; align-items: center; }
-.v-brand-real-logo { max-width: 100%; max-height: 100%; object-fit: contain; display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
+.v-brand-real-logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
 .v-brand-fallback-group { display: flex; flex-direction: column; line-height: 1; }
 .v-brand-name {
   font-size: 1.05rem;
@@ -105,24 +114,24 @@
 .v-brand-sub { margin-top: 2px; padding-left: 6px; font-size: .78rem; letter-spacing: .03em; color: rgba(255,255,255,0.9); }
 .v-tagline {
   position: absolute;
-  top: 28%;
+  top: 26%;
   left: 6%;
-  color: rgba(255,255,255,0.95);
-  font-size: 1.05rem;
+  color: #a5f4ed; /* Matching teal tint */
+  font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   text-shadow: 0 1px 2px rgba(0,0,0,0.28);
 }
 .v-ribbon {
   position: absolute;
-  top: 40%;
+  top: 38%;
   left: 6%;
   display: inline-block;
-  padding: .6rem 1.1rem;
+  padding: .5rem 1rem;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--vc-electric), var(--vc-turquoise));
+  background: linear-gradient(90deg, var(--vc-turquoise), var(--vc-electric));
   color: #fff;
-  font-size: 1.05rem;
+  font-size: 1rem;
   line-height: 1.1;
   font-weight: 900;
   letter-spacing: .02em;
@@ -172,15 +181,15 @@
 .v-signature {
   position: absolute;
   right: 5%;
-  bottom: 18%;
+  bottom: 22%; /* Moved up, away from bottom benefits info */
   transform: rotate(-8deg);
-  color: rgba(255,255,255,0.9);
+  color: rgba(255,255,255,0.8);
   font-family: 'Brush Script MT', 'Segoe Script', cursive;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-style: italic;
   line-height: .95;
   text-align: center;
-  opacity: 0.85;
+  opacity: 0.8;
 }
 .v-signature::after { content: ''; display: block; height: .2rem; margin-top: .4rem; border-radius: 100%; background: rgba(255,255,255,0.12); transform: rotate(-6deg); }
 @media (max-width: 760px) {
@@ -193,13 +202,13 @@
   .voucher-price { font-size: 1.35rem; }
   .v-currency { font-size: .8rem; }
   .v-validity { font-size: .78rem; }
-  .v-tagline { font-size: .82rem; top: 27%; }
-  .v-ribbon { font-size: .82rem; padding: .45rem .9rem; top: 39%; }
+  .v-tagline { font-size: .82rem; top: 25%; }
+  .v-ribbon { font-size: .82rem; padding: .45rem .9rem; top: 37%; }
   .v-benefit { font-size: .7rem; gap: .4rem; }
   .v-benefit-icon { flex: 0 0 2.2rem; width: 2.2rem; height: 2.2rem; font-size: .9rem; }
   .v-benefit + .v-benefit { padding-left: .6rem; }
   .v-benefits { gap: .5rem; bottom: 7%; }
-  .v-signature { font-size: .85rem; bottom: 16%; }
+  .v-signature { font-size: .85rem; bottom: 20%; }
 }
 @media (max-width: 380px) {
   .wrap { padding: 10px; }
