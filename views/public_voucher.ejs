@@ -257,7 +257,11 @@
 
           <div class="row g-2">
             <div class="col-12">
-              <label class="muted small mb-1">Pilih Paket Internet Terbaik</label>
+              <div class="filter-title mb-3" style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--portal-muted)">
+                <i class="bi bi-ticket-perforated" style="color:var(--portal-primary);font-size:13px"></i>
+                <span>Pilih Paket Internet Terbaik</span>
+                <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--portal-line),transparent);margin-left:8px"></div>
+              </div>
               <% if (!profiles || profiles.length === 0) { %>
                 <div class="muted small mt-1">Belum ada profile voucher (metadata Mikhmon) di MikroTik.</div>
               <% } else { %>
@@ -324,7 +328,10 @@
                     </label>
                   <% }) %>
                 </div>
-                <div class="muted small mt-2" id="step1Hint">Klik paket voucher di atas untuk langsung melakukan pembelian & pembayaran.</div>
+                <div class="p-3 mt-3 rounded-3" style="background:rgba(45,212,191,0.04);border:1px solid var(--portal-line);display:flex;align-items:start;gap:10px;" id="step1Hint">
+                  <i class="bi bi-info-circle" style="color:var(--portal-primary);font-size:15px;margin-top:2px"></i>
+                  <span style="font-size:12.5px;line-height:1.5;color:rgba(168,190,194,0.95)">Klik paket voucher pilihan Anda di atas untuk langsung melakukan pengisian data nomor WhatsApp dan pembayaran cepat.</span>
+                </div>
               <% } %>
             </div>
           </div>
@@ -469,16 +476,7 @@
 
         <footer class="site-footer" style="background:#173945;border-top:1px solid rgba(190,239,255,0.32);padding:26px 0 18px;margin-top:32px;margin-left:-20px;margin-right:-20px;margin-bottom:-20px;border-radius:0 0 16px 16px">
           <div class="container text-center">
-            <div class="footer-panel" style="margin-bottom:18px">
-              <ul class="footer-legal" style="list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;justify-content:center;gap:16px 22px">
-                <li><a href="/customer/about" style="font-family:var(--font-sans);color:rgba(237,250,250,0.7);text-decoration:none;font-size:0.82rem;line-height:1.5;transition:color 0.2s ease"><%= t('customer.footer.about', 'Tentang Kami') %></a></li>
-                <li><a href="/customer/contact" style="font-family:var(--font-sans);color:rgba(237,250,250,0.7);text-decoration:none;font-size:0.82rem;line-height:1.5;transition:color 0.2s ease"><%= t('customer.footer.contact', 'Kontak Kami') %></a></li>
-                <li><a href="/customer/tos" style="font-family:var(--font-sans);color:rgba(237,250,250,0.7);text-decoration:none;font-size:0.82rem;line-height:1.5;transition:color 0.2s ease"><%= t('customer.footer.tos', 'Syarat & Ketentuan') %></a></li>
-                <li><a href="/customer/privacy" style="font-family:var(--font-sans);color:rgba(237,250,250,0.7);text-decoration:none;font-size:0.82rem;line-height:1.5;transition:color 0.2s ease"><%= t('customer.footer.privacy', 'Kebijakan Privasi') %></a></li>
-                <li><a href="/customer/tos#refund" style="font-family:var(--font-sans);color:rgba(237,250,250,0.7);text-decoration:none;font-size:0.82rem;line-height:1.5;transition:color 0.2s ease"><%= t('customer.footer.refund', 'Kebijakan Refund') %></a></li>
-              </ul>
-            </div>
-            <div class="footer-bottom text-center" style="font-family:var(--font-sans);font-size:0.8rem;color:rgba(237, 250, 250, 0.72);margin-top:12px;padding-top:0">
+            <div class="footer-bottom text-center" style="font-family:var(--font-sans);font-size:0.8rem;color:rgba(237, 250, 250, 0.72);margin-top:4px;padding-top:0">
               &copy; <%= new Date().getFullYear() %> <%- footerInfo %>
             </div>
           </div>
