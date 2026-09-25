@@ -228,6 +228,36 @@
       margin-bottom:8px;
     }
     .c-modal-section-label i{font-size:13px}
+    .cmpk-card{
+      position:relative;
+      border-radius:14px;
+      padding:16px 18px;
+      margin-bottom:16px;
+      overflow:hidden;
+      background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 45%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 55%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      border:1px solid var(--admin-border);
+      box-shadow:0 8px 24px rgba(2,44,99,.18);
+    }
+    .cmpk-ribbon{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      padding:4px 11px;
+      border-radius:999px;
+      background: linear-gradient(90deg, var(--vc-turquoise, #2dd4bf), var(--vc-electric, #22a7f0));
+      color:#04211f;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+    }
+    .cmpk-name{font-weight:800;color:#fff;font-size:15px;margin-top:10px;line-height:1.3;word-break:break-word}
+    .cmpk-offer{display:flex;align-items:baseline;gap:12px;margin-top:8px;flex-wrap:wrap}
+    .cmpk-price{display:flex;align-items:baseline;font-weight:900;font-size:24px;color:#fff;letter-spacing:-.02em;text-shadow:0 2px 6px rgba(0,0,0,.18)}
+    .cmpk-currency{font-size:12px;font-weight:700;margin-right:5px;opacity:.9}
+    .cmpk-divider{width:2px;height:22px;background:rgba(255,255,255,.14);transform:skew(-15deg)}
+    .cmpk-validity{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.92)}
     .pm-grid-modal{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
     .pm-item-modal{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;background:var(--admin-bg3);border:1.5px solid var(--admin-border);cursor:pointer;transition:all .2s ease;position:relative}
     .pm-item-modal:hover{border-color:var(--admin-primary);background:rgba(34,211,238,.08);transform:translateY(-1px)}
@@ -509,12 +539,14 @@
                 <div style="font-size:13.5px;line-height:1.5;margin-bottom:12px">Silakan masukkan nomor WhatsApp pembeli dan pilih metode pembayaran untuk melanjutkan pesanan Anda:</div>
                 
                 <!-- Paket selected display -->
-                <div class="c-modal-detail" style="margin-top:0;margin-bottom:16px;background:rgba(45,212,191,.04);border-color:rgba(45,212,191,.15)">
-                  <div style="font-weight:800;color:#fff;font-size:15px" id="popName">-</div>
-                  <div style="color:var(--portal-muted);font-size:12.5px;margin-top:2px;display:flex;align-items:center;gap:4px">
-                    <i class="bi bi-clock-history"></i> Masa Aktif: <span id="popValidity">-</span>
+                <div class="cmpk-card">
+                  <span class="cmpk-ribbon"><i class="bi bi-wifi"></i> Voucher Internet</span>
+                  <div class="cmpk-name" id="popName">-</div>
+                  <div class="cmpk-offer">
+                    <span class="cmpk-price"><span class="cmpk-currency">Rp</span><span id="popPrice">-</span></span>
+                    <span class="cmpk-divider" aria-hidden="true"></span>
+                    <span class="cmpk-validity"><i class="bi bi-clock-history"></i> <span id="popValidity">-</span></span>
                   </div>
-                  <div style="font-weight:900;color:#2dd4bf;font-size:18px;margin-top:6px;" id="popPrice">-</div>
                 </div>
 
                 <!-- Input WhatsApp directly inside popup -->
@@ -645,7 +677,7 @@
         activeRadio = r;
         document.getElementById('popName').textContent = r.value;
         document.getElementById('popValidity').textContent = r.dataset.validity || '-';
-        document.getElementById('popPrice').textContent = 'Rp ' + Number(r.dataset.price || 0).toLocaleString('id-ID');
+        document.getElementById('popPrice').textContent = Number(r.dataset.price || 0).toLocaleString('id-ID');
         document.getElementById('confirmModal')?.classList.add('active');
         clearTimeout(focusTimer);
         focusTimer = setTimeout(() => document.getElementById('buyerPhone')?.focus(), 220);
