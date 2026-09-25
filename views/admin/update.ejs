@@ -104,9 +104,6 @@
         <% } %>
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-          <form method="GET" action="/admin/update">
-            <button type="submit" class="btn btn-g"><i class="bi bi-arrow-repeat"></i> <%= t('admin.update.check', 'Cek Versi') %></button>
-          </form>
           <form method="POST" action="/admin/update/run" onsubmit="return confirmUpdate(event)">
             <button type="submit" class="btn btn-s" <%= (info && info.error) ? 'disabled' : '' %>><i class="bi bi-cloud-arrow-down"></i> <%= t('admin.update.run', 'Update Sekarang') %></button>
           </form>
