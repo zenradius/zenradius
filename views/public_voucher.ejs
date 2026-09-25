@@ -216,6 +216,26 @@
       gap:10px;
       justify-content:flex-end;
     }
+    .c-modal-section-label{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:11.5px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+      color:var(--admin-primary);
+      margin-bottom:8px;
+    }
+    .c-modal-section-label i{font-size:13px}
+    .pm-grid-modal{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
+    .pm-item-modal{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;background:var(--admin-bg3);border:1.5px solid var(--admin-border);cursor:pointer;transition:all .2s ease;position:relative}
+    .pm-item-modal:hover{border-color:var(--admin-primary);background:rgba(34,211,238,.08);transform:translateY(-1px)}
+    .pm-radio-modal:checked + .pm-item-modal{background:var(--admin-pdim);border-color:var(--admin-primary);box-shadow:0 4px 14px rgba(34,211,238,.18)}
+    .pm-radio-modal:checked + .pm-item-modal::after{content:'\F272';font-family:'bootstrap-icons';position:absolute;top:6px;right:6px;width:16px;height:16px;background:var(--admin-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#062c2a}
+    .pm-item-modal .pm-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto;overflow:hidden}
+    .pm-item-modal .pm-icon img{width:100%;height:100%;object-fit:contain;padding:3px;background:rgba(255,255,255,.98);border-radius:8px}
+    .pm-item-modal .pm-label{font-size:11.5px;font-weight:700;color:var(--portal-text);line-height:1.25;word-break:break-word}
     
     .payment-methods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:12px}
     @media (max-width: 768px){.payment-methods-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}}
@@ -499,7 +519,7 @@
 
                 <!-- Input WhatsApp directly inside popup -->
                 <div class="mb-3">
-                  <label class="muted small mb-1 fw-bold">Nomor WhatsApp Pembeli</label>
+                  <div class="c-modal-section-label"><i class="bi bi-whatsapp"></i> Nomor WhatsApp Pembeli</div>
                   <div style="position:relative; width: 100%;">
                     <i class="bi bi-whatsapp" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#2dd4bf;font-size:15px;pointer-events:none;z-index:4;"></i>
                     <input class="form-control" name="buyer_phone" id="buyerPhone" inputmode="numeric" placeholder="Contoh: 081234567890" style="padding-left: 38px; height: 46px;" required>
@@ -509,23 +529,19 @@
 
                 <!-- Payment channels inside popup -->
                 <div class="mb-2">
-                  <label class="muted small mb-1 fw-bold">Metode Pembayaran</label>
+                  <div class="c-modal-section-label"><i class="bi bi-credit-card-2-front"></i> Pilih Metode Pembayaran</div>
                   <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
                   <% if (!hasStaticQris && (!paymentChannels || paymentChannels.length === 0)) { %>
                     <input type="hidden" name="method" value="QRIS">
-                    <div class="payment-methods-grid mt-1" style="grid-template-columns:1fr">
-                      <div class="pay-method-item" style="cursor:default;flex-direction:row;padding:10px 14px;background:rgba(255,255,255,.03)">
-                        <div class="p-icon" style="width:36px;height:36px;font-size:16px;margin:0"><i class="bi bi-qr-code-scan"></i></div>
-                        <div class="p-info" style="align-items:flex-start">
-                          <span class="p-name" style="font-size:12.5px">QRIS / E-Wallet</span>
-                        </div>
-                      </div>
+                    <div class="pm-item-modal" style="cursor:default;grid-column:1/-1">
+                      <div class="pm-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><i class="bi bi-qr-code-scan"></i></div>
+                      <span class="pm-label">QRIS / E-Wallet</span>
                     </div>
                   <% } else { %>
-                    <div class="payment-methods-grid mt-1" style="grid-template-columns:repeat(2,1fr);gap:8px">
+                    <div class="pm-grid-modal">
                       <% if (hasStaticQris) { %>
                         <input
-                          class="pm-radio"
+                          class="pm-radio-modal"
                           type="radio"
                           name="method"
                           id="pm_static"
@@ -533,11 +549,9 @@
                           checked
                           style="position:absolute;opacity:0;pointer-events:none"
                         >
-                        <label class="pay-method-item" for="pm_static" style="padding:10px;gap:6px;border-radius:10px;background:rgba(15,23,42,.62)">
-                          <div class="p-icon" style="width:32px;height:32px;font-size:15px;margin-bottom:0"><i class="bi bi-qr-code-scan"></i></div>
-                          <div class="p-info">
-                            <span class="p-name" style="font-size:11.5px">QRIS Instan</span>
-                          </div>
+                        <label class="pm-item-modal" for="pm_static">
+                          <div class="pm-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><i class="bi bi-qr-code-scan"></i></div>
+                          <span class="pm-label">QRIS Instan</span>
                         </label>
                       <% } %>
                       <% paymentChannels.forEach((ch, idx) => {
@@ -545,36 +559,36 @@
                         const name = ch.name || code;
                         const group = String(ch.group || '').toLowerCase();
                         let icon = 'bi-wallet2';
-                        let badgeClass = 'pb-bank';
-                        
+                        let iconBg = 'linear-gradient(135deg,#1e293b,#334155)';
+
                         if (code === 'QRIS' || code.includes('QRIS')) {
                           icon = 'bi-qr-code-scan';
-                          badgeClass = 'pb-bank';
+                          iconBg = 'linear-gradient(135deg,#6366f1,#8b5cf6)';
                         } else if (code.includes('DANA')) {
                           icon = 'bi-wallet2';
-                          badgeClass = 'pb-dana';
+                          iconBg = 'linear-gradient(135deg,#3b82f6,#0ea5e9)';
                         } else if (code.includes('OVO')) {
                           icon = 'bi-wallet2';
-                          badgeClass = 'pb-ovo';
+                          iconBg = 'linear-gradient(135deg,#a855f7,#6366f1)';
                         } else if (code.includes('SHOPEE')) {
                           icon = 'bi-wallet2';
-                          badgeClass = 'pb-shopeepay';
+                          iconBg = 'linear-gradient(135deg,#f97316,#f43f5e)';
                         } else if (code.includes('LINKAJA')) {
                           icon = 'bi-wallet2';
-                          badgeClass = 'pb-linkaja';
+                          iconBg = 'linear-gradient(135deg,#ef4444,#f43f5e)';
                         } else if (code.includes('GOPAY')) {
                           icon = 'bi-wallet2';
-                          badgeClass = 'pb-gopay';
+                          iconBg = 'linear-gradient(135deg,#22c55e,#10b981)';
                         } else if (code.includes('VA') || group.includes('virtual')) {
                           icon = 'bi-bank';
-                          badgeClass = 'pb-bank';
+                          iconBg = 'linear-gradient(135deg,#1e293b,#334155)';
                         } else if (code.includes('SNAP') || code.includes('XENDIT') || code.includes('DUITKU')) {
                           icon = 'bi-credit-card';
-                          badgeClass = 'pb-bank';
+                          iconBg = 'linear-gradient(135deg,#1e293b,#334155)';
                         }
                       %>
                         <input
-                          class="pm-radio"
+                          class="pm-radio-modal"
                           type="radio"
                           name="method"
                           id="pm_<%= idx %>"
@@ -582,19 +596,15 @@
                           <%= (!hasStaticQris && idx === 0) ? 'checked' : '' %>
                           style="position:absolute;opacity:0;pointer-events:none"
                         >
-                        <label class="pay-method-item" for="pm_<%= idx %>" style="padding:10px;gap:6px;border-radius:10px;background:rgba(15,23,42,.62)">
-                          <div class="p-icon" style="width:32px;height:32px;font-size:15px;margin-bottom:0">
+                        <label class="pm-item-modal" for="pm_<%= idx %>">
+                          <div class="pm-icon" style="background:<%= ch.icon_url ? 'transparent' : iconBg %>;<%= ch.icon_url ? '' : 'color:#fff' %>">
                             <% if (ch.icon_url) { %>
-                              <img src="<%= ch.icon_url %>" alt="<%= name %>" class="p-logo" style="padding:4px">
+                              <img src="<%= ch.icon_url %>" alt="<%= name %>">
                             <% } else { %>
-                              <div class="p-badge <%= badgeClass %>" style="font-size:14px">
-                                <i class="<%= icon %>"></i>
-                              </div>
+                              <i class="<%= icon %>"></i>
                             <% } %>
                           </div>
-                          <div class="p-info">
-                            <span class="p-name" style="font-size:11.5px"><%= name %></span>
-                          </div>
+                          <span class="pm-label"><%= name %></span>
                         </label>
                       <% }) %>
                     </div>
