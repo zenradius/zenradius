@@ -8,7 +8,7 @@ const customerSvc = require('../services/customerService');
 const adminSvc = require('../services/adminService');
 const attendanceSvc = require('../services/attendanceService');
 const pdfSvc = require('../services/pdfInvoiceService');
-const { uploadAttendance, removeAttendanceFile } = require('../middleware/attendanceUpload');
+const { uploadAttendance, verifyAttendanceFileMagicBytes, removeAttendanceFile } = require('../middleware/attendanceUpload');
 const sidebarMenuSvc = require('../services/sidebarMenuService');
 
 function requireCollectorSession(req, res, next) {
@@ -133,7 +133,7 @@ router.get('/attendance', requireCollectorSession, requireMenuAccess('collector_
   }
 });
 
-router.post('/attendance/checkin', requireCollectorSession, uploadAttendance.single('photo'), (req, res) => {
+router.post('/attendance/checkin', requireCollectorSession, uploadAttendance.single('photo'), verifyAttendanceFileMagicBytes, (req, res) => {
   try {
     const collectorId = req.session.collectorId;
     const collectorName = req.session.collectorName;
@@ -165,7 +165,7 @@ router.post('/attendance/checkin', requireCollectorSession, uploadAttendance.sin
   }
 });
 
-router.post('/attendance/checkout', requireCollectorSession, uploadAttendance.single('photo'), (req, res) => {
+router.post('/attendance/checkout', requireCollectorSession, uploadAttendance.single('photo'), verifyAttendanceFileMagicBytes, (req, res) => {
   try {
     const collectorId = req.session.collectorId;
 

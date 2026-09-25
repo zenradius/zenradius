@@ -73,7 +73,7 @@ const qrisUtil = require('../utils/qrisUtil');
 const { MultiFormatReader, BarcodeFormat, DecodeHintType, BinaryBitmap, HybridBinarizer, RGBLuminanceSource } = require('@zxing/library');
 const QRCode = require('qrcode');
 const acsPortal = require('./acsPortal');
-const { uploadAttendance, removeAttendanceFile } = require('../middleware/attendanceUpload');
+const { uploadAttendance, verifyAttendanceFileMagicBytes, removeAttendanceFile } = require('../middleware/attendanceUpload');
 
 const DIGIFLAZZ_URL = 'https://api.digiflazz.com/v1';
 const digiflazzApi = axios.create({
@@ -1430,7 +1430,7 @@ router.get('/cashiers/attendance', requireAdminSession, requireSidebarMenuAccess
   }
 });
 
-router.post('/cashiers/attendance/checkin', requireAdminSession, uploadAttendance.single('photo'), (req, res) => {
+router.post('/cashiers/attendance/checkin', requireAdminSession, uploadAttendance.single('photo'), verifyAttendanceFileMagicBytes, (req, res) => {
   try {
     const cashierId = req.session.cashierId;
     const cashierName = req.session.cashierName || req.session.username;
@@ -1466,7 +1466,7 @@ router.post('/cashiers/attendance/checkin', requireAdminSession, uploadAttendanc
   }
 });
 
-router.post('/cashiers/attendance/checkout', requireAdminSession, uploadAttendance.single('photo'), (req, res) => {
+router.post('/cashiers/attendance/checkout', requireAdminSession, uploadAttendance.single('photo'), verifyAttendanceFileMagicBytes, (req, res) => {
   try {
     const cashierId = req.session.cashierId;
     

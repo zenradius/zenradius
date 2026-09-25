@@ -12,7 +12,7 @@ const attendanceSvc = require('../services/attendanceService');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { uploadAttendance, removeAttendanceFile } = require('../middleware/attendanceUpload');
+const { uploadAttendance, verifyAttendanceFileMagicBytes, removeAttendanceFile } = require('../middleware/attendanceUpload');
 const genieacsApi = require('../config/genieacs');
 const { logger } = require('../config/logger');
 const sidebarMenuSvc = require('../services/sidebarMenuService');
@@ -757,7 +757,7 @@ router.get('/attendance', requireTechSession, requireMenuAccess('tech_attendance
   });
 });
 
-router.post('/attendance/checkin', requireTechSession, uploadAttendance.single('photo'), (req, res) => {
+router.post('/attendance/checkin', requireTechSession, uploadAttendance.single('photo'), verifyAttendanceFileMagicBytes, (req, res) => {
   try {
     const techId = req.session.techId;
     const techName = req.session.techName;
@@ -794,7 +794,7 @@ router.post('/attendance/checkin', requireTechSession, uploadAttendance.single('
   }
 });
 
-router.post('/attendance/checkout', requireTechSession, uploadAttendance.single('photo'), (req, res) => {
+router.post('/attendance/checkout', requireTechSession, uploadAttendance.single('photo'), verifyAttendanceFileMagicBytes, (req, res) => {
   try {
     const techId = req.session.techId;
 

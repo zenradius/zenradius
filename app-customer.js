@@ -105,6 +105,25 @@ app.use(session({
 }));
 
 app.disable('x-powered-by');
+
+// Helmet: header keamanan tambahan (defense-in-depth). CSP/COEP/CORP dimatikan
+// karena banyak view EJS memakai inline script/style & resource cross-origin
+// (CDN, gambar upload) — menghindari perubahan UI/behavior yang tidak diminta.
+try {
+  const helmet = require('helmet');
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+    crossOriginOpenerPolicy: false,
+    hsts: false, // HSTS tetap diatur manual di bawah agar hanya aktif saat production+secure cookie
+    frameguard: { action: 'sameorigin' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+  }));
+} catch (e) {
+  logger.warn('[security] helmet tidak tersedia: ' + e.message);
+}
+
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
