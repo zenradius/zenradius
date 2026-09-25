@@ -258,6 +258,19 @@
     .cmpk-currency{font-size:12px;font-weight:700;margin-right:5px;opacity:.9}
     .cmpk-divider{width:2px;height:22px;background:rgba(255,255,255,.14);transform:skew(-15deg)}
     .cmpk-validity{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.92)}
+    .cmpk-signature{
+      position:absolute;
+      top:16px;
+      right:18px;
+      transform:rotate(-6deg);
+      color:rgba(255,255,255,.65);
+      font-family:'Brush Script MT','Segoe Script',cursive;
+      font-size:15px;
+      font-style:italic;
+      line-height:.95;
+      text-align:center;
+      opacity:.85;
+    }
     .pm-grid-modal{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
     .pm-item-modal{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;background:var(--admin-bg3);border:1.5px solid var(--admin-border);cursor:pointer;transition:all .2s ease;position:relative}
     .pm-item-modal:hover{border-color:var(--admin-primary);background:rgba(34,211,238,.08);transform:translateY(-1px)}
@@ -518,7 +531,7 @@
                 </div>
                 <div class="p-3 mt-3 rounded-3" style="background:rgba(45,212,191,0.04);border:1px solid var(--portal-line);display:flex;align-items:start;gap:10px;" id="step1Hint">
                   <i class="bi bi-info-circle" style="color:var(--portal-primary);font-size:15px;margin-top:2px"></i>
-                  <span style="font-size:12.5px;line-height:1.5;color:rgba(168,190,194,0.95)">Klik paket voucher pilihan Anda di atas untuk langsung melakukan pengisian data nomor WhatsApp dan pembayaran cepat.</span>
+                  <span style="font-size:12.5px;line-height:1.5;color:rgba(168,190,194,0.95)">Pilih salah satu paket voucher di atas untuk melanjutkan ke pengisian nomor WhatsApp dan proses pembayaran. Perlu diperhatikan, <strong style="color:#fff">satu kode voucher hanya berlaku untuk satu perangkat</strong> — kode yang telah diaktivasi pada perangkat pertama tidak dapat digunakan kembali pada perangkat lain.</span>
                 </div>
               <% } %>
             </div>
@@ -540,6 +553,7 @@
                 
                 <!-- Paket selected display -->
                 <div class="cmpk-card">
+                  <span class="cmpk-signature" aria-hidden="true">Stay<br>Connected</span>
                   <span class="cmpk-ribbon"><i class="bi bi-wifi"></i> Voucher Internet</span>
                   <div class="cmpk-name" id="popName">-</div>
                   <div class="cmpk-offer">
