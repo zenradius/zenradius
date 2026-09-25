@@ -44,11 +44,11 @@
   overflow: hidden;
   border-radius: 16px;
   border: 1px solid var(--vc-border);
-  background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 45%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 55%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%), url('/img/voucher-wifi-card.svg');
-  background-size: cover, cover, cover, cover;
+  background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 45%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 55%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+  background-size: cover, cover, cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-blend-mode: multiply;
+  background-blend-mode: normal;
   color: #fff;
   font-family: inherit;
   cursor: pointer;
