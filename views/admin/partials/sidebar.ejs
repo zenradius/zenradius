@@ -6,12 +6,11 @@ if (document.body) document.body.classList.remove('light-theme');
 try { localStorage.removeItem('app-theme'); } catch(e) {}
 </script>
 <style>
-  /* Mobile topbar logo — shown only on small screens */
-  .mw-mobile-logo{display:none}
+  /* Mobile sidebar tuning only — no duplicate logo in topbar */
   @media(max-width:992px){
-    .mw-mobile-logo{display:block;position:fixed;top:0;left:0;z-index:499;background:#173945;padding:6px 10px 6px 6px;border-bottom:1px solid var(--border)}
-    .mw-mobile-logo img{max-width:110px;max-height:36px;object-fit:contain}
-    .mw{margin-top:48px}
+    .sb-brand{padding:14px 12px}
+    .sb-brand img{max-width:min(150px,65%);max-height:46px}
+    .sb-brand .sb-sub{font-size:9px}
   }
 </style>
 <% if (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace) { %>
@@ -92,11 +91,6 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
   }
 </style>
 <% } %>
-
-<!-- Mobile logo bar (visible only on small screens) -->
-<div class="mw-mobile-logo">
-  <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" alt="<%= typeof brandName !== 'undefined' ? brandName : 'ZenRadius' %>">
-</div>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar" id="sidebar">

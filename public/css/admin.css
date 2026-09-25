@@ -487,8 +487,6 @@ html,body{width:100%}
   .sb-brand img{max-width:min(150px,65%);max-height:46px}
   .sb-brand .sb-sub{font-size:9px}
 }
-
-/* Bottom nav compact for very small screens */
 @media(max-width:480px){
   .bn-item{font-size:8px;padding:5px 3px;gap:2px}
   .bn-item i{font-size:18px}
