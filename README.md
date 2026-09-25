@@ -97,7 +97,7 @@ Selain payment gateway online, ZenRadius juga mendukung **QRIS Statis** dari aku
 | **QRIS Dinamis dari Payload Statis** | Jika payload QRIS statis diisi, sistem otomatis mengonversinya menjadi QRIS dinamis (nominal sudah terisi) saat pelanggan melakukan scan. |
 | **Webhook DANA Bisnis** | Endpoint `/api/webhook/dana` menerima notifikasi pembayaran langsung dari dashboard DANA Bisnis — tanpa perlu aplikasi otomasi HP pihak ketiga (mis. MacroDroid). |
 | **Webhook Generik (MacroDroid/SMS/dll)** | Endpoint `/api/webhook/v1/payment-notif` tersedia sebagai fallback untuk integrasi notifikasi lain (SMS banking, aplikasi otomasi HP) dengan proteksi `secret_key`. |
-| **Monitoring Real-time** | Panel admin **Payment QRIS Statis** (`/admin/payment-qris-static`) menampilkan tab **Webhook & Notifikasi** — log seluruh notifikasi masuk (status parsing, nominal, invoice/voucher yang cocok, IP pengirim) dengan auto-refresh 30 detik. |
+| **Monitoring Real-time** | Panel admin **Notifikasi E-Wallet** (`/admin/ewallet-logs`) menampilkan log seluruh notifikasi masuk (status parsing, nominal, invoice/voucher yang cocok, IP pengirim) dengan filter, live mode, dan notifikasi browser real-time. |
 
 > 📄 Panduan detail setup DANA Bisnis: lihat `DANA_QRIS_INTEGRATION.md`. Panduan Digiflazz Payment Gateway: lihat `DIGIFLAZZ_PAYMENT_INTEGRATION.md`.
 

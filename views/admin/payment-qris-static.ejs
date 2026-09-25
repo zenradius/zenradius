@@ -19,14 +19,9 @@
     </div>
   </div>
 
-  <!-- Navigation Tabs -->
-  <div style="display: flex; gap: 4px; padding: 12px 16px; background: var(--bg3); border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: center;">
-    <button class="mtab active" data-tab="config" onclick="showTab('config')" style="border-radius: 8px 8px 0 0; padding: 10px 16px; cursor: pointer; background: var(--bg2); border: 1px solid var(--border); border-bottom: none; color: var(--primary)">
-      <i class="bi bi-gear"></i> Konfigurasi
-    </button>
-    <button class="mtab" data-tab="webhooks" onclick="showTab('webhooks')" style="border-radius: 8px 8px 0 0; padding: 10px 16px; cursor: pointer; background: transparent; border: 1px solid transparent; border-bottom: 1px solid var(--border); color: var(--muted)">
-      <i class="bi bi-diagram-3"></i> Webhook & Notifikasi
-    </button>
+  <!-- Shortcut ke Log Notifikasi E-Wallet (menggantikan tab Webhook & Notifikasi yang duplikat) -->
+  <div style="display: flex; gap: 8px; padding: 12px 16px; background: var(--bg3); border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: center; justify-content: flex-end;">
+    <a href="/admin/ewallet-logs" class="btn btn-g btn-sm"><i class="bi bi-wallet2"></i> Lihat Log Notifikasi E-Wallet</a>
   </div>
   <div class="page">
 
@@ -137,120 +132,11 @@
 
     </div><!-- End TAB: Konfigurasi -->
 
-    <!-- TAB: Webhook & Notifikasi -->
-    <div id="tab-webhooks" class="tab-content" style="display: none;">
-
-      <div class="card mb16">
-        <div class="card-hd"><h6><i class="bi bi-diagram-3"></i> Webhook Notifications & Payment Matching</h6></div>
-        <div class="card-bd">
-          <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">
-            Pantau semua notifikasi pembayaran QRIS yang masuk dan cocok dengan invoice.
-          </p>
-
-          <!-- Payment Notif Logs -->
-          <div style="margin-top: 15px;">
-            <h6 style="font-size:12px; margin-bottom:12px; color:var(--text); font-weight:700"><i class="bi bi-clock-history"></i> Recent Webhook Notifications (Last 30)</h6>
-            <div style="overflow-x: auto;">
-              <table style="width:100%; font-size:12px; border-collapse:collapse">
-                <thead>
-                  <tr style="background:var(--bg3); border-bottom:1px solid var(--border)">
-                    <th style="padding:10px 8px; text-align:left">Created</th>
-                    <th style="padding:10px 8px; text-align:left">Service</th>
-                    <th style="padding:10px 8px; text-align:right">Amount (Rp)</th>
-                    <th style="padding:10px 8px; text-align:center">Parsed</th>
-                    <th style="padding:10px 8px; text-align:left">Matched</th>
-                    <th style="padding:10px 8px; text-align:left">Content Preview</th>
-                    <th style="padding:10px 8px; text-align:center">IP</th>
-                  </tr>
-                </thead>
-                <tbody id="webhook-notif-list">
-                  <tr style="text-align:center; padding:20px">
-                    <td colspan="7" style="padding:20px; color:var(--muted)"><i class="bi bi-hourglass"></i> Loading...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div style="margin-top:12px; text-align:center">
-              <button type="button" class="btn btn-g btn-sm" onclick="reloadWebhookNotifs()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-    </div><!-- End TAB: Webhooks -->
-
   </div>
 </div>
 
 <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js" integrity="sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx" crossorigin="anonymous"></script>
 <script>
-
-// Tab Navigation
-function showTab(tabName) {
-  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.mtab').forEach(el => {
-    el.style.background = 'transparent';
-    el.style.borderBottom = '1px solid var(--border)';
-    el.style.color = 'var(--muted)';
-  });
-  const tab = document.getElementById('tab-' + tabName);
-  if (tab) tab.style.display = 'block';
-  const btn = document.querySelector('[data-tab="' + tabName + '"]');
-  if (btn) {
-    btn.style.background = 'var(--bg2)';
-    btn.style.borderBottom = 'none';
-    btn.style.color = 'var(--primary)';
-  }
-}
-
-// Load Webhook Notifications
-async function reloadWebhookNotifs() {
-  try {
-    const res = await fetch('/admin/api/qris/webhook-notifs?limit=30', { credentials: 'same-origin' });
-    const data = await res.json();
-    const list = document.getElementById('webhook-notif-list');
-    if (!list) return;
-    
-    if (!Array.isArray(data) || data.length === 0) {
-      list.innerHTML = '<tr style="text-align:center"><td colspan="7" style="padding:20px; color:var(--muted)">Belum ada notifikasi webhook</td></tr>';
-      return;
-    }
-
-    list.innerHTML = data.map(notif => {
-      const created = notif.created_at ? new Date(notif.created_at).toLocaleString('id-ID') : '-';
-      const service = notif.service || '-';
-      const amount = notif.parsed_amount ? Number(notif.parsed_amount).toLocaleString('id-ID') : '-';
-      const parsed = notif.parsed_ok ? '<span style="color:#22c55e">✓</span>' : '<span style="color:#ef4444">✗</span>';
-      const matched = notif.matched_invoice_id ? `Invoice #${notif.matched_invoice_id}` 
-                    : notif.matched_voucher_order_id ? `Voucher #${notif.matched_voucher_order_id}`
-                    : notif.matched_donation_order_id ? `Donation #${notif.matched_donation_order_id}`
-                    : '<span style="color:#a8bec2">-</span>';
-      const preview = notif.content ? notif.content.slice(0, 60).replace(/\n/g, ' ') + '...' : '-';
-      const ip = notif.ip || '-';
-      return `<tr style="border-bottom:1px solid var(--border); background:${notif.parsed_ok ? 'rgba(34,212,62,0.04)' : 'rgba(239,68,68,0.04)'}">
-        <td style="padding:10px 8px">${created}</td>
-        <td style="padding:10px 8px"><code style="font-size:11px; background:var(--bg3); padding:2px 6px; border-radius:4px">${service}</code></td>
-        <td style="padding:10px 8px; text-align:right"><strong>${amount}</strong></td>
-        <td style="padding:10px 8px; text-align:center">${parsed}</td>
-        <td style="padding:10px 8px">${matched}</td>
-        <td style="padding:10px 8px; color:var(--muted); font-size:11px">${preview}</td>
-        <td style="padding:10px 8px; text-align:center; font-size:11px; color:var(--muted)">${ip}</td>
-      </tr>`;
-    }).join('');
-  } catch (e) {
-    console.error('Failed to load webhooks:', e);
-    const list = document.getElementById('webhook-notif-list');
-    if (list) list.innerHTML = '<tr><td colspan="7" style="padding:20px; text-align:center; color:#ef4444">Error loading webhook notifs</td></tr>';
-  }
-}
-
-// Load on page load
-document.addEventListener('DOMContentLoaded', () => {
-  reloadWebhookNotifs();
-  // Auto-refresh every 30 seconds
-  setInterval(reloadWebhookNotifs, 30000);
-});
 
 function copyInput(id, name) {
   const el = document.getElementById(id);

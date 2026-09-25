@@ -3779,25 +3779,6 @@ router.get('/payment-qris-static', requireAdminSession, requireSidebarMenuAccess
  * API: Get recent webhook payment notifications
  * Used by admin dashboard to monitor QRIS/payment webhook status
  */
-router.get('/api/qris/webhook-notifs', requireAdminSession, (req, res) => {
-  try {
-    const limit = Math.min(Number(req.query.limit) || 30, 100);
-    const notifs = db.prepare(`
-      SELECT id, created_at, service, parsed_amount, parsed_ok, 
-             matched_invoice_id, matched_voucher_order_id, matched_donation_order_id,
-             content, ip
-      FROM webhook_payment_notifs
-      ORDER BY id DESC
-      LIMIT ?
-    `).all(limit);
-    
-    return res.json(notifs || []);
-  } catch (e) {
-    logger.error(`[ADMIN][API] webhook-notifs error: ${e?.message}`);
-    return res.status(500).json({ error: e?.message });
-  }
-});
-
 router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'), (req, res) => {
   const settings = getSettings();
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
