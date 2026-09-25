@@ -255,6 +255,17 @@
       .c-modal-actions{flex-wrap:wrap;gap:8px}
       .c-modal-actions .btn{flex:1 1 auto;padding:10px 14px!important}
     }
+    .hero-steps{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:16px}
+    .hero-step{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--admin-btn-g-bg);border:1px solid var(--admin-btn-g-border);color:var(--portal-text);font-size:12px;font-weight:600;line-height:1.2}
+    .hero-step .hs-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--admin-btn-bg);color:var(--admin-btn-color);font-size:11px;font-weight:800;flex:0 0 auto}
+    .hero-step .hs-icon{color:var(--admin-primary);font-size:14px}
+    .hero-step-arrow{display:inline-flex;align-items:center;color:rgba(190,239,255,.4);font-size:14px}
+    @media (max-width: 576px){
+      .hero-steps{gap:6px}
+      .hero-step{padding:6px 10px;font-size:11px;gap:6px}
+      .hero-step .hs-num{width:18px;height:18px;font-size:10px}
+      .hero-step-arrow{display:none}
+    }
   </style>
   <link rel="stylesheet" href="/css/voucher-cards.css?v=1">
 </head>
@@ -263,7 +274,14 @@
     <div class="cardx">
       <div class="head" style="text-align:center;padding-top:28px;padding-bottom:22px;">
         <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="ZenRadius" style="height:42px;width:auto;max-width:220px;object-fit:contain;display:block;margin:0 auto 14px;" onerror="this.style.display='none'">
-        <p class="muted small mb-0 mx-auto" style="max-width:480px;line-height:1.7;">Dapatkan voucher internet harian dan mingguan secara instan — pilih paket pilihan Anda, selesaikan pelunasan via QRIS / VA / m-banking, dan ambil kode voucher aktif secara langsung tanpa hambatan.</p>
+        <p class="muted small mb-0 mx-auto" style="max-width:480px;line-height:1.7;">Dapatkan voucher internet harian dan mingguan secara instan — pilih paket, bayar, dan langsung terhubung.</p>
+        <div class="hero-steps">
+          <span class="hero-step"><span class="hs-num">1</span><i class="bi bi-ui-checks-grid hs-icon"></i> Pilih Paket</span>
+          <span class="hero-step-arrow"><i class="bi bi-chevron-right"></i></span>
+          <span class="hero-step"><span class="hs-num">2</span><i class="bi bi-qr-code-scan hs-icon"></i> Bayar via QRIS / VA / M-Banking</span>
+          <span class="hero-step-arrow"><i class="bi bi-chevron-right"></i></span>
+          <span class="hero-step"><span class="hs-num">3</span><i class="bi bi-lightning-charge-fill hs-icon"></i> Kode Voucher Aktif Instan</span>
+        </div>
       </div>
       <div class="body">
         <% if (error) { %>
