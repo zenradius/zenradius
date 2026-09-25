@@ -1650,12 +1650,27 @@ app.use(domainLicense.requireDomainLicense({
   allowPaths: [
     '/admin/login', '/admin/logout', '/admin/settings', '/api/settings',
     '/license', '/css', '/js', '/img', '/manifest', '/sw.js', '/favicon',
-    '/customer/payment/callback', '/webhook', '/acs', '/health'
+    '/customer/payment/callback', '/webhook', '/acs', '/health', '/app/connect'
   ]
 }));
 
 const mobileApi = require('./routes/mobileApi');
 app.use('/api/mobile/v1', mobileApi);
+
+// Landing page untuk scan QR stiker modem ONU pelanggan — mengarahkan ke
+// install PWA (bukan APK native) atau langsung ke portal web pelanggan.
+app.get('/app/connect', (req, res) => {
+  const settings = getSettingsWithCache();
+  const cid = String(req.query.cid || '').trim();
+  const companyName = settings.company_header || 'ZenRadius';
+  const companyPhone = settings.company_phone || '';
+  res.render('app_connect', {
+    companyName,
+    companyPhone,
+    cid,
+    settings
+  });
+});
 
 const customerPortal = require('./routes/customerPortal');
 app.use('/customer', customerPortal);

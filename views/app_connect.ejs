@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Pelanggan — <%= companyName %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <style>
+    :root {
+      --portal-bg: #101820;
+      --admin-bg2: #173945;
+      --admin-bg3: #1b4656;
+      --admin-border: rgba(190,239,255,0.22);
+      --admin-primary: #22D3EE;
+      --admin-pdim: rgba(34,211,238,0.14);
+      --portal-primary: #2dd4bf;
+      --portal-accent: #fbbf24;
+      --portal-text: #edf7f5;
+      --portal-muted: #a8bec2;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(160deg, var(--admin-bg2) 0%, #12262f 55%, #0d1c22 100%);
+      color: var(--portal-text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: linear-gradient(180deg, var(--admin-bg2) 0%, var(--admin-bg3) 100%);
+      border: 1px solid var(--admin-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 16px 38px rgba(2, 10, 14, 0.32);
+      text-align: center;
+    }
+    .logo-wrap { margin-bottom: 14px; }
+    .logo-img { max-height: 52px; max-width: 140px; object-fit: contain; }
+    .logo-icon { font-size: 40px; color: var(--admin-primary); }
+    .company-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--portal-text);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .badge-sub {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--admin-primary);
+      background: var(--admin-pdim);
+      border: 1px solid rgba(34,211,238,.28);
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .desc {
+      font-size: 13px;
+      color: var(--portal-muted);
+      margin: 16px 0 20px 0;
+      line-height: 1.5;
+    }
+    .btn-group { display: flex; flex-direction: column; gap: 10px; }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform .15s ease, filter .15s ease;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .btn-primary {
+      background: linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%);
+      color: #f4fffd;
+      border: 1px solid rgba(126,231,219,.48);
+      box-shadow: 0 8px 20px rgba(10,41,50,.24);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #0f9b7e 0%, #0d7a63 100%);
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(13, 122, 99, 0.32);
+    }
+    .btn-outline {
+      background: rgba(190,239,255,.06);
+      border: 1px solid var(--admin-border);
+      color: var(--portal-text);
+    }
+    .btn-outline:hover { background: rgba(190,239,255,.12); }
+    .info-box {
+      margin-top: 22px;
+      background: var(--admin-bg3);
+      border: 1px solid var(--admin-border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: left;
+      font-size: 12px;
+      color: var(--portal-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .info-item { display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
+    .info-item i { font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+    .footer-cs { margin-top: 18px; font-size: 12px; color: #6d8892; }
+    .footer-cs a { color: var(--admin-primary); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo-wrap">
+      <% if (settings.company_logo) { %>
+        <img src="<%= settings.company_logo %>" class="logo-img" alt="Logo" />
+      <% } else { %>
+        <i class="bi bi-wifi logo-icon"></i>
+      <% } %>
+    </div>
+
+    <div class="company-title"><%= companyName %></div>
+    <div><span class="badge-sub">Koneksi Resmi Modem Pelanggan</span></div>
+
+    <% if (cid) { %>
+      <div style="margin-top:12px;padding:6px 12px;background:var(--admin-pdim);border-radius:8px;font-size:12px;color:var(--admin-primary)">
+        ID Pelanggan: <strong><%= cid %></strong>
+      </div>
+    <% } %>
+
+    <div class="desc">
+      Terima kasih telah menggunakan layanan internet kami. Silakan gunakan tombol di bawah ini untuk mengakses akun dan layanan Anda:
+    </div>
+
+    <div class="btn-group">
+      <button type="button" id="btn-install-pwa-connect" class="btn btn-success" onclick="triggerPwaInstall()">
+        <i class="bi bi-download"></i> Install Aplikasi Pelanggan (PWA)
+      </button>
+
+      <a href="/customer/login<%= cid ? ('?cid=' + encodeURIComponent(cid)) : '' %>" class="btn btn-primary">
+        <i class="bi bi-box-arrow-in-right"></i> Masuk ke Portal Web Pelanggan
+      </a>
+
+      <% if (companyPhone) { %>
+        <a href="https://wa.me/<%= companyPhone.replace(/[^0-9]/g, '') %>" target="_blank" class="btn btn-outline">
+          <i class="bi bi-whatsapp" style="color:#2dd4bf"></i> Hubungi Bantuan CS WhatsApp
+        </a>
+      <% } %>
+    </div>
+
+    <div class="info-box">
+      <div class="info-item">
+        <i class="bi bi-lightning-charge-fill" style="color:#fbbf24"></i>
+        <div><strong>Waspada Petir:</strong> Cabut adaptor daya & kabel saat hujan lebat demi keselamatan modem Anda.</div>
+      </div>
+      <div class="info-item">
+        <i class="bi bi-arrow-repeat" style="color:#22D3EE"></i>
+        <div><strong>Cara Reboot:</strong> Matikan tombol power modem 10 detik lalu nyalakan kembali jika koneksi melambat.</div>
+      </div>
+    </div>
+
+    <div class="footer-cs">
+      <%= settings.company_address || '' %>
+    </div>
+  </div>
+
+  <script>
+    // PWA install prompt (sama seperti tombol "Install App" di dashboard/login pelanggan)
+    let deferredPwaPromptConnect = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPromptConnect = e;
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPwaPromptConnect) {
+        deferredPwaPromptConnect.prompt();
+        deferredPwaPromptConnect.userChoice.finally(() => { deferredPwaPromptConnect = null; });
+      } else {
+        // Fallback jika event belum tersedia (browser tidak mendukung / sudah terinstall)
+        window.location.href = '/customer/login<%= cid ? ("?cid=" + encodeURIComponent(cid)) : "" %>';
+      }
+    }
+  </script>
+
+</body>
+</html>
