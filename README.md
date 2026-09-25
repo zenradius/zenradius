@@ -24,6 +24,7 @@ LOGIN: zenradius - zenradius123
 ## 📖 Daftar Isi
 
 - [Fitur Utama](#-fitur-utama)
+- [Integrasi Payment Gateway](#-integrasi-payment-gateway)
 - [Tumpukan Teknologi](#-tumpukan-teknologi)
 - [Persyaratan Sistem](#-persyaratan-sistem)
 - [Instalasi via install.sh (VPS/Production)](#-instalasi-via-installsh-vpsproduction)
@@ -65,6 +66,37 @@ Mendukung instalasi mandiri (*standalone mode*) ke layar beranda perangkat mobil
 | Kolektor Keuangan | **ZenRadius Kolektor** |
 
 Aset statis di-cache menggunakan strategi **Stale-While-Revalidate** untuk pengalaman akses yang instan tanpa jeda pembersihan berkas oleh pengguna akhir.
+
+---
+
+## 💳 Integrasi Payment Gateway
+
+ZenRadius mendukung berbagai metode pembayaran otomatis untuk tagihan pelanggan maupun pembelian voucher publik — mulai dari payment gateway populer di Indonesia hingga QRIS Statis mandiri tanpa biaya transaksi tambahan.
+
+### Payment Gateway Online (Otomatis Penuh)
+| Gateway | Metode Didukung | Webhook Callback |
+|---|---|---|
+| **Tripay** | QRIS, Virtual Account (BCA/BNI/BRI/Permata/Mandiri), E-Wallet | `/customer/payment/callback` |
+| **Midtrans (Snap)** | QRIS, Virtual Account, Kartu Kredit, E-Wallet | `/customer/payment/callback` |
+| **Xendit** | QRIS, Virtual Account, Retail Outlet, E-Wallet | `/customer/payment/callback` |
+| **Duitku** | QRIS, Virtual Account, E-Wallet | `/customer/payment/callback` |
+| **iPaymu** | QRIS, DANA, ShopeePay, Virtual Account | `/customer/payment/callback` |
+| **Digiflazz Payment** | QRIS, E-Money, Transfer Bank, Virtual Account | `/api/webhook/digiflazz-payment` |
+
+Semua gateway di atas melakukan verifikasi **signature webhook** sebelum menandai tagihan/voucher sebagai lunas, serta otomatis memicu aktivasi ulang pelanggan yang sedang diisolir dan pengiriman notifikasi WhatsApp.
+
+### QRIS Statis Mandiri (Semi-Otomatis, Tanpa Fee Gateway)
+Selain payment gateway online, ZenRadius juga mendukung **QRIS Statis** dari akun e-wallet bisnis (mis. **DANA Bisnis**) yang di-upload/di-input langsung oleh admin — cocok untuk yang ingin menghindari biaya transaksi payment gateway pihak ketiga:
+
+| Fitur | Deskripsi |
+|---|---|
+| **Kode Bayar Unik** | Setiap tagihan/voucher otomatis diberi nominal unik (+1–999 rupiah) agar pembayaran dapat dicocokkan otomatis tanpa perlu konfirmasi manual. |
+| **QRIS Dinamis dari Payload Statis** | Jika payload QRIS statis diisi, sistem otomatis mengonversinya menjadi QRIS dinamis (nominal sudah terisi) saat pelanggan melakukan scan. |
+| **Webhook DANA Bisnis** | Endpoint `/api/webhook/dana` menerima notifikasi pembayaran langsung dari dashboard DANA Bisnis — tanpa perlu aplikasi otomasi HP pihak ketiga (mis. MacroDroid). |
+| **Webhook Generik (MacroDroid/SMS/dll)** | Endpoint `/api/webhook/v1/payment-notif` tersedia sebagai fallback untuk integrasi notifikasi lain (SMS banking, aplikasi otomasi HP) dengan proteksi `secret_key`. |
+| **Monitoring Real-time** | Panel admin **Payment QRIS Statis** (`/admin/payment-qris-static`) menampilkan tab **Webhook & Notifikasi** — log seluruh notifikasi masuk (status parsing, nominal, invoice/voucher yang cocok, IP pengirim) dengan auto-refresh 30 detik. |
+
+> 📄 Panduan detail setup DANA Bisnis: lihat `DANA_QRIS_INTEGRATION.md`. Panduan Digiflazz Payment Gateway: lihat `DIGIFLAZZ_PAYMENT_INTEGRATION.md`.
 
 ---
 
