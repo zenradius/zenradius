@@ -20,3 +20,6 @@ license-api/
 
 !database/seed/
 !database/seed/zenradius-seed.db
+
+# Local-only documentation
+DEPLOYMENT_RULES.md
