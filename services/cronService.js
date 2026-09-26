@@ -138,6 +138,161 @@ function startCronJobs() {
     logger.info(`[CRON] Selesai pengecekan isolir. Total ${isolatedCount} pelanggan baru di-isolir.`);
   });
 
+  // Pengingat tagihan H-3 jatuh tempo via WhatsApp (proactive)
+  schedule('0 10 * * *', async () => {
+    const enabled = getSetting('whatsapp_due_reminder_enabled', true);
+    const waEnabled = getSetting('whatsapp_enabled', false);
+    if (!enabled || !waEnabled) return;
+
+    let whatsappStatus;
+    try {
+      const mod = await import('./whatsappBot.mjs');
+      whatsappStatus = mod.whatsappStatus;
+    } catch (e) {
+      logger.error(`[CRON] Gagal load WhatsApp bot untuk pengingat H-3: ${e.message || e}`);
+      return;
+    }
+    if (!whatsappStatus || whatsappStatus.connection !== 'open') {
+      logger.warn('[CRON] WhatsApp bot belum terhubung, pengingat H-3 dilewati.');
+      return;
+    }
+
+    const daysBefore = Number(getSetting('whatsapp_due_reminder_days', 3) || 3) || 3;
+    const today = new Date();
+    const day = today.getDate();
+
+    const targetCustomers = [];
+    const seenPhones = new Set();
+    for (const c of customerSvc.getAllCustomers()) {
+      if (c.status !== 'active') continue;
+      const phone = c.phone ? String(c.phone).trim() : '';
+      if (!phone || phone.length < 9) continue;
+      let digits = phone.replace(/\D/g, '');
+      if (!digits) continue;
+      if (digits.startsWith('0')) digits = '62' + digits.slice(1);
+      if (seenPhones.has(digits)) continue;
+
+      const isPrepaid = c.package_billing_type === 'prepaid';
+      let shouldSend = false;
+
+      if (isPrepaid) {
+        if (c.expired_at) {
+          const expDate = new Date(c.expired_at);
+          if (!isNaN(expDate.getTime())) {
+            const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / 86400000);
+            if (diffDays === daysBefore) {
+              shouldSend = true;
+            }
+          }
+        }
+      } else {
+        const unpaidCount = Number(c.unpaid_count || 0) || 0;
+        if (unpaidCount > 0) {
+          const dueDay = Number(c.isolate_day || 0) || Number(getSetting('isolir_day', 10) || 10) || 10;
+          const remindDay = dueDay - daysBefore;
+          shouldSend = (remindDay >= 1 && day === remindDay);
+        }
+      }
+
+      if (!shouldSend) continue;
+      seenPhones.add(digits);
+      targetCustomers.push(c);
+    }
+
+    if (targetCustomers.length === 0) {
+      logger.info('[CRON] Tidak ada pelanggan yang perlu diingatkan H-' + daysBefore + ' hari ini.');
+      return;
+    }
+
+    logger.info(`[CRON] Memulai pengingat tagihan H-${daysBefore} jatuh tempo untuk ${targetCustomers.length} pelanggan.`);
+
+    const waSvc = require('./whatsappService');
+    const company = getSetting('company_header', 'ZenRadius');
+    const loginLink = `${String(getSetting('public_base_url', '') || 'http://localhost:3001').replace(/\/+$/, '')}/customer/login`;
+    const baseDelayMs = (Number(getSetting('whatsapp_broadcast_delay', 5) || 5) * 1000);
+    const batchSize = 15;
+    const batchPauseMs = 120000;
+
+    let sent = 0;
+    let failed = 0;
+    let batchCount = 0;
+
+    const defaultTemplate =
+      `⏰ *PENGINGAT TAGIHAN H-${daysBefore} JATUH TEMPO*\n\n` +
+      `Yth. {{nama}},\n\n` +
+      `Tagihan internet Anda akan jatuh tempo dalam ${daysBefore} hari lagi.\n\n` +
+      `📦 *Paket:* {{paket}}\n` +
+      `💰 *Total Tagihan:* Rp {{tagihan}}\n` +
+      `📅 *Periode:* {{rincian}}\n\n` +
+      `Mohon segera melakukan pembayaran untuk menghindari isolir layanan.\n` +
+      `Bayar sekarang: {{link}}\n\n` +
+      `Terima kasih.\n` +
+      `Salam,\nAdmin ${company}`;
+
+    const template = String(db.getAppSetting('whatsapp_due_reminder_message', defaultTemplate) || defaultTemplate);
+
+    for (let i = 0; i < targetCustomers.length; i++) {
+      const c = targetCustomers[i];
+      let attemptCount = 0;
+      const maxAttempts = 3;
+
+      while (attemptCount < maxAttempts) {
+        try {
+          const randomDelay = getRandomDelay(baseDelayMs, 2000);
+          await new Promise(r => setTimeout(r, randomDelay));
+
+          const unpaidInvoices = billingSvc.getUnpaidInvoicesByCustomerId(c.id);
+          const totalTagihan = unpaidInvoices.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+          const rincianBulan = unpaidInvoices.map(inv => `${inv.period_month}/${inv.period_year}`).join(', ');
+
+          let formattedMsg = template
+            .replace(/{{nama}}/gi, c.name || 'Pelanggan')
+            .replace(/{{tagihan}}/gi, totalTagihan.toLocaleString('id-ID'))
+            .replace(/{{rincian}}/gi, rincianBulan || '-')
+            .replace(/{{paket}}/gi, c.package_name || '-')
+            .replace(/{{link}}/gi, loginLink);
+
+          const { parseSpintax } = await import('./whatsappBot.mjs');
+          formattedMsg = parseSpintax(formattedMsg);
+          formattedMsg = addMessageVariation(formattedMsg, i);
+
+          await waSvc.sendWhatsAppMessage(c.phone, formattedMsg);
+          sent++;
+          batchCount++;
+
+          if (batchCount >= batchSize && i < targetCustomers.length - 1) {
+            logger.info(`[CRON] Batch pengingat H-${daysBefore} selesai (${batchSize} pesan). Pause ${Math.floor(batchPauseMs / 1000)} detik...`);
+            await new Promise(r => setTimeout(r, batchPauseMs));
+            batchCount = 0;
+          }
+
+          break;
+        } catch (e) {
+          attemptCount++;
+          const errorMsg = e.message || e.toString();
+
+          if (isPermanentError(errorMsg)) {
+            logger.warn(`[CRON] SKIP: Error permanent untuk ${c.phone} - ${errorMsg}`);
+            failed++;
+            break;
+          }
+
+          logger.error(`[CRON] Gagal kirim H-${daysBefore} ke ${c.phone} (attempt ${attemptCount}/${maxAttempts}): ${errorMsg}`);
+
+          if (attemptCount >= maxAttempts) {
+            logger.warn(`[CRON] Max attempts tercapai untuk ${c.phone}`);
+            failed++;
+          } else {
+            const backoffDelay = getBackoffDelay(attemptCount);
+            await new Promise(r => setTimeout(r, backoffDelay));
+          }
+        }
+      }
+    }
+
+    logger.info(`[CRON] Pengingat H-${daysBefore} selesai: target=${targetCustomers.length}, terkirim=${sent}, gagal=${failed}`);
+  });
+
   schedule('5 9 * * *', async () => {
     try {
       const pushSvc = require('./pushNotificationService');

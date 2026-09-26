@@ -245,7 +245,31 @@
           <input class="fc" name="whatsapp_admin_numbers" value="<%= (settings.whatsapp_admin_numbers || []).join(', ') %>" placeholder="6281xxx, 6282xxx">
           <div style="font-size:10px; color:var(--muted); margin-top:4px">Nomor admin akan menerima notifikasi monitoring sistem. Nomor teknisi diambil otomatis dari <a href="/admin/technicians" style="color:var(--brand);font-weight:600">Data Teknisi</a>.</div>
         </div>
+        <div class="form-row mb16">
+          <div class="fg">
+            <label class="fl">Enable AI Gemini</label>
+            <select class="fs" name="gemini_enabled">
+              <option value="true" <%= settings.gemini_enabled ? 'selected' : '' %>>Aktif</option>
+              <option value="false" <%= !settings.gemini_enabled ? 'selected' : '' %>>Nonaktif</option>
+            </select>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Aktifkan agar bot WhatsApp dapat memahami bahasa natural dan menjalankan perintah otomatis via AI.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">API Key Gemini</label>
+            <input class="fc" type="password" name="gemini_api_key" value="<%= settings.gemini_api_key || '' %>" placeholder="AIza...">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Dapatkan gratis dari <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--brand);font-weight:600">Google AI Studio</a>.</div>
+          </div>
+        </div>
+        <div class="fg mb16">
+          <label class="fl">JID Grup Teknisi WA (Opsional)</label>
+          <input class="fc" name="whatsapp_tech_group_jid" value="<%= settings.whatsapp_tech_group_jid || '' %>" placeholder="1234567890@g.us">
+          <div style="font-size:10px; color:var(--muted); margin-top:4px">Isi untuk otomatis mengirim eskalasi gangguan ke grup teknisi. Contoh: 1234567890@g.us</div>
+        </div>
         <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Integrasi WhatsApp</button>
+      </form>
+      <form method="POST" action="/admin/whatsapp/test-gemini" style="margin-top:10px;">
+        <button type="submit" class="btn btn-g w-100"><i class="bi bi-robot"></i> Test Koneksi Gemini</button>
+        <div style="font-size:10px; color:var(--muted); margin-top:4px">Uji apakah API Key Gemini valid dan bisa terhubung ke model gemini-3.5-flash.</div>
       </form>
     </div>
 

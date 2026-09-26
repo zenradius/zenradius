@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
+import axios from 'axios';
 import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, Browsers } from '@whiskeysockets/baileys';
 
 const require = createRequire(import.meta.url);
@@ -60,6 +61,286 @@ const rateLimitStore = new Map(); // Format: { phone: { count: 0, lastReset: tim
 const MAX_COMMANDS_PER_MINUTE = 10;
 const COMMAND_COOLDOWN_MS = 2000; // 2 detik cooldown antar perintah
 const commandCooldownStore = new Map(); // Format: { phone: lastCommandTimestamp }
+
+// Multi-turn conversation state (contekstual bertahap)
+const conversationStateStore = new Map(); // Format: { phone: { action, data, expiresAt } }
+const CONVERSATION_STATE_TTL_MS = 5 * 60 * 1000; // 5 menit
+
+function getConversationState(phone) {
+  if (!phone) return null;
+  const state = conversationStateStore.get(phone);
+  if (!state) return null;
+  if (Date.now() > state.expiresAt) {
+    conversationStateStore.delete(phone);
+    return null;
+  }
+  return state;
+}
+
+function setConversationState(phone, action, data = {}) {
+  if (!phone) return;
+  conversationStateStore.set(phone, {
+    action,
+    data,
+    expiresAt: Date.now() + CONVERSATION_STATE_TTL_MS
+  });
+}
+
+function clearConversationState(phone) {
+  if (!phone) return;
+  conversationStateStore.delete(phone);
+}
+
+// AI LLM (Gemini) integration
+const GEMINI_MODEL = 'gemini-3.5-flash';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+/**
+ * Definisi function calling untuk Gemini.
+ * Model dapat memanggil fungsi ini secara langsung; kita eksekusi di sisi klien.
+ */
+const GEMINI_TOOLS = [
+  {
+    functionDeclarations: [
+      {
+        name: 'get_customer_invoices',
+        description: 'Mengambil daftar tagihan/invoice pelanggan berdasarkan nomor telepon atau tag billing.',
+        parameters: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: 'get_onu_status',
+        description: 'Mengecek status perangkat ONU pelanggan (online/offline, RX power, uptime PPPoE, jumlah user WiFi).',
+        parameters: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: 'reboot_onu',
+        description: 'Merestart perangkat ONU pelanggan dari jarak jauh.',
+        parameters: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: 'update_wifi_ssid',
+        description: 'Mengubah nama WiFi (SSID) pelanggan.',
+        parameters: {
+          type: 'object',
+          properties: {
+            targetSSID: { type: 'string', description: 'Nama WiFi baru yang diinginkan pelanggan' }
+          },
+          required: ['targetSSID']
+        }
+      },
+      {
+        name: 'update_wifi_password',
+        description: 'Mengubah password WiFi pelanggan.',
+        parameters: {
+          type: 'object',
+          properties: {
+            newPassword: { type: 'string', description: 'Password WiFi baru, minimal 8 karakter' }
+          },
+          required: ['newPassword']
+        }
+      },
+      {
+        name: 'escalate_to_technician',
+        description: 'Meneruskan keluhan serius ke tim teknisi jika pelanggan meminta bantuan manusia atau ada gangguan berat.',
+        parameters: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      }
+    ]
+  }
+];
+
+/**
+ * Eksekusi function call dari Gemini ke sistem ZenRadius.
+ * Mengembalikan hasil dalam format yang bisa dikirim kembali ke model.
+ */
+async function executeGeminiFunction(ctx, functionName, args = {}) {
+  if (!ctx) return { error: 'Konteks pelanggan tidak ditemukan. Nomor belum terdaftar.' };
+
+  try {
+    switch (functionName) {
+      case 'get_customer_invoices': {
+        const invoices = billingSvc.getInvoicesByAny(ctx.billingKey);
+        return {
+          invoices: (invoices || []).slice(0, 5).map(i => ({
+            id: i.id,
+            period: `${i.period_month}/${i.period_year}`,
+            amount: i.amount,
+            status: i.status
+          })),
+          total_unpaid: (invoices || []).filter(i => i.status === 'unpaid').reduce((s, i) => s + Number(i.amount || 0), 0)
+        };
+      }
+      case 'get_onu_status': {
+        const data = await customerDevice.getCustomerDeviceData(ctx.deviceKey);
+        return {
+          status: data?.status || 'Tidak ditemukan',
+          rx_power: data?.rxPower || '-',
+          pppoe_uptime: data?.pppoeUptime || '-',
+          total_wifi_users: data?.totalAssociations || '0',
+          ssid: data?.ssid || '-'
+        };
+      }
+      case 'reboot_onu': {
+        const result = await customerDevice.requestReboot(ctx.deviceKey);
+        return { success: true, message: result?.message || 'Perintah reboot dikirim' };
+      }
+      case 'update_wifi_ssid': {
+        const newSSID = String(args?.targetSSID || '').trim();
+        if (!newSSID) return { error: 'Nama WiFi baru belum diisi' };
+        const ok = await customerDevice.updateSSID(ctx.deviceKey, newSSID);
+        return { success: ok, message: ok ? `SSID diubah menjadi ${newSSID}` : 'Gagal mengubah SSID' };
+      }
+      case 'update_wifi_password': {
+        const newPass = String(args?.newPassword || '').trim();
+        if (!newPass || newPass.length < 8) return { error: 'Password harus minimal 8 karakter' };
+        const ok = await customerDevice.updatePassword(ctx.deviceKey, newPass);
+        return { success: ok, message: ok ? 'Password berhasil diubah' : 'Gagal mengubah password' };
+      }
+      case 'escalate_to_technician': {
+        const cust = customerSvc.findCustomerByAny(ctx.billingKey || ctx.deviceKey);
+        const alertBody = `👤 Pelanggan: ${cust ? cust.name : '-'}\n📍 Tag: ${ctx.deviceKey}\n🤖 Eskalasi AI: Pelanggan meminta bantuan manusia`;
+        await sendMonitoringAlert(alertBody, 'high');
+        const groupJid = getSetting('whatsapp_tech_group_jid', '');
+        if (groupJid && currentSock && whatsappStatus.connection === 'open') {
+          await currentSock.sendMessage(groupJid, { text: `🚨 *ESKALASI AI*\n\n${alertBody}` });
+        }
+        return { success: true, message: 'Diteruskan ke tim teknisi' };
+      }
+      default:
+        return { error: 'Fungsi tidak dikenal' };
+    }
+  } catch (e) {
+    logger.error(`[WA AI Function] ${functionName} error: ` + (e.message || e));
+    return { error: e.message || 'Terjadi kesalahan saat eksekusi fungsi' };
+  }
+}
+
+/**
+ * Kirim pesan ke Gemini dengan function calling.
+ * Mengembalikan teks balasan akhir dari model setelah semua function call diselesaikan.
+ */
+async function callGeminiAI(systemPrompt, userMessage, ctx, sock, lidStore) {
+  const apiKey = getSetting('gemini_api_key', '');
+  if (!apiKey) return null;
+
+  const url = `${GEMINI_API_URL}?key=${encodeURIComponent(apiKey)}`;
+  const contents = [{ role: 'user', parts: [{ text: userMessage }] }];
+
+  try {
+    let payload = {
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents,
+      tools: GEMINI_TOOLS,
+      generationConfig: {
+        thinkingConfig: { thinkingLevel: 'low' },
+        maxOutputTokens: 512
+      }
+    };
+
+    const { data } = await axios.post(url, payload, { timeout: 20000 });
+    const candidate = data?.candidates?.[0];
+    if (!candidate) return null;
+
+    // Jika ada function call, eksekusi lalu kirim hasilnya kembali ke model
+    const parts = candidate.content?.parts || [];
+    const functionCallPart = parts.find(p => p.functionCall);
+
+    if (functionCallPart) {
+      const fc = functionCallPart.functionCall;
+      logger.info(`[WA AI] Function call: ${fc.name} args=${JSON.stringify(fc.args || {})}`);
+
+      // Eksekusi fungsi
+      const result = await executeGeminiFunction(ctx, fc.name, fc.args || {});
+
+      // Bangun riwayat percakapan dengan function response
+      contents.push({
+        role: 'model',
+        parts: [{ functionCall: { name: fc.name, args: fc.args || {} } }]
+      });
+      contents.push({
+        role: 'function',
+        parts: [{
+          functionResponse: {
+            name: fc.name,
+            response: { output: result }
+          }
+        }]
+      });
+
+      // Panggil lagi untuk mendapatkan respons teks akhir
+      payload.contents = contents;
+      const { data: secondData } = await axios.post(url, payload, { timeout: 20000 });
+      const secondCandidate = secondData?.candidates?.[0];
+      const finalText = secondCandidate?.content?.parts?.[0]?.text || '';
+      return finalText || null;
+    }
+
+    // Tidak ada function call, kembalikan teks langsung
+    return candidate.content?.parts?.[0]?.text || null;
+  } catch (e) {
+    logger.error('[WA AI] Gemini call failed: ' + (e.message || e));
+    return null;
+  }
+}
+
+function buildGeminiSystemPrompt(ctx, isAdmin) {
+  const company = getSetting('company_header', 'ZenRadius');
+  const today = getNowLocal();
+
+  let contextInfo = '';
+  if (ctx) {
+    try {
+      const cust = customerSvc.findCustomerByAny(ctx.billingKey || ctx.deviceKey);
+      const invoices = billingSvc.getInvoicesByAny(ctx.billingKey);
+      const unpaid = (invoices || []).filter(i => i.status === 'unpaid');
+      contextInfo =
+        `Nama pelanggan: ${cust ? cust.name : '-'}\n` +
+        `Nomor/tag: ${ctx.billingKey || '-'}\n` +
+        `Total tagihan aktif: ${invoices ? invoices.length : 0}\n` +
+        `Tagihan belum lunas: ${unpaid.length}\n` +
+        `Total tagihan belum lunas: Rp ${unpaid.reduce((s, i) => s + Number(i.amount || 0), 0).toLocaleString('id-ID')}\n`;
+    } catch (_) {}
+  }
+
+  return `Kamu adalah asisten AI WhatsApp resmi ${company}.\n` +
+    `Tanggal/waktu sekarang: ${today}.\n` +
+    `Konteks pelanggan saat ini:\n${contextInfo || 'Belum ada konteks pelanggan.'}\n\n` +
+    `Kamu memiliki fungsi yang bisa dipanggil untuk membantu pelanggan:\n` +
+    `- get_customer_invoices: ambil daftar tagihan pelanggan\n` +
+    `- get_onu_status: cek status modem/ONU pelanggan\n` +
+    `- reboot_onu: restart modem/ONU pelanggan\n` +
+    `- update_wifi_ssid: ubah nama WiFi pelanggan\n` +
+    `- update_wifi_password: ubah password WiFi pelanggan\n` +
+    `- escalate_to_technician: eskalasi keluhan serius ke teknisi\n\n` +
+    `Aturan penggunaan fungsi:\n` +
+    `- Jika user bertanya tagihan, panggil get_customer_invoices lalu rangkum hasilnya.\n` +
+    `- Jika user bertanya status internet/lambat/mati, panggil get_onu_status lalu beri diagnosa awal.\n` +
+    `- Jika user ingin restart modem, panggil reboot_onu.\n` +
+    `- Jika user ingin ganti nama WiFi, panggil update_wifi_ssid. Jika belum menyebutkan nama baru, minta dulu.\n` +
+    `- Jika user ingin ganti password WiFi, panggil update_wifi_password. Jika belum menyebutkan password baru, minta dulu.\n` +
+    `- Jika keluhan berat atau user minta manusia, panggil escalate_to_technician.\n` +
+    `- Jika hanya sapaan/obrolan ringan, cukup balas teks tanpa memanggil fungsi.\n\n` +
+    `Aturan balasan:\n` +
+    `- Gunakan bahasa Indonesia yang ramah, singkat, dan jelas.\n` +
+    `- Jangan sebutkan istilah teknis rumit.\n` +
+    `- Jika user menyapa (halo, pagi, dll), sapa balik dan tawarkan bantuan.\n` +
+    `- Setelah memanggil fungsi, jangan lupa rangkum hasilnya untuk pelanggan.`;
+}
 
 function checkRateLimit(phone) {
   const now = Date.now();
@@ -429,6 +710,107 @@ function isWhatsappAdminKey(key, adminSet, sock, lidStore) {
   return false;
 }
 
+/** Levenshtein distance sederhana untuk toleransi typo command (mis. "cektagian" -> "cektagihan"). */
+function levenshtein(a, b) {
+  a = String(a || ''); b = String(b || '');
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+    }
+  }
+  return dp[m][n];
+}
+
+/** Kata kunci command resmi (untuk fuzzy typo-match single word). */
+const KNOWN_COMMAND_WORDS = [
+  'menu', 'bantuan', 'help', 'cektagihan', 'info', 'cekstatus', 'cekonu', 'statusonu',
+  'cekterhubung', 'gantissid', 'gantisandi', 'daftar', 'reboot', 'restartonu'
+];
+
+/** Frasa bahasa natural (sinonim) -> command pelanggan. Dicek via "includes" pada teks yang sudah dinormalisasi. */
+const NATURAL_LANGUAGE_INTENTS = [
+  { cmd: 'cektagihan', phrases: ['tagihan saya', 'tagihan ku', 'cek tagihan', 'lihat tagihan', 'info tagihan', 'berapa tagihan', 'tagihan berapa', 'mau bayar', 'belum bayar', 'sisa tagihan', 'jumlah tagihan', 'tagihan bulan ini', 'tagihan masih ada', 'mau cek tagihan'] },
+  { cmd: 'info', phrases: ['cek status', 'status wifi', 'status internet', 'status onu', 'cek onu', 'kondisi internet', 'kondisi wifi', 'internet saya', 'wifi saya'] },
+  { cmd: 'cekterhubung', phrases: ['perangkat terhubung', 'device terhubung', 'siapa saja yang konek', 'user terhubung', 'siapa yang pakai', 'berapa user konek'] },
+  { cmd: 'gantisandi', phrases: ['ganti password wifi', 'ganti sandi wifi', 'ubah password wifi', 'ubah sandi wifi', 'password wifi baru', 'ganti pass wifi', 'ganti pass hotspot'] },
+  { cmd: 'gantissid', phrases: ['ganti nama wifi', 'ubah nama wifi', 'ganti ssid', 'ganti nama hotspot'] },
+  { cmd: 'reboot', phrases: ['restart modem', 'restart onu', 'reboot modem', 'reboot onu', 'restart wifi', 'reboot wifi', 'mati nyalain modem'] },
+  { cmd: 'menu', phrases: ['menu bantuan', 'daftar perintah', 'perintah apa saja', 'bisa apa saja', 'command list', 'bantuan', 'help', 'apa aja'] },
+  { cmd: 'terimakasih', phrases: ['terima kasih', 'thanks', 'thank you', 'makasih', ' trims'] },
+  { cmd: 'oke', phrases: ['oke siap', 'oke thanks', 'siap terima kasih', 'baik terima kasih', 'oke terima kasih'] }
+];
+
+/** Frasa yang mengindikasikan komplain gangguan jaringan (untuk auto-diagnosa). */
+const NETWORK_COMPLAINT_PHRASES = [
+  'internet mati', 'internet lemot', 'internet lambat', 'internet putus', 'internet gangguan',
+  'wifi mati', 'wifi lemot', 'wifi lambat', 'wifi putus', 'wifi gangguan', 'wifi ga bisa', 'wifi gabisa',
+  'ga bisa connect', 'gabisa connect', 'tidak bisa konek', 'tidak konek', 'gak konek', 'ga konek',
+  'gak ada internet', 'ga ada internet', 'jaringan mati', 'jaringan lambat', 'jaringan putus',
+  'koneksi putus', 'koneksi lambat', 'koneksi mati', 'sinyal ilang', 'sinyal hilang',
+  'lampu merah', 'lampu onu merah', 'onu merah', 'onu mati', 'offline terus', 'disconnect terus',
+  'kenapa internet', 'kenapa wifi', 'susah internet', 'susah wifi'
+];
+
+function normalizeForMatch(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Deteksi apakah teks bebas mengandung keluhan gangguan jaringan (bahasa natural, tanpa command). */
+function detectNetworkComplaint(text) {
+  const norm = normalizeForMatch(text);
+  if (!norm) return false;
+  return NETWORK_COMPLAINT_PHRASES.some((p) => norm.includes(p));
+}
+
+/**
+ * Coba cocokkan teks bebas (bahasa natural / typo) ke command pelanggan yang valid.
+ * Dipanggil sebagai fallback setelah parseCommand() gagal menemukan match persis.
+ */
+function fuzzyMatchCommand(text) {
+  const norm = normalizeForMatch(text);
+  if (!norm) return null;
+
+  // 1. Cocokkan frasa bahasa natural (mis. "tagihan saya berapa ya")
+  for (const intent of NATURAL_LANGUAGE_INTENTS) {
+    if (intent.phrases.some((p) => norm.includes(p))) {
+      if (intent.cmd === 'gantissid' || intent.cmd === 'gantisandi') return null; // butuh argumen, jangan auto-trigger
+      return { cmd: intent.cmd, rest: '', fuzzy: true };
+    }
+  }
+
+  // 2. Cocokkan typo pada kata pertama (mis. "cektagian", "reeboot")
+  const firstWord = norm.split(' ')[0];
+  if (firstWord && firstWord.length >= 4) {
+    let best = null;
+    let bestDist = Infinity;
+    for (const known of KNOWN_COMMAND_WORDS) {
+      const dist = levenshtein(firstWord, known);
+      if (dist < bestDist) { bestDist = dist; best = known; }
+    }
+    const threshold = firstWord.length <= 6 ? 1 : 2;
+    if (best && bestDist <= threshold && ['menu', 'bantuan', 'help', 'cektagihan', 'info', 'cekstatus', 'cekonu', 'statusonu', 'cekterhubung', 'reboot', 'restartonu'].includes(best)) {
+      if (best === 'menu' || best === 'bantuan' || best === 'help') return { cmd: 'menu', rest: '', fuzzy: true };
+      if (['cekstatus', 'cekonu', 'statusonu'].includes(best)) return { cmd: 'info', rest: '', fuzzy: true };
+      if (best === 'restartonu') return { cmd: 'reboot', rest: '', fuzzy: true };
+      return { cmd: best, rest: '', fuzzy: true };
+    }
+  }
+
+  return null;
+}
+
 function parseCommand(text, isAdmin) {
   const t = String(text || '').trim();
   if (!t) return null;
@@ -688,7 +1070,7 @@ ${sep}
 
 📋 *Perintah Tersedia:*
 
-🧾 \`menu\` — Tampilkan bantuan ini
+🧾 \`menu\` / \`bantuan\` — Tampilkan bantuan ini
 📡 \`info\` / \`cekstatus\` — Status ONU Anda
 💳 \`cektagihan\` — Lihat status tagihan
 👥 \`cekterhubung\` — Daftar host terhubung
@@ -696,6 +1078,10 @@ ${sep}
 🔑 \`gantisandi\` _sandi_ — Ubah password
 🔄 \`reboot\` — Restart ONU
 🔗 \`daftar\` _tag/nomor_ — Bind nomor WA
+
+🧠 *Chat Bebas (Natural):*
+Anda juga bisa mengetik dengan bahasa sehari-hari, contoh:
+_"tagihan saya berapa?"_, _"wifi saya mati"_, _"internet lambat"_, _"ganti password wifi"_ — bot akan otomatis memahami maksud Anda dan (untuk keluhan jaringan) langsung memberi diagnosa awal.
 
 ${sep}
 ${footerInfo ? footerInfo : '💡 *Contoh:* `cektagihan`'}`;
@@ -735,7 +1121,7 @@ ${sep}
 
 📱 *Device ONU:*
 📋 \`listonu\` — Daftar semua ONU
-📡 \`info\` / \`cekstatus\` _TAG_ — Status ONU
+📶 \`info\` / \`cekstatus\` _TAG_ — Status ONU
 🔄 \`reboot\` _TAG_ — Restart ONU
 📶 \`gantissid\` _TAG_ _namaSSID_ — Ubah SSID ONU
 🔑 \`gantisandi\` _TAG_ _password_ — Ubah password ONU (min 8)
@@ -1309,32 +1695,205 @@ export async function startWhatsAppBot() {
         const adminSet = loadWhatsappAdminSet(lidStore);
         const isAdmin = isWhatsappAdminKey(m.key, adminSet, sock, lidStore);
         logger.info(`[WA] Sender details: JID=${remote}, isAdmin=${isAdmin}, adminSet=${JSON.stringify([...adminSet])}`);
-        const parsed = parseCommand(text, isAdmin);
+        let parsed = parseCommand(text, isAdmin);
+        const phone = getPhoneFromKey(m.key);
+
+        // Multi-turn conversation state: jika sedang menunggu input lanjutan, proses sebelum command parser
+        if (!isAdmin && phone) {
+          const state = getConversationState(phone);
+          if (state) {
+            const stateAction = state.action;
+            if (stateAction === 'await_ssid') {
+              const newSSID = String(text || '').trim();
+              if (newSSID) {
+                clearConversationState(phone);
+                const ok = await customerDevice.updateSSID(state.data.deviceKey, newSSID);
+                await reply(ok
+                  ? `✅ Nama WiFi berhasil diubah menjadi:\n\n📶 *${newSSID}*`
+                  : '❌ Gagal mengubah nama WiFi. Coba lagi atau hubungi admin.');
+                continue;
+              }
+            } else if (stateAction === 'await_password') {
+              const newPass = String(text || '').trim();
+              if (newPass) {
+                if (newPass.length < 8) {
+                  await reply('⚠️ Password minimal 8 karakter. Silakan kirim password yang lebih panjang.');
+                  continue;
+                }
+                clearConversationState(phone);
+                const ok = await customerDevice.updatePassword(state.data.deviceKey, newPass);
+                await reply(ok
+                  ? `✅ Password WiFi berhasil diubah menjadi:\n\n🔐 *${newPass}*`
+                  : '❌ Gagal mengubah password WiFi.');
+                continue;
+              }
+            }
+          }
+        }
+
+        // Fallback bahasa natural/typo untuk pelanggan (non-admin, tanpa command persis)
+        if (!parsed && !isAdmin) {
+          parsed = fuzzyMatchCommand(text);
+          if (parsed) {
+            logger.info(`[WA] Fuzzy/NLU match: "${text}" -> ${parsed.cmd}`);
+          }
+        }
+
+        // Respon simpatik untuk ucapan terima kasih / oke
+        if (!parsed && !isAdmin) {
+          const courtesy = detectCourtesy(text);
+          if (courtesy === 'thanks') {
+            await reply('😊 *Sama-sama!* Senang bisa membantu. Jika ada kebutuhan lain, ketik saja `menu`.');
+            continue;
+          }
+          if (courtesy === 'ok') {
+            await reply('👍 *Oke!* Jika butuh bantuan lain nanti, silakan kirim `menu` kapan saja.');
+            continue;
+          }
+        }
+
         logger.info(`[WA] Parsed command: ${JSON.stringify(parsed)}`);
+
+        // Auto-diagnosa gangguan jaringan saat pelanggan chat bebas mengeluh internet/wifi bermasalah
+        if (!parsed && !isAdmin && detectNetworkComplaint(text)) {
+          try {
+            const ctxDiag = await resolveCustomerContext(m.key, lidStore);
+            if (!ctxDiag) {
+              await reply(
+                '🔧 *DETEKSI KELUHAN GANGGUAN*\n\n' +
+                'Sepertinya Anda melaporkan gangguan internet, namun nomor Anda belum dikenali sistem.\n\n' +
+                'Kirim sekali:\n`daftar NOMORATAUTAG`\n(sama persis dengan tag di GenieACS), lalu coba lagi.'
+              );
+              continue;
+            }
+
+            const data = await customerDevice.getCustomerDeviceData(ctxDiag.deviceKey);
+            const rx = data && data.rxPower !== '-' ? parseFloat(data.rxPower) : null;
+            const isOffline = !data || data.status === 'Offline' || data.status === 'Tidak ditemukan';
+            const isWeakSignal = rx !== null && !isNaN(rx) && rx < -27;
+
+            const pppoeUptime = data?.pppoeUptime || '-';
+            const totalUsers = data?.totalAssociations || '0';
+
+            let diagnosis = '';
+            let severity = 'low';
+            if (isOffline) {
+              diagnosis = '🔴 Perangkat *OFFLINE* — modem/ONU tidak terhubung ke sistem. Kemungkinan mati listrik, kabel fiber lepas, atau gangguan jaringan di area Anda.';
+              severity = 'high';
+            } else if (isWeakSignal) {
+              diagnosis = `🟡 Perangkat online namun *redaman sinyal optik lemah* (${data.rxPower} dBm). Bisa menyebabkan internet lambat/putus-putus. Kemungkinan kabel fiber kotor, tertekuk, atau konektor longgar.`;
+              severity = 'medium';
+            } else if (String(pppoeUptime) === '-' || String(pppoeUptime) === '0') {
+              diagnosis = '🟡 Perangkat ONU online namun sesi PPPoE belum terhubung. Kemungkinan username/password PPPoE bermasalah atau belum diaktifkan.';
+              severity = 'medium';
+            } else {
+              diagnosis = '🟢 Perangkat terdeteksi *online* dengan sinyal normal. Kendala mungkin dari perangkat (HP/laptop) Anda atau beban jaringan sementara.';
+              severity = 'low';
+            }
+
+            let body =
+              `🔧 *AUTO-DIAGNOSA GANGGUAN*\n\n` +
+              `${diagnosis}\n\n` +
+              `📡 *Status:* ${data ? data.status : '-'}\n` +
+              `📶 *RX Power:* ${data ? data.rxPower : '-'} dBm\n` +
+              `⏳ *PPPoE Uptime:* ${pppoeUptime}\n` +
+              `📱 *User WiFi:* ${totalUsers}\n\n`;
+
+            if (severity === 'low') {
+              body += '💡 *Saran:* Coba restart WiFi Anda dengan ketik `reboot`, atau restart HP/laptop Anda terlebih dahulu. Jika masih bermasalah, silakan hubungi teknisi kami.';
+            } else {
+              body += '📨 Laporan ini otomatis diteruskan ke tim teknisi kami. Mohon ditunggu, atau ketik `reboot` untuk mencoba restart ONU dari jarak jauh.';
+            }
+
+            await reply(body);
+
+            if (severity !== 'low') {
+              try {
+                const custInfo = customerSvc.findCustomerByAny(ctxDiag.billingKey || ctxDiag.deviceKey);
+                const custName = custInfo ? custInfo.name : (ctxDiag.deviceKey || '-');
+                const alertBody =
+                  `👤 *Pelanggan:* ${custName}\n` +
+                  `📍 *Tag:* ${ctxDiag.deviceKey}\n` +
+                  `💬 *Keluhan:* "${text}"\n\n` +
+                  `${diagnosis}\n\n` +
+                  `📡 Status: ${data ? data.status : '-'}\n` +
+                  `📶 RX Power: ${data ? data.rxPower : '-'} dBm`;
+
+                await sendMonitoringAlert(alertBody, severity === 'high' ? 'high' : 'medium');
+
+                const groupJid = getSetting('whatsapp_tech_group_jid', '');
+                if (groupJid && currentSock && whatsappStatus.connection === 'open') {
+                  try {
+                    await currentSock.sendMessage(groupJid, { text: `🚨 *ESKALASI GANGGUAN PELANGGAN*\n\n${alertBody}` });
+                  } catch (_) { /* ignore group send error */ }
+                }
+              } catch (e) { /* ignore alert errors */ }
+            }
+          } catch (e) {
+            logger.error('[WA auto-diagnosa] Gagal: ' + (e.message || e));
+          }
+          continue;
+        }
+
+        if (!parsed && !isAdmin) {
+          const aiEnabled = getSetting('gemini_enabled', false) && getSetting('gemini_api_key', '');
+          if (aiEnabled) {
+            try {
+              const ctxAi = await resolveCustomerContext(m.key, lidStore);
+              const systemPrompt = buildGeminiSystemPrompt(ctxAi, false);
+              const finalText = await callGeminiAI(systemPrompt, text, ctxAi, sock, lidStore);
+              logger.info(`[WA AI] Final response: ${finalText ? finalText.substring(0, 120) : '(empty)'}`);
+
+              if (finalText) {
+                await reply(finalText);
+                continue;
+              }
+            } catch (e) {
+              logger.error('[WA AI] Error: ' + (e.message || e));
+            }
+          }
+
+          const suggestion = suggestClosestCommand(text, isAdmin);
+          let fallback =
+            '🤖 *Maaf, saya belum mengerti maksud Anda.*\n\n' +
+            'Ketik `menu` untuk melihat daftar perintah, atau coba chat bebas seperti:\n' +
+            '_"tagihan saya berapa?"_\n' +
+            '_"wifi saya mati"_\n' +
+            '_"status internet saya"_\n' +
+            '_"ganti password wifi"_';
+          if (suggestion) {
+            fallback =
+              `🤖 *Maksud Anda \`${suggestion}\`?*\n\n` +
+              `Ketik \`${suggestion}\` untuk menjalankan perintah tersebut, atau ketik \`menu\` untuk melihat semua perintah.`;
+          }
+          await reply(fallback);
+          continue;
+        }
+
         if (!parsed) continue;
 
         // Rate Limiting Check
-        const phone = getPhoneFromKey(m.key);
-        if (phone) {
+        const phoneRate = getPhoneFromKey(m.key);
+        if (phoneRate) {
           // Cek command cooldown (2 detik)
-          const cooldownCheck = checkCommandCooldown(phone);
+          const cooldownCheck = checkCommandCooldown(phoneRate);
           if (!cooldownCheck.allowed) {
             await reply(`⏳ Mohon tunggu *${cooldownCheck.waitTime} detik* sebelum mengirim perintah lagi.`);
-            logger.warn(`[WhatsApp Bot] Rate limit cooldown triggered for ${phone}`);
+            logger.warn(`[WhatsApp Bot] Rate limit cooldown triggered for ${phoneRate}`);
             continue;
           }
 
           // Cek rate limit per menit (10 perintah)
-          const rateLimitCheck = checkRateLimit(phone);
+          const rateLimitCheck = checkRateLimit(phoneRate);
           if (!rateLimitCheck.allowed) {
             await reply(`⚠️ Anda telah mencapai batas perintah. Tunggu *${rateLimitCheck.waitTime} detik* sebelum mencoba lagi.`);
-            logger.warn(`[WhatsApp Bot] Rate limit exceeded for ${phone}`);
+            logger.warn(`[WhatsApp Bot] Rate limit exceeded for ${phoneRate}`);
             continue;
           }
 
           // Log rate limit info
           if (rateLimitCheck.remaining <= 3) {
-            logger.info(`[WhatsApp Bot] Rate limit warning for ${phone}: ${rateLimitCheck.remaining} commands remaining`);
+            logger.info(`[WhatsApp Bot] Rate limit warning for ${phoneRate}: ${rateLimitCheck.remaining} commands remaining`);
           }
         }
 
@@ -1349,7 +1908,21 @@ export async function startWhatsAppBot() {
               '⚡ `pulsa SKU TARGET` — Beli pulsa/produk Digiflazz\n' +
               '🔎 `cekpulsa TXID` — Cek status transaksi pulsa';
           }
+          // Jika hasil fuzzy match, beri prefix ramah agar user tahu bot memahami bahasa bebasnya.
+          if (parsed.fuzzy) {
+            body = `🧠 *Maksud Anda menu bantuan?*\n\n${body}`;
+          }
           await reply(body);
+          continue;
+        }
+
+        if (parsed.cmd === 'terimakasih') {
+          await reply('😊 *Sama-sama!* Senang bisa membantu. Jika ada kebutuhan lain, ketik saja `menu`.');
+          continue;
+        }
+
+        if (parsed.cmd === 'oke') {
+          await reply('👍 *Oke!* Jika butuh bantuan lain nanti, silakan kirim `menu` kapan saja.');
           continue;
         }
 
@@ -1894,7 +2467,7 @@ export async function startWhatsAppBot() {
             }
             const ok = await customerDevice.updateSSID(targetTag, parsed.rest);
             if (ok) {
-              await reply(`✅ SSID untuk *${targetTag}* berhasil diubah menjadi:\n\n📶 *${parsed.rest}*`);
+              await reply(`✅ SSID berhasil diubah menjadi:\n\n📶 *${parsed.rest}*`);
               // Kirim notifikasi ke pelanggan
               const now = getNowLocal();
               const cust = customerSvc.findCustomerByAny(targetTag);
@@ -1988,27 +2561,42 @@ export async function startWhatsAppBot() {
 
         if (parsed.cmd === 'cektagihan') {
           const invoices = billingSvc.getInvoicesByAny(ctx.billingKey);
-          await reply(formatCustomerInvoices(invoices, ctx.billingKey));
+          let body = formatCustomerInvoices(invoices, ctx.billingKey);
+          if (parsed.fuzzy) {
+            body = `🧠 *Maksud Anda cek tagihan?*\n\n${body}`;
+          }
+          await reply(body);
           continue;
         }
 
         if (parsed.cmd === 'info') {
           const data = await customerDevice.getCustomerDeviceData(ctx.deviceKey);
-          await reply(formatInfo(data));
+          let body = formatInfo(data);
+          if (parsed.fuzzy) {
+            body = `🧠 *Maksud Anda cek status internet?*\n\n${body}`;
+          }
+          await reply(body);
           continue;
         }
 
         if (parsed.cmd === 'cekterhubung') {
           const data = await customerDevice.getCustomerDeviceData(ctx.deviceKey);
-          await reply(formatCekTerhubung(data));
+          let body = formatCekTerhubung(data);
+          if (parsed.fuzzy) {
+            body = `🧠 *Maksud Anda cek perangkat terhubung?*\n\n${body}`;
+          }
+          await reply(body);
           continue;
         }
 
         if (parsed.cmd === 'gantissid') {
+          const phone = getPhoneFromKey(m.key);
           if (!parsed.rest) {
-            await reply('❌ Format salah. Gunakan:\n\n\`gantissid NamaWiFiBaru\`');
+            setConversationState(phone, 'await_ssid', { deviceKey: ctx.deviceKey, billingKey: ctx.billingKey });
+            await reply('📶 *Ganti Nama WiFi*\n\nSilakan kirim nama WiFi baru yang diinginkan.\nContoh: `WiFiRumahKu`');
             continue;
           }
+          clearConversationState(phone);
           const ok = await customerDevice.updateSSID(ctx.deviceKey, parsed.rest);
           if (ok) {
             await reply(`✅ SSID berhasil diubah menjadi:\n\n📶 *${parsed.rest}*`);
@@ -2035,10 +2623,17 @@ export async function startWhatsAppBot() {
         }
 
         if (parsed.cmd === 'gantisandi') {
-          if (!parsed.rest || parsed.rest.length < 8) {
-            await reply('❌ Format salah. Gunakan:\n\n\`gantisandi sandibarumin8huruf\`\n\nSandi minimal 8 karakter.');
+          const phone = getPhoneFromKey(m.key);
+          if (!parsed.rest) {
+            setConversationState(phone, 'await_password', { deviceKey: ctx.deviceKey, billingKey: ctx.billingKey });
+            await reply('🔑 *Ganti Password WiFi*\n\nSilakan kirim password baru minimal 8 karakter.\nContoh: `SandiBaru123`');
             continue;
           }
+          if (parsed.rest.length < 8) {
+            await reply('⚠️ Password minimal 8 karakter. Silakan kirim ulang password yang lebih panjang.');
+            continue;
+          }
+          clearConversationState(phone);
           const ok = await customerDevice.updatePassword(ctx.deviceKey, parsed.rest);
           if (ok) {
             await reply('✅ Password WiFi berhasil diubah.');
@@ -2066,11 +2661,43 @@ export async function startWhatsAppBot() {
 
         if (parsed.cmd === 'reboot') {
           const r = await customerDevice.requestReboot(ctx.deviceKey);
-          await reply(`🔄 *Reboot ONU*\n\n${r.message}`);
+          let body = `🔄 *Reboot ONU*\n\n${r.message}`;
+          if (parsed.fuzzy) {
+            body = `🧠 *Maksud Anda restart modem?*\n\n${body}`;
+          }
+          await reply(body);
         }
       } catch (e) {
         logger.error('WhatsApp message handler:', e.message || e);
       }
     }
   });
+}
+
+/** Temukan command yang paling mirip dengan kata pertama untuk saran fallback. */
+function suggestClosestCommand(text, isAdmin = false) {
+  const norm = normalizeForMatch(text);
+  const firstWord = norm.split(' ')[0];
+  if (!firstWord || firstWord.length < 3) return null;
+
+  const candidates = isAdmin
+    ? ['saldodigi', 'topup', 'ringkasan', 'lunas', 'generate', 'isolir', 'buka', 'listonu', 'mtactive', 'kickuser']
+    : ['menu', 'cektagihan', 'info', 'cekterhubung', 'reboot', 'gantissid', 'gantisandi'];
+
+  let best = null;
+  let bestDist = Infinity;
+  for (const c of candidates) {
+    const dist = levenshtein(firstWord, c);
+    if (dist < bestDist) { bestDist = dist; best = c; }
+  }
+  if (best && bestDist <= 2) return best;
+  return null;
+}
+
+/** Cek apakah pesan mengandung ucapan terima kasih / oke (untuk respon simpatik tanpa command). */
+function detectCourtesy(text) {
+  const norm = normalizeForMatch(text);
+  if (/\b(terima\s*kasih|thanks?|makasih| trims|matur\s*nuwun)\b/.test(norm)) return 'thanks';
+  if (/\b(oke\s*(siap|mantap|terima\s*kasih)?|siap\s*(terima\s*kasih)?|baik\s*(terima\s*kasih)?|ok\s*(siap)?)\b/.test(norm)) return 'ok';
+  return null;
 }

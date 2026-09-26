@@ -138,6 +138,28 @@ const VALIDATION_RULES = {
     type: 'boolean',
     description: 'Enable WhatsApp'
   },
+  whatsapp_tech_group_jid: {
+    type: 'string',
+    description: 'JID grup WhatsApp teknisi untuk eskalasi gangguan (contoh: 1234567890@g.us)'
+  },
+  gemini_enabled: {
+    type: 'boolean',
+    description: 'Enable AI Gemini untuk WhatsApp bot'
+  },
+  gemini_api_key: {
+    type: 'string',
+    description: 'API Key Gemini (dapatkan dari Google AI Studio)'
+  },
+  whatsapp_due_reminder_enabled: {
+    type: 'boolean',
+    description: 'Enable pengingat tagihan H-3 jatuh tempo via WhatsApp'
+  },
+  whatsapp_due_reminder_days: {
+    type: 'number',
+    min: 1,
+    max: 30,
+    description: 'Berapa hari sebelum jatuh tempo untuk kirim pengingat'
+  },
   whatsapp_auth_folder: {
     type: 'string',
     description: 'Folder auth WhatsApp'

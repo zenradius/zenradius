@@ -79,7 +79,7 @@ function verifyBackupFile(filePath) {
 async function backupDatabase() {
   try {
     const timestamp = getBackupTimestamp();
-    const backupFileName = `billing_db_${timestamp}.db`;
+    const backupFileName = `zenradius_db_${timestamp}.db`;
     const backupFilePath = path.join(backupDir, backupFileName);
 
     const liveDb = require('../config/database');
@@ -312,9 +312,9 @@ function listBackups() {
       let backupDate = null;
       let backupType = null;
 
-      if (file.startsWith('billing_db_') && file.endsWith('.db')) {
+      if ((file.startsWith('zenradius_db_') || file.startsWith('billing_db_')) && file.endsWith('.db')) {
         backupType = 'database';
-        const timestamp = file.replace('billing_db_', '').replace('.db', '');
+        const timestamp = file.replace('zenradius_db_', '').replace('billing_db_', '').replace('.db', '');
         backupDate = parseBackupTimestamp(timestamp);
       } else if (file.startsWith('settings_') && file.endsWith('.json')) {
         backupType = 'settings';
@@ -472,7 +472,7 @@ function checkBackupCapacity(maxSizeMB = 500) {
 function scheduleAutoBackup() {
   const nodeCron = require('node-cron');
   const enabled = getSetting('auto_backup_enabled', true);
-  const schedule = getSetting('auto_backup_schedule', '0 2 * * *');
+  const schedule = getSetting('auto_backup_schedule', '0 2 */7 * *');
 
   if (!enabled) {
     logger.info('[Backup] Auto backup disabled');

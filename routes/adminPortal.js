@@ -4490,12 +4490,13 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
     if (typeof newSettings.whatsapp_admin_numbers === 'string') {
       newSettings.whatsapp_admin_numbers = newSettings.whatsapp_admin_numbers.split(',').map(n => n.trim()).filter(Boolean);
     }
-    
+    if (newSettings.gemini_enabled !== undefined) newSettings.gemini_enabled = (newSettings.gemini_enabled === 'true');
+
     if (newSettings.server_port) newSettings.server_port = parseInt(newSettings.server_port);
     if (newSettings.mikrotik_port) newSettings.mikrotik_port = parseInt(newSettings.mikrotik_port);
     if (newSettings.whatsapp_broadcast_delay) newSettings.whatsapp_broadcast_delay = parseInt(newSettings.whatsapp_broadcast_delay);
     if (newSettings.digiflazz_markup !== undefined) newSettings.digiflazz_markup = parseInt(newSettings.digiflazz_markup) || 0;
-    
+
     if (newSettings.login_otp_enabled !== undefined) newSettings.login_otp_enabled = (newSettings.login_otp_enabled === 'true');
     if (typeof newSettings.domain_license_key === 'string') {
       const rawLic = newSettings.domain_license_key.trim();
@@ -4707,7 +4708,7 @@ router.post('/backup/upload-restore', requireAdminSession, restrictToAdmin, uplo
     let result;
     let savedFileName = '';
 
-    if (ext === '.db' || ext === '.sqlite' || originalName.includes('billing_db')) {
+    if (ext === '.db' || ext === '.sqlite' || originalName.includes('billing_db') || originalName.includes('zenradius_db')) {
       savedFileName = `uploaded_db_${timestamp}_${originalName}`;
       const savePath = path.join(backupDir, savedFileName);
       fs.writeFileSync(savePath, file.buffer);
@@ -6733,6 +6734,50 @@ router.post('/whatsapp/test-notification', requireAdminSession, restrictToAdmin,
   } catch (e) {
     logger.error(`[WA Test] Gagal mengirim test notifikasi: ${e.message}`);
     req.session._msg = { type: 'error', text: 'Gagal kirim test WhatsApp: ' + e.message };
+  }
+  res.redirect('/admin/whatsapp');
+});
+
+router.post('/whatsapp/test-gemini', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), async (req, res) => {
+  try {
+    const apiKey = getSetting('gemini_api_key', '');
+    const enabled = getSetting('gemini_enabled', false);
+
+    if (!apiKey) {
+      req.session._msg = { type: 'error', text: 'API Key Gemini belum diisi.' };
+      return res.redirect('/admin/whatsapp');
+    }
+    if (!enabled) {
+      req.session._msg = { type: 'error', text: 'AI Gemini belum diaktifkan. Aktifkan terlebih dahulu.' };
+      return res.redirect('/admin/whatsapp');
+    }
+
+    const GEMINI_MODEL = 'gemini-3.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    const payload = {
+      systemInstruction: {
+        parts: [{ text: 'Kamu adalah asisten AI WhatsApp resmi ZenRadius. Balas dengan teks singkat dalam bahasa Indonesia.' }]
+      },
+      contents: [{ role: 'user', parts: [{ text: 'Halo, jawab singkat: "Koneksi Gemini berhasil!"' }] }],
+      generationConfig: {
+        thinkingConfig: { thinkingLevel: 'low' },
+        maxOutputTokens: 64
+      }
+    };
+
+    const { data } = await axios.post(url, payload, { timeout: 15000 });
+    const candidate = data?.candidates?.[0];
+    const text = candidate?.content?.parts?.[0]?.text || '';
+
+    if (text) {
+      req.session._msg = { type: 'success', text: `Test koneksi Gemini berhasil. Balasan: "${text.substring(0, 80)}"` };
+    } else {
+      req.session._msg = { type: 'error', text: 'Test koneksi Gemini: respons kosong dari API.' };
+    }
+  } catch (e) {
+    logger.error(`[WA Test Gemini] Gagal: ${e.message || e}`);
+    req.session._msg = { type: 'error', text: 'Test koneksi Gemini gagal: ' + (e.message || e) };
   }
   res.redirect('/admin/whatsapp');
 });

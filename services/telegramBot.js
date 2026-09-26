@@ -258,14 +258,69 @@ function initTelegram() {
         [{ text: '📊 Statistik', callback_data: 'menu_stats' }, { text: '👥 Pelanggan', callback_data: 'menu_cust' }],
         [{ text: '🎫 Voucher', callback_data: 'menu_vouch' }, { text: '💰 Tagihan', callback_data: 'menu_bill' }],
         [{ text: '⚙️ MikroTik Status', callback_data: 'menu_mt' }],
+        [{ text: '🆘 Bantuan / Daftar Perintah', callback_data: 'menu_help' }],
         [{ text: '🔄 Refresh', callback_data: 'menu_main' }]
       ]
     }
   };
 
+  const helpText = `*🆘 DAFTAR PERINTAH ADMIN ZENRADIUS*\n\n` +
+    `*📋 Umum*\n` +
+    `/start atau /menu — Tampilkan menu utama\n` +
+    `/help — Tampilkan daftar perintah ini\n` +
+    `/ringkasan — Ringkasan billing (pendapatan, piutang)\n\n` +
+    `*👥 Pelanggan*\n` +
+    `/cari [nama/wa] — Cari data pelanggan\n` +
+    `/isolir [ID/Nama/PPPoE/NoHP] — Isolir pelanggan\n` +
+    `/buka [ID/Nama/PPPoE/NoHP] — Aktifkan kembali pelanggan\n\n` +
+    `*💰 Tagihan*\n` +
+    `/lunas [IDTagihan/nama/wa/pppoe] — Tandai tagihan lunas\n` +
+    `/generate [bulan] [tahun] — Generate tagihan bulanan\n\n` +
+    `*🎫 Voucher Hotspot*\n` +
+    `/vouch [profile] [limit] [comment] — Buat voucher acak\n` +
+    `/vcr [kode] [profile] — Buat voucher dengan kode custom\n\n` +
+    `*⚙️ MikroTik / Jaringan*\n` +
+    `/kick [user] — Putuskan sesi PPPoE/Hotspot user\n` +
+    `/editpppoe [user] [profile] — Ubah profile PPPoE user\n` +
+    `/cekpppoe [user] — Cek detail koneksi PPPoE user\n\n` +
+    `*📡 GenieACS / ONU*\n` +
+    `/listonu — Daftar semua perangkat ONU\n` +
+    `/info atau /cekstatus [tag] — Detail status ONU pelanggan\n` +
+    `/reboot [tag] — Reboot ONU pelanggan\n` +
+    `/gantissid [tag] [ssid baru] — Ubah nama WiFi (SSID)\n` +
+    `/gantisandi [tag] [sandi baru] — Ubah sandi WiFi\n\n` +
+    `*💳 Agent / Digiflazz*\n` +
+    `/saldodigi — Cek saldo Digiflazz\n` +
+    `/topup [agent] [nominal] [catatan] — Topup saldo agent\n\n` +
+    `*💾 Backup*\n` +
+    `/backup — Buat & kirim backup database ZenRadius sekarang\n\n` +
+    `_Semua perintah hanya dapat digunakan oleh Admin Telegram yang terdaftar._`;
+
   bot.onText(/\/start|\/menu/i, (msg) => {
     if (!isAdmin(msg)) return bot.sendMessage(msg.chat.id, `Maaf, Anda tidak memiliki akses admin.\nChat ID Anda: ${msg.from.id}`);
-    bot.sendMessage(msg.chat.id, '🏠 *PANEL ADMIN RTRW-NET*\nSilakan pilih menu di bawah ini:', { parse_mode: 'Markdown', ...mainMenu });
+    bot.sendMessage(msg.chat.id, '🏠 *ADMIN ZENRADIUS*\nSilakan pilih menu di bawah ini:', { parse_mode: 'Markdown', ...mainMenu });
+  });
+
+  bot.onText(/\/help/i, (msg) => {
+    if (!isAdmin(msg)) return;
+    bot.sendMessage(msg.chat.id, helpText, {
+      parse_mode: 'Markdown',
+      reply_markup: { inline_keyboard: [[{ text: '⬅️ Menu Utama', callback_data: 'menu_main' }]] }
+    });
+  });
+
+  bot.onText(/\/backup/i, async (msg) => {
+    if (!isAdmin(msg)) return;
+    const chatId = msg.chat.id;
+    try {
+      await bot.sendMessage(chatId, '⏳ Membuat backup database ZenRadius...');
+      const backupSvc = require('./backupService');
+      const result = await backupSvc.backupDatabase();
+      if (!result.success) throw new Error(result.error || 'Gagal membuat backup');
+      bot.sendMessage(chatId, `✅ Backup *${result.fileName}* berhasil dibuat dan akan dikirim menyusul.`, { parse_mode: 'Markdown' });
+    } catch (e) {
+      bot.sendMessage(chatId, '❌ Gagal membuat backup: ' + e.message);
+    }
   });
 
   bot.on('message', async (msg) => {
@@ -281,11 +336,20 @@ function initTelegram() {
     if (!isAdmin(query)) return bot.answerCallbackQuery(query.id, { text: 'Akses Ditolak' });
 
     if (data === 'menu_main') {
-      bot.editMessageText('🏠 *PANEL ADMIN RTRW-NET*\nSilakan pilih menu di bawah ini:', {
+      bot.editMessageText('🏠 *ADMIN ZENRADIUS*\nSilakan pilih menu di bawah ini:', {
         chat_id: chatId,
         message_id: query.message.message_id,
         parse_mode: 'Markdown',
         ...mainMenu
+      });
+    }
+
+    else if (data === 'menu_help') {
+      bot.editMessageText(helpText, {
+        chat_id: chatId,
+        message_id: query.message.message_id,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: [[{ text: '⬅️ Menu Utama', callback_data: 'menu_main' }]] }
       });
     }
 
@@ -1018,7 +1082,8 @@ async function sendBackupToTelegram(filePath) {
       caption: `💾 *ZenRadius Auto Cloud Backup*\n\n` +
                `📦 *Berkas:* \`${fileName}\`\n` +
                `📅 *Waktu:* ${getNowLocal()}\n` +
-               `✅ Backup database berhasil dikirim secara aman ke Telegram cloud.`
+               `🔄 *Jadwal:* Setiap 7 hari sekali\n` +
+               `✅ Backup database ZenRadius berhasil dikirim secara aman ke Telegram cloud.`
     }, {
       contentType: 'application/octet-stream',
       filename: fileName

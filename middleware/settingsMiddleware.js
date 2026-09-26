@@ -26,6 +26,8 @@ function validateSettingsMiddleware(req, res, next) {
 
     const booleanFields = [
       'whatsapp_enabled',
+      'gemini_enabled',
+      'whatsapp_due_reminder_enabled',
       'telegram_enabled',
       'tripay_enabled',
       'midtrans_enabled',

@@ -292,18 +292,24 @@ function ensureDefaultSettings() {
       company_header: 'ZenRadius',
       footer_info: 'ZenRadius - All Rights Reserved',
 
-      // Backup otomatis (satu-satunya jalur backup terjadwal, lihat backupService.scheduleAutoBackup)
+      // Backup otomatis setiap 7 hari sekali (satu-satunya jalur backup terjadwal, lihat backupService.scheduleAutoBackup)
       auto_backup_enabled: true,
-      auto_backup_schedule: '0 2 * * *',
+      auto_backup_schedule: '0 2 */7 * *',
       
       wa_gateway_type: 'baileys',
       // WhatsApp aktif secara default agar QR pairing langsung muncul
       // setelah instalasi pertama (install.sh hanya menulis server_port).
       whatsapp_enabled: true,
       whatsapp_auth_folder: 'auth_info_baileys',
+      // AI Gemini untuk WhatsApp bot (nonaktif secara default; isi gemini_api_key untuk aktif)
+      gemini_enabled: false,
+      gemini_api_key: '',
       whatsapp_broadcast_delay: 5,
       whatsapp_auto_billing_enabled: false,
       whatsapp_billing_to_customer_enabled: true,
+      // Pengingat tagihan H-3 jatuh tempo via WhatsApp
+      whatsapp_due_reminder_enabled: true,
+      whatsapp_due_reminder_days: 3,
       fonnte_url: 'https://api.fonnte.com/send',
       http_wa_method: 'POST',
       http_wa_header_name: 'Authorization',
