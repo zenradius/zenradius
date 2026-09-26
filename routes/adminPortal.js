@@ -3758,20 +3758,31 @@ router.get('/payment-gateway', requireAdminSession, requireSidebarMenuAccess('pa
   const settings = getSettings();
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.get('host');
-  const baseUrl = (settings && settings.app_url ? String(settings.app_url) : `${protocol}://${host}`).replace(/\/+$/, '');
+  // Selalu ikuti domain aktif yang sedang diakses admin, bukan app_url statis di
+  // settings — sehingga saat domain/hosting berpindah, link webhook otomatis berubah.
+  const baseUrl = `${protocol}://${host}`.replace(/\/+$/, '');
   const paymentWebhookUrl = `${baseUrl}/customer/payment/callback`;
   res.render('admin/payment-gateway', {
     title: 'Payment Gateway', company: company(), activePage: 'payment_gateway',
     settings, msg: flashMsg(req),
-    paymentWebhookUrl
+    paymentWebhookUrl,
+    activeBaseUrl: baseUrl
   });
 });
 
 router.get('/payment-qris-static', requireAdminSession, requireSidebarMenuAccess('payment_qris_static'), (req, res) => {
   const settings = getSettings();
+  // Base URL webhook selalu mengikuti domain aktif yang sedang diakses (req host),
+  // bukan nilai public_base_url/app_url yang tersimpan statis di settings — sehingga
+  // ketika domain berganti (mis. pindah hosting/subdomain), link webhook otomatis
+  // ikut berubah tanpa perlu admin mengedit ulang pengaturan secara manual.
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.get('host');
+  const activeBaseUrl = `${protocol}://${host}`.replace(/\/+$/, '');
   res.render('admin/payment-qris-static', {
     title: 'Payment Qris Statis', company: company(), activePage: 'payment_qris_static',
-    settings, msg: flashMsg(req)
+    settings, msg: flashMsg(req),
+    activeBaseUrl
   });
 });
 
@@ -3783,7 +3794,11 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
   const settings = getSettings();
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.get('host');
-  const baseUrl = (settings && settings.app_url ? String(settings.app_url) : `${protocol}://${host}`).replace(/\/+$/, '');
+  // Semua link webhook (Digiflazz, payment gateway, MacroDroid) selalu ikut domain
+  // aktif yang sedang diakses admin, bukan app_url/public_base_url statis di settings —
+  // sehingga saat domain/hosting berpindah, seluruh link otomatis ikut berubah.
+  const baseUrl = `${protocol}://${host}`.replace(/\/+$/, '');
+  const activeBaseUrl = baseUrl;
   const digiflazzWebhookUrl = `${baseUrl}/webhook/digiflazz`;
   const paymentWebhookUrl = `${baseUrl}/customer/payment/callback`;
   const licenseCheck = domainLicense.checkRequestLicense(req);
@@ -3792,6 +3807,7 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
     settings, msg: flashMsg(req),
     digiflazzWebhookUrl,
     paymentWebhookUrl,
+    activeBaseUrl,
     currentHost: licenseCheck.host,
     licenseValid: licenseCheck.valid,
     licenseInstallCode: licenseCheck.installCode,
@@ -3805,7 +3821,8 @@ router.get('/ewallet-logs', requireAdminSession, requireSidebarMenuAccess('setti
   const settings = getSettings();
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.get('host');
-  const baseUrl = (settings && settings.app_url ? String(settings.app_url) : `${protocol}://${host}`).replace(/\/+$/, '');
+  const baseUrl = `${protocol}://${host}`.replace(/\/+$/, '');
+  const activeBaseUrl = baseUrl;
   const digiflazzWebhookUrl = `${baseUrl}/webhook/digiflazz`;
   const paymentWebhookUrl = `${baseUrl}/customer/payment/callback`;
   res.render('admin/settings', {
@@ -3813,6 +3830,7 @@ router.get('/ewallet-logs', requireAdminSession, requireSidebarMenuAccess('setti
     settings, msg: flashMsg(req),
     digiflazzWebhookUrl,
     paymentWebhookUrl,
+    activeBaseUrl,
     canManageSidebar: Boolean(req.session?.isAdmin),
     menuConfigs: sidebarMenuSvc.getConfigMenus(),
     viewMode: 'ewallet_logs'

@@ -110,15 +110,17 @@
               <div class="fg" style="margin-top:10px">
                 <label class="fl">Link Webhook MacroDroid (URL POST)</label>
                 <div style="display:flex;gap:8px">
-                  <% 
-                    const base = settings.public_base_url ? settings.public_base_url.replace(/\/+$/, '') : '';
+                  <%
+                    // Selalu ikuti domain aktif yang sedang diakses admin (bukan public_base_url
+                    // statis di settings) agar link otomatis mengikuti saat domain berganti.
+                    const base = (typeof activeBaseUrl !== 'undefined' && activeBaseUrl) ? activeBaseUrl : (settings.public_base_url ? settings.public_base_url.replace(/\/+$/, '') : '');
                     const secret = settings.webhook_secret || process.env.MY_WEBHOOK_SECRET || '';
                     const macroWebhookUrl = base ? (base + '/api/webhook/v1/payment-notif?secret_key=' + secret) : '/api/webhook/v1/payment-notif?secret_key=' + secret;
                   %>
                   <input class="fc" id="macro_webhook_url" readonly value="<%= macroWebhookUrl %>">
                   <button type="button" class="btn btn-g" onclick="copyInput('macro_webhook_url', 'Link Webhook')"><i class="bi bi-copy"></i></button>
                 </div>
-                <div style="font-size:10px; color:var(--muted); margin-top:4px">Kirimkan request HTTP POST ke URL ini dari MacroDroid Anda (sudah termasuk kunci rahasia). Simpan pengaturan dahulu setelah mengisi Secret Key di atas agar link ini ikut terbarui.</div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Kirimkan request HTTP POST ke URL ini dari MacroDroid Anda (sudah termasuk kunci rahasia). Link ini otomatis mengikuti domain yang sedang Anda akses saat ini.</div>
               </div>
             </div>
           </div>
