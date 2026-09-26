@@ -22,7 +22,11 @@ license-api/
 !database/seed/zenradius-seed.db
 
 # Local-only documentation
-# Local-only documentation (not published to public repo)
 *.md
 !README.md
 tutorial/
+
+# Local-only development & test files
+nodemon.json
+scripts/dev/
+scripts/test-*.js
