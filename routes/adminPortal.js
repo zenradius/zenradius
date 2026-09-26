@@ -6766,7 +6766,47 @@ router.post('/whatsapp/test-gemini', requireAdminSession, restrictToAdmin, expre
       }
     };
 
-    const { data } = await axios.post(url, payload, { timeout: 15000 });
+    let lastErr = null;
+    let data = null;
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const resp = await axios.post(url, payload, { timeout: 15000 });
+        data = resp.data;
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        const status = err.response?.status;
+        // Only retry on transient errors (overloaded/rate-limited)
+        if ((status === 503 || status === 429) && attempt < maxAttempts) {
+          const delay = attempt * 800; // 800ms, 1600ms
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        break;
+      }
+    }
+
+    if (lastErr) {
+      const status = lastErr.response?.status;
+      let friendly;
+      if (status === 503 || status === 429) {
+        friendly = 'Server Gemini sedang sibuk/overload. Silakan coba lagi beberapa saat.';
+      } else if (status === 401 || status === 403) {
+        friendly = 'API Key Gemini tidak valid atau tidak memiliki akses.';
+      } else if (status === 404) {
+        friendly = 'Model Gemini tidak ditemukan. Periksa nama model.';
+      } else if (lastErr.code === 'ECONNABORTED') {
+        friendly = 'Koneksi ke Gemini timeout. Silakan coba lagi.';
+      } else {
+        friendly = lastErr.message || String(lastErr);
+      }
+      logger.error(`[WA Test Gemini] Gagal (status=${status || 'n/a'}): ${lastErr.message || lastErr}`);
+      req.session._msg = { type: 'error', text: 'Test koneksi Gemini gagal: ' + friendly };
+      return res.redirect('/admin/whatsapp');
+    }
+
     const candidate = data?.candidates?.[0];
     const text = candidate?.content?.parts?.[0]?.text || '';
 
