@@ -264,37 +264,80 @@ function initTelegram() {
     }
   };
 
-  const helpText = `*🆘 DAFTAR PERINTAH ADMIN ZENRADIUS*\n\n` +
-    `*📋 Umum*\n` +
-    `/start atau /menu — Tampilkan menu utama\n` +
-    `/help — Tampilkan daftar perintah ini\n` +
-    `/ringkasan — Ringkasan billing (pendapatan, piutang)\n\n` +
-    `*👥 Pelanggan*\n` +
-    `/cari [nama/wa] — Cari data pelanggan\n` +
-    `/isolir [ID/Nama/PPPoE/NoHP] — Isolir pelanggan\n` +
-    `/buka [ID/Nama/PPPoE/NoHP] — Aktifkan kembali pelanggan\n\n` +
-    `*💰 Tagihan*\n` +
-    `/lunas [IDTagihan/nama/wa/pppoe] — Tandai tagihan lunas\n` +
-    `/generate [bulan] [tahun] — Generate tagihan bulanan\n\n` +
-    `*🎫 Voucher Hotspot*\n` +
-    `/vouch [profile] [limit] [comment] — Buat voucher acak\n` +
-    `/vcr [kode] [profile] — Buat voucher dengan kode custom\n\n` +
-    `*⚙️ MikroTik / Jaringan*\n` +
-    `/kick [user] — Putuskan sesi PPPoE/Hotspot user\n` +
-    `/editpppoe [user] [profile] — Ubah profile PPPoE user\n` +
-    `/cekpppoe [user] — Cek detail koneksi PPPoE user\n\n` +
-    `*📡 GenieACS / ONU*\n` +
-    `/listonu — Daftar semua perangkat ONU\n` +
-    `/info atau /cekstatus [tag] — Detail status ONU pelanggan\n` +
-    `/reboot [tag] — Reboot ONU pelanggan\n` +
-    `/gantissid [tag] [ssid baru] — Ubah nama WiFi (SSID)\n` +
-    `/gantisandi [tag] [sandi baru] — Ubah sandi WiFi\n\n` +
-    `*💳 Agent / Digiflazz*\n` +
-    `/saldodigi — Cek saldo Digiflazz\n` +
-    `/topup [agent] [nominal] [catatan] — Topup saldo agent\n\n` +
-    `*💾 Backup*\n` +
-    `/backup — Buat & kirim backup database ZenRadius sekarang\n\n` +
-    `_Semua perintah hanya dapat digunakan oleh Admin Telegram yang terdaftar._`;
+  // Kategori bantuan — dipecah per topik agar lebih ringkas & mudah dibaca (bukan 1 pesan raksasa)
+  const helpCategories = {
+    umum: {
+      title: '📋 Umum',
+      text: `*📋 PERINTAH UMUM*\n\n` +
+        `\`/start\` atau \`/menu\`\n└ Tampilkan menu utama dengan tombol interaktif\n\n` +
+        `\`/help\`\n└ Tampilkan menu bantuan ini\n\n` +
+        `\`/ringkasan\`\n└ Ringkasan billing: pendapatan, piutang, tagihan belum lunas`
+    },
+    pelanggan: {
+      title: '👥 Pelanggan',
+      text: `*👥 PERINTAH PELANGGAN*\n\n` +
+        `\`/cari [nama/wa]\`\n└ Cari data pelanggan berdasarkan nama atau nomor HP\n└ Contoh: \`/cari budi\` atau \`/cari 0812\`\n\n` +
+        `\`/isolir [ID/Nama/PPPoE/NoHP]\`\n└ Isolir (nonaktifkan) pelanggan\n└ Contoh: \`/isolir budi\`\n\n` +
+        `\`/buka [ID/Nama/PPPoE/NoHP]\`\n└ Aktifkan kembali pelanggan yang terisolir\n└ Contoh: \`/buka budi\``
+    },
+    tagihan: {
+      title: '💰 Tagihan',
+      text: `*💰 PERINTAH TAGIHAN*\n\n` +
+        `\`/lunas [IDTagihan/nama/wa/pppoe]\`\n└ Tandai tagihan lunas & auto-aktifkan jika tidak ada tunggakan lain\n└ Contoh: \`/lunas 123\` atau \`/lunas budi\`\n\n` +
+        `\`/generate [bulan] [tahun]\`\n└ Generate tagihan bulanan untuk semua pelanggan aktif\n└ Contoh: \`/generate 9 2026\``
+    },
+    voucher: {
+      title: '🎫 Voucher Hotspot',
+      text: `*🎫 PERINTAH VOUCHER HOTSPOT*\n\n` +
+        `\`/vouch [profile] [limit] [comment]\`\n└ Buat voucher dengan kode PIN acak\n└ Contoh: \`/vouch 1jam 1h testing\`\n\n` +
+        `\`/vcr [kode] [profile]\`\n└ Buat voucher dengan kode custom sesuai keinginan\n└ Contoh: \`/vcr promo10 1jam\`\n\n` +
+        `_Tips: Gunakan tombol 🎫 Voucher di menu utama untuk memilih paket harga tanpa mengetik perintah._`
+    },
+    mikrotik: {
+      title: '⚙️ MikroTik / Jaringan',
+      text: `*⚙️ PERINTAH MIKROTIK / JARINGAN*\n\n` +
+        `\`/kick [user]\`\n└ Putuskan sesi PPPoE/Hotspot user secara paksa\n└ Contoh: \`/kick budi01\`\n\n` +
+        `\`/editpppoe [user] [profile]\`\n└ Ubah profile/paket PPPoE user\n└ Contoh: \`/editpppoe budi01 10mbps\`\n\n` +
+        `\`/cekpppoe [user]\`\n└ Cek detail koneksi PPPoE user (IP, uptime, dll)\n└ Contoh: \`/cekpppoe budi01\``
+    },
+    onu: {
+      title: '📡 GenieACS / ONU',
+      text: `*📡 PERINTAH GENIEACS / ONU*\n\n` +
+        `\`/listonu\`\n└ Daftar semua perangkat ONU yang terdeteksi\n\n` +
+        `\`/info [tag]\` atau \`/cekstatus [tag]\`\n└ Detail status ONU pelanggan (SSID, RX Power, uptime, dll)\n└ Contoh: \`/info budi01\`\n\n` +
+        `\`/reboot [tag]\`\n└ Reboot ONU pelanggan dari jarak jauh\n└ Contoh: \`/reboot budi01\`\n\n` +
+        `\`/gantissid [tag] [ssid baru]\`\n└ Ubah nama WiFi (SSID) pelanggan\n└ Contoh: \`/gantissid budi01 RumahBudi\`\n\n` +
+        `\`/gantisandi [tag] [sandi baru]\`\n└ Ubah sandi WiFi pelanggan (min. 8 karakter)\n└ Contoh: \`/gantisandi budi01 sandibaru123\`\n\n` +
+        `_Tag bisa berupa ID GenieACS, PPPoE username, nama, atau No. HP pelanggan._`
+    },
+    agent: {
+      title: '💳 Agent / Digiflazz',
+      text: `*💳 PERINTAH AGENT / DIGIFLAZZ*\n\n` +
+        `\`/saldodigi\`\n└ Cek sisa saldo deposit Digiflazz\n\n` +
+        `\`/topup [agent] [nominal] [catatan]\`\n└ Topup saldo agent (username/ID/no. HP)\n└ Contoh: \`/topup agen01 50000 Topup manual\``
+    },
+    backup: {
+      title: '💾 Backup',
+      text: `*💾 PERINTAH BACKUP*\n\n` +
+        `\`/backup\`\n└ Buat & kirim backup database ZenRadius sekarang juga\n\n` +
+        `_Backup otomatis juga berjalan setiap 7 hari sekali dan dikirim ke chat ini._`
+    }
+  };
+
+  const helpCategoryButtons = {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '📋 Umum', callback_data: 'help_umum' }, { text: '👥 Pelanggan', callback_data: 'help_pelanggan' }],
+        [{ text: '💰 Tagihan', callback_data: 'help_tagihan' }, { text: '🎫 Voucher', callback_data: 'help_voucher' }],
+        [{ text: '⚙️ MikroTik', callback_data: 'help_mikrotik' }, { text: '📡 GenieACS/ONU', callback_data: 'help_onu' }],
+        [{ text: '💳 Agent', callback_data: 'help_agent' }, { text: '💾 Backup', callback_data: 'help_backup' }],
+        [{ text: '⬅️ Menu Utama', callback_data: 'menu_main' }]
+      ]
+    }
+  };
+
+  const helpIntroText = `*🆘 BANTUAN — DAFTAR PERINTAH*\n\n` +
+    `Pilih kategori di bawah ini untuk melihat perintah beserta contoh penggunaannya:`;
 
   bot.onText(/\/start|\/menu/i, (msg) => {
     if (!isAdmin(msg)) return bot.sendMessage(msg.chat.id, `Maaf, Anda tidak memiliki akses admin.\nChat ID Anda: ${msg.from.id}`);
@@ -303,9 +346,9 @@ function initTelegram() {
 
   bot.onText(/\/help/i, (msg) => {
     if (!isAdmin(msg)) return;
-    bot.sendMessage(msg.chat.id, helpText, {
+    bot.sendMessage(msg.chat.id, helpIntroText, {
       parse_mode: 'Markdown',
-      reply_markup: { inline_keyboard: [[{ text: '⬅️ Menu Utama', callback_data: 'menu_main' }]] }
+      ...helpCategoryButtons
     });
   });
 
@@ -356,14 +399,29 @@ function initTelegram() {
     }
 
     else if (data === 'menu_help') {
-      bot.editMessageText(helpText, {
+      bot.editMessageText(helpIntroText, {
         chat_id: chatId,
         message_id: query.message.message_id,
         parse_mode: 'Markdown',
-        reply_markup: { inline_keyboard: [[{ text: '⬅️ Menu Utama', callback_data: 'menu_main' }]] }
+        ...helpCategoryButtons
       }).catch((e) => {
         if (!/not modified/i.test(e.message || '')) logger.warn('Telegram Bot: editMessageText gagal: ' + e.message);
       });
+    }
+
+    else if (data.startsWith('help_')) {
+      const catKey = data.slice(5);
+      const cat = helpCategories[catKey];
+      if (cat) {
+        bot.editMessageText(cat.text, {
+          chat_id: chatId,
+          message_id: query.message.message_id,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: [[{ text: '⬅️ Kategori Bantuan', callback_data: 'menu_help' }, { text: '🏠 Menu Utama', callback_data: 'menu_main' }]] }
+        }).catch((e) => {
+          if (!/not modified/i.test(e.message || '')) logger.warn('Telegram Bot: editMessageText gagal: ' + e.message);
+        });
+      }
     }
 
     else if (data === 'menu_stats') {
@@ -653,9 +711,12 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/vouch (\S+) (\S+) (.+)/, async (msg, match) => {
+  bot.onText(/\/vouch(?:\s+(\S+)\s+(\S+)\s+(.+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
-    const [_, profile, limit, comment] = match;
+    const [, profile, limit, comment] = match;
+    if (!profile || !limit || !comment) {
+      return bot.sendMessage(msg.chat.id, '❌ Format: `/vouch [profile] [limit] [comment]`\nContoh: `/vouch 1jam 1h testing`', { parse_mode: 'Markdown' });
+    }
     try {
       const pin = Math.floor(1000 + Math.random() * 9000).toString();
       await mikrotikSvc.addHotspotUser({
@@ -667,11 +728,14 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/vcr\s+(\S+)\s+(\S+)/i, async (msg, match) => {
+  bot.onText(/\/vcr(?:\s+(\S+)\s+(\S+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const chatId = msg.chat.id;
     const code = match[1];
     const profile = match[2];
+    if (!code || !profile) {
+      return bot.sendMessage(chatId, '❌ Format: `/vcr [kode] [profile]`\nContoh: `/vcr promo10 1jam`', { parse_mode: 'Markdown' });
+    }
     try {
       const now = new Date();
       const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
@@ -690,33 +754,36 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/kick (\S+)/, async (msg, match) => {
+  bot.onText(/\/kick(?:\s+(\S+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
+    const user = match[1];
+    if (!user) return bot.sendMessage(msg.chat.id, '❌ Format: `/kick [user]`\nContoh: `/kick budi01`', { parse_mode: 'Markdown' });
     try {
-      const user = match[1];
       await mikrotikSvc.kickPppoeUser(user);
       await mikrotikSvc.kickHotspotUser(user);
-      bot.sendMessage(msg.chat.id, `✅ Session *${user}* berhasil diputus.`);
+      bot.sendMessage(msg.chat.id, `✅ Session *${user}* berhasil diputus.`, { parse_mode: 'Markdown' });
     } catch (e) {
       bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message);
     }
   });
 
-  bot.onText(/\/editpppoe (\S+) (\S+)/, async (msg, match) => {
+  bot.onText(/\/editpppoe(?:\s+(\S+)\s+(\S+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
+    const [, user, profile] = match;
+    if (!user || !profile) return bot.sendMessage(msg.chat.id, '❌ Format: `/editpppoe [user] [profile]`\nContoh: `/editpppoe budi01 10mbps`', { parse_mode: 'Markdown' });
     try {
-      const [_, user, profile] = match;
       await mikrotikSvc.setPppoeProfile(user, profile);
-      bot.sendMessage(msg.chat.id, `✅ Profile *${user}* diubah ke *${profile}*.`);
+      bot.sendMessage(msg.chat.id, `✅ Profile *${user}* diubah ke *${profile}*.`, { parse_mode: 'Markdown' });
     } catch (e) {
       bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message);
     }
   });
 
-  bot.onText(/\/cekpppoe (\S+)/i, async (msg, match) => {
+  bot.onText(/\/cekpppoe(?:\s+(\S+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
+    const username = match[1];
+    if (!username) return bot.sendMessage(msg.chat.id, '❌ Format: `/cekpppoe [user]`\nContoh: `/cekpppoe budi01`', { parse_mode: 'Markdown' });
     try {
-      const username = match[1];
       const detail = await buildPppoeUserDetailText(username);
       bot.sendMessage(msg.chat.id, detail);
     } catch (e) {
@@ -724,9 +791,11 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/cari (.+)/, async (msg, match) => {
+  bot.onText(/\/cari(?:\s+(.+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
-    const query = match[1].toLowerCase();
+    const queryRaw = match[1];
+    if (!queryRaw) return bot.sendMessage(msg.chat.id, '❌ Format: `/cari [nama/wa]`\nContoh: `/cari budi` atau `/cari 0812`', { parse_mode: 'Markdown' });
+    const query = queryRaw.toLowerCase();
     const customers = customerSvc.getAllCustomers().filter(c =>
       c.name.toLowerCase().includes(query) || c.phone.includes(query)
     );
@@ -858,9 +927,12 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/generate\s+(\d+)\s+(\d+)/i, async (msg, match) => {
+  bot.onText(/\/generate(?:\s+(\d+)\s+(\d+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const chatId = msg.chat.id;
+    if (!match[1] || !match[2]) {
+      return bot.sendMessage(chatId, '❌ Format: `/generate [bulan] [tahun]`\nContoh: `/generate 9 2026`', { parse_mode: 'Markdown' });
+    }
     const month = Number(match[1]);
     const year = Number(match[2]);
     try {
@@ -912,9 +984,12 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/topup\s+(\S+)\s+(\d+)(?:\s+(.+))?/i, async (msg, match) => {
+  bot.onText(/\/topup(?:\s+(\S+)\s+(\d+)(?:\s+(.+))?)?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const chatId = msg.chat.id;
+    if (!match[1] || !match[2]) {
+      return bot.sendMessage(chatId, '❌ Format: `/topup [agent] [nominal] [catatan]`\nContoh: `/topup agen01 50000 Topup manual`', { parse_mode: 'Markdown' });
+    }
     const agentKeyRaw = String(match[1] || '').trim();
     const amount = Number(match[2]) || 0;
     const note = String(match[3] || 'Topup via Telegram').trim();
@@ -982,10 +1057,11 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/(?:info|cekstatus)\s+(\S+)/i, async (msg, match) => {
+  bot.onText(/\/(?:info|cekstatus)(?:\s+(\S+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const chatId = msg.chat.id;
     const inputTag = match[1];
+    if (!inputTag) return bot.sendMessage(chatId, '❌ Format: `/info [tag]` atau `/cekstatus [tag]`\nContoh: `/info budi01`', { parse_mode: 'Markdown' });
     try {
       const cust = customerSvc.findCustomerByAny(inputTag);
       const targetTag = cust ? (cust.genieacs_tag || cust.pppoe_username || cust.phone || inputTag) : inputTag;
@@ -1015,10 +1091,11 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/reboot\s+(\S+)/i, async (msg, match) => {
+  bot.onText(/\/reboot(?:\s+(\S+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const chatId = msg.chat.id;
     const inputTag = match[1];
+    if (!inputTag) return bot.sendMessage(chatId, '❌ Format: `/reboot [tag]`\nContoh: `/reboot budi01`', { parse_mode: 'Markdown' });
     try {
       const cust = customerSvc.findCustomerByAny(inputTag);
       const targetTag = cust ? (cust.genieacs_tag || cust.pppoe_username || cust.phone || inputTag) : inputTag;
@@ -1040,11 +1117,12 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/gantissid\s+(\S+)\s+(.+)/i, async (msg, match) => {
+  bot.onText(/\/gantissid(?:\s+(\S+)\s+(.+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const chatId = msg.chat.id;
     const inputTag = match[1];
     const newSSID = match[2];
+    if (!inputTag || !newSSID) return bot.sendMessage(chatId, '❌ Format: `/gantissid [tag] [ssid baru]`\nContoh: `/gantissid budi01 RumahBudi`', { parse_mode: 'Markdown' });
     try {
       const cust = customerSvc.findCustomerByAny(inputTag);
       const targetTag = cust ? (cust.genieacs_tag || cust.pppoe_username || cust.phone || inputTag) : inputTag;
@@ -1066,11 +1144,12 @@ function initTelegram() {
     }
   });
 
-  bot.onText(/\/gantisandi\s+(\S+)\s+(.+)/i, async (msg, match) => {
+  bot.onText(/\/gantisandi(?:\s+(\S+)\s+(.+))?$/i, async (msg, match) => {
     if (!isAdmin(msg)) return;
     const chatId = msg.chat.id;
     const inputTag = match[1];
     const newPass = match[2];
+    if (!inputTag || !newPass) return bot.sendMessage(chatId, '❌ Format: `/gantisandi [tag] [sandi baru]`\nContoh: `/gantisandi budi01 sandibaru123`', { parse_mode: 'Markdown' });
     try {
       const cust = customerSvc.findCustomerByAny(inputTag);
       const targetTag = cust ? (cust.genieacs_tag || cust.pppoe_username || cust.phone || inputTag) : inputTag;
