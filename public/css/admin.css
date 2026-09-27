@@ -256,6 +256,17 @@ body{font-family:'Inter',sans-serif;
 .btn-sm{padding:5px 10px;font-size:12px}
 .btn-icon{padding:6px 8px;border-radius:7px}
 
+/* Tab Menu, Tombol Navigasi Alternatif, dsb agar otomatis mengkonsentrasikan variabel dinamis aktif */
+.mtab.active,
+.wa-tab.active,
+.tab-btn.active,
+.tab.active {
+  background: var(--btn-bg) !important;
+  color: var(--btn-color) !important;
+  border: 1px solid var(--btn-border) !important;
+  box-shadow: var(--btn-shadow) !important;
+}
+
 /* ── FILTER BAR (form pencarian di atas tabel) ── */
 .card form.d-flex .fc,.card form.d-flex .fs,.filter-bar .fc,.filter-bar .fs{background:rgba(27,70,86,.55);backdrop-filter:blur(6px);border-color:rgba(190,239,255,.18);border-radius:10px;height:38px;padding:8px 13px}
 .card form.d-flex .fc:hover,.card form.d-flex .fs:hover,.filter-bar .fc:hover,.filter-bar .fs:hover{border-color:color-mix(in srgb,var(--primary) 40%,var(--border))}

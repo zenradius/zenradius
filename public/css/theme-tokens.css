@@ -175,6 +175,12 @@
 [data-app-theme="space"] .sb-section:hover{color:#FFFFFF}
 [data-app-theme="space"] .sb-item{color:var(--sb-text)}
 [data-app-theme="space"] .sb-item:hover{color:#FFFFFF;background:var(--sb-hover)}
+[data-app-theme="space"] .sb-item.active {
+  background: var(--btn-bg) !important;
+  color: var(--btn-color) !important;
+  border-left-color: var(--primary) !important;
+  box-shadow: var(--btn-shadow) !important;
+}
 [data-app-theme="space"] .sb-item.is-locked{color:var(--sb-text)}
 [data-app-theme="space"] .sb-item.is-locked:hover{background:var(--sb-hover)}
 [data-app-theme="space"] .topbar{
@@ -198,5 +204,23 @@
 }
 [data-app-theme="space"] .dropdown-item:hover {
   background-color: var(--bg3) !important;
+}
+[data-app-theme="space"] .bottom-nav {
+  background-color: var(--bg2) !important;
+  border-top-color: var(--border) !important;
+}
+[data-app-theme="space"] .bn-item.active {
+  background: var(--btn-bg) !important;
+  color: var(--btn-color) !important;
+}
+[data-app-theme="space"] .fs {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%233B82F6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+[data-app-theme="space"] .card form.d-flex .fc,
+[data-app-theme="space"] .card form.d-flex .fs,
+[data-app-theme="space"] .filter-bar .fc,
+[data-app-theme="space"] .filter-bar .fs {
+  background: var(--bg3) !important;
+  border-color: var(--border) !important;
 }
 
