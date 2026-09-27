@@ -773,9 +773,9 @@
       flex-shrink: 0;
     }
 
-    /* Testimonials — Light Theme */
+    /* Testimonials — Dark Portal Theme (matches whole landing page) */
     .testimonials-section {
-      background: linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%);
+      background: linear-gradient(180deg, rgba(11, 20, 26, 0.96), rgba(16, 24, 32, 0.92));
       padding-top: 72px;
       padding-bottom: 72px;
     }
@@ -789,23 +789,23 @@
     }
 
     .testimonial-card {
-      background: rgba(255, 255, 255, 0.96);
-      border: 1px solid #E2E8F0;
+      background: color-mix(in srgb, var(--portal-surface) 74%, transparent);
+      border: 1px solid color-mix(in srgb, var(--portal-primary) 18%, transparent);
       border-radius: 18px;
       padding: 24px 22px;
       transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+      box-shadow: 0 10px 24px rgba(3, 14, 20, 0.24);
     }
 
     .testimonial-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.08);
-      border-color: rgba(37, 99, 235, 0.18);
+      box-shadow: 0 14px 30px color-mix(in srgb, var(--portal-primary) 14%, transparent);
+      border-color: color-mix(in srgb, var(--portal-primary) 40%, transparent);
     }
 
     .testimonial-card p {
       font-family: var(--font-sans);
-      color: #e6f7f5;
+      color: rgba(237, 250, 250, 0.85);
       font-size: 1rem;
       line-height: 1.7;
       margin-bottom: 20px;
@@ -817,7 +817,7 @@
       align-items: center;
       gap: 12px;
       padding-top: 14px;
-      border-top: 1px solid rgba(151, 239, 228, 0.22);
+      border-top: 1px solid color-mix(in srgb, var(--portal-primary) 22%, transparent);
     }
 
     .testimonial-avatar {
@@ -844,13 +844,13 @@
 
     .testimonial-meta span {
       font-family: var(--font-sans);
-      color: #c8ecea;
+      color: rgba(237, 250, 250, 0.68);
       font-size: 0.85rem;
     }
 
-    /* FAQ Section — Light Theme */
+    /* FAQ Section — Dark Portal Theme (matches whole landing page) */
     .faq-section {
-      background: linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%);
+      background: linear-gradient(180deg, rgba(11, 20, 26, 0.96), rgba(16, 24, 32, 0.92));
       position: relative;
     }
 
@@ -867,22 +867,22 @@
     }
 
     .faq-accordion .accordion-item {
-      background: rgba(255, 255, 255, 0.92);
-      border: 1px solid #E2E8F0;
+      background: color-mix(in srgb, var(--portal-surface) 74%, transparent);
+      border: 1px solid color-mix(in srgb, var(--portal-primary) 18%, transparent);
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+      box-shadow: 0 8px 24px rgba(3, 14, 20, 0.24);
     }
 
     .faq-accordion .accordion-item:first-child {
-      border-top: 1px solid #E2E8F0;
+      border-top: 1px solid color-mix(in srgb, var(--portal-primary) 18%, transparent);
     }
 
     .faq-accordion .accordion-button {
       font-family: var(--font-sans);
       font-size: 1rem;
       font-weight: 700;
-      color: #0F172A;
+      color: var(--portal-text);
       background: transparent;
       padding: 18px 20px;
       box-shadow: none;
@@ -891,8 +891,8 @@
     }
 
     .faq-accordion .accordion-button:not(.collapsed) {
-      color: #0F172A;
-      background: rgba(37, 99, 235, 0.04);
+      color: #d9fffb;
+      background: color-mix(in srgb, var(--portal-primary) 10%, transparent);
       box-shadow: none;
     }
 
@@ -900,7 +900,7 @@
       width: 1.1rem;
       height: 1.1rem;
       background-size: 1.1rem;
-      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230F172A'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23edf7f5'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
       transition: transform 0.2s ease;
     }
 
@@ -915,16 +915,16 @@
 
     .faq-accordion .accordion-body {
       font-family: var(--font-sans);
-      color: #475569;
+      color: rgba(237, 250, 250, 0.78);
       font-size: 0.95rem;
       line-height: 1.75;
       padding: 0 20px 18px;
-      background: rgba(248, 250, 252, 0.7);
+      background: transparent;
     }
 
     .faq-accordion .accordion-button strong {
       font-family: var(--font-display);
-      color: #0F172A;
+      color: var(--portal-text);
     }
 
     /* Contact Section — Match portal login/register theme */
@@ -1206,7 +1206,7 @@
       text-decoration: underline;
     }
 
-    /* PWA Install Banner — Light Theme */
+    /* PWA Install Banner — Warning tint (kept distinct on purpose for visibility) */
     #pwa-install-banner .glass-card {
       background: rgba(255, 255, 255, 0.95) !important;
       border-color: #F59E0B !important;
@@ -1333,9 +1333,9 @@
       min-width: 0;
       padding: 20px 18px 16px;
       border-radius: 16px;
-      border: 1px solid #E2E8F0;
-      background: #FFFFFF;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+      border: 1px solid color-mix(in srgb, var(--portal-primary) 18%, transparent);
+      background: color-mix(in srgb, var(--portal-surface) 78%, transparent);
+      box-shadow: 0 8px 24px rgba(3, 14, 20, 0.28);
       font-family: var(--font-sans);
       min-height: 365px;
       height: 100%;
@@ -1350,8 +1350,8 @@
       gap: 6px;
       padding: 4px 10px;
       border-radius: 999px;
-      background: rgba(37, 99, 235, 0.18);
-      color: #FFFFFF;
+      background: color-mix(in srgb, var(--portal-primary) 20%, transparent);
+      color: #d9fffb;
       font-size: 0.68rem;
       font-weight: 700;
       letter-spacing: 0.08em;
@@ -1364,7 +1364,7 @@
       font-size: 1.38rem;
       font-weight: 800;
       letter-spacing: -0.02em;
-      color: #FFFFFF;
+      color: #f8fbff;
       line-height: 1.2;
     }
     .sim-flex {
@@ -1422,11 +1422,11 @@
       font-family: var(--font-display);
       font-size: 1.8rem;
       font-weight: 800;
-      color: #0F172A;
+      color: #f8fbff;
       line-height: 1;
       letter-spacing: -0.02em;
     }
-    .sim-users-unit { font-size: 0.72rem; color: rgba(255, 255, 255, 0.75); margin-top: 2px; }
+    .sim-users-unit { font-size: 0.72rem; color: rgba(237, 250, 250, 0.7); margin-top: 2px; }
     .sim-needs {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1442,28 +1442,28 @@
       min-height: 76px;
       padding: 10px 8px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid color-mix(in srgb, var(--portal-primary) 14%, transparent);
       background: rgba(15, 23, 42, 0.28);
-      color: #FFFFFF;
+      color: rgba(237, 250, 250, 0.85);
       font-size: 0.76rem;
       font-weight: 600;
       cursor: pointer;
       transition: all .18s ease;
     }
-    .sim-need-btn .sim-need-icon { width: 20px; height: 20px; color: rgba(255, 255, 255, 0.82); transition: color .18s ease; }
-    .sim-need-btn:hover { border-color: rgba(255, 255, 255, 0.28); }
-    .sim-need-btn:hover .sim-need-icon { color: #FFFFFF; }
+    .sim-need-btn .sim-need-icon { width: 20px; height: 20px; color: rgba(237, 250, 250, 0.75); transition: color .18s ease; }
+    .sim-need-btn:hover { border-color: color-mix(in srgb, var(--portal-primary) 32%, transparent); }
+    .sim-need-btn:hover .sim-need-icon { color: #d9fffb; }
     .sim-need-btn.active {
-      background: rgba(37, 99, 235, 0.18);
-      border-color: color-mix(in srgb, var(--portal-line) 58%, transparent);
-      color: #FFFFFF;
+      background: color-mix(in srgb, var(--portal-primary) 20%, transparent);
+      border-color: color-mix(in srgb, var(--portal-primary) 55%, transparent);
+      color: #d9fffb;
       box-shadow: none;
     }
-    .sim-need-btn.active .sim-need-icon { color: #FFFFFF; }
+    .sim-need-btn.active .sim-need-icon { color: #d9fffb; }
     .sim-result {
       margin-top: 10px;
       padding-top: 10px;
-      border-top: 1px solid #E2E8F0;
+      border-top: 1px solid color-mix(in srgb, var(--portal-primary) 16%, transparent);
       width: 100%;
     }
     .sim-estimate-block {
@@ -1483,18 +1483,18 @@
       gap: 10px;
       width: 100%;
     }
-    .sim-est-label { font-size: 0.75rem; font-weight: 600; color: rgba(255, 255, 255, 0.75); letter-spacing: 0.04em; text-transform: uppercase; }
+    .sim-est-label { font-size: 0.75rem; font-weight: 600; color: rgba(237, 250, 250, 0.7); letter-spacing: 0.04em; text-transform: uppercase; }
     .sim-estimate {
       font-family: var(--font-mono);
       font-size: 1.08rem;
       font-weight: 700;
-      color: #FFFFFF;
+      color: #f8fbff;
       letter-spacing: -0.01em;
     }
     .sim-copy {
       font-size: 0.78rem;
       line-height: 1.5;
-      color: rgba(255, 255, 255, 0.85);
+      color: rgba(237, 250, 250, 0.8);
       background: transparent;
       border: 0;
       border-radius: 0;
@@ -1504,9 +1504,9 @@
     .sim-recommend {
       margin-top: 10px;
       padding: 12px 12px 10px;
-      border: 1px solid #E2E8F0;
+      border: 1px solid color-mix(in srgb, var(--portal-primary) 18%, transparent);
       border-radius: 12px;
-      background: #FFFFFF;
+      background: color-mix(in srgb, var(--portal-surface) 60%, transparent);
       width: 100%;
     }
     .sim-eyebrow {
@@ -1514,25 +1514,25 @@
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(237, 250, 250, 0.65);
     }
     .sim-rec-name {
       font-family: var(--font-display);
       font-size: 1rem;
       font-weight: 800;
-      color: #FFFFFF;
+      color: #f8fbff;
       margin: 6px 0 4px;
     }
     .sim-rec-meta {
       font-size: 0.82rem;
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(237, 250, 250, 0.78);
       display: flex;
       align-items: center;
       gap: 7px;
       flex-wrap: wrap;
     }
-    .sim-rec-meta #sim-rec-speed { color: #FFFFFF; font-weight: 700; }
-    .sim-dot { color: rgba(255, 255, 255, 0.5); }
+    .sim-rec-meta #sim-rec-speed { color: #f8fbff; font-weight: 700; }
+    .sim-dot { color: rgba(237, 250, 250, 0.45); }
     .sim-rec-check {
       display: inline-flex;
       align-items: center;
@@ -1540,16 +1540,16 @@
       margin-top: 10px;
       padding: 5px 10px;
       border-radius: 999px;
-      background: rgba(22, 163, 74, 0.16);
-      color: #FFFFFF;
+      background: rgba(34, 197, 94, 0.16);
+      color: #86efac;
       font-size: 0.76rem;
       font-weight: 600;
     }
-    .sim-rec-check .bi { color: #FFFFFF; }
+    .sim-rec-check .bi { color: #86efac; }
     .sim-custom-msg {
       margin-top: 8px;
       font-size: 0.82rem;
-      color: #FFFFFF;
+      color: #fbbf24;
       background: rgba(245, 158, 11, 0.12);
       border: 1px solid rgba(245, 158, 11, 0.28);
       border-radius: 8px;
@@ -1568,13 +1568,13 @@
       text-decoration: none;
       font-weight: 700;
       font-size: 0.84rem;
-      color: #FFFFFF;
-      background: var(--portal-primary-strong);
+      color: #062c2a;
+      background: var(--portal-primary);
       transition: background .15s ease, transform .12s ease;
     }
-    .sim-cta:hover { background: var(--portal-primary); color: #FFFFFF; transform: translateY(-1px); }
-    .sim-cta.is-contact { background: #0F172A; }
-    .sim-cta.is-contact:hover { background: #1E293B; }
+    .sim-cta:hover { background: var(--portal-primary-strong); color: #062c2a; transform: translateY(-1px); }
+    .sim-cta.is-contact { background: rgba(255,255,255,0.08); color: var(--portal-text); }
+    .sim-cta.is-contact:hover { background: rgba(255,255,255,0.14); color: var(--portal-text); }
     .customer-chat-widget {
       position: fixed;
       right: 22px;
