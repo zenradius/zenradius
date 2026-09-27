@@ -52,7 +52,7 @@
     }
 
     .custom-navbar {
-      background: rgba(23, 57, 69, 0.96) !important;
+      background: var(--portal-panel, rgba(23, 57, 69, 0.96)) !important;
       border-bottom: 1px solid color-mix(in srgb, var(--portal-line) 38%, transparent);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
@@ -102,7 +102,7 @@
     }
 
     .custom-navbar .dropdown-menu {
-      background: rgba(23, 57, 69, 0.98);
+      background: var(--portal-panel-strong, rgba(23, 57, 69, 0.98));
       border: 1px solid color-mix(in srgb, var(--portal-line) 38%, transparent);
       border-radius: 12px;
       box-shadow: 0 12px 28px rgba(2, 10, 14, 0.32);
@@ -459,7 +459,7 @@
       line-height: 1.2;
     }
 
-    .stat-number .bi { font-size: 0.9em; }
+    .stat-number .bi { font-size: 0.9em; color: var(--portal-primary); }
 
     .stat-label {
       font-family: var(--font-sans);
@@ -2153,7 +2153,7 @@
         <!-- Left Column: Company Value Proposition -->
         <div class="hero-copy">
           <div class="hero-badge">
-            <i class="bi bi-lightning-charge-fill text-warning"></i>
+            <i class="bi bi-lightning-charge-fill" style="color: var(--portal-accent, #fbbf24);"></i>
             <span>Internet Fiber Optic Cepat, Stabil, dan Tanpa Batas</span>
           </div>
 
@@ -2180,19 +2180,19 @@
           <section class="stats-strip">
             <div class="hero-stats">
               <div class="stat-item">
-                <div class="stat-number"><i class="bi bi-speedometer2 text-info me-1"></i> 100%</div>
+                <div class="stat-number"><i class="bi bi-speedometer2 me-1"></i> 100%</div>
                 <div class="stat-label">Fiber Optic</div>
               </div>
               <div class="stat-item">
-                <div class="stat-number"><i class="bi bi-infinity text-success me-1"></i> Tanpa FUP</div>
+                <div class="stat-number"><i class="bi bi-infinity me-1"></i> Tanpa FUP</div>
                 <div class="stat-label">Tanpa Batas Kuota</div>
               </div>
               <div class="stat-item">
-                <div class="stat-number"><i class="bi bi-shield-lock-fill text-warning me-1"></i> 99.9%</div>
+                <div class="stat-number"><i class="bi bi-shield-lock-fill me-1"></i> 99.9%</div>
                 <div class="stat-label">Uptime SLA</div>
               </div>
               <div class="stat-item">
-                <div class="stat-number"><i class="bi bi-headset text-primary me-1"></i> 24/7</div>
+                <div class="stat-number"><i class="bi bi-headset me-1"></i> 24/7</div>
                 <div class="stat-label">Dukungan Pelanggan</div>
               </div>
             </div>
@@ -2233,9 +2233,9 @@
                   </label>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mb-3 small" style="color: #C8D0E0;">
+                <div class="d-flex justify-content-between align-items-center mb-3 small" style="color: var(--portal-muted, #C8D0E0);">
                   <span><i class="bi bi-info-circle me-1"></i>Gunakan akun pelanggan aktif.</span>
-                  <button type="submit" form="forgot-password-form" class="btn btn-link btn-sm p-0 text-decoration-none" style="color: #7dd3fc;">Lupa Password?</button>
+                  <button type="submit" form="forgot-password-form" class="btn btn-link btn-sm p-0 text-decoration-none" style="color: var(--portal-primary, #7dd3fc);">Lupa Password?</button>
                 </div>
 
                 <% if (settings.login_otp_enabled) { %>
@@ -2270,17 +2270,17 @@
               <!-- Fast Tool Shortcuts -->
               <div class="quick-tools-grid">
                 <a href="/customer/check-billing" class="btn-quick-tool">
-                  <i class="bi bi-receipt text-info fs-5"></i> Cek Tagihan
+                  <i class="bi bi-receipt fs-5" style="color: var(--portal-primary-strong, #22a7f0);"></i> Cek Tagihan
                 </a>
                 <a href="/customer/voucher" class="btn-quick-tool">
-                  <i class="bi bi-ticket-perforated text-warning fs-5"></i> Dapatkan Voucher
+                  <i class="bi bi-ticket-perforated fs-5" style="color: var(--portal-accent, #fbbf24);"></i> Dapatkan Voucher
                 </a>
               </div>
 
               <div class="text-center mt-4 pt-2 border-top border-secondary border-opacity-20">
-                <p class="mb-0 small" style="color: #C8D0E0;">
+                <p class="mb-0 small" style="color: var(--portal-muted, #C8D0E0);">
                   <%= t('customer.not_subscribed', 'Belum menjadi pelanggan?') %>
-                  <a href="/customer/register" class="fw-bold text-decoration-none ms-1" style="color: #4ddbff;">
+                  <a href="/customer/register" class="fw-bold text-decoration-none ms-1" style="color: var(--portal-primary, #4ddbff);">
                     <%= t('customer.register_new', 'Daftar Sekarang') %> <i class="bi bi-arrow-right"></i>
                   </a>
                 </p>
@@ -2311,7 +2311,7 @@
         <div class="col-md-6 col-lg-3">
           <div class="glass-card feature-box feature-premium">
             <div class="feature-icon-wrapper">
-              <i class="bi bi-lightning-charge-fill text-warning"></i>
+              <i class="bi bi-lightning-charge-fill" style="color: var(--portal-accent, #fbbf24);"></i>
             </div>
             <h4 class="feature-title">Ultra Fast Fiber</h4>
             <p class="feature-desc">
@@ -2323,7 +2323,7 @@
         <div class="col-md-6 col-lg-3">
           <div class="glass-card feature-box">
             <div class="feature-icon-wrapper">
-              <i class="bi bi-infinity text-success"></i>
+              <i class="bi bi-infinity" style="color: var(--success, #10B981);"></i>
             </div>
             <h4 class="feature-title">Akses Tanpa Batas</h4>
             <p class="feature-desc">
@@ -2335,7 +2335,7 @@
         <div class="col-md-6 col-lg-3">
           <div class="glass-card feature-box">
             <div class="feature-icon-wrapper">
-              <i class="bi bi-credit-card-2-front-fill text-info"></i>
+              <i class="bi bi-credit-card-2-front-fill" style="color: var(--portal-primary-strong, #22a7f0);"></i>
             </div>
             <h4 class="feature-title">Pembayaran Instan</h4>
             <p class="feature-desc">
@@ -2347,7 +2347,7 @@
         <div class="col-md-6 col-lg-3">
           <div class="glass-card feature-box">
             <div class="feature-icon-wrapper">
-              <i class="bi bi-headset text-primary"></i>
+              <i class="bi bi-headset" style="color: var(--portal-primary, #2dd4bf);"></i>
             </div>
             <h4 class="feature-title">Customer Care 24/7</h4>
             <p class="feature-desc">
@@ -2428,7 +2428,7 @@
           <a href="/customer/check-billing" class="text-decoration-none info-card-link">
             <div class="glass-card info-card">
               <div class="info-icon">
-                <i class="bi bi-receipt text-info fs-3"></i>
+                <i class="bi bi-receipt fs-3" style="color: var(--portal-primary-strong, #22a7f0);"></i>
               </div>
               <div>
                 <h5 class="fw-bold text-white mb-1">Cek Tagihan</h5>
@@ -2442,7 +2442,7 @@
           <a href="/customer/voucher" class="text-decoration-none info-card-link">
             <div class="glass-card info-card">
               <div class="info-icon">
-                <i class="bi bi-ticket-perforated text-warning fs-3"></i>
+                <i class="bi bi-ticket-perforated fs-3" style="color: var(--portal-accent, #fbbf24);"></i>
               </div>
               <div>
                 <h5 class="fw-bold text-white mb-1">Dapatkan Voucher</h5>
@@ -2456,7 +2456,7 @@
           <a href="/customer/register" class="text-decoration-none info-card-link">
             <div class="glass-card info-card">
               <div class="info-icon">
-                <i class="bi bi-person-plus text-success fs-3"></i>
+                <i class="bi bi-person-plus fs-3" style="color: var(--success, #10B981);"></i>
               </div>
               <div>
                 <h5 class="fw-bold text-white mb-1">Pemasangan Baru</h5>
@@ -2471,7 +2471,7 @@
             <a href="https://wa.me/<%= String(settings.company_phone).replace(/\D/g,'') %>" target="_blank" rel="noopener" class="text-decoration-none info-card-link">
               <div class="glass-card info-card">
                 <div class="info-icon">
-                  <i class="bi bi-whatsapp text-primary fs-3"></i>
+                  <i class="bi bi-whatsapp fs-3" style="color: var(--portal-primary, #2dd4bf);"></i>
                 </div>
                 <div>
                   <h5 class="fw-bold text-white mb-1">Dukungan WhatsApp</h5>
@@ -2622,18 +2622,18 @@
         <div class="col-lg-5">
           <div class="glass-card p-4 mb-3 company-info-card">
             <div class="mb-3">
-              <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" style="max-width: 221px; width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 8px 18px rgba(56, 213, 196, 0.18));">
+              <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" style="max-width: 221px; width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 8px 18px color-mix(in srgb, var(--portal-primary) 25%, transparent));">
             </div>
-            <p class="leading-relaxed mb-0" style="color: #C8D0E0;">
+            <p class="leading-relaxed mb-0" style="color: var(--portal-muted, #C8D0E0);">
               Solusi internet andal untuk kebutuhan rumah, keluarga, dan bisnis — koneksi stabil, dukungan responsif, dan layanan pemasangan yang terpercaya.
             </p>
 
             <% if (settings.company_address) { %>
               <div class="d-flex align-items-start gap-3 mt-4 pt-3" style="border-top: 1px solid rgba(148, 163, 184, 0.18);">
-                <i class="bi bi-geo-alt fs-4" style="color: #00D4FF;"></i>
+                <i class="bi bi-geo-alt fs-4" style="color: var(--portal-primary, #00D4FF);"></i>
                 <div>
                   <h6 class="fw-bold mb-1 text-white">Alamat Kantor</h6>
-                  <p class="small mb-0" style="color: #C8D0E0;"><%= settings.company_address %></p>
+                  <p class="small mb-0" style="color: var(--portal-muted, #C8D0E0);"><%= settings.company_address %></p>
                 </div>
               </div>
             <% } %>
@@ -2644,18 +2644,18 @@
           <div class="row g-3">
             <div class="col-sm-6">
               <div class="glass-card p-4 h-100 contact-info-card">
-                <i class="bi bi-clock-history fs-3 text-warning mb-2 d-block"></i>
+                <i class="bi bi-clock-history fs-3 mb-2 d-block" style="color: var(--portal-accent, #fbbf24);"></i>
                 <h5 class="fw-bold text-white fs-6 mb-1">Jam Operasional</h5>
-                <p class="small mb-0" style="color: #C8D0E0;"><%= settings.operational_hours || 'Setiap Hari (24 Jam Online)' %></p>
+                <p class="small mb-0" style="color: var(--portal-muted, #C8D0E0);"><%= settings.operational_hours || 'Setiap Hari (24 Jam Online)' %></p>
               </div>
             </div>
 
             <% if (settings.company_phone) { %>
               <div class="col-sm-6">
                 <div class="glass-card p-4 h-100 contact-info-card">
-                  <i class="bi bi-whatsapp fs-3 text-success mb-2 d-block"></i>
+                  <i class="bi bi-whatsapp fs-3 mb-2 d-block" style="color: var(--portal-primary, #25D366);"></i>
                   <h5 class="fw-bold text-white fs-6 mb-1">WhatsApp Customer Service</h5>
-                  <a href="https://wa.me/<%= String(settings.company_phone).replace(/\D/g,'') %>" target="_blank" rel="noopener" class="text-decoration-none fw-bold" style="color: #4ddbff;">
+                  <a href="https://wa.me/<%= String(settings.company_phone).replace(/\D/g,'') %>" target="_blank" rel="noopener" class="text-decoration-none fw-bold" style="color: var(--portal-primary, #4ddbff);">
                     <%= settings.company_phone %>
                   </a>
                 </div>
@@ -2665,9 +2665,9 @@
             <% if (settings.company_email) { %>
               <div class="col-sm-6">
                 <div class="glass-card p-4 h-100 contact-info-card">
-                  <i class="bi bi-envelope-at fs-3 text-info mb-2 d-block"></i>
+                  <i class="bi bi-envelope-at fs-3 mb-2 d-block" style="color: var(--portal-primary-strong, #4ddbff);"></i>
                   <h5 class="fw-bold text-white fs-6 mb-1">Email Resmi</h5>
-                  <a href="mailto:<%= settings.company_email %>" class="text-decoration-none fw-bold" style="color: #4ddbff;">
+                  <a href="mailto:<%= settings.company_email %>" class="text-decoration-none fw-bold" style="color: var(--portal-primary, #4ddbff);">
                     <%= settings.company_email %>
                   </a>
                 </div>
@@ -2676,9 +2676,9 @@
 
             <div class="col-sm-6">
               <div class="glass-card p-4 h-100 contact-info-card">
-                <i class="bi bi-shield-check fs-3 text-primary mb-2 d-block"></i>
+                <i class="bi bi-shield-check fs-3 mb-2 d-block" style="color: var(--portal-primary, #4ddbff);"></i>
                 <h5 class="fw-bold text-white fs-6 mb-1">Jaminan Layanan</h5>
-                <p class="small mb-0" style="color: #C8D0E0;">SLA 99.9% Uptime Redundant Server</p>
+                <p class="small mb-0" style="color: var(--portal-muted, #C8D0E0);">SLA 99.9% Uptime Redundant Server</p>
               </div>
             </div>
           </div>
