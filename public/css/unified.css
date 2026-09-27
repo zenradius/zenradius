@@ -3,22 +3,22 @@
    All EJS templates should include this file instead of their own inline styles.
 */
 
-/* ── CSS Variables for Consistent theming — synced with landing (#173945/#236060/#173e4d etc.) ── */
+/* ── CSS Variables for Consistent theming — fallback default to Space Theme values ── */
 :root {
-  --portal-bg: #173945;
-  --portal-surface: #183f51;
-  --portal-surface-raised: #1b4656;
-  --portal-ink: #edf7f5;
-  --portal-muted: #a8bec2;
-  --portal-primary: #2dd4bf;
-  --portal-primary-strong: #22a7f0;
-  --portal-accent: #fbbf24;
-  --portal-line: rgba(190, 239, 255, 0.32);
-  --card-bg: #173945;
-  --soft-primary: rgba(45, 212, 191, 0.14);
-  --soft-success: rgba(74, 222, 128, 0.14);
-  --soft-warning: rgba(251, 191, 36, 0.14);
-  --soft-danger: rgba(251, 113, 133, 0.14);
+  --portal-bg: var(--bg, #121622);
+  --portal-surface: var(--bg2, #1A1F31);
+  --portal-surface-raised: var(--bg3, #242B42);
+  --portal-ink: var(--text, #F1F5F9);
+  --portal-muted: var(--muted, #94A3B8);
+  --portal-primary: var(--primary, #3B82F6);
+  --portal-primary-strong: var(--primary, #1D4ED8);
+  --portal-accent: var(--accent, #06B6D4);
+  --portal-line: var(--border, #2A334E);
+  --card-bg: var(--bg2, #1A1F31);
+  --soft-primary: var(--pdim, rgba(59,130,246,.15));
+  --soft-success: var(--sdim, rgba(16,185,129,.15));
+  --soft-warning: var(--wdim, rgba(245,158,11,.15));
+  --soft-danger: var(--ddim, rgba(239,68,68,.15));
 }
 
 /* ── Base Styles — landing background unify ── */
@@ -34,13 +34,13 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(23, 57, 69, 0.3); /* Transparan tipis menyatu dengan background */
+  background: var(--portal-surface-raised); /* Transparan tipis menyatu dengan background */
   border-radius: 100px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, var(--portal-primary) 0%, var(--portal-primary-strong) 100%);
-  border: 2px solid #173945; /* Memberi sela agar tampak melayang */
+  border: 2px solid var(--portal-bg); /* Memberi sela agar tampak melayang */
   border-radius: 100px;
 }
 
@@ -52,7 +52,7 @@
 /* Untuk Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--portal-primary) rgba(23, 57, 69, 0.3);
+  scrollbar-color: var(--portal-primary) var(--portal-surface-raised);
 }
 
 body {
@@ -88,19 +88,19 @@ h1, h2, h3, h4, h5, h6,
 .btn-primary:hover,
 .btn-primary:focus {
   background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 100%);
-  border-color: rgba(20, 184, 166, 0.6);
+  border-color: var(--portal-line);
   filter: brightness(1.03);
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: rgba(45, 212, 191, 0.5);
-  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+  border-color: var(--portal-primary);
+  box-shadow: 0 0 0 3px var(--soft-primary);
 }
 
 /* ── Glassmorphism Effects ── */
 .glass {
-  background: rgba(23, 35, 44, 0.92);
+  background: var(--portal-surface-raised);
   backdrop-filter: blur(14px);
   border: 1px solid var(--portal-line);
 }
@@ -239,7 +239,7 @@ input::placeholder {
 .card {
   border-radius: 1.2rem;
   border: 1px solid var(--portal-line);
-  background: linear-gradient(145deg, rgba(23, 35, 44, .98), rgba(27, 49, 56, .92));
+  background: var(--portal-surface);
 }
 
 .card .form-label {
@@ -248,7 +248,7 @@ input::placeholder {
 
 /* ── Navigation ── */
 .navbar {
-  background: rgba(23, 35, 44, 0.92) !important;
+  background: var(--portal-surface) !important;
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--portal-line);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
