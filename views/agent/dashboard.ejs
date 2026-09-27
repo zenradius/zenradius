@@ -11,17 +11,11 @@
   <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
     :root{
-      --bg:#101820;
-      --panel: linear-gradient(145deg, rgba(25, 42, 53, 0.96), rgba(16, 30, 40, 0.94));
-      --panel2: rgba(4, 17, 22, 0.52);
-      --border:rgba(220, 236, 238, 0.12);
-      --muted:#9bb0b5;
-      --text:#edf7f5;
-      --brand1:#2dd4bf;
-      --brand2:#22a7f0;
-      --danger:#ef4444;
-      --success:#22c55e;
-      --warn:#f59e0b;
+      --panel: var(--bg2, linear-gradient(145deg, rgba(25, 42, 53, 0.96), rgba(16, 30, 40, 0.94)));
+      --panel2: var(--bg3, rgba(4, 17, 22, 0.52));
+      --brand1:var(--primary, #2dd4bf);
+      --brand2:var(--accent, #22a7f0);
+      --warn:var(--warning, #f59e0b);
     }
 
     body{

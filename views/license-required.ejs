@@ -9,13 +9,13 @@
   <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
-    :root{--bg:#173945;--bg3:#1b4656;--border:rgba(190,239,255,.22);--text:#edf7f5;--muted:#a8bec2;--primary:#22D3EE;--pdim:rgba(34,211,238,.14);--success:#34D399;--sdim:rgba(52,211,153,.14);--danger:#F87171}
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{min-height:100%}
     body{
       background:var(--bg);
-      background-image:radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%);
+      background-image:var(--body-bg-image, radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%));
       color:var(--text);font-family:'DM Sans',system-ui,sans-serif;
       min-height:100dvh;display:flex;flex-direction:column;
       padding:0;

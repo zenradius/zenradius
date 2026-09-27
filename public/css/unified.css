@@ -57,10 +57,8 @@
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: #173945;
-  background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
-                    radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
-                    linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+  background: var(--body-bg-solid, var(--portal-bg));
+  background-image: var(--body-bg-image, none);
   color: var(--portal-ink);
   min-height: 100vh;
   line-height: 1.6;

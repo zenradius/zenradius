@@ -12,16 +12,11 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root {
-      --bg-dark:#173945;
-      --bg-dark-2:#102c38;
-      --bg-card:rgba(23,57,69,0.88);
-      --accent:#22d3ee;
-      --accent-strong:#06b6d4;
-      --border:rgba(190,239,255,0.18);
-      --text:#e2f6ff;
-      --muted:#9dd8ea;
-      --success:#34d399;
-      --warning:#fbbf24;
+      --bg-dark:var(--body-bg-solid, #173945);
+      --bg-dark-2:var(--bg3, #102c38);
+      --bg-card:var(--bg2, rgba(23,57,69,0.88));
+      --accent:var(--primary, #22d3ee);
+      --accent-strong:var(--accent, #06b6d4);
     }
     body{font-family:'Outfit',sans-serif;background:linear-gradient(135deg,#0b1f2b 0%,#173945 38%,#102935 100%);color:var(--text);min-height:100vh}
     

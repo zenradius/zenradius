@@ -21,23 +21,23 @@
 
   <style>
     :root {
-      --bg-dark: #173945;
-      --bg-panel: rgba(23, 57, 69, 0.96);
-      --card-bg: rgba(23, 57, 69, 0.96);
-      --card-border: rgba(190, 239, 255, 0.2);
-      --accent-primary: #22d3ee;
-      --accent-primary-strong: #06b6d4;
-      --accent-secondary: #67e8f9;
-      --accent-success: #4ade80;
-      --accent-warning: #fbbf24;
-      --accent-danger: #fb7185;
-      --text-main: #edf7f5;
-      --text-muted: #9bb0b5;
-      --glass-strong: rgba(23, 57, 69, 0.92);
-      --soft-primary: rgba(45, 212, 191, 0.14);
-      --soft-success: rgba(74, 222, 128, 0.14);
-      --soft-warning: rgba(251, 191, 36, 0.14);
-      --soft-danger: rgba(251, 113, 133, 0.14);
+      --bg-dark: var(--bg, #173945);
+      --bg-panel: var(--bg2, rgba(23, 57, 69, 0.96));
+      --card-bg: var(--bg2, rgba(23, 57, 69, 0.96));
+      --card-border: var(--border, rgba(190, 239, 255, 0.2));
+      --accent-primary: var(--primary, #22d3ee);
+      --accent-primary-strong: var(--accent, #06b6d4);
+      --accent-secondary: var(--accent, #67e8f9);
+      --accent-success: var(--success, #4ade80);
+      --accent-warning: var(--warning, #fbbf24);
+      --accent-danger: var(--danger, #fb7185);
+      --text-main: var(--text, #edf7f5);
+      --text-muted: var(--muted, #9bb0b5);
+      --glass-strong: var(--bg2, rgba(23, 57, 69, 0.92));
+      --soft-primary: var(--pdim, rgba(45, 212, 191, 0.14));
+      --soft-success: var(--sdim, rgba(74, 222, 128, 0.14));
+      --soft-warning: var(--wdim, rgba(251, 191, 36, 0.14));
+      --soft-danger: var(--ddim, rgba(251, 113, 133, 0.14));
     }
 
     .text-muted {
@@ -108,8 +108,8 @@
     }
 
     body {
-      background-color: #173945;
-      background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      background-color: var(--body-bg-solid, #173945);
+      background-image: var(--body-bg-image, none);
       color: var(--text-main);
       font-family: 'DM Sans', sans-serif;
       min-height: 100vh;

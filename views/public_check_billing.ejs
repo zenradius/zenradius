@@ -12,15 +12,15 @@
   <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
     :root {
-      --portal-bg: #173945;
-      --portal-panel: #173945;
-      --portal-panel-strong: #173945;
-      --portal-line: rgba(190, 239, 255, 0.32);
-      --portal-line-strong: rgba(190, 239, 255, 0.38);
-      --portal-primary: #2dd4bf;
-      --portal-secondary: #14b8a6;
-      --portal-text: #edf7f5;
-      --portal-muted: #a8bec2;
+      --portal-bg: var(--bg, #173945);
+      --portal-panel: var(--bg2, #173945);
+      --portal-panel-strong: var(--bg3, #173945);
+      --portal-line: var(--border, rgba(190, 239, 255, 0.32));
+      --portal-line-strong: var(--pdim, rgba(190, 239, 255, 0.38));
+      --portal-primary: var(--primary, #2dd4bf);
+      --portal-secondary: var(--accent, #14b8a6);
+      --portal-text: var(--text, #edf7f5);
+      --portal-muted: var(--muted, #a8bec2);
     }
 
     @keyframes softGlow {
@@ -29,16 +29,16 @@
     }
 
     body{
-      background: #173945;
-      background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      background: var(--body-bg-solid, #173945);
+      background-image: var(--body-bg-image, none);
       color: var(--portal-text);
       font-family: 'DM Sans', sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
-    .cardx{background:#173945;backdrop-filter:blur(14px);border:1px solid rgba(190,239,255,.32);border-radius:14px;box-shadow:0 14px 32px rgba(3,14,20,.34);overflow:hidden;max-width:720px;width:100%;position:relative}
+    .cardx{background:var(--portal-panel);backdrop-filter:blur(14px);border:1px solid var(--portal-line);border-radius:14px;box-shadow:0 14px 32px rgba(3,14,20,.34);overflow:hidden;max-width:720px;width:100%;position:relative}
     .cardx::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:140%;background:linear-gradient(135deg,rgba(255,255,255,.04),transparent 40%,rgba(124,221,218,.04));pointer-events:none}
-    .head{background:#173945;padding:22px 20px;border-bottom:1px solid rgba(190,239,255,.22)}
+    .head{background:var(--portal-panel);padding:22px 20px;border-bottom:1px solid var(--border, rgba(190,239,255,.22))}
     .body{padding:22px 20px}
     .form-control,.form-select{
       background: rgba(255, 255, 255, 0.06);

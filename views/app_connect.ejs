@@ -6,18 +6,19 @@
   <title>Portal Pelanggan — <%= companyName %></title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
     :root {
-      --portal-bg: #101820;
-      --admin-bg2: #173945;
-      --admin-bg3: #1b4656;
-      --admin-border: rgba(190,239,255,0.22);
-      --admin-primary: #22D3EE;
-      --admin-pdim: rgba(34,211,238,0.14);
-      --portal-primary: #2dd4bf;
-      --portal-accent: #fbbf24;
-      --portal-text: #edf7f5;
-      --portal-muted: #a8bec2;
+      --portal-bg: var(--bg, #101820);
+      --admin-bg2: var(--bg2, #173945);
+      --admin-bg3: var(--bg3, #1b4656);
+      --admin-border: var(--border, rgba(190,239,255,0.22));
+      --admin-primary: var(--primary, #22D3EE);
+      --admin-pdim: var(--pdim, rgba(34,211,238,0.14));
+      --portal-primary: var(--primary, #2dd4bf);
+      --portal-accent: var(--warning, #fbbf24);
+      --portal-text: var(--text, #edf7f5);
+      --portal-muted: var(--muted, #a8bec2);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {

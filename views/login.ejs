@@ -31,18 +31,18 @@
       --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
       --font-display: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
       --font-mono: 'Space Grotesk', monospace;
-      --portal-bg: #101820;
-      --portal-panel: rgba(17, 29, 36, 0.94);
-      --portal-panel-strong: rgba(12, 23, 30, 0.98);
-      --portal-line: rgba(124, 221, 218, 0.18);
-      --portal-primary: #2dd4bf;
-      --portal-primary-strong: #22a7f0;
-      --portal-accent: #fbbf24;
-      --portal-text: #edf7f5;
-      --portal-muted: #a8bec2;
-      --landing-bg: radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+      --portal-bg: var(--bg, #101820);
+      --portal-panel: var(--bg2, rgba(17, 29, 36, 0.94));
+      --portal-panel-strong: var(--bg3, rgba(12, 23, 30, 0.98));
+      --portal-line: var(--border, rgba(124, 221, 218, 0.18));
+      --portal-primary: var(--primary, #2dd4bf);
+      --portal-primary-strong: var(--accent, #22a7f0);
+      --portal-accent: var(--warning, #fbbf24);
+      --portal-text: var(--text, #edf7f5);
+      --portal-muted: var(--muted, #a8bec2);
+      --landing-bg: var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
             radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
-            linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+            linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));
       --portal-surface: linear-gradient(140deg, rgba(68, 203, 184, 0.24) 0%, rgba(46, 160, 211, 0.22) 46%, rgba(49, 184, 168, 0.17) 100%);
     }
 
