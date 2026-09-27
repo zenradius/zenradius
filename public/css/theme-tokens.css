@@ -1,0 +1,132 @@
+/* ==========================================================================
+   ZENRADIUS — GLOBAL APPLICATION THEME TOKENS
+   ==========================================================================
+   Single source of truth for the application's global visual theme.
+
+   Theme 2 ("current") = existing/current ZenRadius appearance (default).
+   Theme 1 ("design")  = CasaOS UI Design System, as defined in DESIGN.md.
+
+   HOW IT WORKS
+   ------------
+   This file re-declares the SAME CSS custom properties already consumed by
+   public/css/admin.css, public/css/style.css, public/css/unified.css and
+   public/css/voucher-cards.css (e.g. --bg, --primary, --portal-bg, ...).
+   Because this stylesheet is @import'ed AFTER those files, the values below
+   win the cascade (same specificity, later source order) and therefore
+   control every component built on top of those tokens — sidebar, navbar,
+   buttons, cards, tables, forms, modals, alerts, badges, etc. — without
+   duplicating any markup or component CSS.
+
+   The active theme is toggled purely via one HTML attribute:
+       <html data-app-theme="current">   (Theme 2 — default)
+       <html data-app-theme="design">    (Theme 1 — DESIGN.md)
+   set server-side from the global `app_theme` setting (settings.json).
+   ========================================================================== */
+
+/* ── THEME 2 — CURRENT APPLICATION (baseline / fallback) ── */
+:root{
+  /* admin.css tokens */
+  --bg:#173945; --bg2:#173945; --bg3:#1b4656;
+  --border:rgba(190,239,255,.22);
+  --text:#edf7f5; --muted:#a8bec2;
+  --primary:#22D3EE; --pdim:rgba(34,211,238,.14);
+  --accent:#38BDF8;
+  --success:#34D399; --sdim:rgba(52,211,153,.14);
+  --warning:#FBBF24; --wdim:rgba(251,191,36,.14);
+  --danger:#F87171; --ddim:rgba(248,113,113,.14);
+  --info:#60A5FA; --idim:rgba(96,165,250,.14);
+  --btn-bg:linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);
+  --btn-color:#f4fffd;
+  --btn-border:rgba(126,231,219,.48);
+  --btn-shadow:0 8px 20px rgba(10,41,50,.24);
+  --btn-bg-hover:linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%);
+  --btn-border-hover:rgba(166,247,235,.72);
+  --btn-color-hover:#fff;
+  --btn-g-bg:rgba(190,239,255,.08);
+  --btn-g-border:rgba(190,239,255,.22);
+  --sb-item-active-bg:linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);
+  --sb-item-active-border:rgba(126,231,219,.48);
+  --sb-item-active-color:#f4fffd;
+
+  /* portal tokens (style.css / unified.css / voucher-cards.css) */
+  --portal-bg:#173945;
+  --portal-surface:#183f51;
+  --portal-surface-raised:#1b4656;
+  --portal-ink:#edf7f5;
+  --portal-muted:#a8bec2;
+  --portal-primary:#2dd4bf;
+  --portal-primary-strong:#22a7f0;
+  --portal-teal:#2dd4bf;
+  --portal-teal-strong:#14b8a6;
+  --portal-accent:#fbbf24;
+  --portal-line:rgba(190,239,255,.32);
+  --card-bg:#173945;
+  --soft-primary:rgba(45,212,191,.14);
+  --soft-success:rgba(74,222,128,.14);
+  --soft-warning:rgba(251,191,36,.14);
+  --soft-danger:rgba(251,113,133,.14);
+
+  /* page background */
+  --body-bg-solid:#173945;
+  --body-bg-image:radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%);
+
+  /* shape / typography tokens (used sparingly, non-breaking) */
+  --z-radius-card:12px;
+  --z-radius-btn:10px;
+  --z-radius-icon:10px;
+  --z-font-family:'Inter',sans-serif;
+}
+
+/* ── THEME 1 — DESIGN.md (CasaOS UI Design System) ── */
+[data-app-theme="design"]{
+  /* admin.css tokens */
+  --bg:#121418; --bg2:#1C1F26; --bg3:#2A2F3A;
+  --border:#2E3440;
+  --text:#FFFFFF; --muted:#A0A5B5;
+  --primary:#007BFF; --pdim:rgba(0,123,255,.14);
+  --accent:#28A745;
+  --success:#28A745; --sdim:rgba(40,167,69,.14);
+  --warning:#FFC107; --wdim:rgba(255,193,7,.14);
+  --danger:#DC3545; --ddim:rgba(220,53,69,.14);
+  --info:#007BFF; --idim:rgba(0,123,255,.14);
+  --btn-bg:#007BFF;
+  --btn-color:#ffffff;
+  --btn-border:#0069d9;
+  --btn-shadow:0 8px 20px rgba(0,123,255,.24);
+  --btn-bg-hover:#0069d9;
+  --btn-border-hover:#0062cc;
+  --btn-color-hover:#ffffff;
+  --btn-g-bg:rgba(255,255,255,.06);
+  --btn-g-border:#2E3440;
+  --sb-item-active-bg:#007BFF;
+  --sb-item-active-border:#0069d9;
+  --sb-item-active-color:#ffffff;
+
+  /* portal tokens */
+  --portal-bg:#121418;
+  --portal-surface:#1C1F26;
+  --portal-surface-raised:#2A2F3A;
+  --portal-ink:#FFFFFF;
+  --portal-muted:#A0A5B5;
+  --portal-primary:#007BFF;
+  --portal-primary-strong:#0069d9;
+  --portal-teal:#007BFF;
+  --portal-teal-strong:#0069d9;
+  --portal-accent:#28A745;
+  --portal-line:#2E3440;
+  --card-bg:rgba(28,31,38,.65);
+  --soft-primary:rgba(0,123,255,.14);
+  --soft-success:rgba(40,167,69,.14);
+  --soft-warning:rgba(255,193,7,.14);
+  --soft-danger:rgba(220,53,69,.14);
+
+  /* page background — atmospheric depth per DESIGN.md §1 */
+  --body-bg-solid:#121418;
+  --body-bg-image:radial-gradient(circle at 15% 0%,rgba(0,123,255,.14) 0%,transparent 40%),radial-gradient(circle at 100% 100%,rgba(40,167,69,.10) 0%,transparent 42%),linear-gradient(160deg,#121418 0%,#15181d 55%,#1C1F26 100%);
+
+  /* shape / typography — DESIGN.md tokens.radii / typography.fontFamily */
+  --z-radius-card:16px;
+  --z-radius-btn:12px;
+  --z-radius-icon:14px;
+  --z-font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}

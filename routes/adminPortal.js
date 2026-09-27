@@ -3817,6 +3817,33 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
   });
 });
 
+// ── TEMA APLIKASI (Global App Theme) ──
+// Theme 1 "design" (DESIGN.md / CasaOS UI Design System) atau Theme 2 "current"
+// (tampilan asli ZenRadius). Nilai disimpan secara global (settings.json), berlaku
+// untuk seluruh portal (Admin, Pelanggan, Reseller, Teknisi, Kolektor) + halaman login.
+const VALID_APP_THEMES = new Set(['current', 'design']);
+router.get('/theme-settings', requireAdminSession, requireSidebarMenuAccess('theme_settings'), (req, res) => {
+  const raw = String(getSetting('app_theme', 'current') || '').trim().toLowerCase();
+  res.render('admin/theme-settings', {
+    title: 'Tema Aplikasi',
+    company: company(),
+    activePage: 'theme_settings',
+    currentTheme: VALID_APP_THEMES.has(raw) ? raw : 'current',
+    msg: flashMsg(req)
+  });
+});
+
+router.post('/theme-settings', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
+  const theme = String(req.body.app_theme || '').trim().toLowerCase();
+  if (!VALID_APP_THEMES.has(theme)) {
+    req.session._msg = { type: 'error', text: 'Tema tidak valid.' };
+    return res.redirect('/admin/theme-settings');
+  }
+  saveSettings({ app_theme: theme });
+  req.session._msg = { type: 'success', text: 'Tema aplikasi berhasil diubah.' };
+  return res.redirect('/admin/theme-settings');
+});
+
 router.get('/ewallet-logs', requireAdminSession, requireSidebarMenuAccess('settings'), (req, res) => {
   const settings = getSettings();
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;

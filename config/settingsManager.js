@@ -292,6 +292,9 @@ function ensureDefaultSettings() {
       company_header: 'ZenRadius',
       footer_info: 'ZenRadius - All Rights Reserved',
 
+      // Tema Aplikasi global — 'current' (tampilan asli ZenRadius) atau 'design' (CasaOS UI Design System / DESIGN.md)
+      app_theme: 'current',
+
       // Backup otomatis setiap 7 hari sekali (satu-satunya jalur backup terjadwal, lihat backupService.scheduleAutoBackup)
       auto_backup_enabled: true,
       auto_backup_schedule: '0 2 */7 * *',

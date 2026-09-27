@@ -63,6 +63,7 @@ const MENU_DEFINITIONS = [
   { key: 'monitoring', section: 'system', href: '/admin/monitoring', icon: 'bi bi-activity', labelKey: 'admin.nav.monitoring', labelDefault: 'Monitoring Sistem', roles: ['admin'], activePages: ['monitoring'] },
   { key: 'audit_logs', section: 'system', href: '/admin/audit-logs', icon: 'bi bi-shield-lock', labelKey: 'admin.nav.audit_logs', labelDefault: 'Log Aktivitas', roles: ['admin'], activePages: ['audit_logs'] },
   { key: 'settings', section: 'system', href: '/admin/settings', icon: 'bi bi-gear', labelKey: 'admin.nav.settings', labelDefault: 'Pengaturan', roles: ['admin'], activePages: ['settings'] },
+  { key: 'theme_settings', section: 'system', href: '/admin/theme-settings', icon: 'bi bi-palette2', labelKey: 'admin.nav.theme_settings', labelDefault: 'Tema Aplikasi', roles: ['admin'], activePages: ['theme_settings'] },
   { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update System', roles: ['admin'], activePages: ['update'] },
 
   { key: 'tech_dashboard', section: 'tech', href: '/tech', icon: 'bi bi-briefcase-fill', labelKey: 'tech.nav.my_tasks', labelDefault: 'Tugas Saya', roles: ['teknisi'], bottomNav: true, activePages: ['dashboard'] },
@@ -123,6 +124,7 @@ const DEFAULT_MENU_STATES = {
   sidebar_settings: STATE_VISIBLE,
   update: STATE_VISIBLE,
   settings: STATE_VISIBLE,
+  theme_settings: STATE_VISIBLE,
   ewallet_logs: STATE_VISIBLE,
   backup: STATE_VISIBLE,
   monitoring: STATE_VISIBLE,

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= lang || 'id' %>">
+<html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
   <link rel="stylesheet" href="/css/unified.css">
+  <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
     :root {
       --portal-bg: #173945;

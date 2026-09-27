@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= lang || 'id' %>">
+<html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,6 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="manifest" href="/manifest-collector.webmanifest">
   <link href="/css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
     :root{--bg:#101820;--panel:linear-gradient(145deg,rgba(25,42,53,.96),rgba(16,30,40,.94));--panel2:rgba(4,17,22,.52);--muted:#9bb0b5;--text:#edf7f5;--border:rgba(220,236,238,.12)}
     body{background-color:var(--bg);background-image:linear-gradient(140deg,rgba(68,203,184,.24) 0%,rgba(46,160,211,.22) 46%,rgba(49,184,168,.17) 100%);color:var(--text);font-family:'DM Sans',sans-serif}

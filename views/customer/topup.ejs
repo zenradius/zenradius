@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/unified.css">
+  <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Outfit',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}

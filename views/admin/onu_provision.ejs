@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= lang || 'id' %>">
+<html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -10,6 +10,7 @@
   <link rel="manifest" href="/admin/manifest.webmanifest">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
     .onu-card {
       background: rgba(30,41,59,.6);

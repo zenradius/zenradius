@@ -28,6 +28,11 @@ const VALIDATION_RULES = {
     required: true,
     description: 'Nama perusahaan'
   },
+  app_theme: {
+    type: 'string',
+    enum: ['current', 'design'],
+    description: 'Tema aplikasi global (current = tampilan saat ini, design = DESIGN.md/CasaOS)'
+  },
   public_base_url: {
     type: 'string',
     pattern: /^https?:\/\/.+/,

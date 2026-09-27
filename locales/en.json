@@ -183,6 +183,7 @@
         "agent_reports": "Reseller Reports",
         "update": "Update System",
         "settings": "Settings",
+        "theme_settings": "App Theme",
         "digiflazz": "Digiflazz",
         "cashiers_reports": "Cashier Reports",
         "collector_payments": "Collector Approval",
@@ -1038,7 +1039,8 @@
       "agent_reports": "Reseller Reports",
       "user_management": "Role Access",
       "update": "Update System",
-      "settings": "Settings"
+      "settings": "Settings",
+      "theme_settings": "App Theme"
     },
     "update": {
       "title": "Update System",

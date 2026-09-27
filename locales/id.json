@@ -183,6 +183,7 @@
         "agent_reports": "Laporan Reseller",
         "update": "Update System",
         "settings": "Pengaturan",
+        "theme_settings": "Tema Aplikasi",
         "digiflazz": "Digiflazz",
         "cashiers_reports": "Laporan Kasir",
         "collector_payments": "Approval Kolektor",
@@ -1038,7 +1039,8 @@
       "agent_reports": "Laporan Reseller",
       "user_management": "Akses Role",
       "update": "Update System",
-      "settings": "Pengaturan"
+      "settings": "Pengaturan",
+      "theme_settings": "Tema Aplikasi"
     },
     "update": {
       "title": "Update System",

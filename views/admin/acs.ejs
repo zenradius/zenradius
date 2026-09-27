@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="<%= (typeof lang !== 'undefined' ? lang : 'id') %>">
+<html lang="<%= (typeof lang !== 'undefined' ? lang : 'id') %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
     <title>GenieACS Pro | <%= company %></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/theme-tokens.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:30px; }
