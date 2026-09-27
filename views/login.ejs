@@ -47,8 +47,8 @@
 
     body {
       background: var(--landing-bg);
-      background-attachment: fixed;
       background-size: cover;
+      background-repeat: no-repeat;
       color: var(--portal-text);
     }
 
@@ -2078,7 +2078,13 @@
 
     body,
     html {
-      background: var(--landing-bg) fixed !important;
+      background: var(--landing-bg) !important;
+      background-size: cover !important;
+      background-repeat: no-repeat !important;
+    }
+
+    html {
+      background: transparent !important;
     }
 
     .hero-section,
