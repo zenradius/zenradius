@@ -335,12 +335,23 @@ function initTelegram() {
     const data = query.data;
     if (!isAdmin(query)) return bot.answerCallbackQuery(query.id, { text: 'Akses Ditolak' });
 
+    // Acknowledge immediately so Telegram doesn't show an indefinite loading spinner
+    // on buttons whose handlers `return` early (e.g. empty-result messages).
+    try {
+      await bot.answerCallbackQuery(query.id);
+    } catch (ackErr) {
+      logger.warn('Telegram Bot: Gagal answerCallbackQuery: ' + ackErr.message);
+    }
+
     if (data === 'menu_main') {
       bot.editMessageText('🏠 *ADMIN ZENRADIUS*\nSilakan pilih menu di bawah ini:', {
         chat_id: chatId,
         message_id: query.message.message_id,
         parse_mode: 'Markdown',
         ...mainMenu
+      }).catch((e) => {
+        // Ignore "message is not modified" errors when refreshing an identical menu
+        if (!/not modified/i.test(e.message || '')) logger.warn('Telegram Bot: editMessageText gagal: ' + e.message);
       });
     }
 
@@ -350,23 +361,29 @@ function initTelegram() {
         message_id: query.message.message_id,
         parse_mode: 'Markdown',
         reply_markup: { inline_keyboard: [[{ text: '⬅️ Menu Utama', callback_data: 'menu_main' }]] }
+      }).catch((e) => {
+        if (!/not modified/i.test(e.message || '')) logger.warn('Telegram Bot: editMessageText gagal: ' + e.message);
       });
     }
 
     else if (data === 'menu_stats') {
-      const stats = customerSvc.getCustomerStats();
-      const billing = billingSvc.getDashboardStats();
-      let res = `*📊 STATISTIK SISTEM*\n\n`;
-      res += `👥 Pelanggan: ${stats.total}\n`;
-      res += `✅ Aktif: ${stats.active}\n`;
-      res += `🚫 Terisolir: ${stats.suspended}\n\n`;
-      res += `💰 Pendapatan Bulan Ini: Rp ${billing.thisMonth.toLocaleString('id-ID')}\n`;
-      res += `⏳ Belum Dibayar: ${billing.unpaidCount} Tagihan`;
+      try {
+        const stats = customerSvc.getCustomerStats();
+        const billing = billingSvc.getDashboardStats();
+        let res = `*📊 STATISTIK SISTEM*\n\n`;
+        res += `👥 Pelanggan: ${stats.total}\n`;
+        res += `✅ Aktif: ${stats.active}\n`;
+        res += `🚫 Terisolir: ${stats.suspended}\n\n`;
+        res += `💰 Pendapatan Bulan Ini: Rp ${billing.thisMonth.toLocaleString('id-ID')}\n`;
+        res += `⏳ Belum Dibayar: ${billing.unpaidCount} Tagihan`;
 
-      bot.sendMessage(chatId, res, {
-        parse_mode: 'Markdown',
-        reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] }
-      });
+        bot.sendMessage(chatId, res, {
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] }
+        });
+      } catch (e) {
+        bot.sendMessage(chatId, 'Error mengambil statistik: ' + e.message);
+      }
     }
 
     else if (data === 'menu_cust') {
@@ -489,50 +506,66 @@ function initTelegram() {
 
     else if (data === 'cust_search') {
       bot.sendMessage(chatId, '🔍 *CARI PELANGGAN*\nKetik perintah `/cari [nama/wa]`\n\nContoh: `/cari budi` atau `/cari 0812`', { parse_mode: 'Markdown' });
-    }
+    }    else if (data === 'cust_listonu') {
+      try {
+        const customerDevice = require('./customerDeviceService');
+        let res = await customerDevice.listDevicesWithTags(30);
 
-    else if (data === 'cust_listonu') {
-      const customerDevice = require('./customerDeviceService');
-      let res = await customerDevice.listDevicesWithTags(30);
+        if (!res.ok || res.devices.length === 0) {
+          res = await customerDevice.listAllDevices(30);
+        }
 
-      if (!res.ok || res.devices.length === 0) {
-        res = await customerDevice.listAllDevices(30);
+        if (!res.ok || res.devices.length === 0) {
+          bot.sendMessage(chatId, '📭 Tidak ada perangkat ONU yang terdeteksi di GenieACS.');
+        } else {
+          let txt = `*📡 DAFTAR ONU (GenieACS)*\n\n`;
+          res.devices.forEach(d => {
+            const id = d._id || 'Unknown ID';
+            const tags = Array.isArray(d._tags) ? d._tags.join(', ') : (d._tags || '-');
+            txt += `• \`${id}\`\n  └ Tag: ${tags}\n`;
+          });
+          bot.sendMessage(chatId, txt, { parse_mode: 'Markdown' });
+        }
+      } catch (e) {
+        bot.sendMessage(chatId, 'Error mengambil data ONU: ' + e.message);
       }
-
-      if (!res.ok || res.devices.length === 0) {
-        return bot.sendMessage(chatId, '📭 Tidak ada perangkat ONU yang terdeteksi di GenieACS.');
-      }
-
-      let txt = `*📡 DAFTAR ONU (GenieACS)*\n\n`;
-      res.devices.forEach(d => {
-        const id = d._id || 'Unknown ID';
-        const tags = Array.isArray(d._tags) ? d._tags.join(', ') : (d._tags || '-');
-        txt += `• \`${id}\`\n  └ Tag: ${tags}\n`;
-      });
-      bot.sendMessage(chatId, txt, { parse_mode: 'Markdown' });
     }
 
     else if (data === 'cust_suspended') {
-      const customers = customerSvc.getAllCustomers().filter(c => c.status === 'suspended');
-      if (customers.length === 0) return bot.sendMessage(chatId, '✅ Tidak ada pelanggan yang terisolir.');
-      let txt = `*🚫 PELANGGAN TERISOLIR (${customers.length})*\n\n`;
-      customers.slice(0, 15).forEach(c => {
-        txt += `• *${c.name}* (${c.phone})\n`;
-      });
-      if (customers.length > 15) txt += `\n_...dan ${customers.length - 15} lainnya._`;
-      bot.sendMessage(chatId, txt, { parse_mode: 'Markdown' });
+      try {
+        const customers = customerSvc.getAllCustomers().filter(c => c.status === 'suspended');
+        if (customers.length === 0) {
+          bot.sendMessage(chatId, '✅ Tidak ada pelanggan yang terisolir.');
+        } else {
+          let txt = `*🚫 PELANGGAN TERISOLIR (${customers.length})*\n\n`;
+          customers.slice(0, 15).forEach(c => {
+            txt += `• *${c.name}* (${c.phone})\n`;
+          });
+          if (customers.length > 15) txt += `\n_...dan ${customers.length - 15} lainnya._`;
+          bot.sendMessage(chatId, txt, { parse_mode: 'Markdown' });
+        }
+      } catch (e) {
+        bot.sendMessage(chatId, 'Error mengambil data pelanggan: ' + e.message);
+      }
     }
 
     else if (data === 'bill_unpaid') {
-      const invoices = billingSvc.getAllInvoices().filter(i => i.status === 'unpaid');
-      if (invoices.length === 0) return bot.sendMessage(chatId, '✅ Semua tagihan sudah lunas!');
-      let txt = `*⏳ TAGIHAN BELUM BAYAR (${invoices.length})*\n\n`;
-      invoices.slice(0, 15).forEach(i => {
-        const c = customerSvc.getCustomerById(i.customer_id);
-        txt += `• ${c ? c.name : 'Unknown'} - Rp ${i.amount.toLocaleString('id-ID')}\n`;
-      });
-      if (invoices.length > 15) txt += `\n_...dan ${invoices.length - 15} lainnya._`;
-      bot.sendMessage(chatId, txt, { parse_mode: 'Markdown' });
+      try {
+        const invoices = billingSvc.getAllInvoices().filter(i => i.status === 'unpaid');
+        if (invoices.length === 0) {
+          bot.sendMessage(chatId, '✅ Semua tagihan sudah lunas!');
+        } else {
+          let txt = `*⏳ TAGIHAN BELUM BAYAR (${invoices.length})*\n\n`;
+          invoices.slice(0, 15).forEach(i => {
+            const c = customerSvc.getCustomerById(i.customer_id);
+            txt += `• ${c ? c.name : 'Unknown'} - Rp ${i.amount.toLocaleString('id-ID')}\n`;
+          });
+          if (invoices.length > 15) txt += `\n_...dan ${invoices.length - 15} lainnya._`;
+          bot.sendMessage(chatId, txt, { parse_mode: 'Markdown' });
+        }
+      } catch (e) {
+        bot.sendMessage(chatId, 'Error mengambil data tagihan: ' + e.message);
+      }
     }
 
     else if (data === 'bill_today') {
@@ -549,6 +582,13 @@ function initTelegram() {
       } catch (e) {
         bot.sendMessage(chatId, 'Error: ' + e.message);
       }
+    }
+
+    else if (data === 'vouch_create') {
+      bot.sendMessage(chatId, '➕ *BUAT VOUCHER BARU*\nKetik perintah:\n`/vouch [profile] [limit] [comment]`\n\nContoh: `/vouch 1jam 1 testing`\n\nAtau gunakan tombol *📜 Daftar Hotspot Profile* untuk memilih paket yang sudah tersedia harganya.', {
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_vouch' }]] }
+      });
     }
 
     else if (data === 'vouch_profiles') {
@@ -611,8 +651,6 @@ function initTelegram() {
         bot.sendMessage(chatId, 'Gagal: ' + e.message);
       }
     }
-
-    bot.answerCallbackQuery(query.id);
   });
 
   bot.onText(/\/vouch (\S+) (\S+) (.+)/, async (msg, match) => {
