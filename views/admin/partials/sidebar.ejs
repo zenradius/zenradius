@@ -100,7 +100,7 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
     <div class="sb-icon" style="display:none"><i class="bi bi-wifi"></i></div>
     <div style="width:100%">
       <div class="sb-sub" style="text-align:center;display:flex;align-items:center;justify-content:center;gap:6px">
-        <span><%= typeof brandName !== 'undefined' && brandName !== 'ZenRadius' ? brandName + ' · ' : '' %><%= t('admin.panel', 'Admin Panel') %></span>
+        <span><%= t('admin.panel', 'Admin Panel') %></span>
         <span id="waSidebarStatusDot" style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block;box-shadow:0 0 6px rgba(148,163,184,0.4);transition:all .3s" title="WhatsApp: Memeriksa..."></span>
       </div>
       <% if (typeof multiRouterMode !== 'undefined' && multiRouterMode && allActiveRouters && allActiveRouters.length > 0) { %>
