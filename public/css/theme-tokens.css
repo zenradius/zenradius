@@ -71,6 +71,7 @@
   --soft-success:rgba(74,222,128,.14);
   --soft-warning:rgba(251,191,36,.14);
   --soft-danger:rgba(251,113,133,.14);
+  --btn-color:#f4fffd;
 
   /* page background */
   --body-bg-solid:#173945;
@@ -143,6 +144,7 @@
   --soft-success:rgba(16,185,129,.15);
   --soft-warning:rgba(245,158,11,.15);
   --soft-danger:rgba(239,68,68,.15);
+  --btn-color:#ffffff;
 
   /* page background — realistic space atmosphere matching prompt image */
   --body-bg-solid:#121622;

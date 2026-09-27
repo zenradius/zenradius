@@ -292,8 +292,8 @@ function ensureDefaultSettings() {
       company_header: 'ZenRadius',
       footer_info: 'ZenRadius - All Rights Reserved',
 
-// Tema Aplikasi global — 'current' (ZenRadius Ocean, tampilan asli) atau 'space' (ZenRadius Space / DESIGN.md)
-      app_theme: 'current',
+// Tema Aplikasi global — 'space' (ZenRadius Space / DESIGN.md) atau 'current' (ZenRadius Ocean, tampilan asli)
+      app_theme: 'space',
 
       // Backup otomatis setiap 7 hari sekali (satu-satunya jalur backup terjadwal, lihat backupService.scheduleAutoBackup)
       auto_backup_enabled: true,

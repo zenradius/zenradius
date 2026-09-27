@@ -3823,12 +3823,12 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
 // untuk seluruh portal (Admin, Pelanggan, Reseller, Teknisi, Kolektor) + halaman login.
 const VALID_APP_THEMES = new Set(['current', 'space']);
 router.get('/theme-settings', requireAdminSession, requireSidebarMenuAccess('theme_settings'), (req, res) => {
-  const raw = String(getSetting('app_theme', 'current') || '').trim().toLowerCase();
+  const raw = String(getSetting('app_theme', 'space') || '').trim().toLowerCase();
   res.render('admin/theme-settings', {
     title: 'Tema Aplikasi',
     company: company(),
     activePage: 'theme_settings',
-    currentTheme: VALID_APP_THEMES.has(raw) ? raw : 'current',
+    currentTheme: VALID_APP_THEMES.has(raw) ? raw : 'space',
     msg: flashMsg(req)
   });
 });

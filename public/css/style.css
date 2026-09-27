@@ -20,13 +20,13 @@ body {
 
 h1, h2, h3, h4, h5, h6, .navbar-brand { font-family: 'Space Grotesk', sans-serif; }
 .card, .glass-card { border: 1px solid var(--portal-line); border-radius: 16px; box-shadow: 0 10px 24px rgba(0,0,0,.14); }
-.btn-primary { background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%); border-color: rgba(20,184,166,.6); box-shadow: 0 10px 22px rgba(45,212,191,.22); color: #062c2a; }
-.btn-primary:hover, .btn-primary:focus { background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%); border-color: rgba(20,184,166,.6); filter: brightness(1.03); }
-.form-control:focus, .form-select:focus { border-color: rgba(45,212,191,.5); box-shadow: 0 0 0 3px rgba(45,212,191,.12); }
+.btn-primary { background: linear-gradient(135deg, var(--portal-primary, #2dd4bf) 0%, var(--portal-primary-strong, #14b8a6) 100%); border-color: rgba(34,211,238,.4); box-shadow: 0 10px 22px rgba(59,130,246,.2); color: #ffffff; }
+.btn-primary:hover, .btn-primary:focus { background: linear-gradient(135deg, var(--portal-primary, #2dd4bf) 0%, var(--portal-primary-strong, #14b8a6) 100%); border-color: rgba(34,211,238,.4); filter: brightness(1.15); color: #ffffff; }
+.form-control:focus, .form-select:focus { border-color: var(--portal-primary, rgba(45,212,191,.5)); box-shadow: 0 0 0 3px var(--pdim, rgba(45,212,191,.12)); }
 .card {
   border-radius: 1.2rem;
   border: 1px solid var(--portal-line);
-  background: linear-gradient(145deg, rgba(23,35,44,.98), rgba(27,49,56,.92));
+  background: var(--portal-surface);
 }
 .card .form-label {
   font-weight: 500;
