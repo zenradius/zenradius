@@ -148,7 +148,7 @@
 
   /* page background — realistic space atmosphere matching prompt image */
   --body-bg-solid:#121622;
-  --body-bg-image:radial-gradient(circle at 10% 0%,rgba(59,130,246,.16) 0%,transparent 36%),radial-gradient(circle at 90% 100%,rgba(6,182,212,.10) 0%,transparent 45%),linear-gradient(155deg,#0E121E 0%,#121622 45%,#1A1F31 100%);
+  --body-bg-image:radial-gradient(circle at 12% -8%,rgba(59,130,246,.22) 0%,transparent 38%),radial-gradient(circle at 88% 8%,rgba(6,182,212,.16) 0%,transparent 40%),radial-gradient(circle at 50% 100%,rgba(16,185,129,.08) 0%,transparent 45%),radial-gradient(circle at 100% 100%,rgba(29,64,175,.20) 0%,transparent 50%),linear-gradient(165deg,#0A0D16 0%,#121622 40%,#161B2C 70%,#0E1220 100%);
 
   /* brand gradient — premium glowing accent */
   --space-gradient:linear-gradient(135deg,#3B82F6 0%,#06B6D4 55%,#10B981 100%);
