@@ -61,23 +61,23 @@
           <form method="post" action="/admin/theme-settings">
             <input type="hidden" name="app_theme" value="space">
             <button type="submit" class="theme-card <%= currentTheme === 'space' ? 'active' : '' %>" style="width:100%;text-align:left;border:2px solid <%= currentTheme==='space' ? 'var(--primary)' : 'var(--border)' %>;background:none;padding:0;font:inherit;color:inherit">
-              <div class="preview" style="background:#F8FAFC">
-                <div class="mini-sidebar" style="background:#0F172A">
-                  <span style="background:#2563EB"></span><span style="background:#1E293B"></span><span style="background:#1E293B"></span>
+              <div class="preview" style="background:#121622">
+                <div class="mini-sidebar" style="background:#121622">
+                  <span style="background:#3B82F6"></span><span style="background:#1A1F31"></span><span style="background:#1A1F31"></span>
                 </div>
                 <div class="mini-main">
-                  <div class="mini-header" style="background:#FFFFFF;border:1px solid #E2E8F0"></div>
-                  <div class="mini-card" style="background:#FFFFFF;border:1px solid #E2E8F0">
-                    <div class="mini-line" style="background:#E2E8F0;width:70%"></div>
-                    <div class="mini-line" style="background:#E2E8F0;width:45%"></div>
-                    <div class="mini-btn" style="background:linear-gradient(135deg,#2563EB,#0891B2,#14B8A6)"></div>
+                  <div class="mini-header" style="background:#1A1F31;border:1px solid #2A334E"></div>
+                  <div class="mini-card" style="background:#1A1F31;border:1px solid #2A334E">
+                    <div class="mini-line" style="background:#242B42;width:70%"></div>
+                    <div class="mini-line" style="background:#242B42;width:45%"></div>
+                    <div class="mini-btn" style="background:linear-gradient(135deg,#3B82F6,#0EA5E9)"></div>
                   </div>
                 </div>
               </div>
               <div class="info">
                 <div>
                   <h6><%= t('admin.theme.space_name', 'ZenRadius Space') %></h6>
-                  <p><%= t('admin.theme.space_desc', 'Tampilan modern & profesional, workspace terang dengan sidebar navy') %></p>
+                  <p><%= t('admin.theme.space_desc', 'Tampilan gelap futuristik bernuansa deep space premium') %></p>
                 </div>
                 <% if (currentTheme === 'space') { %>
                   <span class="active-badge"><i class="bi bi-check-circle-fill"></i> <%= t('admin.theme.active', 'Aktif') %></span>

@@ -83,71 +83,73 @@
   --z-font-family:'Inter',sans-serif;
 }
 
-/* ── ZENRADIUS SPACE ("space") — modern tech identity per DESIGN.md §2-6 ──
-   NOT a full dark mode: light workspace, navy sidebar/nav accents. ── */
+/* ── ZENRADIUS SPACE ("space") — Deep Space Blue UI Theme ──
+   Inovasi gelap berdasarkan palet premium berkarakter luar angkasa (Deep Space Blue).
+   Sesuai gambar referensi: background biru luar angkasa malam yang khas, card indigo gelap,
+   aktif state menggunakan gradien biru langit muda, dan teks yang cerah & kontras. ── */
 [data-app-theme="space"]{
   /* admin.css tokens */
-  --bg:#F8FAFC; --bg2:#FFFFFF; --bg3:#F1F5F9;
-  --border:#E2E8F0;
-  --text:#0F172A; --muted:#475569;
-  --primary:#2563EB; --pdim:#DBEAFE;
-  --accent:#0891B2;
-  --success:#10B981; --sdim:#D1FAE5;
-  --warning:#F59E0B; --wdim:#FEF3C7;
-  --danger:#EF4444; --ddim:#FEE2E2;
-  --info:#0EA5E9; --idim:#E0F2FE;
-  --btn-bg:#2563EB;
+  --bg:#121622; --bg2:#1A1F31; --bg3:#242B42;
+  --border:#2A334E;
+  --text:#F1F5F9; --muted:#94A3B8;
+  --primary:#3B82F6; --pdim:rgba(59,130,246,.15);
+  --accent:#06B6D4;
+  --success:#10B981; --sdim:rgba(16,185,129,.15);
+  --warning:#F59E0B; --wdim:rgba(245,158,11,.15);
+  --danger:#EF4444; --ddim:rgba(239,68,68,.15);
+  --info:#0EA5E9; --idim:rgba(14,165,233,.15);
+  --btn-bg:linear-gradient(135deg,#3B82F6 0%,#1D4ED8 100%);
   --btn-color:#FFFFFF;
-  --btn-border:#1D4ED8;
-  --btn-shadow:0 8px 20px rgba(37,99,235,.20);
-  --btn-bg-hover:#1D4ED8;
+  --btn-border:#2563EB;
+  --btn-shadow:0 8px 20px rgba(29,78,216,.24);
+  --btn-bg-hover:linear-gradient(135deg,#1D4ED8 0%,#1E40AF 100%);
   --btn-border-hover:#1E40AF;
   --btn-color-hover:#FFFFFF;
-  --btn-g-bg:#EFF6FF;
-  --btn-g-border:#E2E8F0;
-  --sb-item-active-bg:#2563EB;
-  --sb-item-active-border:#1D4ED8;
+  --btn-g-bg:#242B42;
+  --btn-g-border:#2A334E;
+  --sb-item-active-bg:linear-gradient(135deg,#2563EB 0%,#1D4ED8 100%);
+  --sb-item-active-border:#3B82F6;
   --sb-item-active-color:#FFFFFF;
 
-  /* sidebar tokens — dark navy, distinct from light main area */
-  --sb-bg:#0F172A;
-  --sb-bg-secondary:#172554;
-  --sb-hover:#1E293B;
-  --sb-text:#CBD5E1;
-  --sb-border:#334155;
+  /* sidebar tokens — deep space solid navy/slate */
+  --sb-bg:#121622;
+  --sb-bg-secondary:#1A1F31;
+  --sb-hover:#1D2437;
+  --sb-text:#94A3B8;
+  --sb-border:#2A334E;
 
-  /* navbar tokens — clean & light */
-  --nav-bg:#FFFFFF;
-  --nav-border:#E2E8F0;
-  --nav-text:#0F172A;
-  --nav-text-secondary:#475569;
-  --nav-hover:#F1F5F9;
-  --nav-active:#EFF6FF;
+  /* navbar tokens — clean transparent slate */
+  --nav-bg:rgba(26,31,49,.92);
+  --nav-border:#2A334E;
+  --nav-text:#F1F5F9;
+  --nav-text-secondary:#94A3B8;
+  --nav-hover:#242B42;
+  --nav-active:#3B82F6;
 
   /* portal tokens (style.css / unified.css / voucher-cards.css) */
-  --portal-bg:#F8FAFC;
-  --portal-surface:#FFFFFF;
-  --portal-surface-raised:#F1F5F9;
-  --portal-ink:#0F172A;
-  --portal-muted:#475569;
-  --portal-primary:#2563EB;
+  --portal-bg:#121622;
+  --portal-surface:#1A1F31;
+  --portal-surface-raised:#242B42;
+  --portal-ink:#F1F5F9;
+  --portal-muted:#94A3B8;
+  --portal-primary:#3B82F6;
   --portal-primary-strong:#1D4ED8;
-  --portal-teal:#14B8A6;
-  --portal-teal-strong:#0F766E;
-  --portal-accent:#0891B2;
-  --portal-line:#E2E8F0;
-  --card-bg:#FFFFFF;
-  --soft-primary:#DBEAFE;
-  --soft-success:#D1FAE5;
-  --soft-warning:#FEF3C7;
-  --soft-danger:#FEE2E2;
+  --portal-teal:#06B6D4;
+  --portal-teal-strong:#0891B2;
+  --portal-accent:#F59E0B;
+  --portal-line:#2A334E;
+  --card-bg:#1A1F31;
+  --soft-primary:rgba(59,130,246,.15);
+  --soft-success:rgba(16,185,129,.15);
+  --soft-warning:rgba(245,158,11,.15);
+  --soft-danger:rgba(239,68,68,.15);
 
-  /* page background — clean light workspace, no atmospheric glow */
-  --body-bg-solid:#F8FAFC;
-  --body-bg-image:none;
+  /* page background — realistic space atmosphere matching prompt image */
+  --body-bg-solid:#121622;
+  --body-bg-image:radial-gradient(circle at 10% 0%,rgba(59,130,246,.16) 0%,transparent 36%),radial-gradient(circle at 90% 100%,rgba(6,182,212,.10) 0%,transparent 45%),linear-gradient(155deg,#0E121E 0%,#121622 45%,#1A1F31 100%);
 
-  /* brand gradient — selective use only (hero/branding), DESIGN.md §4 */
-  --space-gradient:linear-gradient(135deg,#2563EB 0%,#0891B2 55%,#14B8A6 100%);
+  /* brand gradient — premium glowing accent */
+  --space-gradient:linear-gradient(135deg,#3B82F6 0%,#06B6D4 55%,#10B981 100%);
 
   /* shape / typography */
   --z-radius-card:12px;
@@ -157,11 +159,8 @@
 }
 
 /* ── ZENRADIUS SPACE — component-level overrides ──
-   Space is a MIXED-MODE theme: light workspace (--bg2 = #FFFFFF, used by
-   cards/topbar/modals) but a DARK navy sidebar (DESIGN.md §5). Since
-   admin.css's .sidebar/.topbar/.locked-menu-dialog share --bg2 with cards,
-   the sidebar/nav surfaces need explicit overrides here so they use the
-   dedicated --sb-bg/--nav-bg tokens instead of the shared light --bg2. */
+   Agar konsistensi visual di seluruh penjelajahan panel admin tetap terjaga,
+   elemen structural di-override secara spesifik untuk menggunakan variabel tema Space. */
 [data-app-theme="space"] .sidebar{
   background:var(--sb-bg);
   border-right:1px solid var(--sb-border);
@@ -182,4 +181,20 @@
   color:var(--nav-text);
 }
 [data-app-theme="space"] .tb-title{color:var(--nav-text)}
+[data-app-theme="space"] .hb-menu, [data-app-theme="space"] .hb-menu i{color:var(--nav-text)}
+[data-app-theme="space"] select, [data-app-theme="space"] input, [data-app-theme="space"] textarea{
+  background-color: var(--bg3) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+[data-app-theme="space"] .dropdown-menu {
+  background-color: var(--bg2) !important;
+  border-color: var(--border) !important;
+}
+[data-app-theme="space"] .dropdown-item {
+  color: var(--text) !important;
+}
+[data-app-theme="space"] .dropdown-item:hover {
+  background-color: var(--bg3) !important;
+}
 
