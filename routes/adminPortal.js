@@ -3818,10 +3818,10 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
 });
 
 // ── TEMA APLIKASI (Global App Theme) ──
-// Theme 1 "design" (DESIGN.md / CasaOS UI Design System) atau Theme 2 "current"
-// (tampilan asli ZenRadius). Nilai disimpan secara global (settings.json), berlaku
+// "space" (ZenRadius Space / DESIGN.md) atau "current" (ZenRadius Ocean —
+// tampilan asli ZenRadius). Nilai disimpan secara global (settings.json), berlaku
 // untuk seluruh portal (Admin, Pelanggan, Reseller, Teknisi, Kolektor) + halaman login.
-const VALID_APP_THEMES = new Set(['current', 'design']);
+const VALID_APP_THEMES = new Set(['current', 'space']);
 router.get('/theme-settings', requireAdminSession, requireSidebarMenuAccess('theme_settings'), (req, res) => {
   const raw = String(getSetting('app_theme', 'current') || '').trim().toLowerCase();
   res.render('admin/theme-settings', {

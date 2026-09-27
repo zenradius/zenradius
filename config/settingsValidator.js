@@ -30,8 +30,8 @@ const VALIDATION_RULES = {
   },
   app_theme: {
     type: 'string',
-    enum: ['current', 'design'],
-    description: 'Tema aplikasi global (current = ZenRadius Teal, design = ZenRadius Dark / DESIGN.md CasaOS)'
+    enum: ['current', 'space'],
+    description: 'Tema aplikasi global (current = ZenRadius Ocean, space = ZenRadius Space / DESIGN.md)'
   },
   public_base_url: {
     type: 'string',

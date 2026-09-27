@@ -57,29 +57,29 @@
         </p>
 
         <div class="theme-grid">
-          <!-- Theme: design (DESIGN.md / CasaOS) -->
+          <!-- Theme: space (ZenRadius Space / DESIGN.md) -->
           <form method="post" action="/admin/theme-settings">
-            <input type="hidden" name="app_theme" value="design">
-            <button type="submit" class="theme-card <%= currentTheme === 'design' ? 'active' : '' %>" style="width:100%;text-align:left;border:2px solid <%= currentTheme==='design' ? 'var(--primary)' : 'var(--border)' %>;background:none;padding:0;font:inherit;color:inherit">
-              <div class="preview" style="background:#121418">
-                <div class="mini-sidebar" style="background:#1C1F26">
-                  <span style="background:#007BFF"></span><span style="background:#2A2F3A"></span><span style="background:#2A2F3A"></span>
+            <input type="hidden" name="app_theme" value="space">
+            <button type="submit" class="theme-card <%= currentTheme === 'space' ? 'active' : '' %>" style="width:100%;text-align:left;border:2px solid <%= currentTheme==='space' ? 'var(--primary)' : 'var(--border)' %>;background:none;padding:0;font:inherit;color:inherit">
+              <div class="preview" style="background:#F8FAFC">
+                <div class="mini-sidebar" style="background:#0F172A">
+                  <span style="background:#2563EB"></span><span style="background:#1E293B"></span><span style="background:#1E293B"></span>
                 </div>
                 <div class="mini-main">
-                  <div class="mini-header" style="background:#1C1F26"></div>
-                  <div class="mini-card" style="background:#1C1F26;border:1px solid #2E3440">
-                    <div class="mini-line" style="background:#2A2F3A;width:70%"></div>
-                    <div class="mini-line" style="background:#2A2F3A;width:45%"></div>
-                    <div class="mini-btn" style="background:#007BFF"></div>
+                  <div class="mini-header" style="background:#FFFFFF;border:1px solid #E2E8F0"></div>
+                  <div class="mini-card" style="background:#FFFFFF;border:1px solid #E2E8F0">
+                    <div class="mini-line" style="background:#E2E8F0;width:70%"></div>
+                    <div class="mini-line" style="background:#E2E8F0;width:45%"></div>
+                    <div class="mini-btn" style="background:linear-gradient(135deg,#2563EB,#0891B2,#14B8A6)"></div>
                   </div>
                 </div>
               </div>
               <div class="info">
                 <div>
-                  <h6><%= t('admin.theme.design_name', 'ZenRadius Dark') %></h6>
-                  <p><%= t('admin.theme.design_desc', 'Tema gelap modern berbasis CasaOS Design System') %></p>
+                  <h6><%= t('admin.theme.space_name', 'ZenRadius Space') %></h6>
+                  <p><%= t('admin.theme.space_desc', 'Tampilan modern & profesional, workspace terang dengan sidebar navy') %></p>
                 </div>
-                <% if (currentTheme === 'design') { %>
+                <% if (currentTheme === 'space') { %>
                   <span class="active-badge"><i class="bi bi-check-circle-fill"></i> <%= t('admin.theme.active', 'Aktif') %></span>
                 <% } else { %>
                   <span class="btn btn-sm btn-g"><%= t('admin.theme.use', 'Gunakan') %></span>
@@ -88,7 +88,7 @@
             </button>
           </form>
 
-          <!-- Theme: current (existing ZenRadius look) -->
+          <!-- Theme: current (ZenRadius Ocean — existing ZenRadius look) -->
           <form method="post" action="/admin/theme-settings">
             <input type="hidden" name="app_theme" value="current">
             <button type="submit" class="theme-card <%= currentTheme === 'current' ? 'active' : '' %>" style="width:100%;text-align:left;border:2px solid <%= currentTheme==='current' ? 'var(--primary)' : 'var(--border)' %>;background:none;padding:0;font:inherit;color:inherit">
@@ -107,7 +107,7 @@
               </div>
               <div class="info">
                 <div>
-                  <h6><%= t('admin.theme.current_name', 'ZenRadius Teal') %></h6>
+                  <h6><%= t('admin.theme.current_name', 'ZenRadius Ocean') %></h6>
                   <p><%= t('admin.theme.current_desc', 'Tampilan asli ZenRadius bernuansa teal (default)') %></p>
                 </div>
                 <% if (currentTheme === 'current') { %>
@@ -126,3 +126,4 @@
 </div>
 </body>
 </html>
+

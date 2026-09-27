@@ -2,9 +2,15 @@
    ZENRADIUS — GLOBAL APPLICATION THEME TOKENS
    ==========================================================================
    Single source of truth for the application's global visual theme.
+   Per DESIGN.md (rewritten spec):
 
-   Theme 2 ("current") = existing/current ZenRadius appearance (default).
-   Theme 1 ("design")  = CasaOS UI Design System, as defined in DESIGN.md.
+   Theme "current" = ZenRadius Ocean — the existing/current ZenRadius
+                      teal-oriented identity. This is the PRESERVATION
+                      theme: values below are the pre-existing appearance
+                      and must NOT be reinterpreted (DESIGN.md §7).
+   Theme "space"   = ZenRadius Space — modern tech-oriented identity.
+                      NOT a full dark mode: light workspace + navy
+                      sidebar/nav accents (DESIGN.md §2, §5, §6).
 
    HOW IT WORKS
    ------------
@@ -18,12 +24,12 @@
    duplicating any markup or component CSS.
 
    The active theme is toggled purely via one HTML attribute:
-       <html data-app-theme="current">   (Theme 2 — default)
-       <html data-app-theme="design">    (Theme 1 — DESIGN.md)
+       <html data-app-theme="current">   (ZenRadius Ocean — default)
+       <html data-app-theme="space">     (ZenRadius Space — DESIGN.md)
    set server-side from the global `app_theme` setting (settings.json).
    ========================================================================== */
 
-/* ── THEME 2 — CURRENT APPLICATION (baseline / fallback) ── */
+/* ── ZENRADIUS OCEAN ("current") — preserved existing appearance ── */
 :root{
   /* admin.css tokens */
   --bg:#173945; --bg2:#173945; --bg3:#1b4656;
@@ -77,56 +83,103 @@
   --z-font-family:'Inter',sans-serif;
 }
 
-/* ── THEME 1 — DESIGN.md (CasaOS UI Design System) ── */
-[data-app-theme="design"]{
+/* ── ZENRADIUS SPACE ("space") — modern tech identity per DESIGN.md §2-6 ──
+   NOT a full dark mode: light workspace, navy sidebar/nav accents. ── */
+[data-app-theme="space"]{
   /* admin.css tokens */
-  --bg:#121418; --bg2:#1C1F26; --bg3:#2A2F3A;
-  --border:#2E3440;
-  --text:#FFFFFF; --muted:#A0A5B5;
-  --primary:#007BFF; --pdim:rgba(0,123,255,.14);
-  --accent:#28A745;
-  --success:#28A745; --sdim:rgba(40,167,69,.14);
-  --warning:#FFC107; --wdim:rgba(255,193,7,.14);
-  --danger:#DC3545; --ddim:rgba(220,53,69,.14);
-  --info:#007BFF; --idim:rgba(0,123,255,.14);
-  --btn-bg:#007BFF;
-  --btn-color:#ffffff;
-  --btn-border:#0069d9;
-  --btn-shadow:0 8px 20px rgba(0,123,255,.24);
-  --btn-bg-hover:#0069d9;
-  --btn-border-hover:#0062cc;
-  --btn-color-hover:#ffffff;
-  --btn-g-bg:rgba(255,255,255,.06);
-  --btn-g-border:#2E3440;
-  --sb-item-active-bg:#007BFF;
-  --sb-item-active-border:#0069d9;
-  --sb-item-active-color:#ffffff;
+  --bg:#F8FAFC; --bg2:#FFFFFF; --bg3:#F1F5F9;
+  --border:#E2E8F0;
+  --text:#0F172A; --muted:#475569;
+  --primary:#2563EB; --pdim:#DBEAFE;
+  --accent:#0891B2;
+  --success:#10B981; --sdim:#D1FAE5;
+  --warning:#F59E0B; --wdim:#FEF3C7;
+  --danger:#EF4444; --ddim:#FEE2E2;
+  --info:#0EA5E9; --idim:#E0F2FE;
+  --btn-bg:#2563EB;
+  --btn-color:#FFFFFF;
+  --btn-border:#1D4ED8;
+  --btn-shadow:0 8px 20px rgba(37,99,235,.20);
+  --btn-bg-hover:#1D4ED8;
+  --btn-border-hover:#1E40AF;
+  --btn-color-hover:#FFFFFF;
+  --btn-g-bg:#EFF6FF;
+  --btn-g-border:#E2E8F0;
+  --sb-item-active-bg:#2563EB;
+  --sb-item-active-border:#1D4ED8;
+  --sb-item-active-color:#FFFFFF;
 
-  /* portal tokens */
-  --portal-bg:#121418;
-  --portal-surface:#1C1F26;
-  --portal-surface-raised:#2A2F3A;
-  --portal-ink:#FFFFFF;
-  --portal-muted:#A0A5B5;
-  --portal-primary:#007BFF;
-  --portal-primary-strong:#0069d9;
-  --portal-teal:#007BFF;
-  --portal-teal-strong:#0069d9;
-  --portal-accent:#28A745;
-  --portal-line:#2E3440;
-  --card-bg:rgba(28,31,38,.65);
-  --soft-primary:rgba(0,123,255,.14);
-  --soft-success:rgba(40,167,69,.14);
-  --soft-warning:rgba(255,193,7,.14);
-  --soft-danger:rgba(220,53,69,.14);
+  /* sidebar tokens — dark navy, distinct from light main area */
+  --sb-bg:#0F172A;
+  --sb-bg-secondary:#172554;
+  --sb-hover:#1E293B;
+  --sb-text:#CBD5E1;
+  --sb-border:#334155;
 
-  /* page background — atmospheric depth per DESIGN.md §1 */
-  --body-bg-solid:#121418;
-  --body-bg-image:radial-gradient(circle at 15% 0%,rgba(0,123,255,.14) 0%,transparent 40%),radial-gradient(circle at 100% 100%,rgba(40,167,69,.10) 0%,transparent 42%),linear-gradient(160deg,#121418 0%,#15181d 55%,#1C1F26 100%);
+  /* navbar tokens — clean & light */
+  --nav-bg:#FFFFFF;
+  --nav-border:#E2E8F0;
+  --nav-text:#0F172A;
+  --nav-text-secondary:#475569;
+  --nav-hover:#F1F5F9;
+  --nav-active:#EFF6FF;
 
-  /* shape / typography — DESIGN.md tokens.radii / typography.fontFamily */
-  --z-radius-card:16px;
-  --z-radius-btn:12px;
-  --z-radius-icon:14px;
-  --z-font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  /* portal tokens (style.css / unified.css / voucher-cards.css) */
+  --portal-bg:#F8FAFC;
+  --portal-surface:#FFFFFF;
+  --portal-surface-raised:#F1F5F9;
+  --portal-ink:#0F172A;
+  --portal-muted:#475569;
+  --portal-primary:#2563EB;
+  --portal-primary-strong:#1D4ED8;
+  --portal-teal:#14B8A6;
+  --portal-teal-strong:#0F766E;
+  --portal-accent:#0891B2;
+  --portal-line:#E2E8F0;
+  --card-bg:#FFFFFF;
+  --soft-primary:#DBEAFE;
+  --soft-success:#D1FAE5;
+  --soft-warning:#FEF3C7;
+  --soft-danger:#FEE2E2;
+
+  /* page background — clean light workspace, no atmospheric glow */
+  --body-bg-solid:#F8FAFC;
+  --body-bg-image:none;
+
+  /* brand gradient — selective use only (hero/branding), DESIGN.md §4 */
+  --space-gradient:linear-gradient(135deg,#2563EB 0%,#0891B2 55%,#14B8A6 100%);
+
+  /* shape / typography */
+  --z-radius-card:12px;
+  --z-radius-btn:10px;
+  --z-radius-icon:10px;
+  --z-font-family:'Inter',sans-serif;
 }
+
+/* ── ZENRADIUS SPACE — component-level overrides ──
+   Space is a MIXED-MODE theme: light workspace (--bg2 = #FFFFFF, used by
+   cards/topbar/modals) but a DARK navy sidebar (DESIGN.md §5). Since
+   admin.css's .sidebar/.topbar/.locked-menu-dialog share --bg2 with cards,
+   the sidebar/nav surfaces need explicit overrides here so they use the
+   dedicated --sb-bg/--nav-bg tokens instead of the shared light --bg2. */
+[data-app-theme="space"] .sidebar{
+  background:var(--sb-bg);
+  border-right:1px solid var(--sb-border);
+}
+[data-app-theme="space"] .sb-brand{border-bottom-color:var(--sb-border)}
+[data-app-theme="space"] .sb-name{color:#FFFFFF}
+[data-app-theme="space"] .sb-sub,
+[data-app-theme="space"] .sb-section,
+[data-app-theme="space"] .sb-sec-chev{color:var(--sb-text)}
+[data-app-theme="space"] .sb-section:hover{color:#FFFFFF}
+[data-app-theme="space"] .sb-item{color:var(--sb-text)}
+[data-app-theme="space"] .sb-item:hover{color:#FFFFFF;background:var(--sb-hover)}
+[data-app-theme="space"] .sb-item.is-locked{color:var(--sb-text)}
+[data-app-theme="space"] .sb-item.is-locked:hover{background:var(--sb-hover)}
+[data-app-theme="space"] .topbar{
+  background:var(--nav-bg);
+  border-bottom:1px solid var(--nav-border);
+  color:var(--nav-text);
+}
+[data-app-theme="space"] .tb-title{color:var(--nav-text)}
+
