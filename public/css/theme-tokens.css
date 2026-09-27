@@ -99,12 +99,12 @@
   --warning:#F59E0B; --wdim:rgba(245,158,11,.15);
   --danger:#EF4444; --ddim:rgba(239,68,68,.15);
   --info:#0EA5E9; --idim:rgba(14,165,233,.15);
-  --btn-bg:linear-gradient(135deg,#3B82F6 0%,#1D4ED8 100%);
+  --btn-bg:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);
   --btn-color:#FFFFFF;
-  --btn-border:#2563EB;
-  --btn-shadow:0 8px 20px rgba(29,78,216,.24);
-  --btn-bg-hover:linear-gradient(135deg,#1D4ED8 0%,#1E40AF 100%);
-  --btn-border-hover:#1E40AF;
+  --btn-border:#1D4ED8;
+  --btn-shadow:0 8px 20px rgba(30,64,175,.28);
+  --btn-bg-hover:linear-gradient(135deg,#1E40AF 0%,#1E3A8A 100%);
+  --btn-border-hover:#1E3A8A;
   --btn-color-hover:#FFFFFF;
   --btn-g-bg:#242B42;
   --btn-g-border:#2A334E;

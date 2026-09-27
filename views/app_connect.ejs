@@ -86,10 +86,10 @@
     }
     .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
     .btn-primary {
-      background: linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%);
-      color: #f4fffd;
-      border: 1px solid rgba(126,231,219,.48);
-      box-shadow: 0 8px 20px rgba(10,41,50,.24);
+      background: var(--btn-bg, linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%));
+      color: var(--btn-color, #f4fffd);
+      border: 1px solid var(--btn-border, rgba(126,231,219,.48));
+      box-shadow: var(--btn-shadow, 0 8px 20px rgba(10,41,50,.24));
     }
     .btn-success {
       background: linear-gradient(135deg, #0f9b7e 0%, #0d7a63 100%);

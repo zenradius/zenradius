@@ -68,41 +68,41 @@
     
     .no-data{text-align:center;padding:40px 20px;color:#64748b}
 
-    body{background:radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);color:#edf7f5;font-family:'DM Sans',sans-serif}
-    .topbar{background:rgba(23, 57, 69, 0.92);border-bottom:1px solid rgba(190, 239, 255, 0.15);border-bottom-color:rgba(190, 239, 255, 0.15)}
-    .topbar a:hover{color:#22d3ee}
+    body{background:var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));color:var(--portal-ink, #edf7f5);font-family:'DM Sans',sans-serif}
+    .topbar{background:var(--portal-surface, rgba(23, 57, 69, 0.92));border-bottom:1px solid var(--portal-line, rgba(190, 239, 255, 0.15));border-bottom-color:var(--portal-line, rgba(190, 239, 255, 0.15))}
+    .topbar a:hover{color:var(--portal-primary, #22d3ee)}
     .topbar h1 {color:#f8fafc}
-    .balance-card,.card-panel,.history-card{background:linear-gradient(145deg,rgba(23, 57, 69, 0.98),rgba(19, 50, 62, 0.92));border:1px solid rgba(190, 239, 255, 0.15);box-shadow:0 10px 24px rgba(0,0,0,.14)}
-    .preset-btn,.form-group input,.payment-card{background:rgba(30, 41, 59, 0.95);border:1px solid rgba(190, 239, 255, 0.15)}
-    .preset-btn:hover,.preset-btn.active,.form-group input:focus{border-color:#22d3ee;box-shadow:0 0 0 3px rgba(34, 211, 238, 0.12)}
+    .balance-card,.card-panel,.history-card{background:linear-gradient(145deg,var(--portal-surface, rgba(23, 57, 69, 0.98)),var(--portal-surface-raised, rgba(19, 50, 62, 0.92)));border:1px solid var(--portal-line, rgba(190, 239, 255, 0.15));box-shadow:0 10px 24px rgba(0,0,0,.14)}
+    .preset-btn,.form-group input,.payment-card{background:var(--portal-surface-raised, rgba(30, 41, 59, 0.95));border:1px solid var(--portal-line, rgba(190, 239, 255, 0.15))}
+    .preset-btn:hover,.preset-btn.active,.form-group input:focus{border-color:var(--portal-primary, #22d3ee);box-shadow:0 0 0 3px color-mix(in srgb, var(--portal-primary, #22d3ee) 12%, transparent)}
     .form-group input{color:#f8fafc}
-    .btn-submit{background:linear-gradient(135deg,#22d3ee,#06b6d4);color:#062c2a;box-shadow:0 10px 22px rgba(34, 211, 238, 0.22)}
-    .btn-submit:hover{background:linear-gradient(135deg,#06b6d4,#0891b2)}
-    .btn-pay{background:#22d3ee;color:#062c2a}.btn-pay:hover{background:#06b6d4}
+    .btn-submit{background:var(--btn-bg);color:var(--btn-color);box-shadow:var(--btn-shadow)}
+    .btn-submit:hover{background:var(--btn-bg-hover)}
+    .btn-pay{background:var(--portal-primary, #22d3ee);color:#062c2a}.btn-pay:hover{background:var(--portal-primary-strong, #06b6d4)}
     .payment-radio:checked + .payment-card{
-      border-color:#22d3ee;
-      background:rgba(34, 211, 238, 0.12);
-      box-shadow:0 8px 20px rgba(34, 211, 238, 0.3);
+      border-color:var(--portal-primary, #22d3ee);
+      background:color-mix(in srgb, var(--portal-primary, #22d3ee) 12%, transparent);
+      box-shadow:0 8px 20px color-mix(in srgb, var(--portal-primary, #22d3ee) 30%, transparent);
     }
     .payment-radio:checked + .payment-card::after{
-      background:linear-gradient(135deg,#22d3ee,#06b6d4);
-      box-shadow:0 4px 12px rgba(34, 211, 238, 0.4);
+      background:linear-gradient(135deg,var(--portal-primary, #22d3ee),var(--portal-primary-strong, #06b6d4));
+      box-shadow:0 4px 12px color-mix(in srgb, var(--portal-primary, #22d3ee) 40%, transparent);
     }
     .payment-card:hover{
-      border-color:#22d3ee;
+      border-color:var(--portal-primary, #22d3ee);
       transform:translateY(-2px);
-      box-shadow:0 12px 30px rgba(0,0,0,0.3),0 0 0 1px rgba(34, 211, 238, 0.2);
+      box-shadow:0 12px 30px rgba(0,0,0,0.3),0 0 0 1px color-mix(in srgb, var(--portal-primary, #22d3ee) 20%, transparent);
     }
     .balance-info h2{color:#f8fafc}
-    .balance-info p{color:rgba(190, 239, 255, 0.7)}
+    .balance-info p{color:var(--portal-muted, rgba(190, 239, 255, 0.7))}
     .card-panel h3{color:#f8fafc}
-    .form-group label{color:rgba(190, 239, 255, 0.7)}
+    .form-group label{color:var(--portal-muted, rgba(190, 239, 255, 0.7))}
     .preset-btn{color:#cbd5e1}
-    .preset-btn:hover,.preset-btn.active{color:#fff;background:rgba(34, 211, 238, 0.1)}
-    th{color:rgba(190, 239, 255, 0.7)}
+    .preset-btn:hover,.preset-btn.active{color:#fff;background:color-mix(in srgb, var(--portal-primary, #22d3ee) 10%, transparent)}
+    th{color:var(--portal-muted, rgba(190, 239, 255, 0.7))}
     td{color:#e2e8f0}
     .history-card h3{color:#f8fafc}
-    .topbar h1 i {color:#22d3ee}
+    .topbar h1 i {color:var(--portal-primary, #22d3ee)}
 
     @media(max-width:576px){
       .preset-grid{grid-template-columns:repeat(2,1fr)}

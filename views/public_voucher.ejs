@@ -236,7 +236,7 @@
       padding:16px 18px;
       margin-bottom:16px;
       overflow:hidden;
-      background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 45%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 55%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+      background-image: radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--admin-primary) 55%, transparent) 0%, transparent 45%), radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--admin-primary) 40%, transparent) 0%, transparent 55%), linear-gradient(135deg, var(--admin-bg2, #173740) 0%, var(--admin-bg2, #183f51) 52%, var(--admin-bg2, #194251) 100%);
       border:1px solid var(--admin-border);
       box-shadow:0 8px 24px rgba(2,44,99,.18);
     }
@@ -670,7 +670,7 @@
           </div>
         </form>
 
-        <footer class="site-footer" style="background:#173945;border-top:1px solid rgba(190,239,255,0.32);padding:26px 0 18px;margin-top:32px;margin-left:-20px;margin-right:-20px;margin-bottom:-20px;border-radius:0 0 16px 16px">
+        <footer class="site-footer" style="background:var(--portal-bg, #173945);border-top:1px solid rgba(190,239,255,0.32);padding:26px 0 18px;margin-top:32px;margin-left:-20px;margin-right:-20px;margin-bottom:-20px;border-radius:0 0 16px 16px">
           <div class="container text-center">
             <div class="footer-bottom text-center" style="font-family:var(--font-sans);font-size:0.8rem;color:rgba(237, 250, 250, 0.72);margin-top:4px;padding-top:0">
               &copy; <%= new Date().getFullYear() %> <%- footerInfo %>

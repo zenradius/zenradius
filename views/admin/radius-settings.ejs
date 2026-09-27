@@ -11,7 +11,7 @@
     .mtabs { display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .mtab { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); background: var(--bg2); border: 1px solid var(--border); cursor: pointer; transition: all .2s; }
     .mtab:hover { color: var(--text); background: rgba(255,255,255,0.06); }
-    .mtab.active { color: #f4fffd !important; background: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%) !important; border-color: rgba(126,231,219,.48) !important; box-shadow:0 8px 20px rgba(10,41,50,.24) !important; }
+    /* mtab active styling is now globally handled dynamically in admin.css to support multiple themes */
     
     html[data-theme="light"] .mtab { background: #ffffff !important; color: #64748b !important; border-color: #cbd5e1 !important; }
     html[data-theme="light"] .mtab:hover { color: #0f172a !important; background: #f1f5f9 !important; }

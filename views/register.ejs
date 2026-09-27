@@ -151,11 +151,11 @@
 
     .btn-p{
       align-self:center;min-width:160px;max-width:none;padding:10px 22px;font-size:13px;font-weight:800;
-      color:var(--btn-color);background:linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);border:1px solid var(--btn-border);border-radius:10px;box-shadow:var(--btn-shadow);
+      color:var(--btn-color);background:var(--btn-bg, linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%));border:1px solid var(--btn-border);border-radius:10px;box-shadow:var(--btn-shadow);
       display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .25s;width:100%;
     }
 
-    .btn-p:hover{background:linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%)!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important;filter:brightness(1.04);transform:translateY(-1px)}
+    .btn-p:hover{background:var(--btn-bg-hover, linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%))!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important;filter:brightness(1.04);transform:translateY(-1px)}
 
     .btn-p:disabled {
       opacity: 0.6;

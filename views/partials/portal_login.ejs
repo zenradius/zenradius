@@ -20,14 +20,14 @@
   <style>
     *{box-sizing:border-box} html,body{height:100%}
     body{
-      background:#173945;
-      background-image:radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%);
+      background:var(--body-bg-solid, #173945);
+      background-image:var(--body-bg-image, radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%));
       color:#f8fafc;min-height:100vh;min-height:100dvh;
       display:flex;align-items:center;justify-content:center;
       font-family:'DM Sans',sans-serif;padding:24px;
     }
     .login-card{
-      background:#173945;border:1px solid rgba(190,239,255,.28);border-radius:16px;
+      background:var(--portal-surface, #173945);border:1px solid rgba(190,239,255,.28);border-radius:16px;
       padding:38px 32px 28px;width:100%;max-width:420px;
       box-shadow:0 20px 48px rgba(3,14,20,.45);
       display:flex;flex-direction:column;align-items:center;
@@ -41,12 +41,12 @@
     .form-control::placeholder{color:rgba(237,250,250,.38)}
     .form-control:focus{background:rgba(255,255,255,.09);color:#fff;border-color:rgba(45,212,191,.55);box-shadow:0 0 0 3px rgba(45,212,191,.14)}
     .btn-login{
-      background:linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);color:#f4fffd;
+      background:var(--btn-bg, linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%));color:#f4fffd;
       border:1px solid rgba(126,231,219,.48);padding:10px 22px;border-radius:10px;
       width:auto;min-width:160px;max-width:220px;font-weight:800;font-size:13px;margin:10px auto 0;
       display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 20px rgba(10,41,50,.24);
     }
-    .btn-login:hover{background:linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%)!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important}
+    .btn-login:hover{background:var(--btn-bg-hover, linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%))!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important}
     .brand-icon{font-size:40px;color:#2dd4bf;margin-bottom:10px}
     .login-copy{color:rgba(237,250,250,.7);font-size:12px;line-height:1.55;margin:8px auto 24px;max-width:310px}
     .agent-footer{margin-top:22px;padding-top:14px;border-top:1px solid rgba(124,221,218,.15);color:rgba(237,250,250,.56);font-size:11px;text-align:center}

@@ -11,7 +11,7 @@
     .mtabs { display: flex; gap: 10px; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
     .mtab { padding: 9px 16px; border-radius: 10px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px; }
     .mtab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
-    .mtab.active { background: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%); color: #f4fffd; border:1px solid rgba(126,231,219,.48); box-shadow:0 8px 20px rgba(10,41,50,.24); }
+    /* mtab active styling is now globally handled dynamically in admin.css to support multiple themes */
     html[data-theme="light"] .mtab { background: transparent; color: var(--muted); }
     html[data-theme="light"] .mtab:hover { background: rgba(0,0,0,0.04); color: var(--text); }
     html[data-theme="light"] .mtab.active { background: linear-gradient(135deg,#6366f1 0%,#818cf8 52%,#7c3aed 100%); color: #ffffff; border-color: rgba(99,102,241,.48); box-shadow: 0 8px 20px rgba(99,102,241,.12); }
@@ -25,7 +25,7 @@
     }
 
     .rc-card {
-      background: #173945;
+      background: var(--bg2, #173945);
       border: 1px solid rgba(190,239,255,.28);
       border-radius: 18px;
       padding: 22px;
@@ -61,8 +61,8 @@
       width: 48px;
       height: 48px;
       border-radius: 14px;
-      background: rgba(45,212,191,.12);
-      color: #22D3EE;
+      background: var(--pdim, rgba(45,212,191,.12));
+      color: var(--primary, #22D3EE);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -200,15 +200,12 @@
       border-top: 1px solid rgba(190,239,255,.14);
     }
 
+    /* btn-detail-live background/border/shadow now globally handled dynamically in admin.css to support multiple themes */
     .btn-detail-live {
-      background: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);
-      color: #f4fffd !important;
-      border: 1px solid rgba(126,231,219,.48);
       border-radius: 10px;
       padding: 8px 14px;
       font-weight: 700;
       font-size: 13px;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
       transition: all 0.25s ease;
       display: inline-flex;
       align-items: center;
@@ -216,7 +213,6 @@
     }
     .btn-detail-live:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(10,41,50,.24);
       filter: brightness(1.04);
     }
 
@@ -230,12 +226,7 @@
       font-size: 12px;
       font-weight: 700;
     }
-    .view-toggle-btn.active {
-      background: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);
-      color: #f4fffd;
-      border: 1px solid rgba(126,231,219,.48);
-      box-shadow:0 8px 20px rgba(10,41,50,.24);
-    }
+    /* view-toggle-btn active styling is now globally handled dynamically in admin.css to support multiple themes */
 
     /* Modal Styling Improvements */
     .modal-tab-btn {
@@ -253,12 +244,7 @@
       background: rgba(255,255,255,.08);
       color: #edf7f5;
     }
-    .modal-tab-btn.active {
-      background: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%);
-      color: #f4fffd;
-      border: 1px solid rgba(126,231,219,.48);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    }
+    /* modal-tab-btn active styling is now globally handled dynamically in admin.css to support multiple themes */
 
     /* Light Theme Overrides for Router Cards */
     html[data-theme="light"] .rc-card {

@@ -260,11 +260,26 @@ body{font-family:'Inter',sans-serif;
 .mtab.active,
 .wa-tab.active,
 .tab-btn.active,
-.tab.active {
+.tab.active,
+.inv-tab.active,
+.view-toggle-btn.active,
+.modal-tab-btn.active {
   background: var(--btn-bg) !important;
   color: var(--btn-color) !important;
   border: 1px solid var(--btn-border) !important;
   box-shadow: var(--btn-shadow) !important;
+}
+
+.btn-detail-live {
+  background: var(--btn-bg) !important;
+  color: var(--btn-color) !important;
+  border: 1px solid var(--btn-border) !important;
+  box-shadow: var(--btn-shadow) !important;
+}
+.btn-detail-live:hover {
+  background: var(--btn-bg-hover) !important;
+  border-color: var(--btn-border-hover) !important;
+  color: var(--btn-color-hover) !important;
 }
 
 /* ── FILTER BAR (form pencarian di atas tabel) ── */

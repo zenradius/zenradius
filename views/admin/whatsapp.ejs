@@ -19,7 +19,7 @@
     .wa-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
     .wa-tab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; flex-shrink: 0; }
     .wa-tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
-    .wa-tab.active { background: linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%); color: #f4fffd; border:1px solid rgba(126,231,219,.48); box-shadow:0 8px 20px rgba(10,41,50,.24); }
+    /* wa-tab active styling is now globally handled dynamically in admin.css to support multiple themes */
     @media (max-width: 768px) {
       .wa-tabs { font-size: 13px; }
       .wa-tab { padding: 6px 10px; font-size: 12px; }

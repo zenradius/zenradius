@@ -1,9 +1,9 @@
-/* Reference-inspired WiFi vouchers. Matches landing page dark-teal portal theme. */
+/* Reference-inspired WiFi vouchers. Matches the active portal theme (Ocean/Space) dynamically. */
 :root {
   --vc-primary: var(--portal-primary, #2dd4bf);
   --vc-electric: var(--portal-primary-strong, #22a7f0);
   --vc-turquoise: var(--portal-primary, #2dd4bf);
-  --vc-primary-dark: #0b2b2a;
+  --vc-primary-dark: var(--portal-bg, #0b2b2a);
   --vc-surface: var(--portal-panel, rgba(17, 29, 36, 0.94));
   --vc-border: var(--portal-line, rgba(124, 221, 218, 0.18));
   --vc-text-secondary: var(--portal-muted, #a8bec2);
@@ -44,7 +44,7 @@
   overflow: hidden;
   border-radius: 16px;
   border: 1px solid var(--vc-border);
-  background-image: radial-gradient(circle at 8% 0%, #236060 0%, transparent 45%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 55%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+  background-image: radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--portal-primary) 55%, transparent) 0%, transparent 45%), radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--portal-primary-strong) 45%, transparent) 0%, transparent 55%), linear-gradient(135deg, var(--portal-bg) 0%, var(--portal-surface) 52%, var(--portal-surface-raised) 100%);
   background-size: cover, cover, cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -116,7 +116,7 @@
   position: absolute;
   top: 26%;
   left: 6%;
-  color: #a5f4ed; /* Matching teal tint */
+  color: color-mix(in srgb, var(--vc-primary) 70%, white); /* Matching theme tint */
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.01em;
