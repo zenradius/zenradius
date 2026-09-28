@@ -6,16 +6,16 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 70px;
-    background: linear-gradient(180deg, rgba(23, 57, 69, 0.95), rgba(19, 50, 62, 0.92));
+    height: 72px;
+    background: linear-gradient(180deg, var(--card-bg, rgba(23, 57, 69, 0.95)), var(--bg3, rgba(19, 50, 62, 0.92)));
     backdrop-filter: blur(16px) saturate(180%);
-    border-top: 1px solid rgba(34, 211, 238, 0.2);
+    border-top: 1px solid var(--card-border, rgba(190, 239, 255, 0.15));
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 1050;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -12px 35px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 -1px 0 color-mix(in srgb, var(--accent-primary, #22d3ee) 25%, transparent), 0 -12px 35px rgba(0, 0, 0, 0.5);
   }
 
   .nav-item {
@@ -23,20 +23,30 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #cbd5e1;
+    gap: 3px;
+    color: var(--text-muted, #cbd5e1);
     text-decoration: none;
     font-size: 11px;
     font-weight: 700;
-    transition: all 0.25s ease;
+    transition: color 0.25s ease;
     flex: 1;
     height: 100%;
     cursor: pointer;
     position: relative;
   }
 
+  .nav-icon-wrap {
+    width: 40px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
   .nav-item i {
-    font-size: 20px;
-    margin-bottom: 2px;
+    font-size: 18px;
     transition: transform 0.2s ease, color 0.2s ease;
   }
 
@@ -44,24 +54,22 @@
     color: #ffffff;
   }
 
+  .nav-item:hover .nav-icon-wrap {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
   .nav-item.active {
-    color: #22d3ee;
+    color: var(--accent-primary, #22d3ee);
+  }
+
+  .nav-item.active .nav-icon-wrap {
+    background: var(--soft-primary, rgba(45, 212, 191, 0.14));
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-primary, #22d3ee) 30%, transparent);
   }
 
   .nav-item.active i {
-    transform: translateY(-2px);
-    color: #22d3ee;
-  }
-
-  .nav-item.active::after {
-    content: '';
-    position: absolute;
-    bottom: 6px;
-    width: 5px;
-    height: 5px;
-    background: #22d3ee;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #22d3ee;
+    color: var(--accent-primary, #22d3ee);
   }
 
   /* Hide on desktop, show only on mobile */
@@ -77,23 +85,23 @@
 
 <nav class="customer-bottom-nav">
   <a href="/customer/dashboard#home-section" class="nav-item <%= activeNav === 'home' ? 'active' : '' %>">
-    <i class="bi bi-house-door-fill"></i>
+    <span class="nav-icon-wrap"><i class="bi bi-house-door-fill"></i></span>
     <span>Beranda</span>
   </a>
   <a href="/customer/dashboard#billing-section" class="nav-item <%= activeNav === 'billing' ? 'active' : '' %>">
-    <i class="bi bi-receipt-cutoff text-warning"></i>
+    <span class="nav-icon-wrap"><i class="bi bi-receipt-cutoff text-warning"></i></span>
     <span>Tagihan</span>
   </a>
   <a href="/customer/dashboard#home-section" class="nav-item" onclick="triggerWifiSettingsNav()" title="WiFi Settings" style="cursor:pointer;">
-    <i class="bi bi-wifi" style="color:#22d3ee;"></i>
+    <span class="nav-icon-wrap"><i class="bi bi-wifi" style="color:var(--accent-primary);"></i></span>
     <span>WiFi</span>
   </a>
   <a href="/customer/topup" class="nav-item" title="Top Up Saldo">
-    <i class="bi bi-wallet2" style="color:#34d399;"></i>
+    <span class="nav-icon-wrap"><i class="bi bi-wallet2" style="color:var(--accent-success, #34d399);"></i></span>
     <span>Top Up</span>
   </a>
   <div class="nav-item" onclick="triggerProfileNav()" title="Profil">
-    <i class="bi bi-person-circle" style="color:#a78bfa;"></i>
+    <span class="nav-icon-wrap"><i class="bi bi-person-circle" style="color:#a78bfa;"></i></span>
     <span>Profil</span>
   </div>
 </nav>

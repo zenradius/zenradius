@@ -155,6 +155,18 @@
       position: sticky;
       top: 0;
       z-index: 1020;
+      overflow: hidden;
+    }
+
+    .navbar::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-primary-strong), transparent);
+      opacity: 0.55;
     }
 
     .navbar-shell {
@@ -203,11 +215,14 @@
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-size: 12px;
-      letter-spacing: 0.08em;
+      font-size: 11px;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       font-weight: 700;
-      color: rgba(226, 246, 255, 0.9);
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-primary-strong));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
       line-height: 1.2;
     }
 
