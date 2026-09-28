@@ -70,7 +70,7 @@
     .bg-primary {
       background: var(--soft-primary) !important;
       color: var(--accent-primary) !important;
-      border: 1px solid rgba(45, 212, 191, 0.35);
+      border: 1px solid color-mix(in srgb, var(--accent-primary) 35%, transparent);
     }
 
     .bg-danger {
@@ -78,6 +78,20 @@
       color: var(--accent-danger) !important;
       border: 1px solid rgba(251, 113, 133, 0.35);
     }
+
+    .bg-info {
+      background: var(--soft-primary) !important;
+      color: var(--accent-primary-strong) !important;
+      border: 1px solid color-mix(in srgb, var(--accent-primary-strong) 35%, transparent);
+    }
+
+    /* ── Remap Bootstrap default text utilities to the active theme palette ── */
+    .text-primary { color: var(--accent-primary) !important; }
+    .text-info { color: var(--accent-primary-strong) !important; }
+    .text-success { color: var(--accent-success) !important; }
+    .text-warning { color: var(--accent-warning) !important; }
+    .text-danger { color: var(--accent-danger) !important; }
+    .border-info { border-color: var(--accent-primary-strong) !important; }
 
     /* ── HIGH CONTRAST FORM & PLACEHOLDER STYLING ── */
     .form-control, .form-select {
@@ -115,7 +129,21 @@
       min-height: 100vh;
       padding-bottom: 90px;
       -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
       position: relative;
+    }
+
+    ::selection {
+      background: var(--accent-primary);
+      color: #062c2a;
+    }
+
+    a:focus-visible,
+    button:focus-visible,
+    .btn:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
     }
 
     /* ── GLASS NAVBAR ── */
@@ -234,7 +262,7 @@
     }
 
     .header-balance-btn {
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong));
+      background: var(--soft-primary);
       color: var(--accent-primary) !important;
       border: 1px solid var(--accent-primary) !important;
       border-radius: 10px;
@@ -261,7 +289,7 @@
     }
 
     .notif-bell-btn:hover {
-      background: linear-gradient(180deg, var(--accent-primary), var(--bg-dark));
+      background: linear-gradient(180deg, var(--soft-primary), var(--bg-dark));
       border-color: var(--accent-primary);
       color: #fff;
       transform: translateY(-1px);
@@ -358,7 +386,7 @@
       background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-strong) 100%) !important;
       border: 1px solid rgba(20, 184, 166, 0.6) !important;
       color: #062c2a !important;
-      box-shadow: 0 10px 22px rgba(45, 212, 191, 0.22) !important;
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--accent-primary) 22%, transparent) !important;
     }
 
     .btn-primary:hover,
@@ -394,10 +422,10 @@
     }
 
     .btn-info {
-      background: linear-gradient(135deg, #67e8f9, #38bdf8) !important;
-      border: 1px solid rgba(56, 189, 248, 0.32) !important;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)) !important;
+      border: 1px solid color-mix(in srgb, var(--accent-primary-strong) 32%, transparent) !important;
       color: #062c2a !important;
-      box-shadow: 0 10px 22px rgba(56, 189, 248, 0.2) !important;
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--accent-primary-strong) 20%, transparent) !important;
     }
 
     .btn-outline-light,
@@ -443,7 +471,7 @@
 
     .glass-card:hover {
       box-shadow: 0 16px 30px rgba(15, 23, 42, 0.26);
-      border-color: rgba(45, 212, 191, 0.22);
+      border-color: color-mix(in srgb, var(--accent-primary) 22%, transparent);
     }
 
     .glass-header {
@@ -513,10 +541,10 @@
     }
 
     .action-item:hover {
-      background: rgba(45, 212, 191, 0.12);
-      border-color: rgba(45, 212, 191, 0.35);
+      background: var(--soft-primary);
+      border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(45, 212, 191, 0.15);
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--accent-primary) 15%, transparent);
       color: #fff;
     }
 
@@ -537,7 +565,7 @@
     .ai-pass { background: linear-gradient(135deg, #4ade80, #16a34a); }
     .ai-reboot { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
     .ai-ppob { background: linear-gradient(135deg, #fb7185, #f43f5e); }
-    .ai-ticket { background: linear-gradient(135deg, #7dd3fc, #0ea5e9); }
+    .ai-ticket { background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)); }
 
     .action-label {
       font-size: 11px;
@@ -573,7 +601,7 @@
       border: none;
       padding: 12px 24px;
       border-radius: 10px;
-      box-shadow: 0 10px 22px rgba(45, 212, 191, 0.22);
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--accent-primary) 22%, transparent);
       transition: all 0.25s ease;
       cursor: pointer;
       display: inline-flex;
@@ -583,7 +611,7 @@
 
     .btn-pay-hero:hover {
       transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 12px 26px rgba(45, 212, 191, 0.32);
+      box-shadow: 0 12px 26px color-mix(in srgb, var(--accent-primary) 32%, transparent);
       color: #062c2a;
     }
 
@@ -720,7 +748,7 @@
     }
 
     .accordion-button:not(.collapsed) {
-      background: rgba(45, 212, 191, 0.08) !important;
+      background: var(--soft-primary) !important;
       color: var(--text-main) !important;
       box-shadow: none !important;
     }
@@ -740,8 +768,8 @@
 
     .form-control:focus,
     .form-select:focus {
-      border-color: rgba(45, 212, 191, 0.5) !important;
-      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12) !important;
+      border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent) !important;
+      box-shadow: 0 0 0 3px var(--soft-primary) !important;
     }
 
     .notif-item {
@@ -758,7 +786,7 @@
     }
 
     .notif-item.unread {
-      border-left: 3px solid #2dd4bf;
+      border-left: 3px solid var(--accent-primary);
     }
 
     /* ── INVOICE TABLE OVERRIDE ── */
@@ -814,7 +842,7 @@
       font-size: 13px !important;
     }
     .invoice-table .col-jumlah {
-      color: #7dd3fc !important;
+      color: var(--accent-primary) !important;
       font-weight: 800 !important;
       font-size: 14px !important;
     }
@@ -837,7 +865,7 @@
     }
 
     .eye-toggle-btn:hover {
-      color: rgba(45, 212, 191, 0.95) !important;
+      color: var(--accent-primary) !important;
     }
 
     .eye-toggle-btn:active {
@@ -982,7 +1010,7 @@
       .wifi-box {
         padding: 12px;
         background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg3, rgba(17, 50, 61, 0.92)) 100%) !important;
-        border: 1px solid var(--accent-primary) !important;
+        border: 1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent) !important;
         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
       }
       
@@ -1008,7 +1036,7 @@
         border-radius: 14px;
         padding: 16px;
         background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg3, rgba(17, 50, 61, 0.92)) 100%) !important;
-        border: 1px solid var(--accent-primary) !important;
+        border: 1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent) !important;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
       }
       
@@ -1533,7 +1561,7 @@
                             <button class="btn text-dark w-100" onclick="openPaymentModal('<%= inv.id %>', '<%= itemAmt %>')" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border:none; padding:10px; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow: 0 8px 16px rgba(251, 191, 36, 0.2);">
                               <i class="bi bi-qr-code-scan" style="font-size:17px; color:#0f172a;"></i> <span>BAYAR SEKARANG (QRIS)</span>
                             </button>
-                            <a href="/customer/invoice/<%= inv.id %>/pdf" class="btn text-white w-100" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)); border:1px solid var(--accent-primary); padding:8px; display:flex; align-items:center; justify-content:center; gap:6px;" target="_blank" title="Unduh Tagihan PDF">
+                            <a href="/customer/invoice/<%= inv.id %>/pdf" class="btn text-white w-100" style="background: var(--soft-primary); border:1px solid var(--accent-primary); padding:8px; display:flex; align-items:center; justify-content:center; gap:6px;" target="_blank" title="Unduh Tagihan PDF">
                               <i class="bi bi-file-earmark-pdf-fill" style="font-size:16px; color:var(--accent-primary);"></i> <span style="color:#ffffff;">Unduh PDF</span>
                             </a>
                           </div>
@@ -1542,7 +1570,7 @@
                             <a href="/customer/invoice/<%= inv.id %>/print-thermal" class="btn text-white flex-fill" style="background: linear-gradient(135deg, #10b981, #059669); border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px rgba(16, 185, 129, 0.15);" target="_blank" title="Cetak Struk Thermal">
                               <i class="bi bi-receipt" style="font-size:15px;"></i> <span>Struk</span>
                             </a>
-                            <a href="/customer/invoice/<%= inv.id %>/print" class="btn flex-fill" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)); color:#062c2a; border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px var(--accent-primary);" target="_blank" title="Cetak Faktur A4">
+                            <a href="/customer/invoice/<%= inv.id %>/print" class="btn flex-fill" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)); color:#062c2a; border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px var(--soft-primary);" target="_blank" title="Cetak Faktur A4">
                               <i class="bi bi-printer-fill" style="font-size:15px;"></i> <span>A4</span>
                             </a>
                             <a href="/customer/invoice/<%= inv.id %>/pdf" class="btn text-white flex-fill" style="background: linear-gradient(135deg, #0284c7, #0369a1); border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px rgba(2, 132, 199, 0.15);" target="_blank" title="Unduh PDF">
@@ -1616,7 +1644,7 @@
   <!-- PAYMENT METHODS MODAL -->
   <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid var(--accent-primary); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
+      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
         <div class="modal-header border-0 pb-0" style="padding:24px 24px 10px;">
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-credit-card-2-front me-2 text-warning fs-4"></i>Pilihan Metode Pembayaran</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1688,7 +1716,7 @@
   <!-- NOTIFICATION DRAWER MODAL -->
   <div class="modal fade" id="notifDrawerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-end modal-dialog-scrollable">
-      <div class="modal-content notif-drawer-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border-left:1px solid var(--accent-primary); border-radius:20px 0 0 20px;">
+      <div class="modal-content notif-drawer-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border-left:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:20px 0 0 20px;">
         <div class="modal-header border-0 pb-0">
           <h5 class="modal-title fw-bold"><i class="bi bi-bell-fill me-2 text-warning"></i>Pusat Notifikasi</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1704,7 +1732,7 @@
   <!-- MODAL EDIT WIFI SETTINGS (SSID & PASSWORD COMBINED) -->
   <div class="modal fade" id="editSsidModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid var(--accent-primary); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
+      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
         <div class="modal-header border-0 pb-0" style="padding:24px 24px 10px;">
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-wifi me-2 text-info fs-4"></i>Pengaturan WiFi & Sandi</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1747,7 +1775,7 @@
   <!-- MODAL EDIT PASSWORD (KEPT FOR BACKWARD COMPATIBILITY) -->
   <div class="modal fade" id="editPasswordModal" tabindex="-1" aria-hidden="true" style="display:none;">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid var(--accent-primary); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
+      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
         <div class="modal-header border-0 pb-0" style="padding:24px 24px 10px;">
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-shield-lock me-2 text-success fs-4"></i>Ubah Password WiFi</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1774,7 +1802,7 @@
   <!-- MODAL REBOOT DEVICE -->
   <div class="modal fade" id="rebootModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid var(--accent-primary); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
+      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
         <div class="modal-header border-0 pb-0" style="padding:24px 24px 10px;">
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-arrow-clockwise me-2 text-warning fs-4"></i>Reboot Router / Modem</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
