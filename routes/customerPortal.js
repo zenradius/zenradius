@@ -1639,7 +1639,7 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
     return res.redirect(result.link);
   } catch (e) {
     logger.error('[PublicVoucher] Create payment error: ' + (e?.message || e));
-    return res.redirect('/customer/voucher?err=' + encodeURIComponent('Gagal membuat pembayaran. Silakan coba lagi.'));
+    return res.redirect('/customer/voucher?err=' + encodeURIComponent(message.includes(':') ? message : `Gagal membuat pembayaran: ${message}`));
   }
 });
 
@@ -2875,8 +2875,9 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
 
     throw new Error(result.message || 'Gagal membuat transaksi');
   } catch (error) {
-    logger.error(`[Payment] Create Error (public): ${error.message}`);
-    return redirectBack(payload.lookup, 'Terjadi kesalahan saat membuat transaksi pembayaran. Silakan coba lagi.');
+    const message = String(error?.message || error || 'Terjadi kesalahan saat membuat transaksi pembayaran');
+    logger.error(`[Payment] Create Error (public): ${message}`);
+    return redirectBack(payload.lookup, message.includes(':') ? message : `Terjadi kesalahan saat membuat transaksi pembayaran: ${message}`);
   }
 });
 
@@ -4020,8 +4021,9 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
 
     return res.redirect(result.link);
   } catch(e) {
-    logger.error('[Topup] Error: ' + e.message);
-    return redirectErr('Gagal membuat pembayaran: ' + e.message);
+    const message = String(e?.message || e || 'Gagal membuat pembayaran');
+    logger.error('[PublicVoucher] Create payment error: ' + message);
+    return res.redirect('/customer/voucher?err=' + encodeURIComponent(message.includes(':') ? message : `Gagal membuat pembayaran: ${message}`));
   }
 });
 

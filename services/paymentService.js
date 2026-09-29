@@ -33,6 +33,11 @@ function formatGatewayError(gatewayName, error) {
     cleanMsg = error.message || String(error || 'Terjadi kesalahan pada Payment Gateway');
   }
 
+  const statusCode = error.response?.status;
+  if (statusCode && !String(cleanMsg).includes(String(statusCode))) {
+    cleanMsg = `${cleanMsg} (HTTP ${statusCode})`;
+  }
+
   logger.error(`[${gatewayName}] Error: ${cleanMsg}`);
   return new Error(`${gatewayName}: ${cleanMsg}`);
 }
@@ -457,7 +462,10 @@ async function createIpaymuTransaction(invoice, customer, method = 'ipaymu', app
     });
     const data = res.data?.Data || res.data?.data || {};
     if (!(res.data?.Success ?? res.data?.success) || !data.Url && !data.url) {
-      throw new Error(res.data?.Message || res.data?.message || 'Gagal mendapatkan URL pembayaran dari iPaymu');
+      const message = res.data?.Message || res.data?.message || 'Gagal mendapatkan URL pembayaran dari iPaymu';
+      const error = new Error(message);
+      error.response = { status: res.status, data: res.data };
+      throw error;
     }
     return {
       success: true,
