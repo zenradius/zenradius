@@ -39,12 +39,19 @@ function isGatewayConfigured(settings, gateway) {
       String(settings.duitku_api_key || '').trim()
     );
   }
+  if (g === 'ipaymu') {
+    return (
+      isEnabledFlag(settings.ipaymu_enabled) &&
+      String(settings.ipaymu_va || '').trim() &&
+      String(settings.ipaymu_api_key || '').trim()
+    );
+  }
   return false;
 }
 
 function resolveConfiguredGateway(settings) {
   const def = String(settings?.default_gateway || 'tripay').toLowerCase();
-  const order = ['tripay', 'midtrans', 'xendit', 'duitku'];
+  const order = ['ipaymu', 'tripay', 'midtrans', 'xendit', 'duitku'];
   if (isGatewayConfigured(settings, def)) return def;
   for (const g of order) {
     if (isGatewayConfigured(settings, g)) return g;
@@ -249,13 +256,23 @@ router.get('/', requireAgentSession, async (req, res) => {
       ];
     } else if (gateway === 'duitku') {
       paymentChannels = [
-        { code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true },
         { code: 'QRIS', name: 'QRIS', group: 'E-Wallet', active: true },
         { code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', active: true },
         { code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', active: true },
         { code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', active: true },
         { code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', active: true },
         { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', active: true }
+      ];
+    } else if (gateway === 'ipaymu') {
+      paymentChannels = [
+        { code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true },
+        { code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', active: true },
+        { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true },
+        { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }
       ];
     }
   } catch(e) {
@@ -323,7 +340,8 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
     let result;
     if (gateway === 'midtrans') result = await paymentSvc.createMidtransTransaction(invoiceLike, buyer, method === 'SNAP' ? 'snap' : method, appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name });
     else if (gateway === 'xendit') result = await paymentSvc.createXenditTransaction(invoiceLike, buyer, method === 'XENDIT' ? 'xendit' : method, appUrl, { returnPath, orderPrefix: 'AGTOP', description: invoiceLike.item_name });
-    else if (gateway === 'duitku') result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, method === 'DUITKU' ? 'duitku' : method, appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name });
+    else if (gateway === 'duitku') result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name });
+    else if (gateway === 'ipaymu') result = await paymentSvc.createIpaymuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     else {
       try {
         result = await paymentSvc.createTripayTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name, sku: invoiceLike.sku, callbackPath: '/customer/payment/callback' });
@@ -348,10 +366,12 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
 
     if (!result.success) throw new Error(result.message || 'Gagal membuat transaksi');
 
+    const paymentLink = result.link || result.payload?.Url || result.payload?.url || result.payload?.QrTemplate || result.payload?.qrTemplate || result.payload?.QrImage || result.payload?.qrImage || '';
+    if (!paymentLink) throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
     db.prepare(`UPDATE agent_topup_requests SET payment_gateway=?, payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-      .run(gateway, result.order_id || '', result.link || '', result.reference || '', result.payload ? JSON.stringify(result.payload) : null, reqId);
+      .run(gateway, result.order_id || '', paymentLink, result.reference || '', result.payload ? JSON.stringify(result.payload) : null, reqId);
 
-    return res.redirect(result.link);
+    return res.redirect(paymentLink);
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
     return res.redirect('/agent');

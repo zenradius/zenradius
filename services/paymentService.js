@@ -64,6 +64,16 @@ function normalizePhone(phone) {
   return digits;
 }
 
+function requirePaymentLink(gatewayName, data, candidates) {
+  for (const candidate of candidates) {
+    const value = typeof candidate === 'function' ? candidate(data) : data?.[candidate];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  const error = new Error(`${gatewayName} tidak mengembalikan URL atau instruksi pembayaran`);
+  error.response = { status: 200, data };
+  throw error;
+}
+
 /**
  * Tripay: Membuat Transaksi
  */
@@ -130,13 +140,15 @@ async function createTripayTransaction(invoice, customer, method = 'QRIS', appUr
       headers: { Authorization: `Bearer ${apiKey}` }
     });
     
-    if (res.data && res.data.success) {
+    if (res.data && res.data.success && res.data.data) {
+      const data = res.data.data;
+      const link = requirePaymentLink('Tripay', data, ['checkout_url', 'checkoutUrl', 'qr_url', 'qrUrl']);
       return {
         success: true,
-        link: res.data.data.checkout_url,
-        reference: res.data.data.reference,
+        link,
+        reference: data.reference || data.merchant_ref || merchantRef,
         order_id: merchantRef,
-        payload: res.data.data
+        payload: data
       };
     }
     throw new Error(res.data.message || 'Gagal membuat transaksi di Tripay');
@@ -225,10 +237,11 @@ async function createMidtransTransaction(invoice, customer, method = 'snap', app
       }
     });
 
+    const link = requirePaymentLink('Midtrans', res.data, ['redirect_url', 'redirectUrl']);
     return {
       success: true,
-      link: res.data.redirect_url,
-      reference: res.data.token,
+      link,
+      reference: res.data.token || orderId,
       order_id: orderId,
       payload: res.data
     };
@@ -309,10 +322,11 @@ async function createXenditTransaction(invoice, customer, method = 'xendit', app
       }
     });
 
+    const link = requirePaymentLink('Xendit', res.data, ['invoice_url', 'invoiceUrl']);
     return {
       success: true,
-      link: res.data.invoice_url,
-      reference: res.data.id,
+      link,
+      reference: res.data.id || orderId,
       order_id: orderId,
       payload: res.data
     };
@@ -350,8 +364,8 @@ async function createDuitkuTransaction(invoice, customer, method = 'duitku', app
   const callbackPath = String(opts.callbackPath || '/customer/payment/callback');
   const returnPath = String(opts.returnPath || '/customer/dashboard');
 
-  const signature = crypto.createHash('md5')
-    .update(merchantCode + orderId + amount + apiKey)
+  const signature = crypto.createHmac('sha256', apiKey)
+    .update(merchantCode + orderId + amount)
     .digest('hex');
 
   const payload = {
@@ -369,7 +383,7 @@ async function createDuitkuTransaction(invoice, customer, method = 'duitku', app
   };
 
   const methodMap = {
-    'QRIS': 'DQ',
+    'QRIS': 'NQ',
     'MANDIRIVA': 'M2',
     'BRIVA': 'BR',
     'BNIVA': 'I1',
@@ -377,14 +391,15 @@ async function createDuitkuTransaction(invoice, customer, method = 'duitku', app
     'PERMATAVA': 'BT'
   };
   const methodKey = String(method || '').trim().toUpperCase();
-  payload.paymentMethod = methodMap[methodKey] || 'DQ';
+  payload.paymentMethod = methodMap[methodKey] || (/^[A-Z0-9]{2}$/.test(methodKey) ? methodKey : 'NQ');
 
   try {
     const res = await axios.post(baseUrl, payload);
-    if (res.data && res.data.paymentUrl) {
+    if (res.data && String(res.data.statusCode || '') === '00') {
+      const link = requirePaymentLink('Duitku', res.data, ['paymentUrl', 'payment_url', 'AppUrl', 'appUrl']);
       return {
         success: true,
-        link: res.data.paymentUrl,
+        link,
         reference: res.data.reference || orderId,
         order_id: orderId,
         payload: res.data
@@ -431,6 +446,7 @@ async function createIpaymuTransaction(invoice, customer, method = 'ipaymu', app
   };
   const requested = String(method || '').trim().toUpperCase();
   const [paymentMethod, paymentChannel] = methodMap[requested] || ['qris', 'mpm'];
+  const isQris = paymentMethod === 'qris';
   const payload = {
     name: String(customer.name || 'Pelanggan'),
     phone: normalizePhone(customer.phone || '0'),
@@ -461,7 +477,12 @@ async function createIpaymuTransaction(invoice, customer, method = 'ipaymu', app
       timeout: 15000
     });
     const data = res.data?.Data || res.data?.data || {};
-    if (!(res.data?.Success ?? res.data?.success) || !data.Url && !data.url) {
+    const checkoutUrl = data.Url || data.url || data.QrTemplate || data.qrTemplate || data.QrImage || data.qrImage || null;
+    const paymentCode = data.PaymentNo || data.paymentNo || data.QrString || data.qrString || null;
+    const qrImage = data.QrImage || data.qrImage || null;
+    const qrTemplate = data.QrTemplate || data.qrTemplate || null;
+    const qrString = data.QrString || data.qrString || null;
+    if (!(res.data?.Success ?? res.data?.success) || (!checkoutUrl && !(isQris && (qrImage || qrTemplate || qrString || paymentCode)))) {
       const message = res.data?.Message || res.data?.message || 'Gagal mendapatkan URL pembayaran dari iPaymu';
       const error = new Error(message);
       error.response = { status: res.status, data: res.data };
@@ -469,10 +490,16 @@ async function createIpaymuTransaction(invoice, customer, method = 'ipaymu', app
     }
     return {
       success: true,
-      link: data.Url || data.url,
+      link: checkoutUrl,
       reference: data.ReferenceId || data.referenceId || referenceId,
       order_id: referenceId,
-      payload: data
+      payload: data,
+      qr_image: qrImage,
+      qr_template: qrTemplate,
+      qr_string: qrString,
+      payment_code: paymentCode,
+      payment_method: paymentMethod,
+      payment_channel: paymentChannel
     };
   } catch (error) {
     throw formatGatewayError('iPaymu', error);
@@ -505,10 +532,12 @@ function verifyMidtransWebhook(body, serverKey) {
  */
 function verifyDuitkuWebhook(body, apiKey) {
   const { merchantCode, amount, merchantOrderId, signature } = body;
-  const hash = crypto.createHash('md5')
-    .update(merchantCode + amount + merchantOrderId + apiKey)
+  const hash = crypto.createHmac('sha256', apiKey)
+    .update(String(merchantCode || '') + String(amount || '') + String(merchantOrderId || ''))
     .digest('hex');
-  return hash === signature;
+  const provided = String(signature || '').trim().toLowerCase();
+  if (hash.length !== provided.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(provided));
 }
 
 /** Verifikasi callback iPaymu dengan VA sebagai secret key. */

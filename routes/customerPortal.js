@@ -306,7 +306,7 @@ function resolveConfiguredGatewayForAmount(settings, amount) {
     tripay: 0,
     midtrans: 10000,
     xendit: 1000,
-    duitku: 1000,
+    duitku: 10000,
     ipaymu: 1000
   };
 
@@ -710,6 +710,62 @@ function gatewayDefaultExpiresAtIso(gateway, nowMs = Date.now()) {
   return null;
 }
 
+function extractIpaymuPaymentLink(result) {
+  return result?.link || result?.payload?.Url || result?.payload?.url || result?.payload?.QrTemplate || result?.payload?.qrTemplate || result?.payload?.QrImage || result?.payload?.qrImage || '';
+}
+
+function extractIpaymuQrData(result) {
+  const payload = result?.payload || {};
+  return {
+    ipaymu_qr_image: result?.qr_image || payload.QrImage || payload.qrImage || '',
+    ipaymu_qr_template: result?.qr_template || payload.QrTemplate || payload.qrTemplate || '',
+    ipaymu_qr_string: result?.qr_string || payload.QrString || payload.qrString || '',
+    ipaymu_payment_no: result?.payment_code || payload.PaymentNo || payload.paymentNo || '',
+    ipaymu_via: payload.Via || payload.via || '',
+    ipaymu_channel: payload.Channel || payload.channel || ''
+  };
+}
+
+function buildPaymentInstructionData(result, gateway, method, amount) {
+  const payload = result?.payload || {};
+  const payloadText = JSON.stringify(payload, null, 2);
+  const reference = String(result?.reference || result?.order_id || payload.Reference || payload.reference || '');
+  const instruction = String(
+    payload.vaNumber || payload.va_number || payload.PaymentNo || payload.paymentNo ||
+    payload.qrString || payload.QrString || payload.qr_string ||
+    payload.qrImage || payload.QrImage || payload.qr_image ||
+    payload.paymentUrl || payload.payment_url || payload.Url || payload.url || payload.AppUrl || payload.appUrl ||
+    result?.link || ''
+  ).trim();
+
+  return {
+    gateway: String(gateway || '').toUpperCase(),
+    method: String(method || '').toUpperCase(),
+    amount: Number(amount || result?.amount || payload.Amount || payload.amount || 0) || 0,
+    reference,
+    paymentUrl: String(result?.link || payload.paymentUrl || payload.payment_url || payload.Url || payload.url || payload.AppUrl || payload.appUrl || '').trim(),
+    instruction,
+    payloadText
+  };
+}
+
+function renderPaymentInstructionPage(res, settings, options = {}) {
+  return res.render('payment-instruction', {
+    settings,
+    backUrl: options.backUrl || '/customer/topup',
+    info: options.info || null,
+    gateway: options.gateway || '',
+    method: options.method || '',
+    amount: options.amount || 0,
+    reference: options.reference || '',
+    paymentUrl: options.paymentUrl || '',
+    instruction: options.instruction || '',
+    payloadText: options.payloadText || '{}',
+    helpText: options.helpText || '',
+    error: options.error || null
+  });
+}
+
 function getStandardPaymentChannels(gateway) {
   const base = [
     { code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true },
@@ -721,7 +777,7 @@ function getStandardPaymentChannels(gateway) {
   ];
   if (gateway === 'midtrans') return [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
   if (gateway === 'xendit') return [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
-  if (gateway === 'duitku') return [{ code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+  if (gateway === 'duitku') return base;
   if (gateway === 'ipaymu') return [...base, { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true }, { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }];
   return [];
 }
@@ -737,7 +793,7 @@ async function getCustomerPaymentChannels(settings) {
 async function createGatewayPayment(invoiceLike, customer, gateway, method, appUrl, options = {}) {
   if (gateway === 'midtrans') return paymentSvc.createMidtransTransaction(invoiceLike, customer, method === 'SNAP' ? 'snap' : method, appUrl, options);
   if (gateway === 'xendit') return paymentSvc.createXenditTransaction(invoiceLike, customer, method === 'XENDIT' ? 'xendit' : method, appUrl, options);
-  if (gateway === 'duitku') return paymentSvc.createDuitkuTransaction(invoiceLike, customer, method === 'DUITKU' ? 'duitku' : method, appUrl, options);
+  if (gateway === 'duitku') return paymentSvc.createDuitkuTransaction(invoiceLike, customer, method, appUrl, options);
   if (gateway === 'ipaymu') return paymentSvc.createIpaymuTransaction(invoiceLike, customer, method, appUrl, options);
   return paymentSvc.createTripayTransaction(invoiceLike, customer, method, appUrl, options);
 }
@@ -944,7 +1000,7 @@ router.get('/check-billing', async (req, res) => {
     ];
     if (gateway === 'midtrans') paymentChannels = [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'xendit') paymentChannels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
-    else if (gateway === 'duitku') paymentChannels = [{ code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+    else if (gateway === 'duitku') paymentChannels = base;
     else if (gateway === 'ipaymu') paymentChannels = [{ code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true }, ...base, { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true }, { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }];
   }
 
@@ -1203,7 +1259,7 @@ router.get('/voucher', async (req, res) => {
       ];
       if (gateway === 'midtrans') channels = [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
       else if (gateway === 'xendit') channels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
-      else if (gateway === 'duitku') channels = [{ code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+      else if (gateway === 'duitku') channels = base;
       else if (gateway === 'ipaymu') channels = [{ code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true }, ...base, { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true }, { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }];
       else channels = base;
     }
@@ -1561,8 +1617,8 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
       const allowed = new Set(['XENDIT', 'QRIS', 'BCAVA', 'BNIVA', 'BRIVA', 'PERMATAVA', 'MANDIRIVA']);
       if (!allowed.has(method)) method = 'XENDIT';
     } else if (gateway === 'duitku') {
-      const allowed = new Set(['DUITKU', 'QRIS', 'BCAVA', 'BNIVA', 'BRIVA', 'PERMATAVA', 'MANDIRIVA']);
-      if (!allowed.has(method)) method = 'DUITKU';
+      const allowed = new Set(['QRIS', 'BCAVA', 'BNIVA', 'BRIVA', 'PERMATAVA', 'MANDIRIVA']);
+      if (!allowed.has(method)) method = 'QRIS';
     } else if (gateway === 'ipaymu') {
       const allowed = new Set(['QRIS', 'BCAVA', 'BNIVA', 'BRIVA', 'PERMATAVA', 'MANDIRIVA', 'DANA', 'SHOPEEPAY']);
       if (!allowed.has(method)) method = 'QRIS';
@@ -1589,7 +1645,7 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
     } else if (gateway === 'xendit') {
       result = await paymentSvc.createXenditTransaction(invoiceLike, buyer, method === 'XENDIT' ? 'xendit' : method, appUrl, { returnPath, orderPrefix: 'VOUCHER', description: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     } else if (gateway === 'duitku') {
-      result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, method === 'DUITKU' ? 'duitku' : method, appUrl, { returnPath, orderPrefix: 'VOUCHER', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
+      result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'VOUCHER', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     } else if (gateway === 'ipaymu') {
       result = await paymentSvc.createIpaymuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'VOUCHER', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     } else {
@@ -1615,6 +1671,8 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
     }
 
     if (!result.success) throw new Error(result.message || 'Gagal membuat transaksi');
+    const paymentLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : (result.link || '');
+    if (!paymentLink) throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
 
     db.prepare(`
       UPDATE public_voucher_orders SET
@@ -1629,16 +1687,17 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
     `).run(
       gateway,
       result.order_id || '',
-      result.link || '',
+      paymentLink,
       result.reference || '',
-      result.payload ? JSON.stringify(result.payload) : null,
+      result.payload ? JSON.stringify({ ...result.payload, ...(gateway === 'ipaymu' ? extractIpaymuQrData(result) : {}) }) : null,
       resolvePaymentExpiresAt(gateway, result) || gatewayDefaultExpiresAtIso(gateway),
       orderId
     );
 
-    return res.redirect(result.link);
+    return res.redirect(paymentLink);
   } catch (e) {
     logger.error('[PublicVoucher] Create payment error: ' + (e?.message || e));
+    const message = String(e?.message || e || 'Gagal membuat pembayaran');
     return res.redirect('/customer/voucher?err=' + encodeURIComponent(message.includes(':') ? message : `Gagal membuat pembayaran: ${message}`));
   }
 });
@@ -2069,7 +2128,7 @@ router.get('/dashboard', async (req, res) => {
     ];
     if (gateway === 'midtrans') paymentChannels = [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'xendit') paymentChannels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
-    else if (gateway === 'duitku') paymentChannels = [{ code: 'DUITKU', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
+    else if (gateway === 'duitku') paymentChannels = base;
     else if (gateway === 'ipaymu') paymentChannels = getStandardPaymentChannels('ipaymu');
   }
 
@@ -2831,7 +2890,7 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
     } else if (gateway === 'xendit') {
       result = await paymentSvc.createXenditTransaction(inv, cust, method === 'XENDIT' ? 'xendit' : method, appUrl);
     } else if (gateway === 'duitku') {
-      result = await paymentSvc.createDuitkuTransaction(inv, cust, method === 'DUITKU' ? 'duitku' : method, appUrl);
+      result = await paymentSvc.createDuitkuTransaction(inv, cust, method, appUrl);
     } else if (gateway === 'ipaymu') {
       result = await paymentSvc.createIpaymuTransaction(inv, cust, method, appUrl);
     } else {
@@ -2857,20 +2916,22 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
     }
 
     if (result.success) {
+      const ipaymuMeta = gateway === 'ipaymu' ? extractIpaymuQrData(result) : {};
+      const redirectLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : result.link;
       const resolvedExpiresAt =
         resolvePaymentExpiresAt(gateway, result) ||
         gatewayDefaultExpiresAtIso(gateway);
       billingSvc.updatePaymentInfo(inv.id, {
         gateway: gateway,
         order_id: result.order_id,
-        link: result.link,
+        link: redirectLink,
         reference: result.reference,
-        payload: result.payload,
+        payload: gateway === 'ipaymu' ? { ...result.payload, ...ipaymuMeta } : result.payload,
         expires_at: resolvedExpiresAt
       });
 
       logger.info(`[Payment] New link created for INV-${inv.id} via ${gateway} (public)`);
-      return res.redirect(result.link);
+      return res.redirect(redirectLink || '/customer/dashboard');
     }
 
     throw new Error(result.message || 'Gagal membuat transaksi');
@@ -3065,10 +3126,11 @@ router.post('/payment/batch/create', express.urlencoded({ extended: true }), asy
       orderPrefix: 'BATCH', itemName: invoiceLike.item_name,
       callbackPath: '/customer/payment/callback', returnPath: '/customer/dashboard#billing-section'
     });
-    if (!result?.success || !result.link) throw new Error(result?.message || 'Gagal membuat transaksi pembayaran gabungan.');
+    const batchRedirectLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : result?.link;
+    if (!result?.success || !batchRedirectLink) throw new Error(result?.message || 'Gagal membuat transaksi pembayaran gabungan.');
     db.prepare(`UPDATE payment_batches SET payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, payment_expires_at=? WHERE id=?`)
-      .run(result.order_id || '', result.link, result.reference || '', result.payload ? JSON.stringify(result.payload) : null, resolvePaymentExpiresAt(gateway, result) || gatewayDefaultExpiresAtIso(gateway), batchId);
-    return res.redirect(result.link);
+      .run(result.order_id || '', batchRedirectLink, result.reference || '', result.payload ? JSON.stringify({ ...result.payload, ...(gateway === 'ipaymu' ? extractIpaymuQrData(result) : {}) }) : null, resolvePaymentExpiresAt(gateway, result) || gatewayDefaultExpiresAtIso(gateway), batchId);
+    return res.redirect(batchRedirectLink);
   } catch (error) {
     logger.error(`[Payment Batch] Create error: ${error.message}`);
     return redirectBack('Gagal membuat pembayaran gabungan: ' + error.message);
@@ -3171,7 +3233,7 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
     let method =
       gateway === 'midtrans' ? (methodRaw === 'SNAP' ? 'snap' : methodRaw) :
       gateway === 'xendit' ? (methodRaw === 'XENDIT' ? 'xendit' : methodRaw) :
-      gateway === 'duitku' ? (methodRaw === 'DUITKU' ? 'duitku' : methodRaw) :
+      gateway === 'duitku' ? methodRaw :
       methodRaw;
     const cust = customerSvc.getCustomerById(inv.customer_id);
     
@@ -3224,6 +3286,8 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
     }
     
     if (result.success) {
+      const paymentLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : (result.link || '');
+      if (!paymentLink) throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
       const resolvedExpiresAt =
         resolvePaymentExpiresAt(gateway, result) ||
         gatewayDefaultExpiresAtIso(gateway);
@@ -3231,14 +3295,14 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
       billingSvc.updatePaymentInfo(inv.id, {
         gateway: gateway,
         order_id: result.order_id,
-        link: result.link,
+        link: paymentLink,
         reference: result.reference,
-        payload: result.payload,
+        payload: gateway === 'ipaymu' ? { ...result.payload, ...extractIpaymuQrData(result) } : result.payload,
         expires_at: resolvedExpiresAt
       });
 
       logger.info(`[Payment] New link created for INV-${inv.id} via ${gateway}`);
-      res.redirect(result.link);
+      res.redirect(paymentLink);
     } else {
       throw new Error(result.message || 'Gagal membuat transaksi');
     }
@@ -3990,7 +4054,7 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
     let result;
     if (gateway === 'midtrans') result = await paymentSvc.createMidtransTransaction(invoiceLike, buyer, method === 'SNAP' ? 'snap' : method, appUrl, { returnPath, orderPrefix: 'TOPUP', itemName: invoiceLike.item_name });
     else if (gateway === 'xendit') result = await paymentSvc.createXenditTransaction(invoiceLike, buyer, method === 'XENDIT' ? 'xendit' : method, appUrl, { returnPath, orderPrefix: 'TOPUP', description: invoiceLike.item_name });
-    else if (gateway === 'duitku') result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, method === 'DUITKU' ? 'duitku' : method, appUrl, { returnPath, orderPrefix: 'TOPUP', itemName: invoiceLike.item_name });
+    else if (gateway === 'duitku') result = await paymentSvc.createDuitkuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'TOPUP', itemName: invoiceLike.item_name });
     else if (gateway === 'ipaymu') result = await paymentSvc.createIpaymuTransaction(invoiceLike, buyer, method, appUrl, { returnPath, orderPrefix: 'TOPUP', itemName: invoiceLike.item_name, callbackPath: '/customer/payment/callback' });
     else {
       try {
@@ -4016,14 +4080,23 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
 
     if (!result.success) throw new Error(result.message || 'Gagal membuat transaksi');
 
+    const ipaymuMeta = gateway === 'ipaymu' ? extractIpaymuQrData(result) : {};
+    const redirectLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : (result.link || '');
+    const instructionData = buildPaymentInstructionData(result, gateway, method, amount);
     db.prepare(`UPDATE customer_topup_requests SET payment_gateway=?, payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-      .run(gateway, result.order_id||'', result.link||'', result.reference||'', result.payload ? JSON.stringify(result.payload) : null, reqId);
+      .run(gateway, result.order_id||'', redirectLink, result.reference||'', result.payload ? JSON.stringify({ ...result.payload, ...ipaymuMeta }) : null, reqId);
 
-    return res.redirect(result.link);
+    if (redirectLink) return res.redirect(redirectLink);
+    return renderPaymentInstructionPage(res, settings, {
+      backUrl: '/customer/topup',
+      info: 'Pembayaran berhasil dibuat. Ikuti instruksi di bawah.',
+      helpText: 'Simpan referensi pembayaran ini sampai status top-up berubah menjadi lunas.',
+      ...instructionData
+    });
   } catch(e) {
     const message = String(e?.message || e || 'Gagal membuat pembayaran');
     logger.error('[PublicVoucher] Create payment error: ' + message);
-    return res.redirect('/customer/voucher?err=' + encodeURIComponent(message.includes(':') ? message : `Gagal membuat pembayaran: ${message}`));
+    return res.redirect('/customer/topup?err=' + encodeURIComponent(message.includes(':') ? message : `Gagal membuat pembayaran: ${message}`));
   }
 });
 
@@ -4097,10 +4170,19 @@ router.post('/agent-topup/create', express.urlencoded({ extended: true }), async
 
     if (!result.success) throw new Error(result.message || 'Gagal membuat transaksi');
 
+    const ipaymuMeta = gateway === 'ipaymu' ? extractIpaymuQrData(result) : {};
+    const redirectLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : (result.link || '');
+    const instructionData = buildPaymentInstructionData(result, gateway, method, amount);
     db.prepare(`UPDATE agent_topup_requests SET payment_gateway=?, payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-      .run(gateway, result.order_id||'', result.link||'', result.reference||'', result.payload ? JSON.stringify(result.payload) : null, reqId);
+      .run(gateway, result.order_id||'', redirectLink, result.reference||'', result.payload ? JSON.stringify({ ...result.payload, ...ipaymuMeta }) : null, reqId);
 
-    return res.redirect(result.link);
+    if (redirectLink) return res.redirect(redirectLink);
+    return renderPaymentInstructionPage(res, settings, {
+      backUrl: '/agent',
+      info: 'Pembayaran berhasil dibuat. Ikuti instruksi di bawah.',
+      helpText: 'Gunakan detail pembayaran yang ditampilkan di halaman ini untuk menyelesaikan top-up agent.',
+      ...instructionData
+    });
   } catch(e) {
     logger.error('[AgentTopup] Error: ' + e.message);
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
