@@ -477,12 +477,13 @@ async function createIpaymuTransaction(invoice, customer, method = 'ipaymu', app
       timeout: 15000
     });
     const data = res.data?.Data || res.data?.data || {};
-    const checkoutUrl = data.Url || data.url || data.QrTemplate || data.qrTemplate || data.QrImage || data.qrImage || null;
+    const checkoutUrl = data.Url || data.url || null;
     const paymentCode = data.PaymentNo || data.paymentNo || data.QrString || data.qrString || null;
     const qrImage = data.QrImage || data.qrImage || null;
     const qrTemplate = data.QrTemplate || data.qrTemplate || null;
     const qrString = data.QrString || data.qrString || null;
-    if (!(res.data?.Success ?? res.data?.success) || (!checkoutUrl && !(isQris && (qrImage || qrTemplate || qrString || paymentCode)))) {
+    const hasPaymentInstruction = paymentCode || qrImage || qrTemplate || qrString;
+    if (!(res.data?.Success ?? res.data?.success) || (!checkoutUrl && !hasPaymentInstruction)) {
       const message = res.data?.Message || res.data?.message || 'Gagal mendapatkan URL pembayaran dari iPaymu';
       const error = new Error(message);
       error.response = { status: res.status, data: res.data };

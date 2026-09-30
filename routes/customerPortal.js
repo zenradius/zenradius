@@ -711,7 +711,9 @@ function gatewayDefaultExpiresAtIso(gateway, nowMs = Date.now()) {
 }
 
 function extractIpaymuPaymentLink(result) {
-  return result?.link || result?.payload?.Url || result?.payload?.url || result?.payload?.QrTemplate || result?.payload?.qrTemplate || result?.payload?.QrImage || result?.payload?.qrImage || '';
+  const payload = result?.payload || {};
+  const data = payload.Data || payload.data || {};
+  return result?.link || data.Url || data.url || payload.Url || payload.url || '';
 }
 
 function extractIpaymuQrData(result) {
@@ -1706,7 +1708,10 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
 
     if (!result.success) throw new Error(result.message || 'Gagal membuat transaksi');
     const paymentLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : (result.link || '');
-    if (!paymentLink) throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
+    const instructionData = buildPaymentInstructionData(result, gateway, method, selected.price);
+    if (!paymentLink && !instructionData.qrImageUrl && !instructionData.details.paymentNo) {
+      throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
+    }
 
     db.prepare(`
       UPDATE public_voucher_orders SET
@@ -1728,7 +1733,15 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
       orderId
     );
 
-    return res.redirect(paymentLink);
+    if (paymentLink) return res.redirect(paymentLink);
+    return renderPaymentInstructionPage(res, settings, {
+      backUrl: `/customer/voucher?order=${encodeURIComponent(String(orderId))}&t=${encodeURIComponent(token)}`,
+      info: null,
+      helpText: instructionData.mode === 'qris'
+        ? 'Scan QR dengan aplikasi pembayaran. Pesanan diproses otomatis setelah pembayaran terverifikasi.'
+        : 'Transfer sesuai nominal ke nomor virtual account. Pesanan diproses otomatis setelah pembayaran terverifikasi.',
+      ...instructionData
+    });
   } catch (e) {
     logger.error('[PublicVoucher] Create payment error: ' + (e?.message || e));
     const message = String(e?.message || e || 'Gagal membuat pembayaran');
@@ -2952,6 +2965,7 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
     if (result.success) {
       const ipaymuMeta = gateway === 'ipaymu' ? extractIpaymuQrData(result) : {};
       const redirectLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : result.link;
+      const instructionData = buildPaymentInstructionData(result, gateway, method, inv.amount);
       const resolvedExpiresAt =
         resolvePaymentExpiresAt(gateway, result) ||
         gatewayDefaultExpiresAtIso(gateway);
@@ -2965,7 +2979,15 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
       });
 
       logger.info(`[Payment] New link created for INV-${inv.id} via ${gateway} (public)`);
-      return res.redirect(redirectLink || '/customer/dashboard');
+      if (redirectLink) return res.redirect(redirectLink);
+      return renderPaymentInstructionPage(res, settings, {
+        backUrl: `/customer/check-billing?q=${encodeURIComponent(String(payload.lookup || ''))}`,
+        info: null,
+        helpText: instructionData.mode === 'qris'
+          ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
+          : 'Transfer sesuai nominal ke nomor virtual account. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.',
+        ...instructionData
+      });
     }
 
     throw new Error(result.message || 'Gagal membuat transaksi');
@@ -3161,10 +3183,21 @@ router.post('/payment/batch/create', express.urlencoded({ extended: true }), asy
       callbackPath: '/customer/payment/callback', returnPath: '/customer/dashboard#billing-section'
     });
     const batchRedirectLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : result?.link;
-    if (!result?.success || !batchRedirectLink) throw new Error(result?.message || 'Gagal membuat transaksi pembayaran gabungan.');
+    const instructionData = buildPaymentInstructionData(result, gateway, method, amount);
+    if (!result?.success || (!batchRedirectLink && !instructionData.qrImageUrl && !instructionData.details.paymentNo)) {
+      throw new Error(result?.message || 'Gagal membuat transaksi pembayaran gabungan.');
+    }
     db.prepare(`UPDATE payment_batches SET payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, payment_expires_at=? WHERE id=?`)
       .run(result.order_id || '', batchRedirectLink, result.reference || '', result.payload ? JSON.stringify({ ...result.payload, ...(gateway === 'ipaymu' ? extractIpaymuQrData(result) : {}) }) : null, resolvePaymentExpiresAt(gateway, result) || gatewayDefaultExpiresAtIso(gateway), batchId);
-    return res.redirect(batchRedirectLink);
+    if (batchRedirectLink) return res.redirect(batchRedirectLink);
+    return renderPaymentInstructionPage(res, settings, {
+      backUrl: '/customer/dashboard#billing-section',
+      info: null,
+      helpText: instructionData.mode === 'qris'
+        ? 'Scan QR untuk menyelesaikan pembayaran seluruh tagihan yang dipilih.'
+        : 'Transfer sesuai nominal ke virtual account untuk menyelesaikan seluruh tagihan yang dipilih.',
+      ...instructionData
+    });
   } catch (error) {
     logger.error(`[Payment Batch] Create error: ${error.message}`);
     return redirectBack('Gagal membuat pembayaran gabungan: ' + error.message);
@@ -3321,7 +3354,10 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
     
     if (result.success) {
       const paymentLink = gateway === 'ipaymu' ? extractIpaymuPaymentLink(result) : (result.link || '');
-      if (!paymentLink) throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
+      const instructionData = buildPaymentInstructionData(result, gateway, method, inv.amount);
+      if (!paymentLink && !instructionData.qrImageUrl && !instructionData.details.paymentNo) {
+        throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
+      }
       const resolvedExpiresAt =
         resolvePaymentExpiresAt(gateway, result) ||
         gatewayDefaultExpiresAtIso(gateway);
@@ -3336,7 +3372,15 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
       });
 
       logger.info(`[Payment] New link created for INV-${inv.id} via ${gateway}`);
-      res.redirect(paymentLink);
+      if (paymentLink) return res.redirect(paymentLink);
+      return renderPaymentInstructionPage(res, settings, {
+        backUrl: '/customer/dashboard#billing-section',
+        info: null,
+        helpText: instructionData.mode === 'qris'
+          ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
+          : 'Transfer sesuai nominal ke nomor virtual account. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.',
+        ...instructionData
+      });
     } else {
       throw new Error(result.message || 'Gagal membuat transaksi');
     }

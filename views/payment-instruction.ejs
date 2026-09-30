@@ -10,57 +10,63 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
     body{margin:0;font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:
-      radial-gradient(circle at top left, rgba(34,211,238,.22), transparent 32%),
-      radial-gradient(circle at bottom right, rgba(45,212,191,.16), transparent 28%),
-      linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%);color:#edf7f5;min-height:100vh}
+      var(--body-bg-image, linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%));
+      background-color:var(--body-bg-solid, #173945);color:var(--portal-ink, #edf7f5);min-height:100vh}
     .wrap{max-width:980px;margin:0 auto;padding:20px}
-    .panel{background:linear-gradient(180deg,rgba(23,57,69,.96) 0%,rgba(19,50,62,.95) 100%);border:1px solid rgba(190,239,255,.16);border-radius:24px;padding:22px;box-shadow:0 18px 42px rgba(0,0,0,.24);overflow:hidden}
+    .panel{background:linear-gradient(180deg, color-mix(in srgb, var(--portal-surface, #183f51) 92%, transparent) 0%, color-mix(in srgb, var(--portal-surface-raised, #1b4656) 94%, transparent) 100%);border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.16)) 85%, transparent);border-radius:24px;padding:22px;box-shadow:0 18px 42px rgba(0,0,0,.24);overflow:hidden}
     .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
     .title{font-size:22px;font-weight:800;letter-spacing:0}
     .muted{color:rgba(190,239,255,.72)}
     .grid{display:grid;grid-template-columns:1fr;gap:14px}
-    .box{background:rgba(30,41,59,.72);border:1px solid rgba(190,239,255,.12);border-radius:18px;padding:18px}
+    .box{background:color-mix(in srgb, var(--portal-surface-raised, #1b4656) 70%, transparent);border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.12)) 80%, transparent);border-radius:18px;padding:18px}
     .hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:14px;align-items:stretch}
     .amount{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
     .amount strong{font-size:30px;line-height:1}
-    .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;border:1px solid rgba(190,239,255,.2);background:rgba(190,239,255,.08)}
-    .badge.ok{background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.24);color:#6ee7b7}
-    .badge.warn{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.24);color:#fcd34d}
-    .kv{display:grid;grid-template-columns:160px 1fr;gap:10px 12px;align-items:start}
-    .kv div:nth-child(odd){color:rgba(190,239,255,.72)}
+    .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.2)) 88%, transparent);background:color-mix(in srgb, var(--portal-surface-raised, #1b4656) 52%, transparent)}
+    .badge.ok{background:color-mix(in srgb, var(--soft-success, rgba(16,185,129,.14)) 82%, transparent);border-color:color-mix(in srgb, var(--success, #34D399) 28%, transparent);color:var(--success, #34D399)}
+    .badge.warn{background:color-mix(in srgb, var(--soft-warning, rgba(251,191,36,.14)) 82%, transparent);border-color:color-mix(in srgb, var(--warning, #FBBF24) 30%, transparent);color:var(--warning, #FBBF24)}
+    .kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .kv-row{background:color-mix(in srgb, var(--portal-surface, #1b4656) 68%, transparent);border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.1)) 86%, transparent);border-radius:14px;padding:12px}
+    .kv-label{font-size:12px;color:color-mix(in srgb, var(--portal-muted, rgba(190,239,255,.72)) 92%, transparent);margin-bottom:4px}
+    .kv-value{font-weight:700;word-break:break-word}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-word}
-    .qr{max-width:336px;width:100%;background:#fff;padding:14px;border-radius:22px;display:block;margin:0 auto;box-shadow:0 18px 38px rgba(0,0,0,.28)}
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid rgba(190,239,255,.18);background:rgba(34,211,238,.12);color:#edf7f5;text-decoration:none;font-weight:700}
-    .btn:hover{background:rgba(34,211,238,.18)}
+    .qr{max-width:336px;width:100%;background:color-mix(in srgb, var(--portal-surface, #fff) 8%, #fff);padding:14px;border-radius:22px;display:block;margin:0 auto;box-shadow:0 18px 38px rgba(0,0,0,.28)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.18)) 86%, transparent);background:color-mix(in srgb, var(--soft-primary, rgba(34,211,238,.12)) 82%, transparent);color:var(--portal-ink, #edf7f5);text-decoration:none;font-weight:700}
+    .btn:hover{background:color-mix(in srgb, var(--soft-primary, rgba(34,211,238,.18)) 88%, transparent)}
     .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .summary-item{background:rgba(15,23,42,.55);border:1px solid rgba(190,239,255,.1);border-radius:16px;padding:12px 14px}
-    .summary-item .label{font-size:12px;color:rgba(190,239,255,.68);margin-bottom:4px}
+    .summary-item{background:color-mix(in srgb, var(--portal-surface, #1b4656) 70%, transparent);border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.1)) 86%, transparent);border-radius:16px;padding:12px 14px}
+    .summary-item .label{font-size:12px;color:var(--portal-muted, rgba(190,239,255,.68));margin-bottom:4px}
     .summary-item .value{font-weight:700;word-break:break-word}
     .instruction-line{font-size:15px;line-height:1.6;word-break:break-word}
     .hero-copy{display:flex;flex-direction:column;gap:12px}
-    .hero-note{font-size:14px;line-height:1.6;color:rgba(237,247,245,.86)}
+    .hero-note{font-size:14px;line-height:1.6;color:color-mix(in srgb, var(--portal-ink, #edf7f5) 88%, transparent)}
     .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
     .hero-actions .btn{min-width:140px;justify-content:center}
-    .amount-card{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg, rgba(34,211,238,.14), rgba(45,212,191,.08));border:1px solid rgba(190,239,255,.14);border-radius:18px;padding:16px}
+    .amount-card{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg, color-mix(in srgb, var(--soft-primary, rgba(34,211,238,.14)) 88%, transparent), color-mix(in srgb, var(--soft-success, rgba(45,212,191,.08)) 88%, transparent));border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.14)) 88%, transparent);border-radius:18px;padding:16px}
     .amount-meta{display:flex;flex-direction:column;gap:3px}
     .amount-meta .label{font-size:12px;color:rgba(190,239,255,.72);text-transform:uppercase;letter-spacing:.08em}
     .amount-meta .value{font-size:18px;font-weight:800}
-    .mode-qris .hero{grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr)}
-    .mode-va .hero{grid-template-columns:minmax(0,1fr) minmax(260px,.85fr)}
+    .mode-qris .hero{grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr)}
+    .mode-va .hero{grid-template-columns:minmax(0,1fr) minmax(300px,.86fr)}
     .mode-va .qr{display:none}
     .mode-qris .va-panel{display:none}
     .mode-va .va-code{display:block;font-size:34px;font-weight:800;line-height:1.05;word-break:break-word}
     .mode-va .va-title{font-size:16px;font-weight:800;margin-bottom:6px}
-    .mode-va .va-bank{font-size:13px;color:rgba(190,239,255,.74);text-transform:uppercase;letter-spacing:.04em}
-    .mode-va .va-panel{background:linear-gradient(180deg,rgba(16,24,32,.88),rgba(19,50,62,.92));border:1px solid rgba(190,239,255,.14);border-radius:20px;padding:18px}
-    .mode-va .va-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.2);color:#a5f4ed}
+    .mode-va .va-bank{font-size:13px;color:var(--portal-muted, rgba(190,239,255,.74));text-transform:uppercase;letter-spacing:.04em}
+    .mode-va .va-panel{background:linear-gradient(180deg,color-mix(in srgb, var(--portal-surface, #1b4656) 92%, transparent), color-mix(in srgb, var(--portal-surface-raised, #1b4656) 96%, transparent));border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.14)) 86%, transparent);border-radius:20px;padding:18px}
+    .mode-va .va-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:color-mix(in srgb, var(--soft-primary, rgba(34,211,238,.12)) 82%, transparent);border:1px solid color-mix(in srgb, var(--portal-line, rgba(34,211,238,.2)) 86%, transparent);color:var(--portal-primary, #a5f4ed)}
     .mode-qris .qr-frame{display:flex;flex-direction:column;align-items:center;gap:12px}
     .mode-qris .qr-side{display:flex;flex-direction:column;gap:12px}
-    .mode-qris .scan-chip{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.22);color:#6ee7b7;font-size:12px;font-weight:800}
-    @media (max-width: 780px){.hero{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}.amount-card{align-items:flex-start;flex-direction:column}}
+    .mode-qris .scan-chip{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;background:color-mix(in srgb, var(--soft-success, rgba(16,185,129,.12)) 82%, transparent);border:1px solid color-mix(in srgb, var(--success, #34D399) 26%, transparent);color:var(--success, #6ee7b7);font-size:12px;font-weight:800}
+    .mode-qris .qr-stage{background:linear-gradient(180deg,color-mix(in srgb, var(--portal-surface-raised, #1b4656) 96%, transparent), color-mix(in srgb, var(--portal-surface, #1b4656) 98%, transparent));border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.18)) 88%, transparent);border-radius:24px;padding:20px}
+    .mode-qris .hero-copy{background:linear-gradient(180deg, color-mix(in srgb, var(--portal-surface, #1b4656) 88%, transparent), color-mix(in srgb, var(--portal-surface-raised, #1b4656) 96%, transparent));border:1px solid color-mix(in srgb, var(--portal-line, rgba(190,239,255,.14)) 88%, transparent);border-radius:20px;padding:18px}
+    .mode-qris .amount-card{background:linear-gradient(135deg, color-mix(in srgb, var(--soft-primary, rgba(34,211,238,.18)) 88%, transparent), color-mix(in srgb, var(--soft-success, rgba(45,212,191,.12)) 88%, transparent));border-color:color-mix(in srgb, var(--portal-line, rgba(190,239,255,.18)) 86%, transparent)}
+    .mode-va .va-panel{box-shadow:0 16px 34px rgba(0,0,0,.18)}
+    .mode-va .summary-item{background:rgba(15,23,42,.62)}
+    @media (max-width: 780px){.hero{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}.amount-card{align-items:flex-start;flex-direction:column}.kv{grid-template-columns:1fr}}
   </style>
 </head>
-<body class="mode-<%= (details && details.mode) || 'va' %>">
+<body class="mode-<%= mode || ((details && details.mode) || 'va') %>">
   <div class="wrap">
     <div class="panel">
       <div class="top">
@@ -81,12 +87,12 @@
           <div class="hero">
             <div class="box hero-copy">
               <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                <div class="badge ok"><i class="bi bi-check2-circle"></i> Pembayaran berhasil dibuat</div>
+                <div class="badge ok"><i class="bi bi-shield-check"></i> Instruksi pembayaran aktif</div>
                 <div class="badge"><%= gateway || '-' %></div>
               </div>
               <div class="amount-card">
                 <div class="amount-meta">
-                  <div class="label"><%= (details && details.mode) === 'qris' ? 'Total QRIS' : 'Nominal VA' %></div>
+                  <div class="label"><%= mode === 'qris' ? 'Total QRIS' : 'Nominal VA' %></div>
                   <div class="value">Rp <%= Number((details && details.total) || amount || 0).toLocaleString('id-ID') %></div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 justify-content-end">
@@ -95,9 +101,9 @@
                 </div>
               </div>
               <div class="hero-note">
-                <%= (details && details.mode) === 'qris'
-                  ? 'Scan QR di sisi kanan dengan e-wallet atau mobile banking yang mendukung QRIS.'
-                  : 'Gunakan nomor VA di sisi kanan untuk transfer lewat mobile banking atau ATM.' %>
+                <%= mode === 'qris'
+                  ? 'Scan QR menggunakan aplikasi perbankan atau dompet digital yang mendukung QRIS.'
+                  : 'Salin nomor virtual account, lalu selesaikan pembayaran melalui aplikasi perbankan atau ATM.' %>
               </div>
               <div class="summary-grid">
                 <div class="summary-item">
@@ -110,7 +116,7 @@
                 </div>
               </div>
               <div class="hero-actions">
-                <% if ((details && details.mode) !== 'qris' && details && details.paymentNo) { %>
+                <% if (mode !== 'qris' && details && details.paymentNo) { %>
                   <button class="btn" type="button" id="copyVaBtn"><i class="bi bi-clipboard"></i> Salin Nomor VA</button>
                 <% } %>
                 <button class="btn" type="button" id="copyAmountBtn"><i class="bi bi-cash-coin"></i> Salin Nominal</button>
@@ -118,7 +124,7 @@
             </div>
 
             <div class="box qr-frame" style="text-align:center;display:flex;align-items:center;justify-content:center">
-              <% if ((details && details.mode) === 'qris' && qrImageUrl) { %>
+              <% if (mode === 'qris' && qrImageUrl) { %>
                 <div class="w-100">
                   <div class="scan-chip mb-3"><i class="bi bi-qr-code-scan"></i> Scan untuk bayar</div>
                   <img class="qr" src="<%= qrImageUrl %>" alt="QR / pembayaran">
@@ -139,31 +145,13 @@
 
           <div class="box">
             <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
-              <div style="font-weight:800"><%= (details && details.mode) === 'qris' ? 'Detail QRIS' : 'Detail Virtual Account' %></div>
-              <div class="badge"><%= method || 'PAYMENT' %></div>
+              <div style="font-weight:800">Ringkasan Pembayaran</div>
+              <div class="badge"><%= mode === 'qris' ? 'QRIS' : 'VIRTUAL ACCOUNT' %></div>
             </div>
             <div class="kv">
-              <% if ((details && details.mode) === 'qris') { %>
-                <div>Session ID</div><div class="mono"><%= details?.sessionId || '-' %></div>
-                <div>Transaction ID</div><div class="mono"><%= details?.transactionId || '-' %></div>
-                <div>Reference ID</div><div class="mono"><%= details?.referenceId || '-' %></div>
-                <div>Nama</div><div><%= details?.paymentName || '-' %></div>
-                <div>Expired</div><div><%= details?.expired || '-' %></div>
-                <div>Subtotal</div><div>Rp <%= Number(details?.subtotal || 0).toLocaleString('id-ID') %></div>
-                <div>Biaya</div><div>Rp <%= Number(details?.fee || 0).toLocaleString('id-ID') %></div>
-                <div>Total</div><div><strong>Rp <%= Number(details?.total || amount || 0).toLocaleString('id-ID') %></strong></div>
-              <% } else { %>
-                <div>Session ID</div><div class="mono"><%= details?.sessionId || '-' %></div>
-                <div>Transaction ID</div><div class="mono"><%= details?.transactionId || '-' %></div>
-                <div>Reference ID</div><div class="mono"><%= details?.referenceId || '-' %></div>
-                <div>Bank / Channel</div><div><%= details?.channel || details?.via || '-' %></div>
-                <div>Nama</div><div><%= details?.paymentName || '-' %></div>
-                <div>Nomor VA</div><div class="mono"><%= details?.paymentNo || '-' %></div>
-                <div>Expired</div><div><%= details?.expired || '-' %></div>
-                <div>Subtotal</div><div>Rp <%= Number(details?.subtotal || 0).toLocaleString('id-ID') %></div>
-                <div>Biaya</div><div>Rp <%= Number(details?.fee || 0).toLocaleString('id-ID') %></div>
-                <div>Total</div><div><strong>Rp <%= Number(details?.total || amount || 0).toLocaleString('id-ID') %></strong></div>
-              <% } %>
+              <div class="kv-row"><div class="kv-label">Referensi</div><div class="kv-value mono"><%= reference || details?.referenceId || '-' %></div></div>
+              <div class="kv-row"><div class="kv-label"><%= mode === 'qris' ? 'Metode' : 'Bank / Channel' %></div><div class="kv-value"><%= mode === 'qris' ? 'QRIS' : (details?.channel || details?.via || method || '-') %></div></div>
+              <div class="kv-row"><div class="kv-label">Berlaku Sampai</div><div class="kv-value"><%= details?.expired || '-' %></div></div>
             </div>
           </div>
 

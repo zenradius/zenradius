@@ -59,6 +59,35 @@ function resolveConfiguredGateway(settings) {
   return null;
 }
 
+function buildPaymentInstructionData(result, gateway, method, amount) {
+  const payload = result?.payload || {};
+  const data = payload.Data || payload.data || payload;
+  const via = String(data.Via || data.via || '').trim();
+  const channel = String(data.Channel || data.channel || result?.payment_channel || '').trim();
+  const paymentNo = String(data.PaymentNo || data.paymentNo || result?.payment_code || '').trim();
+  const qrImageUrl = String(result?.qr_image || data.QrImage || data.qrImage || '').trim();
+  const mode = qrImageUrl || /QR/i.test(via) || /QR/i.test(channel) || /QR/i.test(String(method || '')) ? 'qris' : 'va';
+
+  return {
+    mode,
+    gateway: String(gateway || '').toUpperCase(),
+    method: String(method || '').toUpperCase(),
+    amount: Number(amount || data.Total || data.total || 0) || 0,
+    reference: String(result?.reference || result?.order_id || data.ReferenceId || data.referenceId || ''),
+    qrImageUrl,
+    paymentUrl: String(result?.link || data.Url || data.url || '').trim(),
+    instruction: paymentNo || via || channel,
+    details: {
+      referenceId: String(data.ReferenceId || data.referenceId || result?.reference || ''),
+      via,
+      channel,
+      paymentNo,
+      expired: String(data.Expired || data.expired || ''),
+      total: String(data.Total ?? data.total ?? amount ?? '')
+    }
+  };
+}
+
 function tripayMethodCandidatesForAmount(tripayChannels, amount) {
   const amt = Number(amount || 0) || 0;
   const list = Array.isArray(tripayChannels) ? tripayChannels : [];
@@ -366,12 +395,25 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
 
     if (!result.success) throw new Error(result.message || 'Gagal membuat transaksi');
 
-    const paymentLink = result.link || result.payload?.Url || result.payload?.url || result.payload?.QrTemplate || result.payload?.qrTemplate || result.payload?.QrImage || result.payload?.qrImage || '';
-    if (!paymentLink) throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
+    const instructionData = buildPaymentInstructionData(result, gateway, method, amount);
+    const paymentLink = instructionData.paymentUrl;
+    if (!paymentLink && !instructionData.qrImageUrl && !instructionData.details.paymentNo) {
+      throw new Error(`${gateway} tidak mengembalikan URL atau instruksi pembayaran`);
+    }
     db.prepare(`UPDATE agent_topup_requests SET payment_gateway=?, payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
       .run(gateway, result.order_id || '', paymentLink, result.reference || '', result.payload ? JSON.stringify(result.payload) : null, reqId);
 
-    return res.redirect(paymentLink);
+    if (paymentLink) return res.redirect(paymentLink);
+    return res.render('payment-instruction', {
+      settings,
+      backUrl: '/agent',
+      info: null,
+      helpText: instructionData.mode === 'qris'
+        ? 'Scan QR untuk menyelesaikan top-up saldo agent.'
+        : 'Transfer sesuai nominal ke virtual account untuk menyelesaikan top-up saldo agent.',
+      error: null,
+      ...instructionData
+    });
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
     return res.redirect('/agent');
