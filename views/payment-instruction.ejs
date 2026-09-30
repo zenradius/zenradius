@@ -142,10 +142,8 @@
               <% } else { %>
                 <div class="va-panel w-100 text-start">
                   <div class="va-bank mb-1 d-flex align-items-center gap-2">
-                    <% var vaBankLogo = typeof bankLogoFor === 'function' ? bankLogoFor(((details && details.channel) || method || gateway)) : ''; %>
-                    <% if (vaBankLogo) { %>
-                      <img src="<%= vaBankLogo %>" alt="bank" style="height:20px;width:auto;background:#fff;padding:2px 4px;border-radius:4px">
-                    <% } %>
+                    <% var vaBankColor = typeof bankLogoFor === 'function' ? bankLogoFor(((details && details.channel) || method || gateway)) : ''; %>
+                    <i class="bi bi-bank" style="<%= vaBankColor ? 'color:' + vaBankColor : '' %>"></i>
                     <span><%= (details && details.via) || gateway || 'PAYMENT' %><% if (details && details.channel) { %> / <%= details.channel %><% } %></span>
                   </div>
                   <div class="va-title">Nomor Pembayaran</div>

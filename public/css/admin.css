@@ -428,12 +428,11 @@ textarea.fc{resize:vertical;min-height:75px}
 *{-webkit-tap-highlight-color:transparent}
 html,body{width:100%}
 
-/* Tombol aksi utama duplikat yang ditaruh di card-hd sebagai fallback mobile
-   (karena .topbar disembunyikan total di layar <=576px). Di layar >576px,
-   tombol asli di topbar sudah terlihat sehingga duplikat ini disembunyikan
-   agar tidak dobel. */
-.mobile-action-btn{display:none}
-@media(max-width:576px){ .mobile-action-btn{display:inline-flex} }
+/* Tombol aksi utama (Tambah/Generate/Export dsb) kini ditaruh di area .page/card-hd
+   sebagai SATU-SATUNYA tombol (bukan lagi duplikat topbar), sehingga tetap konsisten
+   terlihat di semua ukuran layar termasuk mobile (karena .topbar disembunyikan
+   total di layar <=576px). Class ini sekarang hanya penanda semantik, selalu tampil. */
+.mobile-action-btn{display:inline-flex}
 
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:950;backdrop-filter:blur(2px)}
 .sidebar-overlay.show{display:block}

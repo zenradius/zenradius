@@ -221,21 +221,23 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── OFFICIAL BANK LOGOS ──
-// Maps a payment channel code (e.g. BCAVA, BNIVA) to the bank logo asset path.
-// Assets are custom-made SVG monograms stored locally at public/img/banks/*.svg.
-const BANK_LOGO_MAP = {
-  BCA: '/img/banks/bca.svg',
-  BNI: '/img/banks/bni.svg',
-  BRI: '/img/banks/bri.svg',
-  MANDIRI: '/img/banks/mandiri.svg',
-  PERMATA: '/img/banks/permata.svg'
+// ── BANK ICONS (Bootstrap Icons, bukan gambar/SVG kustom) ──
+// Sebelumnya memakai file gambar (.png/.svg) yang kadang gagal dimuat (404/CORS/ORB).
+// Sekarang cukup pakai ikon Bootstrap Icons + warna khas tiap bank agar selalu tampil konsisten.
+const BANK_ICON_COLOR_MAP = {
+  BCA: '#0058A3',
+  BNI: '#F37021',
+  BRI: '#00529C',
+  MANDIRI: '#003A70',
+  PERMATA: '#00A651'
 };
 app.use((req, res, next) => {
+  // Kembalikan warna khas bank (hex) berdasarkan kode channel (mis. BCAVA, BNIVA), atau '' jika tidak dikenali.
+  // Dipakai bersama ikon Bootstrap `bi bi-bank` di semua view (dashboard, isolated, payment-instruction, dll).
   res.locals.bankLogoFor = (codeOrName) => {
     const s = String(codeOrName || '').toUpperCase();
-    for (const key of Object.keys(BANK_LOGO_MAP)) {
-      if (s.includes(key)) return BANK_LOGO_MAP[key];
+    for (const key of Object.keys(BANK_ICON_COLOR_MAP)) {
+      if (s.includes(key)) return BANK_ICON_COLOR_MAP[key];
     }
     return '';
   };

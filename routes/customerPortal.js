@@ -747,7 +747,10 @@ function buildPaymentInstructionData(result, gateway, method, amount) {
   const channel = String(data.Channel || data.channel || payload.Channel || payload.channel || payload.ipaymu_channel || '').trim();
   const paymentNo = String(data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo || payload.ipaymu_payment_no || '').trim();
   const reference = String(result?.reference || result?.order_id || data.ReferenceId || payload.ReferenceId || payload.Reference || payload.reference || '');
-  const qrImageUrl = String(result?.qr_image || data.QrImage || data.qrImage || payload.QrImage || payload.qrImage || payload.ipaymu_qr_image || '').trim();
+  const qrImageUrl = String(
+    result?.qr_image || data.QrImage || data.qrImage || payload.QrImage || payload.qrImage || payload.ipaymu_qr_image ||
+    data.qr_url || data.qrUrl || payload.qr_url || payload.qrUrl || ''
+  ).trim();
   const paymentUrl = String(result?.link || data.QrTemplate || data.qrTemplate || payload.QrTemplate || payload.qrTemplate || data.paymentUrl || data.payment_url || payload.paymentUrl || payload.payment_url || data.Url || data.url || payload.Url || payload.url || '').trim();
   const mode = qrImageUrl || /QR/i.test(via) || /QR/i.test(channel) || /QR/i.test(String(method || '')) ? 'qris' : 'va';
   const instruction = String(

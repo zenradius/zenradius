@@ -696,7 +696,7 @@
                             <% if (ch.icon_url) { %>
                               <img src="<%= ch.icon_url %>" alt="<%= name %>">
                             <% } else if (isVa && typeof bankLogoFor === 'function' && bankLogoFor(code)) { %>
-                              <img src="<%= bankLogoFor(code) %>" alt="<%= name %>" style="background:#fff;padding:2px">
+                              <i class="bi bi-bank" style="color:<%= bankLogoFor(code) %>"></i>
                             <% } else { %>
                               <i class="<%= icon %>"></i>
                             <% } %>

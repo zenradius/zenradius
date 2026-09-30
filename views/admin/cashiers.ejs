@@ -24,7 +24,6 @@
         <i class="bi bi-person-fill"></i> 
         <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
       </span>
-      <button class="btn btn-p btn-sm" onclick="openModal('addCashierModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.cashiers.add', 'Tambah Kasir') %></button>
     </div>
   </div>
 

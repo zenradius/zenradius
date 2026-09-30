@@ -32,7 +32,6 @@
         <i class="bi bi-person-fill"></i>
         <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
       </span>
-      <button class="btn btn-p btn-sm" onclick="openModal('addPkgModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.packages.add', 'Tambah Paket') %></button>
     </div>
   </div>
 
