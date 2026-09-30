@@ -57,67 +57,115 @@
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
     .cardx{background: linear-gradient(180deg, var(--admin-bg2) 0%, var(--admin-bg3) 100%);backdrop-filter: blur(12px);border: 1px solid var(--admin-border);border-radius: 16px;box-shadow: 0 16px 38px rgba(2, 10, 14, 0.32);overflow:hidden;max-width: 720px;width:100%;position: relative;}
     .cardx::before { content:""; position:absolute; inset:0 auto auto 0; width:100%; height:140%; background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%, rgba(148,163,184,0.04)); pointer-events:none; }
-    .head{background:var(--admin-bg3);padding:26px 20px;border-bottom:1px solid var(--admin-border)}
-    .body{padding:22px 20px}
-    .form-control,.form-select{
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--portal-line);
-      color: var(--portal-text);
-      border-radius: 10px;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    /* Premium Modern Header Card with Nebular Glassmorphism & Fixed Background Image support */
+    .head {
+      position: relative;
+      background: linear-gradient(135deg, rgba(16, 24, 40, 0.72) 0%, rgba(10, 15, 30, 0.88) 100%) !important;
+      padding: 34px 24px 28px !important;
+      border-bottom: 1px solid var(--admin-border) !important;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
-    .form-control::placeholder{
-      color: rgba(237, 250, 250, 0.38);
+    .head::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 15% 15%, rgba(91, 108, 255, 0.16) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.14) 0%, transparent 45%);
+      filter: blur(20px);
+      z-index: 1;
+      pointer-events: none;
     }
-    .form-control:focus,.form-select:focus{
-      background: rgba(255, 255, 255, 0.09);
-      border-color: var(--portal-primary);
-      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14);
-      color: #fff;
+    .head > * {
+      position: relative;
+      z-index: 2;
     }
-    .muted{color: var(--portal-muted)}
-    .btnx{border-radius:12px;font-weight:700;font-family: var(--font-display);transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; min-height: 46px; padding: 10px 16px; line-height: 1.2;}
-    .btnx:hover{transform: translateY(-2px); filter: brightness(1.03);}
-    .btn-primary{background:linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-strong) 52%, #2563eb 100%);border:1px solid rgba(45, 212, 191, 0.6);color:#062c2a;box-shadow:0 10px 22px rgba(45, 212, 191, 0.22);animation:softGlow 5s ease-in-out infinite}
-    .btn-primary:hover{filter:brightness(1.05)!important;color:#062c2a!important}
-    /* CTA modal pembayaran (Bayar & Batal) — diselaraskan dengan tombol .btn-p / .btn-g admin panel */
-    .c-modal-actions .btn-pay{background:var(--admin-btn-bg);color:var(--admin-btn-color);border:1px solid var(--admin-btn-border);box-shadow:var(--admin-btn-shadow);transition:filter .2s ease,transform .18s ease}
-    .c-modal-actions .btn-pay:hover{filter:brightness(1.12);transform:translateY(-1px);color:var(--admin-btn-color)}
-    .c-modal-actions .btn-cancel{background:var(--admin-btn-g-bg);color:var(--portal-text);border:1px solid var(--admin-btn-g-border);transition:background .2s ease,border-color .2s ease}
-    .c-modal-actions .btn-cancel:hover{background:rgba(190,239,255,.14);border-color:rgba(190,239,255,.34);color:#fff}
-    a{color:#a5f4ed}
-    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18)}
-    .pill-u{background: rgba(248, 81, 73, .12);color:#fca5a5;border-color: rgba(248, 81, 73, .28)}
-    .pill-p{background: rgba(63, 185, 80, .12);color:#86efac;border-color: rgba(63, 185, 80, .28)}
-
-    /* Order Status Card — modern professional redesign */
-    .order-status-card{
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--portal-line);
-      border-radius: 14px;
-      padding: 18px 16px;
+    .brand-logo {
+      height: 48px;
+      width: auto;
+      max-width: 240px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 16px;
+      filter: drop-shadow(0 4px 12px rgba(91, 108, 255, 0.25));
     }
-    .order-status-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .order-status-label{display:block;font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--portal-text)}
-    .order-status-meta{display:block;font-size:12px;color:var(--portal-muted);margin-top:2px}
-    @keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-    .spin-slow{display:inline-block;animation:spinSlow 2.2s linear infinite}
-
-    .order-steps{display:flex;align-items:center;margin:18px 0 4px}
-    .order-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;width:88px}
-    .order-step-dot{
-      width:30px;height:30px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      background: rgba(255,255,255,0.06);
-      border:1.5px solid var(--portal-line);
-      color: var(--portal-muted);
-      font-size:14px;
-      transition: all .3s ease;
+    .brand-desc {
+      font-size: 13.5px !important;
+      color: rgba(255, 255, 255, 0.75) !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.015em;
     }
-    .order-step.is-done .order-step-dot{
-      background: linear-gradient(135deg, var(--portal-primary), var(--portal-primary-strong));
-      border-color: transparent;
-      color:#062c2a;
+    .hero-steps {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 22px;
+    }
+    .hero-step {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+      font-size: 12.5px;
+      font-weight: 600;
+      line-height: 1.2;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      transition: all 0.25s ease;
+    }
+    .hero-step:hover {
+      background: rgba(91, 108, 255, 0.08);
+      border-color: rgba(91, 108, 255, 0.25);
+      transform: translateY(-1px);
+    }
+    .hero-step .hs-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #5b6cff 0%, #8b5cf6 100%);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      flex: 0 0 auto;
+      box-shadow: 0 0 10px rgba(91, 108, 255, 0.4);
+    }
+    .hero-step .hs-icon {
+      color: #38bdf8;
+      font-size: 15px;
+    }
+    .hero-step-arrow {
+      display: inline-flex;
+      align-items: center;
+      color: rgba(91, 108, 255, 0.45);
+      font-size: 15px;
+      animation: pulseArrow 2s infinite ease-in-out;
+    }
+    @keyframes pulseArrow {
+      0%, 100% { transform: translateX(0); opacity: 0.5; }
+      50% { transform: translateX(3px); opacity: 1; }
+    }
+    @media (max-width: 576px) {
+      .head { padding: 26px 16px 20px !important; }
+      .brand-logo { height: 40px; margin-bottom: 12px; }
+      .brand-desc { font-size: 12px !important; line-height: 1.6 !important; }
+      .hero-steps { gap: 8px; margin-top: 16px; }
+      .hero-step { padding: 6px 12px; font-size: 11px; gap: 6px; border-radius: 10px; }
+      .hero-step .hs-num { width: 18px; height: 18px; font-size: 9.5px; }
+      .hero-step .hs-icon { font-size: 13px; }
+      .hero-step-arrow { display: none; }
+    }
       box-shadow: 0 4px 14px rgba(45,212,191,.35);
     }
     .order-step.is-active .order-step-dot{
@@ -338,9 +386,9 @@
 <body>
   <div class="wrap">
     <div class="cardx">
-      <div class="head" style="text-align:center;padding-top:28px;padding-bottom:22px;">
-        <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="ZenRadius" style="height:42px;width:auto;max-width:220px;object-fit:contain;display:block;margin:0 auto 14px;" onerror="this.style.display='none'">
-        <p class="muted small mb-0 mx-auto" style="max-width:480px;line-height:1.7;">Dapatkan voucher internet harian dan mingguan secara instan — pilih paket, bayar, dan langsung terhubung.</p>
+      <div class="head">
+        <img class="brand-logo" src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="ZenRadius" onerror="this.style.display='none'">
+        <p class="muted small mb-0 mx-auto brand-desc" style="max-width:480px;line-height:1.7;text-align:center;">Dapatkan voucher internet harian dan mingguan secara instan — pilih paket, bayar, dan langsung terhubung.</p>
         <div class="hero-steps">
           <span class="hero-step"><span class="hs-num">1</span><i class="bi bi-ui-checks-grid hs-icon"></i> Pilih Paket</span>
           <span class="hero-step-arrow"><i class="bi bi-chevron-right"></i></span>

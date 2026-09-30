@@ -27,46 +27,61 @@
       font-family:'DM Sans',sans-serif;padding:24px;
     }
     .login-card{
-      background:var(--portal-surface, #173945);border:1px solid rgba(190,239,255,.28);border-radius:16px;
-      padding:38px 32px 28px;width:100%;max-width:420px;
-      box-shadow:0 20px 48px rgba(3,14,20,.45);
-      display:flex;flex-direction:column;align-items:center;
+      background: var(--portal-surface, rgba(255, 255, 255, 0.03));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 38px 32px 28px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 40px 120px -20px rgba(59, 130, 246, 0.15), 0 20px 60px -10px rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+    .login-card:hover {
+      background: rgba(255, 255, 255, 0.055);
+      border-color: rgba(255, 255, 255, 0.14);
     }
     .login-card form{width:100%;max-width:320px;display:flex;flex-direction:column;align-items:stretch}
-    .login-card .form-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#d9fffb!important;font-weight:700}
+    .login-card .form-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,0.64)!important;font-weight:700}
     .form-control{
-      background:rgba(255,255,255,.06);border:1px solid rgba(190,239,255,.22);color:#f0fdfa;
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:#ffffff;
       padding:12px 14px 12px 40px;border-radius:10px;font-size:14px;
+      backdrop-filter: blur(4px);
     }
-    .form-control::placeholder{color:rgba(237,250,250,.38)}
-    .form-control:focus{background:rgba(255,255,255,.09);color:#fff;border-color:rgba(45,212,191,.55);box-shadow:0 0 0 3px rgba(45,212,191,.14)}
+    .form-control::placeholder{color:rgba(255,255,255,.40)}
+    .form-control:focus{background:rgba(255,255,255,.06);color:#fff;border-color:var(--primary, #3b82f6);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
     .btn-login{
-      background:var(--btn-bg, linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%));color:#f4fffd;
-      border:1px solid rgba(126,231,219,.48);padding:10px 22px;border-radius:10px;
+      background:linear-gradient(135deg,#3b82f6 0%,#7c5cff 100%);color:#ffffff;
+      border:1px solid rgba(255,255,255,0.08);padding:10px 22px;border-radius:10px;
       width:auto;min-width:160px;max-width:220px;font-weight:800;font-size:13px;margin:10px auto 0;
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 20px rgba(10,41,50,.24);
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 30px rgba(59,130,246,0.3);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
     }
-    .btn-login:hover{background:var(--btn-bg-hover, linear-gradient(135deg,#2d7774 0%,#1d5264 52%,#205b68 100%))!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important}
-    .brand-icon{font-size:40px;color:#2dd4bf;margin-bottom:10px}
-    .login-copy{color:rgba(237,250,250,.7);font-size:12px;line-height:1.55;margin:8px auto 24px;max-width:310px}
-    .agent-footer{margin-top:22px;padding-top:14px;border-top:1px solid rgba(124,221,218,.15);color:rgba(237,250,250,.56);font-size:11px;text-align:center}
-    .back-link{margin-top:14px;font-size:12px;color:rgba(237,250,250,.62);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-    .back-link:hover{color:#7dd3fc}
+    .btn-login:hover{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)!important;border-color:rgba(255,255,255,0.18)!important;color:#fff!important;transform:translateY(-1px);box-shadow:0 12px 40px rgba(99,102,241,0.4)}
+    .brand-icon{font-size:40px;color:var(--primary, #3b82f6);margin-bottom:10px}
+    .login-copy{color:rgba(255,255,255,0.64);font-size:12px;line-height:1.55;margin:8px auto 24px;max-width:310px}
+    .agent-footer{margin-top:22px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.40);font-size:11px;text-align:center}
+    .back-link{margin-top:14px;font-size:12px;color:rgba(255,255,255,0.64);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    .back-link:hover{color:#3b82f6}
     .password-field-wrapper{position:relative}
     .password-field-wrapper .eye-toggle{
       position:absolute;right:12px;top:50%;transform:translateY(-50%);
-      background:transparent;border:none;color:rgba(190,239,255,.72);cursor:pointer;padding:0;
+      background:transparent;border:none;color:rgba(255,255,255,0.64);cursor:pointer;padding:0;
       width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:15px;
       transition:all .2s ease;border-radius:6px;z-index:10;box-shadow:none;
     }
-    .password-field-wrapper .eye-toggle:hover{color:rgba(45,212,191,.95);background:transparent;border:none;box-shadow:none}
+    .password-field-wrapper .eye-toggle:hover{color:#fff;background:transparent;border:none;box-shadow:none}
     .password-field-wrapper .eye-toggle:active{transform:translateY(-50%) scale(.96)}
     .password-field-wrapper .form-control.with-eye{padding-right:42px}
-    .btn-pwa{background:rgba(45,212,191,.08);border:1px solid rgba(126,231,219,.38);color:#d9fffb;border-radius:9px;font-size:12px;transition:all .25s}
-    .btn-pwa:hover{background:rgba(45,212,191,.16);color:#fff}
+    .btn-pwa{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,0.64);border-radius:9px;font-size:12px;transition:all .25s}
+    .btn-pwa:hover{background:rgba(255,255,255,.06);color:#fff}
     .login-links{width:100%;max-width:320px;display:flex;justify-content:space-between;gap:12px;margin-top:14px;font-size:12px}
-    .login-links a{color:#7dd3fc;font-weight:700;text-decoration:none}
-    .login-links a:hover{text-decoration:underline}
+    .login-links a{color:#3b82f6;font-weight:700;text-decoration:none;transition:color 0.2s;}
+    .login-links a:hover{color:#7c5cff;text-decoration:underline}
     .alert-success{background:rgba(74,222,128,.1);color:#86efac;border:1px solid rgba(74,222,128,.22)}
   </style>
 </head>

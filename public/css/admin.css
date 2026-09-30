@@ -485,16 +485,20 @@ html,body{width:100%}
 
 @media(max-width:576px){
   .stat-grid{grid-template-columns:1fr 1fr}
-  .topbar{padding:8px 12px;gap:8px}
-  .topbar .tb-title{flex:1;min-width:0}
-  .topbar .tb-title span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .topbar .tb-right{gap:6px}
-  .topbar .btn{padding:6px 10px;font-size:11px}
+  /* Sembunyikan topbar seluruhnya di mobile browser sehingga area kerja lebih tinggi dan bersih,
+     semua penjelajahan panel navigasi sudah didorong penuh melalui bottom nav + hamburger di bar bawah */
+  .topbar{display:none !important}
   .page{padding:10px}
   .tb-title{font-size:13px;gap:6px}
   .tb-title i{font-size:16px}
   .hb-menu{padding:4px;font-size:18px}
+  /* Sembunyikan badge role (Admin/Kasir), dropdown bahasa (ID/EN), dan tombol Logout di topbar mobile.
+     Logout tetap bisa diakses lewat menu sidebar (hamburger). */
   .adm-badge{display:none}
+  .topbar .lang-dropdown{display:none}
+  .topbar .tb-right > a.btn-g{display:none}
+  /* Sembunyikan tombol hamburger menu di topbar mobile — akses menu sudah tersedia via bottom nav */
+  .hb-menu{display:none !important}
   .filter-bar{flex-direction:column;align-items:stretch}
   .filter-bar .sinput,.filter-bar select{max-width:none !important;width:100% !important}
   .dtbl{font-size:12px}
@@ -508,8 +512,10 @@ html,body{width:100%}
 }
 
 @media(max-width:480px){
-  .topbar{flex-wrap:wrap}
-  .topbar .tb-right{width:100%;justify-content:flex-end}
+  /* Di screen ultra kecil <= 480px, cegah topbar wrapping membungkus isinya kebawah.
+     Tetapkan flex alignment horizontal di satu baris yang rapi */
+  .topbar{flex-wrap:nowrap}
+  .topbar .tb-right{width:auto;justify-content:flex-end}
   .stat-grid{grid-template-columns:1fr 1fr;gap:8px}
   .sc{padding:10px}
   .sc-val{font-size:18px}

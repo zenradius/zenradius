@@ -75,6 +75,68 @@ h1, h2, h3, h4, h5, h6,
   border-radius: 16px;
   background: var(--card-bg);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(var(--backdrop-blur, 8px));
+  -webkit-backdrop-filter: blur(var(--backdrop-blur, 8px));
+  transition: all 0.25s ease;
+}
+
+.card:hover, .glass-card:hover {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
+}
+
+/* ── Glow Effects (Termius Style) ── */
+.section {
+  position: relative;
+  isolation: isolate;
+}
+
+.section--glow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 800px;
+  height: 400px;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(76, 110, 255, 0.18), transparent);
+  filter: blur(var(--glow-blur, 60px));
+  z-index: -1;
+  pointer-events: none;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 90%;
+  z-index: -1;
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgba(76, 110, 255, 0.35) 0%, transparent 70%),
+    radial-gradient(40% 40% at 20% 30%, rgba(124, 92, 255, 0.22) 0%, transparent 70%),
+    radial-gradient(40% 40% at 80% 30%, rgba(59, 130, 246, 0.18) 0%, transparent 70%);
+  filter: blur(var(--glow-blur, 40px));
+  pointer-events: none;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 200px;
+  background: linear-gradient(to bottom, transparent, var(--body-bg-solid, var(--portal-bg)));
+  z-index: -1;
+  pointer-events: none;
 }
 
 .btn-primary {

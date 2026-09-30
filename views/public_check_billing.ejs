@@ -297,8 +297,8 @@
                       <% } %>
                       <% paymentChannels.forEach((ch, idx) => {
                         const code = String(ch.code || '').toUpperCase();
-                        // Prevent duplicate QRIS Statis card if it was already unshifted or inserted at the top
-                        if (code === 'QRIS_STATIC' && hasStaticQris && idx > 0) return;
+                        // QRIS Statis sudah dirender manual di atas — selalu skip di sini agar tidak dobel
+                        if (code === 'QRIS_STATIC' && hasStaticQris) return;
                         const isQris = code === 'QRIS' || code.includes('QRIS');
                         const isVa = code.includes('VA') || String(ch.group || '').toLowerCase().includes('virtual');
                         const name = isQris ? (code === 'QRIS_STATIC' ? 'QRIS Statis' : 'QRIS Otomatis') : (isVa ? String(ch.name || code).replace(/Virtual Account/i, 'VA') : String(ch.name || code));
