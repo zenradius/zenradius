@@ -1,6 +1,7 @@
 /** Service: Integrasi Payment Gateway (Multi-Gateway) */
 const axios = require('axios');
 const crypto = require('crypto');
+const QRCode = require('qrcode');
 const { getSettingsWithCache } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 
@@ -479,9 +480,12 @@ async function createIpaymuTransaction(invoice, customer, method = 'ipaymu', app
     const data = res.data?.Data || res.data?.data || {};
     const checkoutUrl = data.Url || data.url || null;
     const paymentCode = data.PaymentNo || data.paymentNo || data.QrString || data.qrString || null;
-    const qrImage = data.QrImage || data.qrImage || null;
+    let qrImage = data.QrImage || data.qrImage || null;
     const qrTemplate = data.QrTemplate || data.qrTemplate || null;
     const qrString = data.QrString || data.qrString || null;
+    if (!qrImage && qrString) {
+      qrImage = await QRCode.toDataURL(String(qrString), { width: 720, margin: 2, errorCorrectionLevel: 'M' });
+    }
     const hasPaymentInstruction = paymentCode || qrImage || qrTemplate || qrString;
     if (!(res.data?.Success ?? res.data?.success) || (!checkoutUrl && !hasPaymentInstruction)) {
       const message = res.data?.Message || res.data?.message || 'Gagal mendapatkan URL pembayaran dari iPaymu';

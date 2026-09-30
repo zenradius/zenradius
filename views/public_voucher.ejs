@@ -273,14 +273,15 @@
       text-align:center;
       opacity:.85;
     }
-    .pm-grid-modal{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
-    .pm-item-modal{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;background:var(--admin-bg3);border:1.5px solid var(--admin-border);cursor:pointer;transition:all .2s ease;position:relative}
-    .pm-item-modal:hover{border-color:var(--admin-primary);background:rgba(34,211,238,.08);transform:translateY(-1px)}
-    .pm-radio-modal:checked + .pm-item-modal{background:var(--admin-pdim);border-color:var(--admin-primary);box-shadow:0 4px 14px rgba(34,211,238,.18)}
-    .pm-radio-modal:checked + .pm-item-modal::after{content:'\F272';font-family:'bootstrap-icons';position:absolute;top:6px;right:6px;width:16px;height:16px;background:var(--admin-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#062c2a}
-    .pm-item-modal .pm-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto;overflow:hidden}
+    .pm-grid-modal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px}
+    .pm-item-modal{min-height:68px;display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;background:color-mix(in srgb,var(--portal-panel-strong) 90%,transparent);border:1px solid var(--portal-line);cursor:pointer;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;position:relative}
+    .pm-item-modal:hover{border-color:var(--portal-primary);background:color-mix(in srgb,var(--soft-primary) 70%,var(--portal-panel-strong))}
+    .pm-radio-modal:checked + .pm-item-modal{background:color-mix(in srgb,var(--soft-primary) 82%,var(--portal-panel-strong));border-color:var(--portal-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--portal-primary) 18%,transparent)}
+    .pm-radio-modal:checked + .pm-item-modal::after{content:'\F272';font-family:'bootstrap-icons';position:absolute;top:7px;right:7px;width:17px;height:17px;background:var(--portal-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:var(--portal-bg)}
+    .pm-item-modal .pm-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;overflow:hidden;background:var(--soft-primary)!important;border:1px solid color-mix(in srgb,var(--portal-primary) 28%,transparent);color:var(--portal-primary)!important}
     .pm-item-modal .pm-icon img{width:100%;height:100%;object-fit:contain;padding:3px;background:rgba(255,255,255,.98);border-radius:8px}
-    .pm-item-modal .pm-label{font-size:11.5px;font-weight:700;color:var(--portal-text);line-height:1.25;word-break:break-word}
+    .pm-item-modal .pm-label{font-size:12px;font-weight:700;color:var(--portal-text);line-height:1.3;word-break:break-word;padding-right:14px}
+    @media(max-width:520px){.pm-grid-modal{grid-template-columns:1fr}}
     
     .payment-methods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:12px}
     @media (max-width: 768px){.payment-methods-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}}
@@ -442,10 +443,14 @@
               <% } else { %>
                 <div class="alert alert-warning mt-3 mb-0">Link QRIS tidak tersedia.</div>
               <% } %>
-            <% } else if (String(order.status) === 'pending' && order.payment_link) { %>
-              <a class="btn btn-primary btnx mt-3 w-100" href="<%= order.payment_link %>">
-                <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
-              </a>
+            <% } else if (String(order.status) === 'pending' && (order.payment_link || order.payment_payload)) { %>
+              <% if (orderToken) { %>
+                <a class="btn btn-primary btnx mt-3 w-100" href="/customer/voucher/payment/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
+                  <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
+                </a>
+              <% } else { %>
+                <div class="alert alert-warning mt-3 mb-0">Instruksi pembayaran tidak tersedia.</div>
+              <% } %>
             <% } %>
           </div>
           <hr style="border-color: rgba(148,163,184,.18)">
@@ -582,8 +587,8 @@
                   <% if (!hasStaticQris && (!paymentChannels || paymentChannels.length === 0)) { %>
                     <input type="hidden" name="method" value="QRIS">
                     <div class="pm-item-modal" style="cursor:default;grid-column:1/-1">
-                      <div class="pm-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><i class="bi bi-qr-code-scan"></i></div>
-                      <span class="pm-label">QRIS / E-Wallet</span>
+                      <div class="pm-icon"><i class="bi bi-qr-code-scan"></i></div>
+                      <span class="pm-label">QRIS Otomatis</span>
                     </div>
                   <% } else { %>
                     <div class="pm-grid-modal">
@@ -598,41 +603,35 @@
                           style="position:absolute;opacity:0;pointer-events:none"
                         >
                         <label class="pm-item-modal" for="pm_static">
-                          <div class="pm-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><i class="bi bi-qr-code-scan"></i></div>
-                          <span class="pm-label">QRIS Instan</span>
+                          <div class="pm-icon"><i class="bi bi-qr-code-scan"></i></div>
+                          <span class="pm-label">QRIS Statis</span>
                         </label>
                       <% } %>
                       <% paymentChannels.forEach((ch, idx) => {
                         const code = String(ch.code || '').toUpperCase();
                         const name = ch.name || code;
                         const group = String(ch.group || '').toLowerCase();
+                        const isQris = code === 'QRIS' || code.includes('QRIS');
+                        const isVa = code.includes('VA') || group.includes('virtual');
+                        const displayName = isQris ? 'QRIS Otomatis' : (isVa ? String(name).replace(/Virtual Account/i, 'VA') : name);
                         let icon = 'bi-wallet2';
-                        let iconBg = 'linear-gradient(135deg,#1e293b,#334155)';
 
-                        if (code === 'QRIS' || code.includes('QRIS')) {
+                        if (isQris) {
                           icon = 'bi-qr-code-scan';
-                          iconBg = 'linear-gradient(135deg,#6366f1,#8b5cf6)';
                         } else if (code.includes('DANA')) {
                           icon = 'bi-wallet2';
-                          iconBg = 'linear-gradient(135deg,#3b82f6,#0ea5e9)';
                         } else if (code.includes('OVO')) {
                           icon = 'bi-wallet2';
-                          iconBg = 'linear-gradient(135deg,#a855f7,#6366f1)';
                         } else if (code.includes('SHOPEE')) {
                           icon = 'bi-wallet2';
-                          iconBg = 'linear-gradient(135deg,#f97316,#f43f5e)';
                         } else if (code.includes('LINKAJA')) {
                           icon = 'bi-wallet2';
-                          iconBg = 'linear-gradient(135deg,#ef4444,#f43f5e)';
                         } else if (code.includes('GOPAY')) {
                           icon = 'bi-wallet2';
-                          iconBg = 'linear-gradient(135deg,#22c55e,#10b981)';
-                        } else if (code.includes('VA') || group.includes('virtual')) {
+                        } else if (isVa) {
                           icon = 'bi-bank';
-                          iconBg = 'linear-gradient(135deg,#1e293b,#334155)';
                         } else if (code.includes('SNAP') || code.includes('XENDIT') || code.includes('DUITKU')) {
                           icon = 'bi-credit-card';
-                          iconBg = 'linear-gradient(135deg,#1e293b,#334155)';
                         }
                       %>
                         <input
@@ -645,14 +644,14 @@
                           style="position:absolute;opacity:0;pointer-events:none"
                         >
                         <label class="pm-item-modal" for="pm_<%= idx %>">
-                          <div class="pm-icon" style="background:<%= ch.icon_url ? 'transparent' : iconBg %>;<%= ch.icon_url ? '' : 'color:#fff' %>">
+                          <div class="pm-icon">
                             <% if (ch.icon_url) { %>
                               <img src="<%= ch.icon_url %>" alt="<%= name %>">
                             <% } else { %>
                               <i class="<%= icon %>"></i>
                             <% } %>
                           </div>
-                          <span class="pm-label"><%= name %></span>
+                          <span class="pm-label"><%= displayName %></span>
                         </label>
                       <% }) %>
                     </div>

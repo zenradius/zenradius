@@ -748,6 +748,23 @@
       background: transparent;
     }
 
+    .payment-modal-card{
+      background:linear-gradient(180deg,var(--portal-surface,var(--card-bg)),var(--portal-surface-raised,var(--bg3)))!important;
+      border:1px solid var(--portal-line,var(--card-border))!important;
+      border-radius:18px!important;
+      color:var(--portal-ink,var(--text-main))!important;
+      box-shadow:0 20px 56px rgba(0,0,0,.34)!important;
+    }
+    .payment-total-card{background:var(--soft-primary);border:1px solid var(--portal-line);border-radius:14px;padding:14px;text-align:center}
+    .payment-total-label{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--portal-muted);letter-spacing:.04em}
+    .payment-total-value{font-size:28px;font-weight:800;color:var(--portal-ink);margin:2px 0 0}
+    .payment-option{width:100%;min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--portal-line)!important;border-radius:12px!important;background:color-mix(in srgb,var(--portal-surface-raised,var(--card-bg)) 90%,transparent)!important;color:var(--portal-ink)!important;text-align:left;transition:border-color .18s ease,background .18s ease!important}
+    .payment-option:hover{border-color:var(--portal-primary)!important;background:color-mix(in srgb,var(--soft-primary) 72%,var(--portal-surface-raised))!important}
+    .payment-option-icon{width:40px;height:40px;border-radius:10px;background:var(--soft-primary);border:1px solid color-mix(in srgb,var(--portal-primary) 28%,transparent);display:flex;align-items:center;justify-content:center;color:var(--portal-primary);font-size:19px;flex:0 0 auto}
+    .payment-option-title{font-size:14px;font-weight:700;color:var(--portal-ink)}
+    .payment-option-copy{font-size:12px;color:var(--portal-muted)}
+    .payment-option-arrow{color:var(--portal-muted)}
+
     .accordion-item {
       border-radius: 16px !important;
       overflow: hidden !important;
@@ -1659,67 +1676,70 @@
   <!-- PAYMENT METHODS MODAL -->
   <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
+      <div class="modal-content payment-modal-card">
         <div class="modal-header border-0 pb-0" style="padding:24px 24px 10px;">
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-credit-card-2-front me-2 text-warning fs-4"></i>Pilihan Metode Pembayaran</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-4">
           <!-- AMOUNT DISPLAY CARD -->
-          <div class="text-center mb-4 p-3 rounded-4" style="background:rgba(30,41,59,0.9); border:1px solid rgba(245,158,11,0.4); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);">
-            <div class="fw-bold small mb-1" style="color:#cbd5e1; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Total Tagihan Harus Dibayar</div>
-            <h2 class="fw-extrabold text-warning mb-0" style="font-size:28px; color:#fbbf24; text-shadow:0 2px 10px rgba(245,158,11,0.3);" id="pay_amount_text">Rp 0</h2>
-            <div class="small mt-1" id="paymentSelectionInfo" style="color:#cbd5e1"></div>
+          <div class="payment-total-card mb-4">
+            <div class="payment-total-label">Total Pembayaran</div>
+            <h2 class="payment-total-value" id="pay_amount_text">Rp 0</h2>
+            <div class="small mt-1 muted" id="paymentSelectionInfo"></div>
           </div>
 
           <div class="d-grid gap-3">
             <!-- DYNAMIC CHANNELS OR DEFAULTS -->
             <% if (typeof paymentChannels !== 'undefined' && paymentChannels && paymentChannels.length > 0) { %>
               <% paymentChannels.forEach(ch => { %>
-                <button class="btn btn-outline-light p-3 text-start d-flex align-items-center justify-content-between" onclick="submitPayment('<%= ch.code %>')" style="border-radius:16px; border:1px solid rgba(99,102,241,0.35); background:rgba(30,41,59,0.75); transition:all 0.2s ease;">
+                <% const code = String(ch.code || '').toUpperCase(); const isQris = code.includes('QRIS'); const isVa = code.includes('VA') || String(ch.group || '').toLowerCase().includes('virtual'); const displayName = isQris ? 'QRIS Otomatis' : (isVa ? String(ch.name || code).replace(/Virtual Account/i, 'VA') : ch.name); %>
+                <button class="payment-option" data-payment-code="<%= code %>" data-single-only="<%= ch.singleOnly ? 'true' : 'false' %>" onclick="submitPayment('<%= code %>')">
                   <div class="d-flex align-items-center gap-3">
-                    <div style="width:44px; height:44px; border-radius:12px; background:rgba(99,102,241,0.2); display:flex; align-items:center; justify-content:center; color:#818cf8; font-size:20px; font-weight:bold;">
-                      <% if (ch.code.includes('QRIS') || ch.code.includes('SNAP') || ch.code.includes('XENDIT') || ch.code.includes('DUITKU')) { %>
-                        <i class="bi bi-qr-code-scan text-info"></i>
+                    <div class="payment-option-icon">
+                      <% if (isQris) { %>
+                        <i class="bi bi-qr-code-scan"></i>
+                      <% } else if (isVa) { %>
+                        <i class="bi bi-bank"></i>
                       <% } else { %>
-                        <i class="bi bi-bank text-success"></i>
+                        <i class="bi bi-credit-card"></i>
                       <% } %>
                     </div>
                     <div>
-                      <div class="fw-bold text-white" style="font-size:15px;"><%= ch.name %></div>
-                      <div class="small fw-semibold" style="color:#cbd5e1; font-size:12px;"><%= ch.group || 'Metode Pembayaran Online' %></div>
+                      <div class="payment-option-title"><%= displayName %></div>
+                      <div class="payment-option-copy"><%= isQris ? 'Scan melalui aplikasi pembayaran' : (isVa ? 'Transfer melalui bank pilihan' : 'Lanjutkan ke halaman gateway') %></div>
                     </div>
                   </div>
-                  <span class="badge bg-primary text-white px-2 py-1" style="font-size:11px; border-radius:6px;">PILIH <i class="bi bi-chevron-right ms-1"></i></span>
+                  <i class="bi bi-chevron-right payment-option-arrow"></i>
                 </button>
               <% }) %>
             <% } else { %>
               <!-- DEFAULT QRIS -->
-              <button class="btn btn-outline-light p-3 text-start d-flex align-items-center justify-content-between" onclick="submitPayment('qris')" style="border-radius:16px; border:1px solid rgba(99,102,241,0.4); background:linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(30,41,59,0.8) 100%);">
+              <button class="payment-option" onclick="submitPayment('QRIS')">
                 <div class="d-flex align-items-center gap-3">
-                  <div style="width:46px; height:46px; border-radius:12px; background:var(--soft-primary); border:1px solid var(--accent-primary-strong); display:flex; align-items:center; justify-content:center; color:#38bdf8; font-size:22px;">
+                  <div class="payment-option-icon">
                     <i class="bi bi-qr-code-scan"></i>
                   </div>
                   <div>
-                    <div class="fw-bold text-white" style="font-size:15px;">QRIS Instant (Semua E-Wallet)</div>
-                    <div class="small fw-semibold" style="color:#cbd5e1; font-size:12px;">DANA, GoPay, OVO, ShopeePay, Mobile Banking</div>
+                    <div class="payment-option-title">QRIS Otomatis</div>
+                    <div class="payment-option-copy">Scan melalui aplikasi pembayaran</div>
                   </div>
                 </div>
-                <i class="bi bi-chevron-right text-info fs-5"></i>
+                <i class="bi bi-chevron-right payment-option-arrow"></i>
               </button>
 
               <!-- DEFAULT BANK TRANSFER -->
-              <button class="btn btn-outline-light p-3 text-start d-flex align-items-center justify-content-between" onclick="submitPayment('bank_transfer')" style="border-radius:16px; border:1px solid rgba(16,185,129,0.4); background:linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(30,41,59,0.8) 100%);">
+              <button class="payment-option" onclick="submitPayment('BCAVA')">
                 <div class="d-flex align-items-center gap-3">
-                  <div style="width:46px; height:46px; border-radius:12px; background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.4); display:flex; align-items:center; justify-content:center; color:#34d399; font-size:22px;">
+                  <div class="payment-option-icon">
                     <i class="bi bi-bank"></i>
                   </div>
                   <div>
-                    <div class="fw-bold text-white" style="font-size:15px;">Virtual Account / Transfer Bank</div>
-                    <div class="small fw-semibold" style="color:#cbd5e1; font-size:12px;">BCA, BRI, BNI, Mandiri, Permata</div>
+                    <div class="payment-option-title">Virtual Account</div>
+                    <div class="payment-option-copy">Transfer melalui bank pilihan</div>
                   </div>
                 </div>
-                <i class="bi bi-chevron-right text-success fs-5"></i>
+                <i class="bi bi-chevron-right payment-option-arrow"></i>
               </button>
             <% } %>
           </div>
@@ -1937,6 +1957,7 @@
       document.getElementById('pay_amount_text').innerText = 'Rp ' + Math.round(num).toLocaleString('id-ID');
       const selectionInfo = document.getElementById('paymentSelectionInfo');
       if (selectionInfo) selectionInfo.textContent = 'Pembayaran untuk satu tagihan.';
+      document.querySelectorAll('#paymentModal .payment-option[data-single-only="true"]').forEach(el => { el.hidden = false; });
       if (!pModal) pModal = new bootstrap.Modal(document.getElementById('paymentModal'));
       pModal.show();
     }
@@ -1972,6 +1993,7 @@
       if (amountText) amountText.innerText = 'Rp ' + Math.round(total).toLocaleString('id-ID');
       const selectionInfo = document.getElementById('paymentSelectionInfo');
       if (selectionInfo) selectionInfo.textContent = `Pembayaran gabungan ${selectedBatchInvoiceIds.length} tagihan.`;
+      document.querySelectorAll('#paymentModal .payment-option[data-single-only="true"]').forEach(el => { el.hidden = true; });
       if (!pModal) pModal = new bootstrap.Modal(document.getElementById('paymentModal'));
       pModal.show();
     }

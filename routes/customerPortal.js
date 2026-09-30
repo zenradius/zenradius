@@ -739,11 +739,11 @@ function extractIpaymuQrData(result) {
 function buildPaymentInstructionData(result, gateway, method, amount) {
   const payload = result?.payload || {};
   const data = payload.Data || payload.data || {};
-  const via = String(data.Via || data.via || payload.Via || payload.via || '').trim();
-  const channel = String(data.Channel || data.channel || payload.Channel || payload.channel || '').trim();
-  const paymentNo = String(data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo || '').trim();
+  const via = String(data.Via || data.via || payload.Via || payload.via || payload.ipaymu_via || '').trim();
+  const channel = String(data.Channel || data.channel || payload.Channel || payload.channel || payload.ipaymu_channel || '').trim();
+  const paymentNo = String(data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo || payload.ipaymu_payment_no || '').trim();
   const reference = String(result?.reference || result?.order_id || data.ReferenceId || payload.ReferenceId || payload.Reference || payload.reference || '');
-  const qrImageUrl = String(result?.qr_image || data.QrImage || data.qrImage || payload.QrImage || payload.qrImage || '').trim();
+  const qrImageUrl = String(result?.qr_image || data.QrImage || data.qrImage || payload.QrImage || payload.qrImage || payload.ipaymu_qr_image || '').trim();
   const paymentUrl = String(result?.link || data.QrTemplate || data.qrTemplate || payload.QrTemplate || payload.qrTemplate || data.paymentUrl || data.payment_url || payload.paymentUrl || payload.payment_url || data.Url || data.url || payload.Url || payload.url || '').trim();
   const mode = qrImageUrl || /QR/i.test(via) || /QR/i.test(channel) || /QR/i.test(String(method || '')) ? 'qris' : 'va';
   const instruction = String(
@@ -771,16 +771,34 @@ function buildPaymentInstructionData(result, gateway, method, amount) {
       sessionId: String(data.SessionId || data.sessionId || payload.SessionId || payload.sessionId || '').trim(),
       transactionId: String(data.TransactionId || data.transactionId || payload.TransactionId || payload.transactionId || '').trim(),
       referenceId: String(data.ReferenceId || data.referenceId || payload.ReferenceId || payload.referenceId || '').trim(),
-      paymentName: String(data.PaymentName || data.paymentName || payload.PaymentName || payload.paymentName || '').trim(),
+      paymentName: String(data.PaymentName || data.paymentName || payload.PaymentName || payload.paymentName || payload.ipaymu_payment_name || '').trim(),
       via,
       channel,
       paymentNo,
-      expired: String(data.Expired || data.expired || payload.Expired || payload.expired || '').trim(),
+      expired: String(data.Expired || data.expired || payload.Expired || payload.expired || payload.ipaymu_expired || '').trim(),
       subtotal: String(data.SubTotal ?? data.subTotal ?? payload.SubTotal ?? payload.subTotal ?? '').trim(),
-      fee: String(data.Fee ?? data.fee ?? payload.Fee ?? payload.fee ?? '').trim(),
-      total: String(data.Total ?? data.total ?? payload.Total ?? payload.total ?? '').trim()
+      fee: String(data.Fee ?? data.fee ?? payload.Fee ?? payload.fee ?? payload.ipaymu_fee ?? '').trim(),
+      total: String(data.Total ?? data.total ?? payload.Total ?? payload.total ?? payload.ipaymu_total ?? '').trim()
     }
   };
+}
+
+function buildStoredPaymentInstructionData(invoice, method = '') {
+  if (!invoice?.payment_payload) return null;
+  try {
+    const payload = typeof invoice.payment_payload === 'string'
+      ? JSON.parse(invoice.payment_payload)
+      : invoice.payment_payload;
+    return buildPaymentInstructionData({
+      payload,
+      reference: invoice.payment_reference,
+      order_id: invoice.payment_order_id,
+      qr_image: payload?.ipaymu_qr_image || payload?.QrImage || payload?.qrImage || '',
+      payment_code: payload?.ipaymu_payment_no || payload?.PaymentNo || payload?.paymentNo || ''
+    }, invoice.payment_gateway, method, invoice.amount ?? invoice.price);
+  } catch {
+    return null;
+  }
 }
 
 function renderPaymentInstructionPage(res, settings, options = {}) {
@@ -1037,7 +1055,10 @@ router.get('/check-billing', async (req, res) => {
     if (gateway === 'midtrans') paymentChannels = [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'xendit') paymentChannels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'duitku') paymentChannels = base;
-    else if (gateway === 'ipaymu') paymentChannels = [{ code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true }, ...base, { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true }, { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }];
+    else if (gateway === 'ipaymu') paymentChannels = getStandardPaymentChannels('ipaymu');
+  }
+  if (hasStaticQrisConfig(settings) && !paymentChannels.some(channel => String(channel?.code || '').toUpperCase() === 'QRIS_STATIC')) {
+    paymentChannels.unshift({ code: 'QRIS_STATIC', name: 'QRIS Statis', group: 'QRIS', active: true, singleOnly: true });
   }
 
   if (query) {
@@ -1296,7 +1317,7 @@ router.get('/voucher', async (req, res) => {
       if (gateway === 'midtrans') channels = [{ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', active: true }, ...base];
       else if (gateway === 'xendit') channels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
       else if (gateway === 'duitku') channels = base;
-      else if (gateway === 'ipaymu') channels = [{ code: 'QRIS', name: 'QRIS', group: 'QRIS', active: true }, ...base, { code: 'DANA', name: 'DANA', group: 'E-Wallet', active: true }, { code: 'SHOPEEPAY', name: 'ShopeePay', group: 'E-Wallet', active: true }];
+      else if (gateway === 'ipaymu') channels = getStandardPaymentChannels('ipaymu');
       else channels = base;
     }
     
@@ -1396,6 +1417,35 @@ router.get('/voucher/qris/:orderId', async (req, res) => {
   } catch (e) {
     return res.redirect('/customer/voucher?order=' + encodeURIComponent(String(orderId)) + '&t=' + encodeURIComponent(String(req.query.t || '')) + '&err=' + encodeURIComponent(String(e?.message || e || 'Gagal')));
   }
+});
+
+router.get('/voucher/payment/:orderId', (req, res) => {
+  const settings = getSettingsWithCache();
+  const orderId = Number(req.params.orderId || 0);
+  const secret = settings.session_secret;
+  if (!secret) throw new Error('Session secret not configured for customer portal token generation');
+  const payload = verifyPublicToken(req.query.t, secret);
+  const backUrl = '/customer/voucher?order=' + encodeURIComponent(String(orderId)) + '&t=' + encodeURIComponent(String(req.query.t || ''));
+  if (!payload || Number(payload.voucherOrderId) !== orderId) {
+    return res.redirect('/customer/voucher?err=' + encodeURIComponent('Link pembayaran voucher tidak valid atau sudah kadaluarsa'));
+  }
+
+  const order = db.prepare('SELECT * FROM public_voucher_orders WHERE id = ?').get(orderId);
+  if (!order || String(order.status) !== 'pending') return res.redirect(backUrl);
+  const instructionData = buildStoredPaymentInstructionData(order);
+  if (!instructionData || (!instructionData.qrImageUrl && !instructionData.details.paymentNo)) {
+    if (order.payment_link) return res.redirect(order.payment_link);
+    return res.redirect(backUrl + '&err=' + encodeURIComponent('Instruksi pembayaran belum tersedia'));
+  }
+
+  return renderPaymentInstructionPage(res, settings, {
+    backUrl,
+    info: null,
+    helpText: instructionData.mode === 'qris'
+      ? 'Scan QR untuk menyelesaikan pembelian voucher. Pesanan diproses otomatis setelah pembayaran terverifikasi.'
+      : 'Transfer sesuai nominal ke virtual account. Pesanan diproses otomatis setelah pembayaran terverifikasi.',
+    ...instructionData
+  });
 });
 
 router.get('/voucher/status/:orderId', async (req, res) => {
@@ -2876,7 +2926,7 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
     }
 
     const force = String(req.query.force || '').toLowerCase() === '1' || String(req.query.force || '').toLowerCase() === 'true';
-    if (!force && inv.payment_link) {
+    if (!force && (inv.payment_link || inv.payment_payload)) {
       let expiresAtMs = inv.payment_expires_at ? new Date(inv.payment_expires_at).getTime() : 0;
       let payloadExpiresAt = null;
       if (inv.payment_payload) {
@@ -2903,7 +2953,18 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
 
       if (Number.isFinite(expiresAtMs) && expiresAtMs > Date.now()) {
         logger.info(`[Payment] Reusing existing link for INV-${inv.id} (public)`);
-        return res.redirect(inv.payment_link);
+        const storedInstruction = buildStoredPaymentInstructionData(inv, selectedMethod);
+        if (storedInstruction && (storedInstruction.qrImageUrl || storedInstruction.details.paymentNo)) {
+          return renderPaymentInstructionPage(res, settings, {
+            backUrl: `/customer/check-billing?q=${encodeURIComponent(String(payload.lookup || ''))}`,
+            info: null,
+            helpText: storedInstruction.mode === 'qris'
+              ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
+              : 'Transfer sesuai nominal ke nomor virtual account. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.',
+            ...storedInstruction
+          });
+        }
+        if (inv.payment_link) return res.redirect(inv.payment_link);
       }
     }
 
@@ -3237,8 +3298,32 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
 
     const methodRaw = String(req.query.method || 'QRIS').toUpperCase();
 
+    if (methodRaw === 'QRIS_STATIC') {
+      const { uniqueCode, amountUnique } = ensureInvoiceQrisUnique(inv, false);
+      const qrisQrUrl = await getStaticQrisQrUrlForAmount(settings, amountUnique);
+      if (!qrisQrUrl) throw new Error('QRIS statis belum diatur oleh admin');
+      return res.render('qris_static', {
+        settings,
+        backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
+        error: null,
+        info: null,
+        kind: 'invoice',
+        invoiceId: Number(inv.id),
+        periodText: `${inv.period_month}/${inv.period_year}`,
+        customerName: profile?.name || inv.customer_name || '',
+        amountUnique,
+        uniqueCode,
+        qrisQrUrl,
+        helpText: 'Bayar sesuai nominal yang ditampilkan agar transaksi dapat diverifikasi otomatis.',
+        adminWaDigits: getFirstAdminWaDigits(settings),
+        publicToken: publicToken || '',
+        proofUrl: '',
+        proofActionUrl: '/customer/payment/proof/' + encodeURIComponent(String(inv.id))
+      });
+    }
+
     const force = String(req.query.force || '').toLowerCase() === '1' || String(req.query.force || '').toLowerCase() === 'true';
-    if (!force && inv.payment_link) {
+    if (!force && (inv.payment_link || inv.payment_payload)) {
       let expiresAtMs = inv.payment_expires_at ? new Date(inv.payment_expires_at).getTime() : 0;
       let payloadExpiresAt = null;
       if (inv.payment_payload) {
@@ -3265,7 +3350,18 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
 
       if (Number.isFinite(expiresAtMs) && expiresAtMs > Date.now()) {
         logger.info(`[Payment] Reusing existing link for INV-${inv.id}`);
-        return res.redirect(inv.payment_link);
+        const storedInstruction = buildStoredPaymentInstructionData(inv, methodRaw);
+        if (storedInstruction && (storedInstruction.qrImageUrl || storedInstruction.details.paymentNo)) {
+          return renderPaymentInstructionPage(res, settings, {
+            backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
+            info: null,
+            helpText: storedInstruction.mode === 'qris'
+              ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
+              : 'Transfer sesuai nominal ke nomor virtual account. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.',
+            ...storedInstruction
+          });
+        }
+        if (inv.payment_link) return res.redirect(inv.payment_link);
       }
     }
 
