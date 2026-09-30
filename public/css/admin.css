@@ -70,6 +70,7 @@ body{font-family:'Inter',sans-serif;
 
 /* ── SIDEBAR ── */
 .sidebar{width:var(--sw);height:100vh;height:100dvh;background:var(--bg2);border-right:1px solid var(--border);position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:100;overflow-y:auto;scrollbar-width:thin;box-shadow:0 14px 28px rgba(3,14,20,.34)}
+.sb-nav{padding-bottom:24px}
 .sb-brand{padding:18px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
 .sb-brand img{max-width:min(180px,80%);max-height:54px;height:auto;width:auto;object-fit:contain;display:block;margin:0 auto}
 .sb-icon{width:38px;height:38px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
@@ -427,12 +428,19 @@ textarea.fc{resize:vertical;min-height:75px}
 *{-webkit-tap-highlight-color:transparent}
 html,body{width:100%}
 
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:90;backdrop-filter:blur(2px)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:950;backdrop-filter:blur(2px)}
 .sidebar-overlay.show{display:block}
 .sb-close{display:none !important}
 .hb-menu{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:5px;line-height:1}
 .sb-brand{position:relative}
 @media(max-width:992px){ .sb-close{display:flex !important} }
+@media(max-width:992px){
+  /* Sidebar mobile harus tampil di atas bottom-nav (z-index:300) agar seluruh menu
+     (termasuk item terakhir & Logout) tidak tertutup saat sidebar dibuka via hamburger. */
+  .sidebar{z-index:1000}
+  .sb-nav{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  body.sidebar-open .bottom-nav{display:none !important}
+}
 
 /* ── BOTTOM NAV ── */
 .bottom-nav{

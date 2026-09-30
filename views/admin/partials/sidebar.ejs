@@ -201,6 +201,7 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
     const ov = document.getElementById('sidebarOverlay');
     sb.classList.toggle('open');
     ov.classList.toggle('show');
+    document.body.classList.toggle('sidebar-open', sb.classList.contains('open'));
   }
 
   // Akordeon collapse/expand menu section
