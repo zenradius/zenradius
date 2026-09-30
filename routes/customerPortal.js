@@ -716,36 +716,65 @@ function extractIpaymuPaymentLink(result) {
 
 function extractIpaymuQrData(result) {
   const payload = result?.payload || {};
+  const data = payload.Data || payload.data || {};
   return {
-    ipaymu_qr_image: result?.qr_image || payload.QrImage || payload.qrImage || '',
-    ipaymu_qr_template: result?.qr_template || payload.QrTemplate || payload.qrTemplate || '',
-    ipaymu_qr_string: result?.qr_string || payload.QrString || payload.qrString || '',
-    ipaymu_payment_no: result?.payment_code || payload.PaymentNo || payload.paymentNo || '',
-    ipaymu_via: payload.Via || payload.via || '',
-    ipaymu_channel: payload.Channel || payload.channel || ''
+    ipaymu_qr_image: result?.qr_image || data.QrImage || data.qrImage || payload.QrImage || payload.qrImage || '',
+    ipaymu_qr_template: result?.qr_template || data.QrTemplate || data.qrTemplate || payload.QrTemplate || payload.qrTemplate || '',
+    ipaymu_qr_string: result?.qr_string || data.QrString || data.qrString || payload.QrString || payload.qrString || '',
+    ipaymu_payment_no: result?.payment_code || data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo || '',
+    ipaymu_via: data.Via || data.via || payload.Via || payload.via || '',
+    ipaymu_channel: data.Channel || data.channel || payload.Channel || payload.channel || '',
+    ipaymu_expired: data.Expired || data.expired || payload.Expired || payload.expired || '',
+    ipaymu_total: data.Total ?? data.total ?? payload.Total ?? payload.total ?? '',
+    ipaymu_fee: data.Fee ?? data.fee ?? payload.Fee ?? payload.fee ?? '',
+    ipaymu_payment_name: data.PaymentName || data.paymentName || payload.PaymentName || payload.paymentName || '',
+    ipaymu_reference_id: data.ReferenceId || data.referenceId || payload.ReferenceId || payload.referenceId || '',
+    ipaymu_transaction_id: data.TransactionId || data.transactionId || payload.TransactionId || payload.transactionId || '',
+    ipaymu_session_id: data.SessionId || data.sessionId || payload.SessionId || payload.sessionId || ''
   };
 }
 
 function buildPaymentInstructionData(result, gateway, method, amount) {
   const payload = result?.payload || {};
-  const payloadText = JSON.stringify(payload, null, 2);
-  const reference = String(result?.reference || result?.order_id || payload.Reference || payload.reference || '');
+  const data = payload.Data || payload.data || {};
+  const reference = String(result?.reference || result?.order_id || data.ReferenceId || payload.ReferenceId || payload.Reference || payload.reference || '');
+  const qrImageUrl = String(result?.qr_image || data.QrImage || data.qrImage || payload.QrImage || payload.qrImage || '').trim();
+  const paymentUrl = String(result?.link || data.QrTemplate || data.qrTemplate || payload.QrTemplate || payload.qrTemplate || data.paymentUrl || data.payment_url || payload.paymentUrl || payload.payment_url || data.Url || data.url || payload.Url || payload.url || '').trim();
   const instruction = String(
-    payload.vaNumber || payload.va_number || payload.PaymentNo || payload.paymentNo ||
-    payload.qrString || payload.QrString || payload.qr_string ||
-    payload.qrImage || payload.QrImage || payload.qr_image ||
-    payload.paymentUrl || payload.payment_url || payload.Url || payload.url || payload.AppUrl || payload.appUrl ||
-    result?.link || ''
+    data.Via || data.via || payload.Via || payload.via ||
+    data.Channel || data.channel || payload.Channel || payload.channel ||
+    data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo ||
+    data.QrString || data.qrString || payload.QrString || payload.qrString ||
+    data.QrTemplate || data.qrTemplate || payload.QrTemplate || payload.qrTemplate ||
+    data.QrImage || data.qrImage || payload.QrImage || payload.qrImage ||
+    paymentUrl ||
+    ''
   ).trim();
+
+  const payloadText = JSON.stringify(payload, null, 2);
 
   return {
     gateway: String(gateway || '').toUpperCase(),
     method: String(method || '').toUpperCase(),
     amount: Number(amount || result?.amount || payload.Amount || payload.amount || 0) || 0,
     reference,
-    paymentUrl: String(result?.link || payload.paymentUrl || payload.payment_url || payload.Url || payload.url || payload.AppUrl || payload.appUrl || '').trim(),
+    qrImageUrl,
+    paymentUrl,
     instruction,
-    payloadText
+    payloadText,
+    details: {
+      sessionId: String(data.SessionId || data.sessionId || payload.SessionId || payload.sessionId || '').trim(),
+      transactionId: String(data.TransactionId || data.transactionId || payload.TransactionId || payload.transactionId || '').trim(),
+      referenceId: String(data.ReferenceId || data.referenceId || payload.ReferenceId || payload.referenceId || '').trim(),
+      paymentName: String(data.PaymentName || data.paymentName || payload.PaymentName || payload.paymentName || '').trim(),
+      via: String(data.Via || data.via || payload.Via || payload.via || '').trim(),
+      channel: String(data.Channel || data.channel || payload.Channel || payload.channel || '').trim(),
+      paymentNo: String(data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo || '').trim(),
+      expired: String(data.Expired || data.expired || payload.Expired || payload.expired || '').trim(),
+      subtotal: String(data.SubTotal ?? data.subTotal ?? payload.SubTotal ?? payload.subTotal ?? '').trim(),
+      fee: String(data.Fee ?? data.fee ?? payload.Fee ?? payload.fee ?? '').trim(),
+      total: String(data.Total ?? data.total ?? payload.Total ?? payload.total ?? '').trim()
+    }
   };
 }
 
@@ -758,9 +787,10 @@ function renderPaymentInstructionPage(res, settings, options = {}) {
     method: options.method || '',
     amount: options.amount || 0,
     reference: options.reference || '',
+    qrImageUrl: options.qrImageUrl || '',
     paymentUrl: options.paymentUrl || '',
     instruction: options.instruction || '',
-    payloadText: options.payloadText || '{}',
+    details: options.details || {},
     helpText: options.helpText || '',
     error: options.error || null
   });
@@ -4091,6 +4121,8 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
       backUrl: '/customer/topup',
       info: 'Pembayaran berhasil dibuat. Ikuti instruksi di bawah.',
       helpText: 'Simpan referensi pembayaran ini sampai status top-up berubah menjadi lunas.',
+      qrImageUrl: instructionData.qrImageUrl,
+      details: instructionData.details,
       ...instructionData
     });
   } catch(e) {
@@ -4181,6 +4213,8 @@ router.post('/agent-topup/create', express.urlencoded({ extended: true }), async
       backUrl: '/agent',
       info: 'Pembayaran berhasil dibuat. Ikuti instruksi di bawah.',
       helpText: 'Gunakan detail pembayaran yang ditampilkan di halaman ini untuk menyelesaikan top-up agent.',
+      qrImageUrl: instructionData.qrImageUrl,
+      details: instructionData.details,
       ...instructionData
     });
   } catch(e) {
