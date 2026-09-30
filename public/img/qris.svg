@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 32" width="96" height="32" role="img" aria-label="QRIS">
+  <rect x="0" y="0" width="96" height="32" rx="6" fill="#EE1C25"/>
+  <!-- mini QR corner glyphs -->
+  <rect x="6" y="6" width="7" height="7" fill="#FFFFFF"/>
+  <rect x="8" y="8" width="3" height="3" fill="#EE1C25"/>
+  <rect x="6" y="19" width="7" height="7" fill="#FFFFFF"/>
+  <rect x="8" y="21" width="3" height="3" fill="#EE1C25"/>
+  <text x="55" y="21" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">QRIS</text>
+</svg>

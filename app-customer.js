@@ -222,14 +222,14 @@ app.use((req, res, next) => {
 });
 
 // ── OFFICIAL BANK LOGOS ──
-// Maps a payment channel code (e.g. BCAVA, BNIVA) to the official bank logo asset path.
-// Assets stored locally at public/img/banks/*.png (downloaded from official public-domain sources).
+// Maps a payment channel code (e.g. BCAVA, BNIVA) to the bank logo asset path.
+// Assets are custom-made SVG monograms stored locally at public/img/banks/*.svg.
 const BANK_LOGO_MAP = {
-  BCA: '/img/banks/bca.png',
-  BNI: '/img/banks/bni.png',
-  BRI: '/img/banks/bri.png',
-  MANDIRI: '/img/banks/mandiri.png',
-  PERMATA: '/img/banks/permata.png'
+  BCA: '/img/banks/bca.svg',
+  BNI: '/img/banks/bni.svg',
+  BRI: '/img/banks/bri.svg',
+  MANDIRI: '/img/banks/mandiri.svg',
+  PERMATA: '/img/banks/permata.svg'
 };
 app.use((req, res, next) => {
   res.locals.bankLogoFor = (codeOrName) => {
