@@ -152,6 +152,10 @@
       <div class="alert alert-<%= msg.type==='error'?'d':'s' %>"><%= msg.text %></div>
     <% } %>
 
+    <div class="mb-3 text-end">
+      <button class="btn btn-p btn-sm mobile-action-btn" onclick="openModal('addOdpModal')"><i class="bi bi-plus-circle"></i> <%= t('admin.map.add_odp', 'Tambah ODP') %></button>
+    </div>
+
     <div class="map-stats">
         <div class="msc">
             <div class="msc-icon msc-w"><i class="bi bi-box-seam-fill"></i></div>

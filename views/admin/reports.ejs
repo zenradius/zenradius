@@ -39,6 +39,11 @@
   </div>
   <div class="page">
 
+    <div class="mb-3 d-flex gap-2 justify-content-end">
+      <a href="/admin/reports/export-csv?year=<%= filterYear %>" class="btn btn-g btn-sm mobile-action-btn" title="Export Excel (CSV)"><i class="bi bi-file-earmark-excel" style="color:#10b981"></i> Excel</a>
+      <a href="/admin/reports/print?year=<%= filterYear %>" target="_blank" class="btn btn-g btn-sm mobile-action-btn" title="Print PDF"><i class="bi bi-printer" style="color:#3b82f6"></i> Print</a>
+    </div>
+
     <!-- Big Stats -->
     <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="sc s"><i class="bi bi-cash-stack sc-icon"></i>

@@ -218,6 +218,11 @@
       <div class="alert alert-<%= msg.type==='error'?'d':'s' %>"><%= msg.text %></div>
     <% } %>
 
+    <div class="mb-3 text-end d-flex gap-2 justify-content-end">
+      <button class="btn btn-g btn-sm mobile-action-btn" onclick="openModal('manageOltsModal')"><i class="bi bi-gear"></i> <%= t('admin.olts.manage', 'Kelola OLT') %></button>
+      <button class="btn btn-p btn-sm mobile-action-btn" onclick="openModal('addOltModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.olts.add', 'Tambah OLT') %></button>
+    </div>
+
     <div class="olt-dashboard">
       <!-- OLT Selector & Global Actions -->
       <div class="olt-selector-container">
