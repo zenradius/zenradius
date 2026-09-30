@@ -2951,10 +2951,12 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
         } catch {}
       }
 
+      const requestedModeIsQris = /QR/i.test(selectedMethod);
       if (Number.isFinite(expiresAtMs) && expiresAtMs > Date.now()) {
-        logger.info(`[Payment] Reusing existing link for INV-${inv.id} (public)`);
         const storedInstruction = buildStoredPaymentInstructionData(inv, selectedMethod);
-        if (storedInstruction && (storedInstruction.qrImageUrl || storedInstruction.details.paymentNo)) {
+        const storedModeMatches = storedInstruction && (storedInstruction.mode === 'qris') === requestedModeIsQris;
+        if (storedInstruction && storedModeMatches && (storedInstruction.qrImageUrl || storedInstruction.details.paymentNo)) {
+          logger.info(`[Payment] Reusing existing link for INV-${inv.id} (public)`);
           return renderPaymentInstructionPage(res, settings, {
             backUrl: `/customer/check-billing?q=${encodeURIComponent(String(payload.lookup || ''))}`,
             info: null,
@@ -2964,7 +2966,7 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
             ...storedInstruction
           });
         }
-        if (inv.payment_link) return res.redirect(inv.payment_link);
+        if (storedModeMatches && inv.payment_link) return res.redirect(inv.payment_link);
       }
     }
 
@@ -3348,10 +3350,12 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
         } catch {}
       }
 
+      const requestedModeIsQris = /QR/i.test(methodRaw);
       if (Number.isFinite(expiresAtMs) && expiresAtMs > Date.now()) {
-        logger.info(`[Payment] Reusing existing link for INV-${inv.id}`);
         const storedInstruction = buildStoredPaymentInstructionData(inv, methodRaw);
-        if (storedInstruction && (storedInstruction.qrImageUrl || storedInstruction.details.paymentNo)) {
+        const storedModeMatches = storedInstruction && (storedInstruction.mode === 'qris') === requestedModeIsQris;
+        if (storedInstruction && storedModeMatches && (storedInstruction.qrImageUrl || storedInstruction.details.paymentNo)) {
+          logger.info(`[Payment] Reusing existing link for INV-${inv.id}`);
           return renderPaymentInstructionPage(res, settings, {
             backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
             info: null,
@@ -3361,7 +3365,7 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
             ...storedInstruction
           });
         }
-        if (inv.payment_link) return res.redirect(inv.payment_link);
+        if (storedModeMatches && inv.payment_link) return res.redirect(inv.payment_link);
       }
     }
 

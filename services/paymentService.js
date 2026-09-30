@@ -480,9 +480,14 @@ async function createIpaymuTransaction(invoice, customer, method = 'ipaymu', app
     const data = res.data?.Data || res.data?.data || {};
     const checkoutUrl = data.Url || data.url || null;
     const paymentCode = data.PaymentNo || data.paymentNo || data.QrString || data.qrString || null;
-    let qrImage = data.QrImage || data.qrImage || null;
     const qrTemplate = data.QrTemplate || data.qrTemplate || null;
     const qrString = data.QrString || data.qrString || null;
+    const rawQrImage = String(data.QrImage || data.qrImage || '').trim();
+    // iPaymu's QrImage field is often a link to an HTML page (e.g. my.ipaymu.com/qris-basic/...),
+    // not a raw image file — using it directly as <img src> gets blocked by browsers (ORB/503).
+    // Only trust it if it's a data URI or a URL that actually points to an image file.
+    const isUsableImageUrl = /^data:image\//i.test(rawQrImage) || /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(rawQrImage);
+    let qrImage = isUsableImageUrl ? rawQrImage : '';
     if (!qrImage && qrString) {
       qrImage = await QRCode.toDataURL(String(qrString), { width: 720, margin: 2, errorCorrectionLevel: 'M' });
     }
