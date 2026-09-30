@@ -1791,7 +1791,7 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
       orderId
     );
 
-    if (paymentLink) return res.redirect(paymentLink);
+    if (paymentLink && instructionData.mode !== 'qris') return res.redirect(paymentLink);
     return renderPaymentInstructionPage(res, settings, {
       backUrl: `/customer/voucher?order=${encodeURIComponent(String(orderId))}&t=${encodeURIComponent(token)}`,
       changeMethodUrl: `/customer/voucher?order=${encodeURIComponent(String(orderId))}&t=${encodeURIComponent(token)}`,
@@ -3269,9 +3269,11 @@ router.post('/payment/batch/create', express.urlencoded({ extended: true }), asy
     }
     db.prepare(`UPDATE payment_batches SET payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, payment_expires_at=? WHERE id=?`)
       .run(result.order_id || '', batchRedirectLink, result.reference || '', result.payload ? JSON.stringify({ ...result.payload, ...(gateway === 'ipaymu' ? extractIpaymuQrData(result) : {}) }) : null, resolvePaymentExpiresAt(gateway, result) || gatewayDefaultExpiresAtIso(gateway), batchId);
-    if (batchRedirectLink) return res.redirect(batchRedirectLink);
+    if (batchRedirectLink && instructionData.mode !== 'qris') return res.redirect(batchRedirectLink);
     return renderPaymentInstructionPage(res, settings, {
       backUrl: '/customer/dashboard#billing-section',
+      changeMethodUrl: '/customer/dashboard#billing-section',
+      cancelUrl: `/customer/payment/batch/cancel/${encodeURIComponent(String(batchId))}`,
       info: null,
       helpText: instructionData.mode === 'qris'
         ? 'Scan QR untuk menyelesaikan pembayaran seluruh tagihan yang dipilih.'
@@ -3491,7 +3493,7 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
       });
 
       logger.info(`[Payment] New link created for INV-${inv.id} via ${gateway}`);
-      if (paymentLink) return res.redirect(paymentLink);
+      if (paymentLink && instructionData.mode !== 'qris') return res.redirect(paymentLink);
       return renderPaymentInstructionPage(res, settings, {
         backUrl: '/customer/dashboard#billing-section',
         changeMethodUrl: '/customer/dashboard#billing-section',
@@ -3527,6 +3529,33 @@ router.post('/payment/cancel/:invoiceId', (req, res) => {
       billingSvc.updatePaymentInfo(inv.id, {
         gateway: '', order_id: '', link: '', reference: '', payload: null, expires_at: null
       });
+    }
+    req.session._msg = { type: 'success', text: 'Transaksi pembayaran dibatalkan. Silakan pilih metode pembayaran lain.' };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal membatalkan transaksi: ' + (e?.message || e) };
+  }
+  return res.redirect(backUrl);
+});
+
+router.post('/payment/batch/cancel/:batchId', (req, res) => {
+  const loginId = req.session && req.session.phone;
+  if (!loginId) return res.redirect('/customer/login');
+  const batchId = Number(req.params.batchId || 0);
+  const backUrl = '/customer/dashboard#billing-section';
+  try {
+    const profile = findCustomerProfileByLoginId(loginId);
+    const batch = db.prepare('SELECT * FROM payment_batches WHERE id=?').get(batchId);
+    if (!batch || !profile || Number(batch.customer_id) !== Number(profile.id)) {
+      req.session._msg = { type: 'error', text: 'Transaksi tidak valid.' };
+      return res.redirect(backUrl);
+    }
+    if (String(batch.status) === 'pending') {
+      db.prepare(`
+        UPDATE payment_batches SET
+          payment_gateway = '', payment_order_id = '', payment_link = '', payment_reference = '',
+          payment_payload = NULL, payment_expires_at = NULL
+        WHERE id = ?
+      `).run(batchId);
     }
     req.session._msg = { type: 'success', text: 'Transaksi pembayaran dibatalkan. Silakan pilih metode pembayaran lain.' };
   } catch (e) {

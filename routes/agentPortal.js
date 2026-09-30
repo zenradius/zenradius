@@ -403,7 +403,7 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
     db.prepare(`UPDATE agent_topup_requests SET payment_gateway=?, payment_order_id=?, payment_link=?, payment_reference=?, payment_payload=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
       .run(gateway, result.order_id || '', paymentLink, result.reference || '', result.payload ? JSON.stringify(result.payload) : null, reqId);
 
-    if (paymentLink) return res.redirect(paymentLink);
+    if (paymentLink && instructionData.mode !== 'qris') return res.redirect(paymentLink);
     return res.render('payment-instruction', {
       settings,
       backUrl: '/agent',

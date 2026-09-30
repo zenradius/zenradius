@@ -307,6 +307,7 @@
     }
     .method-option:hover { border-color: var(--primary); background-color: var(--primary-light); }
     .method-option input[type="radio"] { accent-color: var(--primary); width: 15px; height: 15px; flex: 0 0 auto; }
+    .method-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; font-size: 16px; }
 
     .checkbox-group {
       display: flex;
@@ -639,10 +640,27 @@
             <form id="paymentForm">
               <div class="payment-methods" style="margin-bottom: 12px;">
                 <span class="info-label" style="margin-bottom: 6px; display: block; font-weight: 700; font-size: 10px;">Pilih Metode Pembayaran</span>
-                <% paymentChannels.forEach((chan, idx) => { %>
+                <% paymentChannels.forEach((chan, idx) => {
+                  const code = String(chan.code || '').toUpperCase();
+                  const isQris = code.includes('QRIS');
+                  const isVa = code.includes('VA') || String(chan.group || '').toLowerCase().includes('virtual');
+                  const displayName = code === 'QRIS_STATIC' ? 'QRIS Statis' : (isQris ? 'QRIS Otomatis' : (isVa ? String(chan.name || code).replace(/Virtual Account/i, 'VA') : chan.name));
+                  const bankLogo = isVa && typeof bankLogoFor === 'function' ? bankLogoFor(code) : '';
+                %>
                   <label class="method-option">
                     <input type="radio" name="payment_method" value="<%= chan.code %>" <%= idx === 0 ? 'checked' : '' %>>
-                    <span><%= chan.name %></span>
+                    <span class="method-icon">
+                      <% if (isVa && bankLogo) { %>
+                        <img src="<%= bankLogo %>" alt="<%= displayName %>" style="height:20px;width:auto;max-width:52px;object-fit:contain;background:#fff;padding:2px 4px;border-radius:4px">
+                      <% } else if (isQris) { %>
+                        <i class="bi bi-qr-code-scan"></i>
+                      <% } else if (isVa) { %>
+                        <i class="bi bi-bank"></i>
+                      <% } else { %>
+                        <i class="bi bi-credit-card"></i>
+                      <% } %>
+                    </span>
+                    <span><%= displayName %></span>
                   </label>
                 <% }) %>
               </div>
