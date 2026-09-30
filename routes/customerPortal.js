@@ -737,13 +737,15 @@ function extractIpaymuQrData(result) {
 function buildPaymentInstructionData(result, gateway, method, amount) {
   const payload = result?.payload || {};
   const data = payload.Data || payload.data || {};
+  const via = String(data.Via || data.via || payload.Via || payload.via || '').trim();
+  const channel = String(data.Channel || data.channel || payload.Channel || payload.channel || '').trim();
+  const paymentNo = String(data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo || '').trim();
   const reference = String(result?.reference || result?.order_id || data.ReferenceId || payload.ReferenceId || payload.Reference || payload.reference || '');
   const qrImageUrl = String(result?.qr_image || data.QrImage || data.qrImage || payload.QrImage || payload.qrImage || '').trim();
   const paymentUrl = String(result?.link || data.QrTemplate || data.qrTemplate || payload.QrTemplate || payload.qrTemplate || data.paymentUrl || data.payment_url || payload.paymentUrl || payload.payment_url || data.Url || data.url || payload.Url || payload.url || '').trim();
+  const mode = qrImageUrl || /QR/i.test(via) || /QR/i.test(channel) || /QR/i.test(String(method || '')) ? 'qris' : 'va';
   const instruction = String(
-    data.Via || data.via || payload.Via || payload.via ||
-    data.Channel || data.channel || payload.Channel || payload.channel ||
-    data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo ||
+    via || channel || paymentNo ||
     data.QrString || data.qrString || payload.QrString || payload.qrString ||
     data.QrTemplate || data.qrTemplate || payload.QrTemplate || payload.qrTemplate ||
     data.QrImage || data.qrImage || payload.QrImage || payload.qrImage ||
@@ -757,6 +759,7 @@ function buildPaymentInstructionData(result, gateway, method, amount) {
     gateway: String(gateway || '').toUpperCase(),
     method: String(method || '').toUpperCase(),
     amount: Number(amount || result?.amount || payload.Amount || payload.amount || 0) || 0,
+    mode,
     reference,
     qrImageUrl,
     paymentUrl,
@@ -767,9 +770,9 @@ function buildPaymentInstructionData(result, gateway, method, amount) {
       transactionId: String(data.TransactionId || data.transactionId || payload.TransactionId || payload.transactionId || '').trim(),
       referenceId: String(data.ReferenceId || data.referenceId || payload.ReferenceId || payload.referenceId || '').trim(),
       paymentName: String(data.PaymentName || data.paymentName || payload.PaymentName || payload.paymentName || '').trim(),
-      via: String(data.Via || data.via || payload.Via || payload.via || '').trim(),
-      channel: String(data.Channel || data.channel || payload.Channel || payload.channel || '').trim(),
-      paymentNo: String(data.PaymentNo || data.paymentNo || payload.PaymentNo || payload.paymentNo || '').trim(),
+      via,
+      channel,
+      paymentNo,
       expired: String(data.Expired || data.expired || payload.Expired || payload.expired || '').trim(),
       subtotal: String(data.SubTotal ?? data.subTotal ?? payload.SubTotal ?? payload.subTotal ?? '').trim(),
       fee: String(data.Fee ?? data.fee ?? payload.Fee ?? payload.fee ?? '').trim(),
@@ -786,6 +789,7 @@ function renderPaymentInstructionPage(res, settings, options = {}) {
     gateway: options.gateway || '',
     method: options.method || '',
     amount: options.amount || 0,
+    mode: options.mode || 'va',
     reference: options.reference || '',
     qrImageUrl: options.qrImageUrl || '',
     paymentUrl: options.paymentUrl || '',
@@ -4121,6 +4125,7 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
       backUrl: '/customer/topup',
       info: 'Pembayaran berhasil dibuat. Ikuti instruksi di bawah.',
       helpText: 'Simpan referensi pembayaran ini sampai status top-up berubah menjadi lunas.',
+      mode: instructionData.mode,
       qrImageUrl: instructionData.qrImageUrl,
       details: instructionData.details,
       ...instructionData
@@ -4213,6 +4218,7 @@ router.post('/agent-topup/create', express.urlencoded({ extended: true }), async
       backUrl: '/agent',
       info: 'Pembayaran berhasil dibuat. Ikuti instruksi di bawah.',
       helpText: 'Gunakan detail pembayaran yang ditampilkan di halaman ini untuk menyelesaikan top-up agent.',
+      mode: instructionData.mode,
       qrImageUrl: instructionData.qrImageUrl,
       details: instructionData.details,
       ...instructionData
