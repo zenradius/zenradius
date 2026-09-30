@@ -307,6 +307,7 @@
                         
                         let badgeClass = 'pb-bank';
                         let iconHtml = '<i class="bi bi-credit-card"></i>';
+                        const bankLogo = (isVa && typeof bankLogoFor === 'function') ? bankLogoFor(code) : '';
                         
                         if (code === 'QRIS') {
                           badgeClass = 'pb-qris';
@@ -330,6 +331,8 @@
                           } else {
                             iconHtml = '<i class="bi bi-wallet2"></i>';
                           }
+                        } else if (bankLogo) {
+                          iconHtml = '';
                         } else if (group.includes('virtual') || group.includes('bank')) {
                           iconHtml = '<i class="bi bi-bank"></i>';
                         }
@@ -348,6 +351,8 @@
                             <div class="p-icon">
                               <% if (iconUrl) { %>
                                 <img src="<%= iconUrl %>" alt="<%= name %>" class="p-logo">
+                              <% } else if (bankLogo) { %>
+                                <img src="<%= bankLogo %>" alt="<%= name %>" class="p-logo">
                               <% } else { %>
                                 <%- iconHtml %>
                               <% } %>

@@ -1693,12 +1693,14 @@
             <!-- DYNAMIC CHANNELS OR DEFAULTS -->
             <% if (typeof paymentChannels !== 'undefined' && paymentChannels && paymentChannels.length > 0) { %>
               <% paymentChannels.forEach(ch => { %>
-                <% const code = String(ch.code || '').toUpperCase(); const isQris = code.includes('QRIS'); const isVa = code.includes('VA') || String(ch.group || '').toLowerCase().includes('virtual'); const displayName = isQris ? 'QRIS Otomatis' : (isVa ? String(ch.name || code).replace(/Virtual Account/i, 'VA') : ch.name); %>
+                <% const code = String(ch.code || '').toUpperCase(); const isQris = code.includes('QRIS'); const isVa = code.includes('VA') || String(ch.group || '').toLowerCase().includes('virtual'); const displayName = isQris ? 'QRIS Otomatis' : (isVa ? String(ch.name || code).replace(/Virtual Account/i, 'VA') : ch.name); const bankLogo = isVa && typeof bankLogoFor === 'function' ? bankLogoFor(code) : ''; %>
                 <button class="payment-option" data-payment-code="<%= code %>" data-single-only="<%= ch.singleOnly ? 'true' : 'false' %>" onclick="submitPayment('<%= code %>')">
                   <div class="d-flex align-items-center gap-3">
                     <div class="payment-option-icon">
                       <% if (isQris) { %>
                         <i class="bi bi-qr-code-scan"></i>
+                      <% } else if (isVa && bankLogo) { %>
+                        <img src="<%= bankLogo %>" alt="<%= displayName %>" style="width:100%;height:100%;object-fit:contain;padding:6px;background:#fff;border-radius:10px">
                       <% } else if (isVa) { %>
                         <i class="bi bi-bank"></i>
                       <% } else { %>

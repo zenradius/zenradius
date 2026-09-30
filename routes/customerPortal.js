@@ -372,6 +372,10 @@ function getStaticQrisQrUrl(settings) {
   return url || '';
 }
 
+function hasStaticQrisConfig(settings) {
+  return !!(getStaticQrisQrUrl(settings) || getStaticQrisPayload(settings));
+}
+
 function normalizeQrisPayloadRaw(raw) {
   let s = String(raw || '').replace(/[\r\n\t]+/g, '').trim();
   const idx = s.indexOf('000201');
@@ -805,6 +809,8 @@ function renderPaymentInstructionPage(res, settings, options = {}) {
   return res.render('payment-instruction', {
     settings,
     backUrl: options.backUrl || '/customer/topup',
+    changeMethodUrl: options.changeMethodUrl || '',
+    cancelUrl: options.cancelUrl || '',
     info: options.info || null,
     gateway: options.gateway || '',
     method: options.method || '',
@@ -1440,6 +1446,8 @@ router.get('/voucher/payment/:orderId', (req, res) => {
 
   return renderPaymentInstructionPage(res, settings, {
     backUrl,
+    changeMethodUrl: backUrl,
+    cancelUrl: `/customer/voucher/payment/cancel/${encodeURIComponent(String(orderId))}?t=${encodeURIComponent(String(req.query.t || ''))}`,
     info: null,
     helpText: instructionData.mode === 'qris'
       ? 'Scan QR untuk menyelesaikan pembelian voucher. Pesanan diproses otomatis setelah pembayaran terverifikasi.'
@@ -1786,6 +1794,8 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
     if (paymentLink) return res.redirect(paymentLink);
     return renderPaymentInstructionPage(res, settings, {
       backUrl: `/customer/voucher?order=${encodeURIComponent(String(orderId))}&t=${encodeURIComponent(token)}`,
+      changeMethodUrl: `/customer/voucher?order=${encodeURIComponent(String(orderId))}&t=${encodeURIComponent(token)}`,
+      cancelUrl: `/customer/voucher/payment/cancel/${encodeURIComponent(String(orderId))}?t=${encodeURIComponent(token)}`,
       info: null,
       helpText: instructionData.mode === 'qris'
         ? 'Scan QR dengan aplikasi pembayaran. Pesanan diproses otomatis setelah pembayaran terverifikasi.'
@@ -2227,6 +2237,9 @@ router.get('/dashboard', async (req, res) => {
     else if (gateway === 'xendit') paymentChannels = [{ code: 'XENDIT', name: 'Semua Metode', group: 'E-Wallet', active: true }, ...base];
     else if (gateway === 'duitku') paymentChannels = base;
     else if (gateway === 'ipaymu') paymentChannels = getStandardPaymentChannels('ipaymu');
+  }
+  if (hasStaticQrisConfig(settings) && !paymentChannels.some(channel => String(channel?.code || '').toUpperCase() === 'QRIS_STATIC')) {
+    paymentChannels.unshift({ code: 'QRIS_STATIC', name: 'QRIS Statis', group: 'QRIS', active: true, singleOnly: true });
   }
 
   let trafficMaxDownMbps = 10;
@@ -2959,6 +2972,8 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
           logger.info(`[Payment] Reusing existing link for INV-${inv.id} (public)`);
           return renderPaymentInstructionPage(res, settings, {
             backUrl: `/customer/check-billing?q=${encodeURIComponent(String(payload.lookup || ''))}`,
+            changeMethodUrl: `/customer/check-billing?q=${encodeURIComponent(String(payload.lookup || ''))}`,
+            cancelUrl: `/customer/public/payment/cancel/${encodeURIComponent(String(inv.id))}?token=${encodeURIComponent(String(req.body.token || ''))}`,
             info: null,
             helpText: storedInstruction.mode === 'qris'
               ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
@@ -3045,6 +3060,8 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
       if (redirectLink) return res.redirect(redirectLink);
       return renderPaymentInstructionPage(res, settings, {
         backUrl: `/customer/check-billing?q=${encodeURIComponent(String(payload.lookup || ''))}`,
+        changeMethodUrl: `/customer/check-billing?q=${encodeURIComponent(String(payload.lookup || ''))}`,
+        cancelUrl: `/customer/public/payment/cancel/${encodeURIComponent(String(inv.id))}?token=${encodeURIComponent(String(req.body.token || ''))}`,
         info: null,
         helpText: instructionData.mode === 'qris'
           ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
@@ -3358,6 +3375,8 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
           logger.info(`[Payment] Reusing existing link for INV-${inv.id}`);
           return renderPaymentInstructionPage(res, settings, {
             backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
+            changeMethodUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
+            cancelUrl: `/customer/payment/cancel/${encodeURIComponent(String(inv.id))}`,
             info: null,
             helpText: storedInstruction.mode === 'qris'
               ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
@@ -3475,6 +3494,8 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
       if (paymentLink) return res.redirect(paymentLink);
       return renderPaymentInstructionPage(res, settings, {
         backUrl: '/customer/dashboard#billing-section',
+        changeMethodUrl: '/customer/dashboard#billing-section',
+        cancelUrl: `/customer/payment/cancel/${encodeURIComponent(String(inv.id))}`,
         info: null,
         helpText: instructionData.mode === 'qris'
           ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
@@ -3487,6 +3508,79 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
   } catch (error) {
     logger.error(`[Payment] Create Error: ${error.message}`);
     res.status(500).send(`Terjadi kesalahan: ${error.message}`);
+  }
+});
+
+router.post('/payment/cancel/:invoiceId', (req, res) => {
+  const loginId = req.session && req.session.phone;
+  if (!loginId) return res.redirect('/customer/login');
+  const invoiceId = Number(req.params.invoiceId || 0);
+  const backUrl = '/customer/dashboard#billing-section';
+  try {
+    const profile = findCustomerProfileByLoginId(loginId);
+    const inv = billingSvc.getInvoiceById(invoiceId);
+    if (!inv || !profile || Number(inv.customer_id) !== Number(profile.id)) {
+      req.session._msg = { type: 'error', text: 'Tagihan tidak valid.' };
+      return res.redirect(backUrl);
+    }
+    if (String(inv.status) === 'unpaid') {
+      billingSvc.updatePaymentInfo(inv.id, {
+        gateway: '', order_id: '', link: '', reference: '', payload: null, expires_at: null
+      });
+    }
+    req.session._msg = { type: 'success', text: 'Transaksi pembayaran dibatalkan. Silakan pilih metode pembayaran lain.' };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal membatalkan transaksi: ' + (e?.message || e) };
+  }
+  return res.redirect(backUrl);
+});
+
+router.post('/public/payment/cancel/:invoiceId', (req, res) => {
+  const settings = getSettingsWithCache();
+  const secret = settings.session_secret;
+  const invoiceId = Number(req.params.invoiceId || 0);
+  const token = String(req.query.token || req.body.token || '').trim();
+  const payload = token && secret ? verifyPublicToken(token, secret) : null;
+  const backUrl = `/customer/check-billing?q=${encodeURIComponent(String(payload?.lookup || ''))}`;
+  if (!payload || String(invoiceId) !== String(payload.invoiceId)) {
+    return res.redirect('/customer/check-billing?err=' + encodeURIComponent('Link tidak valid atau sudah kadaluarsa'));
+  }
+  try {
+    const inv = billingSvc.getInvoiceById(invoiceId);
+    if (inv && Number(inv.customer_id) === Number(payload.customerId) && String(inv.status) === 'unpaid') {
+      billingSvc.updatePaymentInfo(inv.id, {
+        gateway: '', order_id: '', link: '', reference: '', payload: null, expires_at: null
+      });
+    }
+    return res.redirect(backUrl + '&info=' + encodeURIComponent('Transaksi pembayaran dibatalkan. Silakan pilih metode pembayaran lain.'));
+  } catch (e) {
+    return res.redirect(backUrl + '&err=' + encodeURIComponent('Gagal membatalkan transaksi: ' + (e?.message || e)));
+  }
+});
+
+router.post('/voucher/payment/cancel/:orderId', (req, res) => {
+  const settings = getSettingsWithCache();
+  const orderId = Number(req.params.orderId || 0);
+  const secret = settings.session_secret;
+  const token = String(req.query.t || req.body.t || '').trim();
+  const payload = token && secret ? verifyPublicToken(token, secret) : null;
+  const backUrl = '/customer/voucher?order=' + encodeURIComponent(String(orderId)) + '&t=' + encodeURIComponent(token);
+  if (!payload || Number(payload.voucherOrderId) !== orderId) {
+    return res.redirect('/customer/voucher?err=' + encodeURIComponent('Link tidak valid atau sudah kadaluarsa'));
+  }
+  try {
+    const order = db.prepare('SELECT * FROM public_voucher_orders WHERE id = ?').get(orderId);
+    if (order && String(order.status) === 'pending') {
+      db.prepare(`
+        UPDATE public_voucher_orders SET
+          payment_gateway = '', payment_order_id = '', payment_link = '', payment_reference = '',
+          payment_payload = NULL, payment_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(orderId);
+    }
+    return res.redirect(backUrl + '&info=' + encodeURIComponent('Transaksi pembayaran dibatalkan. Silakan pilih metode pembayaran lain.'));
+  } catch (e) {
+    return res.redirect(backUrl + '&err=' + encodeURIComponent('Gagal membatalkan transaksi: ' + (e?.message || e)));
   }
 });
 

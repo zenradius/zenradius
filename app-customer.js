@@ -221,6 +221,27 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── OFFICIAL BANK LOGOS ──
+// Maps a payment channel code (e.g. BCAVA, BNIVA) to the official bank logo asset path.
+// Assets stored locally at public/img/banks/*.png (downloaded from official public-domain sources).
+const BANK_LOGO_MAP = {
+  BCA: '/img/banks/bca.png',
+  BNI: '/img/banks/bni.png',
+  BRI: '/img/banks/bri.png',
+  MANDIRI: '/img/banks/mandiri.png',
+  PERMATA: '/img/banks/permata.png'
+};
+app.use((req, res, next) => {
+  res.locals.bankLogoFor = (codeOrName) => {
+    const s = String(codeOrName || '').toUpperCase();
+    for (const key of Object.keys(BANK_LOGO_MAP)) {
+      if (s.includes(key)) return BANK_LOGO_MAP[key];
+    }
+    return '';
+  };
+  next();
+});
+
 app.get('/lang/:lang', (req, res) => {
   const targetLang = normalizeLang(req.params.lang);
   req.session.lang = targetLang;
