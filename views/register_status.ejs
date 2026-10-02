@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cek Status Pendaftaran | <%= settings.company_header || 'ZenRadius' %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/theme-tokens.css">
+  <script src="/js/app-ui.js" defer></script>
+  <style>
+    body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);background-image:var(--body-bg-image, radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%));display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;color:var(--text)}
+    .card{width:100%;max-width:640px;background:var(--bg);border:1px solid rgba(190,239,255,.28);border-radius:16px;padding:34px 28px;box-shadow:0 20px 48px rgba(3,14,20,.45)}
+    .alert{font-size:12.5px;border-radius:10px}.alert-danger{background:rgba(248,81,73,.1);color:#ff7b72;border:1px solid rgba(248,81,73,.22)}.alert-info{background:rgba(45,212,191,.08);color:#d9fffb;border:1px solid rgba(45,212,191,.22)}
+    .fc{width:100%;padding:11px 14px;font-size:14px;color:#f0fdfa;background:rgba(255,255,255,.06);border:1px solid rgba(190,239,255,.22);border-radius:10px;outline:none}.fc::placeholder{color:rgba(237,250,250,.38)}.fc:focus{background:rgba(255,255,255,.09);border-color:rgba(45,212,191,.55);box-shadow:0 0 0 3px rgba(45,212,191,.14)}
+    .btn-p{width:100%;padding:11px 22px;font-size:13px;font-weight:800;color:var(--btn-color);background:var(--btn-bg, linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%));border:1px solid var(--btn-border);border-radius:10px;box-shadow:var(--btn-shadow)}
+    .logo{width:min(180px,56%)}.muted{color:rgba(237,250,250,.6)}
+    .links a{color:#7dd3fc;font-weight:700;text-decoration:none;font-size:12px}
+    .sb{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800}
+    .sb-pending{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.35)}.sb-surveyed{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.35)}.sb-approved{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.35)}.sb-rejected{background:rgba(248,81,73,.12);color:#ff7b72;border:1px solid rgba(248,81,73,.35)}
+    .kv{background:rgba(255,255,255,.04);border:1px solid rgba(190,239,255,.12);border-radius:12px;padding:11px 13px}.kv .k{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:rgba(190,239,255,.6);font-weight:700;margin-bottom:3px}.kv .v{font-size:13px;font-weight:700;color:#f0fdfa;word-break:break-word}
+    .msg{font-size:12.5px;line-height:1.55;color:rgba(237,250,250,.75);background:rgba(255,255,255,.04);border:1px solid rgba(190,239,255,.14);border-radius:12px;padding:12px 14px}.msg b{color:#fff}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="text-center mb-4">
+      <img class="logo mb-2" src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.src='/img/icon.png'">
+      <h5 class="text-white fw-bold mb-1">Cek Status Pendaftaran</h5>
+      <p class="muted small mb-0">Masukkan <b>No. Registrasi</b> (contoh: REG-2026-0001) atau <b>Nomor WhatsApp</b> yang digunakan saat mendaftar.</p>
+    </div>
+
+    <% if (error) { %><div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><%= error %></div><% } %>
+
+    <% if (!result) { %>
+      <form method="POST" action="/customer/register/status">
+        <div class="mb-3">
+          <label class="form-label text-white small fw-bold">Nomor Registrasi / Nomor WhatsApp</label>
+          <input class="fc" type="text" name="q" value="<%= query || '' %>" placeholder="REG-2026-0001 atau 081234567890" required autofocus>
+        </div>
+        <button type="submit" class="btn-p"><i class="bi bi-search me-1"></i> Cek Status</button>
+      </form>
+    <% } else { %>
+      <% const st = String(result.registration_status || 'pending_survey'); %>
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+          <span class="fs-6 fw-bold text-white"><i class="bi bi-person-badge me-2"></i><%= result.name %></span>
+          <% if (st === 'approved') { %><span class="sb sb-approved"><i class="bi bi-check-circle-fill"></i> Disetujui &amp; Aktif</span>
+          <% } else if (st === 'rejected') { %><span class="sb sb-rejected"><i class="bi bi-x-circle-fill"></i> Ditolak</span>
+          <% } else if (st === 'surveyed') { %><span class="sb sb-surveyed"><i class="bi bi-clipboard-check"></i> Menunggu Approval Admin</span>
+          <% } else { %><span class="sb sb-pending"><i class="bi bi-hourglass-split"></i> Menunggu Survei</span><% } %>
+        </div>
+        <div class="row g-2">
+          <div class="col-6"><div class="kv"><div class="k">No. Registrasi</div><div class="v"><%= result.registration_number || '-' %></div></div></div>
+          <div class="col-6"><div class="kv"><div class="k">Paket</div><div class="v"><%= result.package_name || '-' %></div></div></div>
+          <div class="col-6"><div class="kv"><div class="k">Wilayah</div><div class="v"><%= result.area || '-' %></div></div></div>
+          <div class="col-6"><div class="kv"><div class="k">Tanggal Daftar</div><div class="v"><%= result.created_at || '-' %></div></div></div>
+        </div>
+      </div>
+      <% if (st === 'rejected') { %>
+        <div class="msg mb-2"><b>Status:</b> Pendaftaran Anda belum dapat diproses.<br>
+          <% if (result.registration_reject_reason) { %><b>Alasan:</b> <%= result.registration_reject_reason %><br><% } %>
+          Jika Anda merasa informasi ini kurang tepat, silakan hubungi layanan pelanggan kami.
+        </div>
+      <% } else if (st === 'approved') { %>
+        <div class="msg mb-2"><b>Selamat!</b> Pendaftaran Anda telah disetujui dan layanan kini <b>aktif</b>. Silakan login ke portal pelanggan menggunakan email dan password yang telah dibuat.</div>
+      <% } else if (st === 'surveyed') { %>
+        <div class="msg mb-2">Hasil survei Anda <b>layak</b> dan sedang menunggu persetujuan Admin. Kami akan segera menghubungi Anda melalui WhatsApp.</div>
+      <% } else { %>
+        <div class="msg mb-2">Pendaftaran Anda sedang dalam proses verifikasi wilayah dan penjadwalan survei. Tim kami akan menghubungi Anda melalui WhatsApp (<b><%= result.phone || '-' %></b>).</div>
+      <% } %>
+    <% } %>
+
+    <div class="text-center mt-4">
+      <div class="links d-flex justify-content-center gap-3">
+        <a href="/"><i class="bi bi-house-door me-1"></i> Beranda</a>
+        <a href="/customer/register"><i class="bi bi-person-plus-fill me-1"></i> Daftar Baru</a>
+        <a href="/customer/login"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a>
+      </div>
+      <div class="small mt-3" style="color:rgba(237,250,250,.45);font-size:11px">&copy; <%= new Date().getFullYear() %> <%- footerInfo %></div>
+    </div>
+  </div>
+</body>
+</html>

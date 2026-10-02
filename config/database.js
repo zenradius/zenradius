@@ -138,6 +138,7 @@ db.exec(`
     nik TEXT DEFAULT '',
     name TEXT NOT NULL,
     phone TEXT DEFAULT '',
+    customer_no TEXT DEFAULT '',
     address TEXT DEFAULT '',
     area TEXT DEFAULT '',
     package_id INTEGER REFERENCES packages(id) ON DELETE SET NULL,
@@ -156,6 +157,7 @@ db.exec(`
     surveyed_at DATETIME,
     registration_approved_by TEXT DEFAULT '',
     registration_approved_at DATETIME,
+    registration_number TEXT DEFAULT '',
     created_at DATETIME DEFAULT (NOW_LOCAL())
   );
 
@@ -867,6 +869,30 @@ try { db.exec("ALTER TABLE customers ADD COLUMN surveyed_by_tech_id INTEGER REFE
 try { db.exec("ALTER TABLE customers ADD COLUMN surveyed_at DATETIME"); } catch (e) {}
 try { db.exec("ALTER TABLE customers ADD COLUMN registration_approved_by TEXT DEFAULT ''"); } catch (e) {}
 try { db.exec("ALTER TABLE customers ADD COLUMN registration_approved_at DATETIME"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN registration_rejected_by TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN registration_rejected_at DATETIME"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN registration_reject_reason TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN registration_number TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE customers ADD COLUMN customer_no TEXT DEFAULT ''"); } catch (e) {}
+
+// Backfill customer_no (8 digit) untuk semua pelanggan yang belum punya.
+// Format: 8 digit dari 10000000 + id (agar unik & konsisten).
+try {
+  db.exec(`
+    UPDATE customers
+    SET customer_no = printf('%08d', 10000000 + (id * 1) / 1)
+    WHERE customer_no IS NULL OR customer_no = ''
+  `);
+} catch (e) {}
+
+// Backfill nomor registrasi untuk pendaftar online yang belum punya
+try {
+  db.exec(`
+    UPDATE customers
+    SET registration_number = 'REG-' || (SELECT strftime('%Y','now')) || '-' || printf('%04d', id)
+    WHERE registration_source='online' AND (registration_number IS NULL OR registration_number='')
+  `);
+} catch (e) {}
 
 // Pendaftar sebelum metadata alur registrasi ditambahkan tetap harus masuk antrean survei.
 try {

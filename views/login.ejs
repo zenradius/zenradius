@@ -2107,7 +2107,7 @@
   <!-- Header / Navbar Section -->
   <nav class="navbar navbar-expand-lg sticky-top custom-navbar">
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
         <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.style.display='none'">
       </a>
 
@@ -2119,7 +2119,7 @@
       <div class="collapse navbar-collapse" id="navbarContent">
         <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
           <li class="nav-item">
-            <a class="nav-link active" href="#hero"><i class="bi bi-house-door me-1"></i> Beranda</a>
+            <a class="nav-link active" href="/"><i class="bi bi-house-door me-1"></i> Beranda</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#features"><i class="bi bi-shield-check me-1"></i> Keunggulan</a>
@@ -2211,6 +2211,8 @@
 
         </div>
 
+        <body>
+        <script>window.__companyName = <%- JSON.stringify(settings.company_header || '') %>;</script>
         <% if (typeof landingOnly !== 'undefined' && landingOnly) { %>
         <div class="hero-package-simulator" id="simulator-section">
           <%- include('partials/package-simulator') %>

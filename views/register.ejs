@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <link rel="stylesheet" href="/css/theme-tokens.css">
+  <script src="/js/app-ui.js" defer></script>
   <style>
     /* -- Custom Premium Scrollbar -- */
     ::-webkit-scrollbar {
@@ -468,8 +469,10 @@
       <% if (error) { %><div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i><%= error %></div><% } %>
       <% if (success) { %>
         <div class="alert alert-success"><i class="bi bi-check-circle"></i><%= success %></div>
-        <div style="text-align:center;margin-top:16px">
+        <div style="text-align:center;margin-top:16px;display:flex;flex-direction:column;gap:8px;width:100%">
+          <a href="/customer/register/status" class="btn-p" style="max-width:none"><i class="bi bi-search"></i> Cek Status Pendaftaran</a>
           <a href="/customer/login" class="btn-p" style="max-width:200px"><i class="bi bi-box-arrow-in-right"></i> Kembali ke Login</a>
+          <a href="/" style="font-size:12px;color:#7dd3fc;font-weight:700;text-decoration:none;margin-top:4px"><i class="bi bi-house-door me-1"></i>Kembali ke Beranda</a>
         </div>
       <% } else { %>
         <form method="POST" action="/customer/register" id="register-form" onsubmit="return validateRegisterForm(event)">
@@ -525,6 +528,21 @@
           </div>
 
           <div class="fg">
+            <label class="fl" for="reg-area">Wilayah / Area Tempat Tinggal *</label>
+            <div class="field" style="position:relative">
+              <i class="bi bi-geo" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);z-index:1;color:rgba(190,239,255,.7)"></i>
+              <select class="fc" id="reg-area" name="area" required style="padding-left:40px;cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:rgba(255,255,255,.06);padding-right:14px;font-weight:500">
+                <option value="" disabled selected>-- Pilih Wilayah / Area --</option>
+                <% (typeof areas !== 'undefined' && areas && areas.length > 0 ? areas : []).forEach(function(ar) { %>
+                  <option value="<%= ar.name %>"><%= ar.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <small id="area-error" style="color:#ff7b72;font-size:11px;display:none;margin-top:4px"></small>
+            <small class="coord-text">Pilih wilayah agar tim kami dapat memeriksa ketersediaan layanan di area Anda.</small>
+          </div>
+
+          <div class="fg">
             <label class="fl" for="reg-package">Paket Internet *</label>
             <div class="field" style="position:relative">
               <i class="bi bi-box-seam" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);z-index:1;color:rgba(190,239,255,.7)"></i>
@@ -552,6 +570,8 @@
       <% } %>
 
       <div class="links" style="margin-top:14px;border-top:1px solid rgba(190,239,255,.12);padding-top:12px">
+        <a href="/"><i class="bi bi-house-door me-1"></i>Kembali ke Beranda</a>
+        <a href="/customer/register/status"><i class="bi bi-search me-1"></i>Cek Status Pendaftaran</a>
         <a href="/customer/login">Sudah punya akun? Login</a>
       </div>
 
@@ -863,6 +883,7 @@
       const password = document.getElementById('reg-password').value;
       const confirmPassword = document.getElementById('reg-confirm-password').value;
       const address = document.getElementById('reg-address').value.trim();
+      const area = document.getElementById('reg-area') ? document.getElementById('reg-area').value : '';
       const packageId = document.getElementById('reg-package').value;
       const agreeTerms = document.getElementById('register-form').querySelector('input[name="agree_terms"]').checked;
       
@@ -873,10 +894,11 @@
       const passwordError = document.getElementById('password-error');
       const confirmPasswordError = document.getElementById('confirm-password-error');
       const addressError = document.getElementById('address-error');
+      const areaError = document.getElementById('area-error');
       const packageError = document.getElementById('package-error');
       const submitBtn = document.getElementById('submit-register-btn');
       
-      [nameError, phoneError, emailError, passwordError, confirmPasswordError, addressError, packageError].forEach(el => {
+      [nameError, phoneError, emailError, passwordError, confirmPasswordError, addressError, areaError, packageError].forEach(el => {
         if (el) el.style.display = 'none';
       });
       
@@ -939,6 +961,14 @@
       } else if (address.length > 300) {
         addressError.textContent = 'Alamat maksimal 300 karakter.';
         addressError.style.display = 'block';
+        isValid = false;
+      }
+      
+      if (!area) {
+        if (areaError) {
+          areaError.textContent = 'Silakan pilih wilayah / area tempat tinggal.';
+          areaError.style.display = 'block';
+        }
         isValid = false;
       }
       

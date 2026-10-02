@@ -1416,15 +1416,86 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.get('/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
-  res.sendFile(path.join(__dirname, 'public', 'manifest.webmanifest'));
+  const companyName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
+  const shortName = companyName.length > 12 ? companyName.slice(0, 12) : companyName;
+  res.send({
+    name: companyName,
+    short_name: shortName,
+    description: `Portal Pelanggan ${companyName}`,
+    start_url: '/customer/login?source=pwa',
+    scope: '/customer/',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#173945',
+    theme_color: '#2dd4bf',
+    icons: [
+      { src: '/img/icon.png', sizes: 'any', type: 'image/png', purpose: 'any maskable' },
+      { src: '/img/logo.png', sizes: '2000x545', type: 'image/png', purpose: 'any' }
+    ]
+  });
+});
+app.get('/tech/manifest.webmanifest', (req, res) => {
+  res.type('application/manifest+json');
+  const companyName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
+  res.send({
+    name: `${companyName} - Teknisi`,
+    short_name: companyName.length > 12 ? companyName.slice(0, 12) : companyName,
+    description: `Pusat operasional teknisi ${companyName}`,
+    start_url: '/tech?source=pwa',
+    scope: '/tech/',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#0f172a',
+    theme_color: '#0f172a',
+    icons: [
+      { src: '/img/icon.png', sizes: 'any', type: 'image/png', purpose: 'any maskable' }
+    ]
+  });
+});
+app.get('/collector/manifest.webmanifest', (req, res) => {
+  res.type('application/manifest+json');
+  const companyName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
+  res.send({
+    name: `${companyName} - Kolektor`,
+    short_name: companyName.length > 12 ? companyName.slice(0, 12) : companyName,
+    description: `Pusat operasional kolektor ${companyName}`,
+    start_url: '/collector?source=pwa',
+    scope: '/collector/',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#0f172a',
+    theme_color: '#0f172a',
+    icons: [
+      { src: '/img/icon.png', sizes: 'any', type: 'image/png', purpose: 'any maskable' }
+    ]
+  });
+});
+app.get('/agent/manifest.webmanifest', (req, res) => {
+  res.type('application/manifest+json');
+  const companyName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
+  res.send({
+    name: `${companyName} - Agen`,
+    short_name: companyName.length > 12 ? companyName.slice(0, 12) : companyName,
+    description: `Pusat layanan agen ${companyName}`,
+    start_url: '/agent?source=pwa',
+    scope: '/agent/',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#0f172a',
+    theme_color: '#0f172a',
+    icons: [
+      { src: '/img/icon.png', sizes: 'any', type: 'image/png', purpose: 'any maskable' }
+    ]
+  });
 });
 app.get('/admin/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
-    res.send({
-      name: 'ZenRadius - Pusat Administrasi',
-      short_name: 'ZenRadius',
-      description: 'Sistem manajemen billing dan administrasi jaringan ZenRadius',
-      start_url: '/admin/settings?source=pwa',
+  const companyName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius Admin';
+  res.send({
+    name: `${companyName} - Pusat Administrasi`,
+    short_name: companyName,
+    description: `Sistem manajemen billing dan administrasi jaringan ${companyName}`,
+    start_url: '/admin/settings?source=pwa',
     scope: '/admin/',
     display: 'standalone',
     orientation: 'portrait',

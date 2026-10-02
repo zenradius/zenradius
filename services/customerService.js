@@ -108,6 +108,10 @@ function getAllCustomers(search = '', routerId = null, filterStatus = '', filter
   const whereClauses = [];
   const params = [];
 
+  // Calon pelanggan (pendaftar online yang belum disetujui) tidak masuk daftar pelanggan utama.
+  // Mereka dikelola khusus di panel "Pendaftaran Online".
+  whereClauses.push(`(c.registration_source != 'online' OR c.registration_status = 'approved' OR c.registration_status = 'rejected' OR c.registration_status = '' OR c.registration_status IS NULL)`);
+
   if (search) {
     const s = `%${search}%`;
     whereClauses.push(`(c.name LIKE ? OR c.phone LIKE ? OR c.nik LIKE ? OR c.genieacs_tag LIKE ? OR c.address LIKE ? OR c.area LIKE ? OR c.pppoe_username LIKE ? OR c.static_ip LIKE ? OR c.hotspot_username LIKE ?)`);
@@ -189,13 +193,14 @@ function createCustomer(data) {
   }
 
   const portalPassword = String(data.portal_password || '').trim() || generatePortalPassword(8);
+  const customerNo = String(data.customer_no || '').trim() || generateCustomerNo();
 
   return db.prepare(`
-    INSERT INTO customers (nik, name, phone, email, address, area, package_id, router_id, olt_id, odp_id, pon_port, lat, lng, genieacs_tag, pppoe_username, pppoe_password, pppoe_remote_address, isolir_profile, status, install_date, expired_at, notes, auto_isolate, isolate_day, connection_type, static_ip, mac_address, hotspot_username, hotspot_password, hotspot_profile, collector_id, is_radius, portal_password)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO customers (nik, name, phone, customer_no, email, address, area, package_id, router_id, olt_id, odp_id, pon_port, lat, lng, genieacs_tag, pppoe_username, pppoe_password, pppoe_remote_address, isolir_profile, status, install_date, expired_at, notes, auto_isolate, isolate_day, connection_type, static_ip, mac_address, hotspot_username, hotspot_password, hotspot_profile, collector_id, is_radius, portal_password)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     data.nik ? String(data.nik).trim() : '',
-    data.name, data.phone || '', data.email || '', data.address || '',
+    data.name, data.phone || '', customerNo, data.email || '', data.address || '',
     data.area ? String(data.area).trim() : '',
     data.package_id ? parseInt(data.package_id) : null,
     data.router_id ? parseInt(data.router_id) : null,
@@ -226,18 +231,40 @@ function createCustomer(data) {
   );
 }
 
+/** Generate nomor pelanggan unik 8 digit (contoh: 12345678). */
+function generateCustomerNo() {
+  const row = db.prepare("SELECT MAX(CAST(customer_no AS INTEGER)) AS mx FROM customers WHERE customer_no IS NOT NULL AND customer_no != '' AND CAST(customer_no AS INTEGER) > 0").get();
+  let next = Number(row?.mx || 0) + 1;
+  // fallback jika kolom belum ada / kosong
+  if (!Number.isFinite(next) || next < 1) {
+    const cnt = db.prepare('SELECT COUNT(*) AS c FROM customers').get().c || 0;
+    next = Math.max(1, cnt + 1);
+  }
+  return String(next).padStart(8, '0');
+}
+
 /** Buat pendaftar online yang harus melewati survei dan approval sebelum aktif. */
 function createOnlineRegistration(data) {
   const result = createCustomer({ ...data, status: 'inactive' });
   const customerId = Number(result.lastInsertRowid || result.insertId);
   if (!Number.isFinite(customerId) || customerId <= 0) throw new Error('Gagal membuat data pendaftar');
 
+  const regNumber = generateRegistrationNumber(customerId);
   db.prepare(`
     UPDATE customers
-    SET registration_source='online', registration_status='pending_survey', survey_status='pending'
+    SET registration_source='online', registration_status='pending_survey', survey_status='pending',
+        registration_number=?
     WHERE id=?
-  `).run(customerId);
-  return result;
+  `).run(regNumber, customerId);
+  return { ...result, registration_number: regNumber, id: customerId };
+}
+
+/** Generate nomor registrasi format REG-YYYY-NNNN */
+function generateRegistrationNumber(customerId) {
+  const id = Number(customerId || 0);
+  if (!Number.isFinite(id) || id <= 0) return '';
+  const year = new Date().getFullYear();
+  return `REG-${year}-${String(id).padStart(4, '0')}`;
 }
 
 function getRegistrationById(id) {
@@ -262,9 +289,10 @@ function getOnlineRegistrations(status = '') {
     params.push(status);
   }
   return db.prepare(`
-    SELECT c.id, c.name, c.phone, c.email, c.address, c.lat, c.lng, c.created_at,
-           c.registration_status, c.survey_status, c.survey_notes, c.surveyed_at,
+    SELECT c.id, c.name, c.phone, c.email, c.address, c.area, c.lat, c.lng, c.created_at,
+           c.registration_status, c.registration_number, c.survey_status, c.survey_notes, c.surveyed_at,
            c.registration_approved_by, c.registration_approved_at,
+           c.registration_rejected_by, c.registration_rejected_at, c.registration_reject_reason,
            p.name AS package_name, t.name AS surveyed_by_tech_name
     FROM customers c
     LEFT JOIN packages p ON p.id=c.package_id
@@ -272,6 +300,32 @@ function getOnlineRegistrations(status = '') {
     WHERE ${where}
     ORDER BY c.created_at ASC
   `).all(...params);
+}
+
+function getRegistrationByNumber(regNumber) {
+  const num = String(regNumber || '').trim().toUpperCase();
+  if (!num) return null;
+  return db.prepare(`
+    SELECT c.*, p.name AS package_name,
+           t.name AS surveyed_by_tech_name
+    FROM customers c
+    LEFT JOIN packages p ON p.id=c.package_id
+    LEFT JOIN technicians t ON t.id=c.surveyed_by_tech_id
+    WHERE c.registration_source='online' AND c.registration_number = ?
+  `).get(num);
+}
+
+function getRegistrationByPhone(phone) {
+  const p = String(phone || '').trim();
+  if (!p) return null;
+  return db.prepare(`
+    SELECT c.*, p.name AS package_name,
+           t.name AS surveyed_by_tech_name
+    FROM customers c
+    LEFT JOIN packages p ON p.id=c.package_id
+    LEFT JOIN technicians t ON t.id=c.surveyed_by_tech_id
+    WHERE c.registration_source='online' AND c.phone = ?
+  `).get(p);
 }
 
 function submitRegistrationSurvey(id, technicianId, result, notes) {
@@ -324,6 +378,26 @@ function approveOnlineRegistration(id, approvedBy) {
     `).run(customerId);
   });
   approve();
+  return getRegistrationById(customerId);
+}
+
+function rejectOnlineRegistration(id, rejectedBy, reason) {
+  const customerId = Number(id);
+  const rejector = String(rejectedBy || '').trim() || 'Admin';
+  const rejectReason = String(reason || '').trim();
+  if (!Number.isFinite(customerId) || customerId <= 0) throw new Error('ID pendaftar tidak valid');
+
+  const updated = db.prepare(`
+    UPDATE customers
+    SET registration_status='rejected', registration_rejected_by=?, registration_rejected_at=NOW_LOCAL(), registration_reject_reason=?
+    WHERE id=? AND registration_source='online' AND registration_status IN ('pending_survey','surveyed')
+  `).run(rejector, customerId, rejectReason);
+
+  if (updated.changes !== 1) {
+    const registration = getRegistrationById(customerId);
+    if (!registration) throw new Error('Pendaftar online tidak ditemukan');
+    throw new Error('Pendaftaran ini sudah diproses dan tidak dapat ditolak lagi');
+  }
   return getRegistrationById(customerId);
 }
 
@@ -465,11 +539,28 @@ async function deleteCustomer(id) {
 }
 
 function getCustomerStats() {
+  const excludeApplicants = `(c.registration_source != 'online' OR c.registration_status = 'approved' OR c.registration_status = 'rejected' OR c.registration_status = '' OR c.registration_status IS NULL)`;
+  const now = getCurrentDateInTimezone();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const todayStr = `${monthStr}-${String(now.getDate()).padStart(2, '0')}`;
+  // "Pelanggan baru" dihitung dari tanggal menjadi pelanggan aktif:
+  // - Pendaftar online dihitung saat di-approve (registration_approved_at)
+  // - Pelanggan non-online dihitung dari created_at
   return {
-    total:     db.prepare('SELECT COUNT(*) as c FROM customers').get().c,
-    active:    db.prepare("SELECT COUNT(*) as c FROM customers WHERE status='active'").get().c,
-    suspended: db.prepare("SELECT COUNT(*) as c FROM customers WHERE status='suspended'").get().c,
-    inactive:  db.prepare("SELECT COUNT(*) as c FROM customers WHERE status='inactive'").get().c,
+    total:     db.prepare(`SELECT COUNT(*) as c FROM customers c WHERE ${excludeApplicants}`).get().c,
+    active:    db.prepare(`SELECT COUNT(*) as c FROM customers c WHERE ${excludeApplicants} AND c.status='active'`).get().c,
+    suspended: db.prepare(`SELECT COUNT(*) as c FROM customers c WHERE ${excludeApplicants} AND c.status='suspended'`).get().c,
+    inactive:  db.prepare(`SELECT COUNT(*) as c FROM customers c WHERE ${excludeApplicants} AND c.status='inactive'`).get().c,
+    newThisMonth: db.prepare(`
+      SELECT COUNT(*) as c FROM customers c
+      WHERE ${excludeApplicants}
+        AND date(COALESCE(NULLIF(c.registration_approved_at,''), c.created_at)) >= ? AND date(COALESCE(NULLIF(c.registration_approved_at,''), c.created_at)) <= ?
+    `).get(`${monthStr}-01`, `${monthStr}-31`).c,
+    newToday:    db.prepare(`
+      SELECT COUNT(*) as c FROM customers c
+      WHERE ${excludeApplicants}
+        AND date(COALESCE(NULLIF(c.registration_approved_at,''), c.created_at)) = ?
+    `).get(todayStr).c,
   };
 }
 
@@ -818,5 +909,7 @@ module.exports = {
   getAllPackages, getPackageById, createPackage, updatePackage, deletePackage,
   suspendCustomer, activateCustomer, findCustomerByAny, updateCustomerCablePath,
   resetPromoCyclesUsed, getEffectiveRouterId, verifyCustomerPortalPassword,
-  getRegistrationById, getOnlineRegistrations, submitRegistrationSurvey, approveOnlineRegistration
+  getRegistrationById, getOnlineRegistrations, getRegistrationByNumber, getRegistrationByPhone,
+  submitRegistrationSurvey, approveOnlineRegistration, rejectOnlineRegistration,
+  generateRegistrationNumber, generateCustomerNo
 };

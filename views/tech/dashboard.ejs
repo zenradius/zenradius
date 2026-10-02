@@ -16,6 +16,60 @@
   </div>
 </div>
 
+<% if (typeof surveys !== 'undefined' && surveys && surveys.length > 0) { %>
+<div class="mb-4 mt-4">
+  <h6 class="mb-3 text-secondary fw-bold text-uppercase" style="font-size: 13px; letter-spacing: 1px;">
+    <i class="bi bi-clipboard-check me-1"></i> Tugas Survei Pendaftaran (<%= surveys.length %>)
+  </h6>
+  <div class="d-flex flex-column gap-2">
+    <% surveys.forEach(sv => { %>
+      <div class="t-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="badge-status badge-open"><i class="bi bi-geo-alt-fill"></i> Perlu Survei</span>
+          <span class="text-secondary" style="font-size:11px"><%= sv.registration_number || ('REG-' + sv.id) %></span>
+        </div>
+        <div class="fw-bold mb-1" style="font-size:15px"><%= sv.name %></div>
+        <div class="text-secondary mb-2" style="font-size:12px">
+          <i class="bi bi-telephone-fill me-1"></i><%= sv.phone || '-' %><br>
+          <i class="bi bi-geo-alt-fill me-1"></i><%= sv.address || '-' %><br>
+          <i class="bi bi-box-seam me-1"></i><%= sv.package_name || '-' %>
+          <% if (sv.area) { %> • <i class="bi bi-globe2 me-1"></i><%= sv.area %><% } %>
+          <% if (sv.lat && sv.lng) { %>
+            <br><i class="bi bi-map me-1"></i><a href="https://maps.google.com/?q=<%= sv.lat %>,<%= sv.lng %>" target="_blank" rel="noopener" class="text-info text-decoration-none">Buka Peta</a>
+          <% } %>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-success btn-sm" onclick="submitSurvey(<%= sv.id %>, 'eligible', '<%= sv.name.replace(/'/g, "\\'") %>')"><i class="bi bi-check-circle-fill me-1"></i> Layak</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="submitSurvey(<%= sv.id %>, 'ineligible', '<%= sv.name.replace(/'/g, "\\'") %>')"><i class="bi bi-x-circle-fill me-1"></i> Tidak Layak</button>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+<% } %>
+
+<script>
+  async function submitSurvey(id, result, name) {
+    const label = result === 'eligible' ? 'LAYAK' : 'TIDAK LAYAK';
+    const notes = prompt(`Hasil survei: ${label} untuk ${name}.\n\nMohon isi catatan hasil survei (wajib):`);
+    if (notes === null) return;
+    if (!String(notes || '').trim()) { alert('Catatan hasil survei wajib diisi.'); return; }
+    try {
+      const resp = await fetch(`/tech/api/registrations/${encodeURIComponent(id)}/survey`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ result, notes: String(notes).trim() })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.error || 'Gagal menyimpan survei');
+      alert('Hasil survei berhasil disimpan. Notifikasi telah dikirim ke pendaftar.');
+      window.location.reload();
+    } catch (err) {
+      alert('Gagal: ' + (err.message || 'Terjadi kesalahan'));
+    }
+  }
+</script>
+
 <h6 class="mb-3 text-secondary fw-bold text-uppercase" style="font-size: 13px; letter-spacing: 1px;">
   <i class="bi bi-list-task me-1"></i> <%= t('tech.dashboard.active_tasks', 'Tugas Aktif Anda') %> (<%= tickets.length %>)
 </h6>

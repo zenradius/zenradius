@@ -141,7 +141,9 @@ self.addEventListener('fetch', (event) => {
   // Brand images & manifests - network-first so a logo uploaded from admin
   // is shown immediately; cached copy only used when offline.
   if (path === '/img/logo.png' || path === '/img/icon.png' ||
-      path === '/manifest.webmanifest' || path === '/manifest-admin.webmanifest') {
+      path === '/manifest.webmanifest' || path === '/admin/manifest.webmanifest' ||
+      path === '/tech/manifest.webmanifest' || path === '/collector/manifest.webmanifest' ||
+      path === '/agent/manifest.webmanifest') {
     event.respondWith(networkFirst(req));
     return;
   }

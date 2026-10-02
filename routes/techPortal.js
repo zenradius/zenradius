@@ -193,6 +193,12 @@ router.get('/', requireTechSession, (req, res) => {
   const techId = req.session.techId;
   const stats = techSvc.getTechStats(techId);
   const myTickets = techSvc.getAssignedTickets(techId);
+  let surveys = [];
+  try {
+    surveys = customerSvc.getOnlineRegistrations('pending_survey');
+  } catch (e) {
+    logger.warn('[Tech Dashboard] Gagal muat daftar survei: ' + (e?.message || e));
+  }
 
   res.render('tech/dashboard', {
     title: 'Dashboard Teknisi',
@@ -201,6 +207,7 @@ router.get('/', requireTechSession, (req, res) => {
     activePage: 'dashboard',
     stats,
     tickets: myTickets,
+    surveys,
     msg: flashMsg(req)
   });
 });
@@ -255,7 +262,7 @@ router.get('/api/registrations', requireTechSession, (req, res) => {
   }
 });
 
-router.post('/api/registrations/:id/survey', requireTechSession, express.json(), (req, res) => {
+router.post('/api/registrations/:id/survey', requireTechSession, express.json(), async (req, res) => {
   try {
     const registration = customerSvc.submitRegistrationSurvey(
       req.params.id,
@@ -264,6 +271,45 @@ router.post('/api/registrations/:id/survey', requireTechSession, express.json(),
       req.body?.notes
     );
     logger.info(`[Registration] Survey ${registration.survey_status} untuk pendaftar #${registration.id} oleh teknisi #${req.session.techId}`);
+
+    // ── Notifikasi WA ke pendaftar setelah hasil survei ──
+    try {
+      const waEnabled = getSetting('whatsapp_enabled', false);
+      if (waEnabled && registration.phone) {
+        const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
+        if (whatsappStatus?.connection === 'open') {
+          const companyHeader = getSetting('company_header', 'ZenRadius');
+          if (String(registration.survey_status).toLowerCase() === 'eligible') {
+            const msg = `Halo *${registration.name}* 👋
+
+Hasil survei untuk pendaftaran layanan internet *${companyHeader}* Anda:
+
+✅ *Layak & sesuai syarat*
+🆔 No. Registrasi: *${registration.registration_number || '-'}*
+
+Pendaftaran Anda kini menunggu persetujuan Admin. Kami akan mengabari Anda kembali melalui WhatsApp ini.
+
+Terima kasih telah menunggu. 🙏`;
+            await sendWA(registration.phone, msg);
+          } else {
+            const msg = `Mohon maaf *${registration.name}* 🙏
+
+Kami telah melakukan survei untuk pendaftaran layanan internet Anda (No. Registrasi: *${registration.registration_number || '-'}*).
+
+❌ *Hasil survei: Tidak layak*
+${registration.survey_notes ? `Keterangan: ${registration.survey_notes}` : ''}
+
+Jika Anda merasa informasi ini kurang tepat, silakan hubungi tim kami melalui WhatsApp ini.
+
+Terima kasih atas pengertiannya.`;
+            await sendWA(registration.phone, msg);
+          }
+        }
+      }
+    } catch (waErr) {
+      logger.warn(`[Registration] Gagal kirim notif hasil survei WA: ${waErr.message}`);
+    }
+
     return res.json({ success: true, registration });
   } catch (e) {
     return res.status(400).json({ success: false, error: e.message });

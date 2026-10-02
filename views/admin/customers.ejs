@@ -64,14 +64,18 @@
     <div class="card" style="margin-bottom:16px;border-color:rgba(99,102,241,.45)">
       <div class="card-hd">
         <h6><i class="bi bi-person-lines-fill"></i> Pendaftaran Online (<%= onlineRegistrations.length %>)</h6>
-        <span class="badge bp">Tetap tampil saat filter router aktif</span>
+        <div class="d-flex gap-1 flex-wrap">
+          <span class="badge bp">Tetap tampil saat filter router aktif</span>
+          <a href="/admin/registrations/export.csv" class="btn btn-sm btn-s" style="text-decoration:none"><i class="bi bi-download"></i> Export CSV</a>
+        </div>
       </div>
       <div class="tbl-wrap">
         <table class="dtbl">
-          <thead><tr><th>Nama</th><th>Kontak</th><th>Paket</th><th>Survey</th><th>Waktu Daftar</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>No. Registrasi</th><th>Nama</th><th>Kontak</th><th>Paket</th><th>Survey</th><th>Waktu Daftar</th><th>Aging</th><th>Aksi</th></tr></thead>
           <tbody>
           <% onlineRegistrations.forEach(registration => { %>
             <tr>
+              <td><span class="mono" style="font-weight:800;color:var(--primary)"><%= registration.registration_number || '-' %></span></td>
               <td class="fw6"><%= registration.name %></td>
               <td><div><%= registration.phone || '-' %></div><small class="text-muted"><%= registration.email || '-' %></small></td>
               <td><%= registration.package_name || '-' %></td>
@@ -79,16 +83,45 @@
                 <% if (registration.registration_status === 'pending_survey') { %><span class="badge bw">Menunggu Survey</span>
                 <% } else if (registration.registration_status === 'surveyed') { %><span class="badge bp">Layak — Menunggu Approval</span>
                 <% } else if (registration.registration_status === 'approved') { %><span class="badge bs">Disetujui</span>
+                <% } else if (registration.registration_status === 'rejected') { %><span class="badge bd">Ditolak</span>
                 <% } else { %><span class="badge bd">Tidak Layak</span><% } %>
                 <% if (registration.surveyed_by_tech_name) { %><div style="font-size:11px;margin-top:3px"><%= registration.surveyed_by_tech_name %></div><% } %>
+                <% if (registration.registration_reject_reason) { %><div style="font-size:11px;margin-top:3px;color:var(--danger)">Alasan: <%= registration.registration_reject_reason %></div><% } %>
               </td>
               <td><%= registration.created_at || '-' %></td>
               <td>
+                <% if (['pending_survey','surveyed'].includes(registration.registration_status)) { %>
+                  <%
+                    let ageLabel = '-';
+                    if (registration.created_at) {
+                      const createdMs = new Date(registration.created_at + 'Z').getTime();
+                      if (Number.isFinite(createdMs)) {
+                        const days = Math.floor((Date.now() - createdMs) / 86400000);
+                        const hours = Math.floor(((Date.now() - createdMs) % 86400000) / 3600000);
+                        ageLabel = days > 0 ? `${days} hari ${hours} jam` : `${hours} jam`;
+                      }
+                    }
+                  %>
+                  <span class="badge <%= (ageLabel !== '-' && (ageLabel.startsWith('2') || ageLabel.startsWith('3') || ageLabel.startsWith('4') || ageLabel.startsWith('5') || ageLabel.startsWith('6') || ageLabel.startsWith('7') || ageLabel.startsWith('8') || ageLabel.startsWith('9'))) ? 'bd' : 'bw' %>"><i class="bi bi-clock"></i> <%= ageLabel %></span>
+                <% } else { %>
+                  <span class="text-muted" style="font-size:11px">-</span>
+                <% } %>
+              </td>
+              <td>
                 <% if (registration.registration_status === 'surveyed' && registration.survey_status === 'eligible') { %>
-                  <button type="button" class="btn btn-s btn-sm" data-registration-id="<%= registration.id %>" data-registration-name="<%= registration.name %>" onclick="approveOnlineRegistration(Number(this.dataset.registrationId), this.dataset.registrationName)"><i class="bi bi-check2-circle"></i> Approve & Aktifkan</button>
+                  <div class="d-flex flex-wrap gap-1" style="flex-wrap:nowrap">
+                    <button type="button" class="btn btn-s btn-sm" data-registration-id="<%= registration.id %>" data-registration-name="<%= registration.name %>" onclick="approveOnlineRegistration(Number(this.dataset.registrationId), this.dataset.registrationName)"><i class="bi bi-check2-circle"></i> Approve</button>
+                    <button type="button" class="btn btn-sm btn-custom-reject" data-registration-id="<%= registration.id %>" data-registration-name="<%= registration.name %>" onclick="rejectOnlineRegistration(Number(this.dataset.registrationId), this.dataset.registrationName)"><i class="bi bi-x-circle"></i> Tolak</button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-registration='<%- JSON.stringify(registration) %>' onclick="showRegistrationDetail(this)"><i class="bi bi-eye"></i> Detail</button>
+                  </div>
                 <% } else if (registration.registration_status === 'pending_survey') { %>
-                  <span class="text-muted" style="font-size:12px">Menunggu hasil teknisi</span>
-                <% } else { %><span class="text-muted" style="font-size:12px">-</span><% } %>
+                  <div class="d-flex flex-wrap gap-1" style="flex-wrap:nowrap">
+                    <button type="button" class="btn btn-sm btn-custom-reject" data-registration-id="<%= registration.id %>" data-registration-name="<%= registration.name %>" onclick="rejectOnlineRegistration(Number(this.dataset.registrationId), this.dataset.registrationName)"><i class="bi bi-x-circle"></i> Tolak</button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-registration='<%- JSON.stringify(registration) %>' onclick="showRegistrationDetail(this)"><i class="bi bi-eye"></i> Detail</button>
+                  </div>
+                <% } else { %>
+                  <button type="button" class="btn btn-sm btn-secondary" data-registration='<%- JSON.stringify(registration) %>' onclick="showRegistrationDetail(this)"><i class="bi bi-eye"></i> Detail</button>
+                <% } %>
               </td>
             </tr>
           <% }) %>
@@ -106,6 +139,8 @@
       .sc.s.stat-card-active { border-color: var(--success) !important; box-shadow: 0 0 12px var(--sdim); }
       .sc.w.stat-card-active { border-color: var(--warning) !important; box-shadow: 0 0 12px var(--wdim); }
       .sc.d.stat-card-active { border-color: var(--danger) !important; box-shadow: 0 0 12px var(--ddim); }
+      .btn-custom-reject { background: var(--ddim, rgba(239,68,68,.12)) !important; color: var(--danger, #ef4444) !important; border: 1px solid color-mix(in srgb, var(--danger, #ef4444) 40%, transparent) !important; font-weight: 700; }
+      .btn-custom-reject:hover { background: var(--danger, #ef4444) !important; color: #fff !important; }
     </style>
     <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="sc p sc-clickable <%= (!filterStatus) ? 'stat-card-active' : '' %>" onclick="filterByStatus('')" title="Klik untuk tampilkan semua pelanggan">
@@ -189,7 +224,7 @@
         <table class="dtbl">
           <thead>
             <tr>
-              <th>#</th>
+              <th><%= t('admin.customers.table.no', 'No. Pelanggan') %></th>
               <th><%= t('admin.customers.table.name', 'Nama') %></th>
               <th><%= t('admin.customers.table.phone_tag', 'Telepon / Tag ONU') %></th>
               <th><%= t('admin.customers.table.package', 'Paket') %></th>
@@ -202,11 +237,13 @@
           </thead>
           <tbody>
           <% if (customers.length === 0) { %>
-            <tr><td colspan="8" class="text-center text-muted" style="padding:32px"><%= t('admin.customers.empty', 'Belum ada pelanggan') %></td></tr>
+            <tr><td colspan="9" class="text-center text-muted" style="padding:32px"><%= t('admin.customers.empty', 'Belum ada pelanggan') %></td></tr>
           <% } %>
           <% customers.forEach((c, i) => { %>
             <tr>
-              <td class="text-muted"><%= i+1 %></td>
+              <td>
+                <span class="mono" style="font-weight:800;color:var(--primary);font-size:12px"><%= (c.customer_no || String(c.id).padStart(8, '0')).replace(/(\d{4})(\d{4})/, '$1 $2') %></span>
+              </td>
               <td class="fw6">
                 <a href="javascript:void(0)" onclick="viewCustDetail(<%= i %>)" style="color:var(--primary);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;" title="Klik untuk lihat detail pelanggan & MikroTik">
                   <%= c.name %>
@@ -1014,6 +1051,37 @@
 </div>
 
 <!-- Modal Detail & Koneksi Pelanggan -->
+<div class="mo" id="regDetailModal">
+  <div class="mb" style="max-width:720px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-person-lines-fill"></i> Detail Pendaftaran Online</span>
+      <button type="button" class="mc" onclick="closeModal('regDetailModal')">&times;</button>
+    </div>
+    <div class="mbody" style="padding:16px 20px">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h5 id="rd_name" class="m-0 fw-bold" style="color:var(--text);font-size:16px">-</h5>
+          <span class="text-muted" style="font-size:12px">No. Registrasi: <strong id="rd_number" style="color:var(--primary)">-</strong></span>
+        </div>
+        <span id="rd_badge" class="badge">-</span>
+      </div>
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-6"><div style="background:var(--panel2);border:1px solid rgba(148,163,184,0.15);border-radius:10px;padding:10px 12px"><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.04em">No. WhatsApp</div><div class="fw-bold" id="rd_phone" style="color:var(--text)">-</div></div></div>
+        <div class="col-md-6"><div style="background:var(--panel2);border:1px solid rgba(148,163,184,0.15);border-radius:10px;padding:10px 12px"><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.04em">Email</div><div class="fw-bold" id="rd_email" style="color:var(--text)">-</div></div></div>
+        <div class="col-md-6"><div style="background:var(--panel2);border:1px solid rgba(148,163,184,0.15);border-radius:10px;padding:10px 12px"><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.04em">Wilayah</div><div class="fw-bold" id="rd_area" style="color:var(--text)">-</div></div></div>
+        <div class="col-md-6"><div style="background:var(--panel2);border:1px solid rgba(148,163,184,0.15);border-radius:10px;padding:10px 12px"><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.04em">Paket</div><div class="fw-bold" id="rd_package" style="color:var(--text)">-</div></div></div>
+        <div class="col-12"><div style="background:var(--panel2);border:1px solid rgba(148,163,184,0.15);border-radius:10px;padding:10px 12px"><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.04em">Alamat</div><div class="fw-bold" id="rd_address" style="color:var(--text)">-</div></div></div>
+      </div>
+
+      <div class="fw6 mb-2 text-primary" style="font-size:13px"><i class="bi bi-clock-history"></i> Riwayat Proses</div>
+      <div id="rd_timeline" style="font-size:12.5px;line-height:1.7"></div>
+
+      <% if (typeof hasTimelineData !== 'undefined' && hasTimelineData) { %><div id="rd_timeline_extra"></div><% } %>
+    </div>
+  </div>
+</div>
+
 <div class="mo" id="viewDetailModal">
   <div class="mb" style="max-width:700px">
     <div class="mh">
@@ -1025,7 +1093,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3 p-3" style="background:var(--panel2);border:1px solid rgba(148,163,184,0.15);border-radius:12px">
         <div>
           <h5 id="v_cust_name" class="m-0 font-weight-bold" style="color:var(--text);font-size:16px">-</h5>
-          <span class="text-muted" style="font-size:12px">ID Pelanggan: #<strong id="v_cust_id">-</strong></span>
+          <span class="text-muted" style="font-size:12px">No. Pelanggan: <strong id="v_cust_no" style="color:var(--primary);font-family:monospace">-</strong> &bull; ID: #<strong id="v_cust_id">-</strong></span>
         </div>
         <div id="v_online_badge">
           <!-- Badge Online/Offline inserted dynamically -->
@@ -1169,6 +1237,7 @@
 <script id="sessions-data" type="application/json"><%- JSON.stringify(Array.from(typeof activeSessionsMap !== 'undefined' && activeSessionsMap && activeSessionsMap.entries ? activeSessionsMap.entries() : [])) %></script>
 <script id="settings-data" type="application/json"><%- JSON.stringify(settings) %></script>
 <script id="routers-data" type="application/json"><%- JSON.stringify(routers || []) %></script>
+<script id="complete-registration-data" type="application/json"><%- JSON.stringify(typeof actionCompleteRegistration !== 'undefined' ? actionCompleteRegistration : '') %></script>
 <script id="pay-months-data" type="application/json"><%- JSON.stringify((lang === 'en')
   ? ['January','February','March','April','May','June','July','August','September','October','November','December']
   : ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']) %></script>
@@ -1200,15 +1269,82 @@ function safeParseJSON(elementId, fallback = []) {
 }
 
 async function approveOnlineRegistration(id, name) {
-  if (!confirm(`Setujui pendaftaran ${name} dan aktifkan layanannya?`)) return;
+  const ok = await window.appConfirm(`Setujui pendaftaran ${name} dan aktifkan layanannya?`, { title: 'Approve Pendaftaran', danger: false, okText: 'Approve & Aktifkan' });
+  if (!ok) return;
   try {
     const response = await fetch(`/admin/customers/${encodeURIComponent(id)}/registration/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const result = await response.json();
     if (!response.ok || !result.success) throw new Error(result.error || 'Approval pendaftaran gagal');
+    window.location.href = `/admin/customers?action=complete_registration&id=${encodeURIComponent(result.customer_id || id)}`;
+  } catch (error) {
+    window.appNotify(error.message || 'Approval pendaftaran gagal', 'error');
+  }
+}
+
+async function rejectOnlineRegistration(id, name) {
+  const value = await window.appPrompt(`Tolak pendaftaran ${name}.\n\nAlasan penolakan (mis. wilayah belum tercover / di luar jangkauan):`, {
+    title: 'Tolak Pendaftaran',
+    placeholder: 'Masukkan alasan penolakan...'
+  });
+  if (value === null) return;
+  const trimmed = String(value || '').trim();
+  if (!trimmed) { window.appNotify('Alasan penolakan wajib diisi.', 'warning'); return; }
+  try {
+    const response = await fetch(`/admin/customers/${encodeURIComponent(id)}/registration/reject`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: trimmed }) });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || 'Penolakan pendaftaran gagal');
+    window.appNotify('Pendaftaran ditolak dan notifikasi telah dikirim ke WhatsApp pendaftar.', 'success');
     window.location.reload();
   } catch (error) {
-    alert(error.message || 'Approval pendaftaran gagal');
+    window.appNotify(error.message || 'Penolakan pendaftaran gagal', 'error');
   }
+}
+
+function showRegistrationDetail(btn) {
+  let reg = null;
+  try { reg = JSON.parse(btn.getAttribute('data-registration') || '{}'); } catch (e) { alert('Data pendaftar tidak valid.'); return; }
+  if (!reg || !reg.id) return;
+
+  document.getElementById('rd_name').textContent = reg.name || '-';
+  document.getElementById('rd_number').textContent = reg.registration_number || `REG-${reg.id}`;
+  document.getElementById('rd_phone').textContent = reg.phone || '-';
+  document.getElementById('rd_email').textContent = reg.email || '-';
+  document.getElementById('rd_area').textContent = reg.area || '-';
+  document.getElementById('rd_package').textContent = reg.package_name || '-';
+  document.getElementById('rd_address').textContent = reg.address || '-';
+
+  const st = String(reg.registration_status || '');
+  const badge = document.getElementById('rd_badge');
+  if (st === 'approved') { badge.className = 'badge bs'; badge.textContent = 'Disetujui & Aktif'; }
+  else if (st === 'rejected') { badge.className = 'badge bd'; badge.textContent = 'Ditolak'; }
+  else if (st === 'surveyed') { badge.className = 'badge bp'; badge.textContent = 'Menunggu Approval'; }
+  else { badge.className = 'badge bw'; badge.textContent = 'Menunggu Survei'; }
+
+  const steps = [];
+  steps.push({ label: 'Pendaftaran dibuat', time: reg.created_at || '-', icon: 'person-plus-fill' });
+  if (reg.surveyed_at) steps.push({ label: reg.survey_status === 'eligible' ? 'Survei selesai (Layak)' : 'Survei selesai (Tidak Layak)', time: reg.surveyed_at, icon: 'clipboard-check' });
+  if (reg.registration_approved_at) steps.push({ label: 'Disetujui & diaktifkan', time: reg.registration_approved_at, icon: 'check-circle-fill' });
+  if (reg.registration_rejected_at) steps.push({ label: 'Ditolak', time: reg.registration_rejected_at, icon: 'x-circle-fill' });
+
+  let html = '';
+  steps.forEach((s, idx) => {
+    const isLast = idx === steps.length - 1;
+    html += `<div style="display:flex;gap:10px;align-items:flex-start;position:relative">
+      <div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--pdim, rgba(34,211,238,.12));color:var(--primary, #22d3ee);flex-shrink:0"><i class="bi bi-${s.icon}"></i></div>
+      <div style="flex:1;padding-bottom:${isLast ? '0' : '14px'}">
+        <div style="font-weight:700;color:var(--text)">${s.label}</div>
+        <div style="font-size:11px;color:var(--muted)">${s.time}</div>
+      </div>
+    </div>`;
+  });
+  if (reg.registration_reject_reason) {
+    html += `<div class="mt-2" style="background:var(--ddim, rgba(248,113,113,.1));border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:8px 12px;color:#f87171;font-size:12px"><b>Alasan penolakan:</b> ${reg.registration_reject_reason}</div>`;
+  }
+  if (reg.survey_notes) {
+    html += `<div class="mt-2" style="background:var(--panel2);border:1px solid rgba(148,163,184,0.15);border-radius:8px;padding:8px 12px;color:var(--muted);font-size:12px"><b>Catatan survei:</b> ${reg.survey_notes}</div>`;
+  }
+  document.getElementById('rd_timeline').innerHTML = html || '<span class="text-muted">Belum ada riwayat.</span>';
+  openModal('regDetailModal');
 }
 
 const customersData = safeParseJSON('customers-data', []);
@@ -1263,6 +1399,10 @@ function viewCustDetail(idx) {
 
     if (document.getElementById('v_cust_name')) document.getElementById('v_cust_name').textContent = c.name || '-';
     if (document.getElementById('v_cust_id')) document.getElementById('v_cust_id').textContent = c.id || '-';
+    if (document.getElementById('v_cust_no')) {
+      const no = (c.customer_no || String(c.id || '').padStart(8, '0'));
+      document.getElementById('v_cust_no').textContent = no.replace(/(\d{4})(\d{4})/, '$1 $2') || '-';
+    }
 
     if (document.getElementById('v_online_badge')) {
       if (isOnline) {
@@ -1839,6 +1979,21 @@ document.querySelector('#editForm')?.addEventListener('submit', function(event) 
 });
 
 setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),4000);
+
+// ── Auto-buka modal edit setelah approve pendaftaran online (lengkapi PPPoE dll) ──
+(function () {
+  let targetId = '';
+  try {
+    const raw = document.getElementById('complete-registration-data');
+    if (raw) targetId = JSON.parse(raw.textContent || '""');
+  } catch (e) { targetId = ''; }
+  if (!targetId) return;
+  const idx = customersData.findIndex(c => String(c.id) === String(targetId));
+  if (idx >= 0) {
+    // Berikan waktu agar DOM & datalist router siap
+    setTimeout(() => editCust(idx), 400);
+  }
+})();
 </script>
 </body>
 </html>

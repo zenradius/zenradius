@@ -23,6 +23,7 @@ const _jimpMod = require('jimp');
 const Jimp = _jimpMod.Jimp || _jimpMod;
 const qrisUtil = require('../utils/qrisUtil');
 const { BinaryBitmap, HybridBinarizer, RGBLuminanceSource, MultiFormatReader, BarcodeFormat, DecodeHintType } = require('@zxing/library');
+const areaSvc = require('../services/areaService');
 const customerWifiChangeCooldown = new Map();
 
 function checkCustomerWifiChangeCooldown(sessionId) {
@@ -809,7 +810,9 @@ function buildStoredPaymentInstructionData(invoice, method = '') {
 }
 
 function renderPaymentInstructionPage(res, settings, options = {}) {
-  return res.render('payment-instruction', {
+  const mode = options.mode || 'va';
+  const view = mode === 'qris' ? 'qris_auto' : 'payment-instruction';
+  return res.render(view, {
     settings,
     backUrl: options.backUrl || '/customer/topup',
     changeMethodUrl: options.changeMethodUrl || '',
@@ -818,14 +821,23 @@ function renderPaymentInstructionPage(res, settings, options = {}) {
     gateway: options.gateway || '',
     method: options.method || '',
     amount: options.amount || 0,
-    mode: options.mode || 'va',
+    mode,
     reference: options.reference || '',
     qrImageUrl: options.qrImageUrl || '',
     paymentUrl: options.paymentUrl || '',
     instruction: options.instruction || '',
     details: options.details || {},
     helpText: options.helpText || '',
-    error: options.error || null
+    error: options.error || null,
+    /* Ekstra untuk template qris_auto (sinonim dengan qris_static) */
+    customerName: options.customerName || '',
+    periodText: options.periodText || '',
+    invoiceId: options.invoiceId || 0,
+    kind: options.kind || 'invoice',
+    publicToken: options.publicToken || '',
+    proofUrl: options.proofUrl || '',
+    proofActionUrl: options.proofActionUrl || '',
+    adminWaDigits: options.adminWaDigits || ''
   });
 }
 
@@ -1455,6 +1467,12 @@ router.get('/voucher/payment/:orderId', (req, res) => {
     helpText: instructionData.mode === 'qris'
       ? 'Scan QR untuk menyelesaikan pembelian voucher. Pesanan diproses otomatis setelah pembayaran terverifikasi.'
       : 'Transfer sesuai nominal ke virtual account. Pesanan diproses otomatis setelah pembayaran terverifikasi.',
+    kind: 'voucher',
+    invoiceId: Number(orderId),
+    customerName: order.buyer_phone ? `WA: ${order.buyer_phone}` : 'Pembeli Voucher',
+    periodText: `${order.profile_name || ''}${order.validity ? ' • ' + String(order.validity) : ''}`,
+    publicToken: String(req.query.t || ''),
+    adminWaDigits: getFirstAdminWaDigits(settings),
     ...instructionData
   });
 });
@@ -1803,6 +1821,12 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
       helpText: instructionData.mode === 'qris'
         ? 'Scan QR dengan aplikasi pembayaran. Pesanan diproses otomatis setelah pembayaran terverifikasi.'
         : 'Transfer sesuai nominal ke nomor virtual account. Pesanan diproses otomatis setelah pembayaran terverifikasi.',
+      kind: 'voucher',
+      invoiceId: Number(orderId),
+      customerName: order.buyer_phone ? `WA: ${order.buyer_phone}` : 'Pembeli Voucher',
+      periodText: `${order.profile_name || ''}${order.validity ? ' • ' + String(order.validity) : ''}`,
+      publicToken: String(token || ''),
+      adminWaDigits: getFirstAdminWaDigits(settings),
       ...instructionData
     });
   } catch (e) {
@@ -1815,14 +1839,16 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
 router.get('/register', (req, res) => {
   const settings = getSettingsWithCache();
   const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
+  const areas = areaSvc.getAllAreas();
   const selectedPackageId = String(req.query.package || '').trim();
-  res.render('register', { error: null, success: null, settings, packages, selectedPackageId });
+  res.render('register', { error: null, success: null, settings, packages, areas, selectedPackageId });
 });
 
 router.post('/register', async (req, res) => {
   const settings = getSettingsWithCache();
   const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
-  const { name, phone, email, portal_password, confirm_portal_password, address, package_id, lat, lng, agree_terms } = req.body;
+  const areas = areaSvc.getAllAreas();
+  const { name, phone, email, portal_password, confirm_portal_password, address, area, package_id, lat, lng, agree_terms } = req.body;
 
   try {
     const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -1830,22 +1856,42 @@ router.post('/register', async (req, res) => {
     if (!name || !phone || !normalizedEmail || !portalPassword || !address || !package_id) {
       throw new Error('Semua field wajib diisi.');
     }
+    const normalizedArea = String(area || '').trim();
+    if (!normalizedArea) throw new Error('Wilayah/Area tempat tinggal wajib dipilih.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) throw new Error('Format email tidak valid.');
     if (portalPassword.length < 8) throw new Error('Password portal minimal 8 karakter.');
     if (portalPassword !== String(confirm_portal_password || '')) throw new Error('Konfirmasi password portal tidak sama.');
-    if (db.prepare("SELECT id FROM customers WHERE LOWER(email)=? AND email != '' LIMIT 1").get(normalizedEmail)) {
-      throw new Error('Email ini sudah terdaftar. Gunakan email lain atau login ke portal pelanggan.');
-    }
     if (agree_terms !== '1' && agree_terms !== true && agree_terms !== 'true') {
       throw new Error('Anda harus menyetujui Syarat & Ketentuan sebelum mendaftar.');
     }
 
+    // ── Validasi & normalisasi nomor WhatsApp ──
+    const rawPhoneDigits = String(phone || '').replace(/\D/g, '');
+    if (rawPhoneDigits.length < 9) throw new Error('Nomor WhatsApp tidak valid. Gunakan minimal 9 digit (contoh: 081234567890).');
+    const normalizedPhone = normalizeWaDigits(rawPhoneDigits) || (rawPhoneDigits.startsWith('0') ? '62' + rawPhoneDigits.slice(1) : rawPhoneDigits);
+    if (normalizedPhone.length < 10) throw new Error('Nomor WhatsApp tidak valid. Gunakan format yang benar (contoh: 081234567890).');
+
+    // Cek duplikat nomor WA — baik di pelanggan terdaftar maupun calon pendaftar yang masih diproses
+    const dupPhone = db.prepare("SELECT id, name, registration_source, registration_status FROM customers WHERE phone = ? LIMIT 1").get(normalizedPhone);
+    if (dupPhone) {
+      if (dupPhone.registration_source === 'online' && ['pending_survey', 'surveyed'].includes(dupPhone.registration_status || '')) {
+        throw new Error('Nomor WhatsApp ini sudah terdaftar sebagai calon pelanggan yang sedang diproses. Silakan tunggu konfirmasi dari kami atau hubungi admin.');
+      }
+      throw new Error('Nomor WhatsApp ini sudah terdaftar. Gunakan nomor lain atau login ke portal pelanggan.');
+    }
+
+    // Cek duplikat email — termasuk pendaftar online yang belum selesai
+    if (db.prepare("SELECT id, registration_source, registration_status FROM customers WHERE LOWER(email)=? AND email != '' LIMIT 1").get(normalizedEmail)) {
+      throw new Error('Email ini sudah terdaftar. Gunakan email lain atau login ke portal pelanggan.');
+    }
+
     const newCustomer = customerSvc.createOnlineRegistration({
       name,
-      phone,
+      phone: normalizedPhone,
       email: normalizedEmail,
       portal_password: hashPassword(portalPassword),
       address,
+      area: normalizedArea,
       package_id,
       lat: String(lat || '').trim(),
       lng: String(lng || '').trim(),
@@ -1853,12 +1899,38 @@ router.post('/register', async (req, res) => {
       notes: 'Pendaftar Baru via Online'
     });
 
+    const regNumberText = String(newCustomer?.registration_number || '').trim();
+
+    const selectedPkg = packages.find(p => p.id.toString() === package_id.toString());
+    const pkgName = selectedPkg ? selectedPkg.name : 'Tidak diketahui';
+
+    // ── Notifikasi ke pendaftar: pendaftaran diterima & menunggu survei ──
+    if (settings.whatsapp_enabled) {
+      try {
+        const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
+        if (whatsappStatus?.connection === 'open') {
+          const applicantMsg = `Halo *${name}* 👋
+
+Terima kasih telah mendaftar layanan internet *${settings.company_header || 'ZenRadius'}*.
+
+✅ *Pendaftaran Anda telah kami terima*
+🆔 *No. Registrasi:* ${regNumberText || '-'}
+📦 Paket yang dipilih: *${pkgName}*
+📍 Alamat pemasangan: *${address}*
+🗺️ Wilayah: *${normalizedArea}*
+
+Kami akan segera menghubungi Anda untuk verifikasi wilayah dan survei lokasi (estimasi *1×24 jam kerja*). Mohon tunggu konfirmasi dari tim kami melalui WhatsApp ini.
+
+Terima kasih atas kepercayaan Anda. 🙏`;
+          try { await sendWA(normalizedPhone, applicantMsg); } catch (e) { logger.warn('[Register] Gagal kirim notif ke pendaftar: ' + (e?.message || e)); }
+        }
+      } catch (e) { /* whatsapp module not ready */ }
+    }
+
     if (settings.whatsapp_enabled && settings.whatsapp_admin_numbers && settings.whatsapp_admin_numbers.length > 0) {
       const { sendWA } = await import('../services/whatsappBot.mjs');
-      const selectedPkg = packages.find(p => p.id.toString() === package_id.toString());
-      const pkgName = selectedPkg ? selectedPkg.name : 'Tidak diketahui';
       
-      const adminMsg = `🔔 *PENDAFTARAN BARU*\n\nAda calon pelanggan baru yang mendaftar via web:\n\n👤 *Nama:* ${name}\n📞 *WA:* ${phone}\n📍 *Alamat:* ${address}\n📦 *Paket:* ${pkgName}\n\nSilakan cek di panel Admin untuk menindaklanjuti.`;
+      const adminMsg = `🔔 *PENDAFTARAN BARU*\n\nAda calon pelanggan baru yang mendaftar via web:\n\n🆔 *No. Registrasi:* ${regNumberText || '-'}\n👤 *Nama:* ${name}\n📞 *WA:* ${normalizedPhone}\n🗺️ *Wilayah:* ${normalizedArea}\n📍 *Alamat:* ${address}\n📦 *Paket:* ${pkgName}\n\nSilakan cek di panel Admin untuk menindaklanjuti.`;
       const latStr = String(lat || '').trim();
       const lngStr = String(lng || '').trim();
       const mapLine = (latStr && lngStr) ? `\n🗺️ *Lokasi:* https://maps.google.com/?q=${encodeURIComponent(latStr)},${encodeURIComponent(lngStr)}` : '';
@@ -1882,10 +1954,7 @@ router.post('/register', async (req, res) => {
         const technicians = adminSvc.getAllTechnicians().filter(t => t.is_active === 1 && t.phone);
         
         if (technicians.length > 0) {
-          const selectedPkg = packages.find(p => p.id.toString() === package_id.toString());
-          const pkgName = selectedPkg ? selectedPkg.name : 'Tidak diketahui';
-          
-          const techMsg = `🔧 *PENDAFTARAN BARU - PERLU SURVEI*\n\nAda calon pelanggan baru yang perlu disurvei:\n\n👤 *Nama:* ${name}\n📞 *WA:* ${phone}\n📍 *Alamat:* ${address}\n📦 *Paket:* ${pkgName}\n\nSilakan koordinasi dengan admin untuk jadwal survei.`;
+          const techMsg = `🔧 *PENDAFTARAN BARU - PERLU SURVEI*\n\nAda calon pelanggan baru yang perlu disurvei:\n\n🆔 *No. Registrasi:* ${regNumberText || '-'}\n👤 *Nama:* ${name}\n📞 *WA:* ${normalizedPhone}\n🗺️ *Wilayah:* ${normalizedArea}\n📍 *Alamat:* ${address}\n📦 *Paket:* ${pkgName}\n\nSilakan koordinasi dengan admin untuk jadwal survei.`;
           const latStr = String(lat || '').trim();
           const lngStr = String(lng || '').trim();
           const mapLine = (latStr && lngStr) ? `\n🗺️ *Lokasi:* https://maps.google.com/?q=${encodeURIComponent(latStr)},${encodeURIComponent(lngStr)}` : '';
@@ -1906,11 +1975,59 @@ router.post('/register', async (req, res) => {
 
     res.render('register', { 
       error: null, 
-      success: 'Pendaftaran berhasil! Setelah survey dan approval, gunakan email serta password yang dibuat untuk login ke portal pelanggan.', 
-      settings, packages, selectedPackageId: ''
+      success: `Pendaftaran berhasil! Nomor registrasi Anda: *${regNumberText || '-'}*. Tim kami akan menghubungi WhatsApp ${normalizedPhone} untuk verifikasi wilayah dan survei. Setelah disetujui, gunakan email serta password yang dibuat untuk login ke portal pelanggan.`, 
+      settings, packages, areas, selectedPackageId: ''
     });
   } catch (err) {
-    res.render('register', { error: err.message, success: null, settings, packages, selectedPackageId: String(package_id || '') });
+    res.render('register', { error: err.message, success: null, settings, packages, areas, selectedPackageId: String(package_id || '') });
+  }
+});
+
+router.get('/register/status', (req, res) => {
+  const settings = getSettingsWithCache();
+  const error = String(req.query.err || '').trim() || null;
+  const info = String(req.query.info || '').trim() || null;
+  res.render('register_status', { settings, error, info, result: null, query: '' });
+});
+
+router.post('/register/status', async (req, res) => {
+  const settings = getSettingsWithCache();
+  const q = String(req.body?.q || '').trim();
+
+  if (!q) {
+    return res.render('register_status', {
+      settings, error: 'Masukkan nomor registrasi atau nomor WhatsApp untuk mengecek status.', info: null, result: null, query: q
+    });
+  }
+
+  try {
+    // Cari berdasarkan nomor registrasi (REG-2026-0001) atau nomor HP (yang dinormalisasi)
+    let reg = null;
+    const qUpper = q.toUpperCase();
+    if (/^REG-\d{4}-\d+$/i.test(qUpper)) {
+      reg = customerSvc.getRegistrationByNumber(qUpper);
+    }
+    if (!reg) {
+      const digits = String(q || '').replace(/\D/g, '');
+      if (digits.length >= 9) {
+        const normalizedPhone = normalizeWaDigits(digits) || (digits.startsWith('0') ? '62' + digits.slice(1) : digits);
+        reg = customerSvc.getRegistrationByPhone(normalizedPhone);
+      }
+    }
+    if (!reg) {
+      return res.render('register_status', {
+        settings, error: 'Data pendaftaran tidak ditemukan. Periksa kembali nomor registrasi atau nomor WhatsApp Anda.', info: null, result: null, query: q
+      });
+    }
+
+    return res.render('register_status', {
+      settings, error: null, info: null, result: reg, query: q
+    });
+  } catch (e) {
+    logger.error('[Register Status] Error: ' + (e?.message || e));
+    return res.render('register_status', {
+      settings, error: 'Terjadi kesalahan. Silakan coba lagi.', info: null, result: null, query: q
+    });
   }
 });
 
@@ -1947,8 +2064,18 @@ router.post('/login', loginRateLimiter, async (req, res) => {
 
   if (customer.registration_source === 'online' && customer.registration_status !== 'approved') {
     const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
+    let errorMsg;
+    if (customer.registration_status === 'rejected') {
+      errorMsg = customer.registration_reject_reason
+        ? `Pendaftaran Anda belum dapat diproses. Alasan: ${customer.registration_reject_reason}. Silakan hubungi admin untuk informasi lebih lanjut.`
+        : 'Pendaftaran Anda belum dapat diproses. Silakan hubungi admin untuk informasi lebih lanjut.';
+    } else if (customer.registration_status === 'surveyed') {
+      errorMsg = 'Pendaftaran Anda telah disurvei dan menunggu persetujuan Admin. Silakan tunggu konfirmasi melalui WhatsApp.';
+    } else {
+      errorMsg = 'Pendaftaran Anda masih menunggu survey dan approval Admin.';
+    }
     return res.render('customer-login', {
-      error: 'Pendaftaran Anda masih menunggu survey dan approval Admin.',
+      error: errorMsg,
       success: null,
       settings,
       packages
@@ -2981,6 +3108,12 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
             helpText: storedInstruction.mode === 'qris'
               ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
               : 'Transfer sesuai nominal ke nomor virtual account. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.',
+            kind: 'invoice',
+            invoiceId: Number(inv.id),
+            customerName: inv.customer_name || '',
+            periodText: `${inv.period_month}/${inv.period_year}`,
+            publicToken: String(req.body.token || ''),
+            adminWaDigits: getFirstAdminWaDigits(settings),
             ...storedInstruction
           });
         }
@@ -3069,6 +3202,12 @@ router.post('/public/payment/create/:invoiceId', async (req, res) => {
         helpText: instructionData.mode === 'qris'
           ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
           : 'Transfer sesuai nominal ke nomor virtual account. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.',
+        kind: 'invoice',
+        invoiceId: Number(inv.id),
+        customerName: inv.customer_name || '',
+        periodText: `${inv.period_month}/${inv.period_year}`,
+        publicToken: String(req.body.token || ''),
+        adminWaDigits: getFirstAdminWaDigits(settings),
         ...instructionData
       });
     }
@@ -3281,6 +3420,12 @@ router.post('/payment/batch/create', express.urlencoded({ extended: true }), asy
       helpText: instructionData.mode === 'qris'
         ? 'Scan QR untuk menyelesaikan pembayaran seluruh tagihan yang dipilih.'
         : 'Transfer sesuai nominal ke virtual account untuk menyelesaikan seluruh tagihan yang dipilih.',
+      kind: 'batch',
+      invoiceId: Number(batchId),
+      customerName: profile?.name || '',
+      periodText: `${invoiceIds.length} tagihan`,
+      publicToken: '',
+      adminWaDigits: getFirstAdminWaDigits(settings),
       ...instructionData
     });
   } catch (error) {
@@ -3386,6 +3531,12 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
             helpText: storedInstruction.mode === 'qris'
               ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
               : 'Transfer sesuai nominal ke nomor virtual account. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.',
+            kind: 'invoice',
+            invoiceId: Number(inv.id),
+            customerName: profile?.name || inv.customer_name || '',
+            periodText: `${inv.period_month}/${inv.period_year}`,
+            publicToken: publicToken || '',
+            adminWaDigits: getFirstAdminWaDigits(settings),
             ...storedInstruction
           });
         }
@@ -3505,6 +3656,12 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
         helpText: instructionData.mode === 'qris'
           ? 'Scan QR dengan aplikasi pembayaran. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.'
           : 'Transfer sesuai nominal ke nomor virtual account. Status tagihan diperbarui otomatis setelah pembayaran terverifikasi.',
+        kind: 'invoice',
+        invoiceId: Number(inv.id),
+        customerName: profile?.name || inv.customer_name || '',
+        periodText: `${inv.period_month}/${inv.period_year}`,
+        publicToken: publicToken || '',
+        adminWaDigits: getFirstAdminWaDigits(settings),
         ...instructionData
       });
     } else {
@@ -4398,6 +4555,12 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
       mode: instructionData.mode,
       qrImageUrl: instructionData.qrImageUrl,
       details: instructionData.details,
+      kind: 'topup',
+      invoiceId: Number(reqId),
+      customerName: customer?.name || 'Top-Up Saldo',
+      periodText: `Top-Up Rp ${Number(amount || 0).toLocaleString('id-ID')}`,
+      publicToken: '',
+      adminWaDigits: getFirstAdminWaDigits(settings),
       ...instructionData
     });
   } catch(e) {
@@ -4491,6 +4654,12 @@ router.post('/agent-topup/create', express.urlencoded({ extended: true }), async
       mode: instructionData.mode,
       qrImageUrl: instructionData.qrImageUrl,
       details: instructionData.details,
+      kind: 'topup',
+      invoiceId: Number(reqId),
+      customerName: agent?.name || 'Top-Up Agent',
+      periodText: `Top-Up Rp ${Number(amount || 0).toLocaleString('id-ID')}`,
+      publicToken: '',
+      adminWaDigits: getFirstAdminWaDigits(settings),
       ...instructionData
     });
   } catch(e) {

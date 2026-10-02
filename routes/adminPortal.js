@@ -1775,7 +1775,7 @@ router.get('/bulk', requireAdminSession, (req, res) => {
 });
 
 router.get('/customers', requireAdminSession, requireSidebarMenuAccess('customers'), async (req, res) => {
-  const { search = '', status: filterStatus = '', area: filterArea = '' } = req.query;
+  const { search = '', status: filterStatus = '', area: filterArea = '', action = '', id: actionId = '' } = req.query;
   const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
   const customers = customerSvc.getAllCustomers(search, selectedRouterId, filterStatus, filterArea);
   const stats = customerSvc.getCustomerStats();
@@ -1798,6 +1798,7 @@ router.get('/customers', requireAdminSession, requireSidebarMenuAccess('customer
   res.render('admin/customers', {
     title: 'Data Pelanggan', company: company(), activePage: 'customers',
     customers, stats, packages, routers, olts, odps, collectors, areas, masterAreas, onlineRegistrations, activeSessionsMap, search, filterStatus, filterArea, selectedRouterId, msg: flashMsg(req),
+    actionCompleteRegistration: String(action) === 'complete_registration' ? String(actionId) : '',
     settings: getSettings()
   });
 });
@@ -1810,6 +1811,35 @@ router.get('/api/registrations', requireAdminSession, restrictToAdmin, (req, res
     return res.json({ registrations: customerSvc.getOnlineRegistrations(status) });
   } catch (e) {
     return res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/registrations/export.csv', requireAdminSession, restrictToAdmin, (req, res) => {
+  try {
+    const registrations = customerSvc.getOnlineRegistrations();
+    const esc = (v) => {
+      const s = String(v ?? '');
+      return '"' + s.replace(/"/g, '""') + '"';
+    };
+    const rows = [
+      ['No. Registrasi', 'Nama', 'No. WhatsApp', 'Email', 'Wilayah', 'Alamat', 'Paket', 'Status', 'Tanggal Daftar'].join(','),
+      ...registrations.map(r => [
+        esc(r.registration_number || r.id),
+        esc(r.name),
+        esc(r.phone),
+        esc(r.email),
+        esc(r.area),
+        esc(r.address),
+        esc(r.package_name || ''),
+        esc(r.registration_status || ''),
+        esc(r.created_at)
+      ].join(','))
+    ];
+    res.set('Content-Type', 'text/csv; charset=utf-8');
+    res.set('Content-Disposition', `attachment; filename="registrations-${new Date().toISOString().slice(0,10)}.csv"`);
+    return res.send('\uFEFF' + rows.join('\r\n'));
+  } catch (e) {
+    return res.status(500).send('Export gagal: ' + e.message);
   }
 });
 
@@ -1843,7 +1873,54 @@ router.post('/customers/:id/registration/approve', requireAdminSession, restrict
       logger.warn(`[Registration] Gagal kirim notifikasi approval WhatsApp: ${waErr.message}`);
     }
 
-    return res.json({ success: true, registration: approved });
+    return res.json({ success: true, registration: approved, redirect_to_edit: true, customer_id: approved.id });
+  } catch (e) {
+    return res.status(400).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/customers/:id/registration/reject', requireAdminSession, restrictToAdmin, express.json(), async (req, res) => {
+  try {
+    const rejector = String(req.session?.username || req.session?.adminUsername || 'Admin').trim() || 'Admin';
+    const reason = String(req.body?.reason || '').trim();
+    if (!reason) return res.status(400).json({ success: false, error: 'Alasan penolakan wajib diisi.' });
+
+    const registration = customerSvc.rejectOnlineRegistration(req.params.id, rejector, reason);
+
+    auditSvc.logAuditTrail({
+      action: 'REJECT_ONLINE_REGISTRATION',
+      entity_type: 'customer',
+      entity_id: String(registration.id),
+      actor_type: 'admin',
+      actor_id: rejector,
+      actor_name: rejector,
+      details: { reject_reason: reason, survey_status: registration.survey_status },
+      ip_address: req.ip,
+      user_agent: req.get('user-agent')
+    });
+
+    try {
+      if (getSetting('whatsapp_enabled', false) && registration.phone) {
+        const { sendWA, whatsappStatus } = await import('../services/whatsappBot.mjs');
+        if (whatsappStatus?.connection === 'open') {
+          const rejectMsg = `Mohon maaf *${registration.name}* 🙏
+
+Kami telah meninjau pendaftaran layanan internet Anda dengan nomor *${registration.phone}*.
+
+❌ *Pendaftaran belum dapat kami proses* dengan alasan:
+*${reason}*
+
+Jika Anda merasa informasi ini kurang tepat, silakan hubungi kami melalui WhatsApp ini agar dapat kami bantu lebih lanjut.
+
+Terima kasih atas pengertiannya.`;
+          await sendWA(registration.phone, rejectMsg);
+        }
+      }
+    } catch (waErr) {
+      logger.warn(`[Registration] Gagal kirim notifikasi penolakan WhatsApp: ${waErr.message}`);
+    }
+
+    return res.json({ success: true, registration });
   } catch (e) {
     return res.status(400).json({ success: false, error: e.message });
   }

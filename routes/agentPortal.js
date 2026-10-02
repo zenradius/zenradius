@@ -404,14 +404,23 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
       .run(gateway, result.order_id || '', paymentLink, result.reference || '', result.payload ? JSON.stringify(result.payload) : null, reqId);
 
     if (paymentLink && instructionData.mode !== 'qris') return res.redirect(paymentLink);
-    return res.render('payment-instruction', {
+    const view = instructionData.mode === 'qris' ? 'qris_auto' : 'payment-instruction';
+    return res.render(view, {
       settings,
       backUrl: '/agent',
+      changeMethodUrl: '',
+      cancelUrl: '',
       info: null,
       helpText: instructionData.mode === 'qris'
         ? 'Scan QR untuk menyelesaikan top-up saldo agent.'
         : 'Transfer sesuai nominal ke virtual account untuk menyelesaikan top-up saldo agent.',
       error: null,
+      kind: 'topup',
+      invoiceId: Number(reqId),
+      customerName: agent?.name || 'Top-Up Agent',
+      periodText: `Top-Up Rp ${Number(amount || 0).toLocaleString('id-ID')}`,
+      publicToken: '',
+      adminWaDigits: '',
       ...instructionData
     });
   } catch (e) {
