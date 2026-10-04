@@ -499,11 +499,25 @@ function getDashboardStats() {
   const thisMonth     = db.prepare("SELECT SUM(amount) as t FROM invoices WHERE status='paid' AND period_month=? AND period_year=?").get(m, y);
   const pendingAmount = db.prepare("SELECT SUM(amount) as t FROM invoices WHERE status='unpaid'").get();
   const unpaidCount   = db.prepare("SELECT COUNT(*) as c FROM invoices WHERE status='unpaid'").get();
+  // Jumlah pelanggan unik dengan tagihan bayar (lunas) bulan ini & belum bayar
+  const paidCustomersThisMonth = db.prepare(`
+    SELECT COUNT(DISTINCT customer_id) as c FROM invoices
+    WHERE status='paid' AND period_month=? AND period_year=?
+  `).get(m, y).c || 0;
+  const unpaidCustomers = db.prepare(`
+    SELECT COUNT(DISTINCT customer_id) as c FROM invoices WHERE status='unpaid'
+  `).get().c || 0;
+  const paidCountThisMonth = db.prepare(`
+    SELECT COUNT(*) as c FROM invoices WHERE status='paid' AND period_month=? AND period_year=?
+  `).get(m, y).c || 0;
   return {
     totalRevenue:  totalRevenue.t  || 0,
     thisMonth:     thisMonth.t     || 0,
     pendingAmount: pendingAmount.t || 0,
     unpaidCount:   unpaidCount.c   || 0,
+    paidCustomersThisMonth,
+    unpaidCustomers,
+    paidCountThisMonth,
   };
 }
 

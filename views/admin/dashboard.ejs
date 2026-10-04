@@ -89,8 +89,100 @@
     <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="dashboard-section">
 
-      <!-- ONU Stats -->
+      <!-- Customers Stats (berada di atas) -->
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">
+        <i class="bi bi-people"></i> <%= t('admin.dashboard.customers_summary', 'Pelanggan') %>
+      </div>
+      <div class="stat-grid">
+        <div class="sc p" style="cursor:pointer" onclick="location.href='/admin/customers'">
+          <i class="bi bi-person-lines-fill sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.total_customers', 'Total Pelanggan') %></div>
+          <div class="sc-val"><%= custStats ? custStats.total : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.all_time', 'Seluruh masa') %></div>
+        </div>
+        <div class="sc s" style="cursor:pointer" onclick="location.href='/admin/customers?status=active'">
+          <i class="bi bi-person-check sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.active_customers', 'Pelanggan Aktif') %></div>
+          <div class="sc-val"><%= custStats ? custStats.active : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.customers_active_suffix', 'Layanan berjalan normal') %></div>
+        </div>
+        <div class="sc d" style="cursor:pointer" onclick="location.href='/admin/customers?status=suspended'">
+          <i class="bi bi-person-slash sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.suspended_customers', 'Pelanggan Terisolir') %></div>
+          <div class="sc-val"><%= custStats ? custStats.suspended : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.customers_suspended_suffix', 'Terisolir / suspend') %></div>
+        </div>
+        <div class="sc w" style="cursor:pointer" onclick="location.href='/admin/customers?status=inactive'">
+          <i class="bi bi-person-x sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.inactive_customers', 'Nonaktif') %></div>
+          <div class="sc-val"><%= custStats ? custStats.inactive : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.customers_inactive_suffix', 'Tidak aktif / baru daftar') %></div>
+        </div>
+      </div>
+
+      <!-- Payment Status Customers -->
+      <div class="stat-grid" style="margin-top:14px">
+        <div class="sc s" style="cursor:pointer" onclick="location.href='/admin/billing'">
+          <i class="bi bi-check-all sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.paid_customers', 'Pelanggan Bayar') %></div>
+          <div class="sc-val"><%= billing ? billing.paidCustomersThisMonth : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.paid_month_suffix', 'Sudah bayar bulan ini') %></div>
+        </div>
+        <div class="sc d" style="cursor:pointer" onclick="location.href='/admin/billing?status=unpaid'">
+          <i class="bi bi-hourglass-split sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.unpaid_customers', 'Pelanggan Belum Bayar') %></div>
+          <div class="sc-val"><%= billing ? billing.unpaidCustomers : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.unpaid_customers_suffix', 'Memiliki tagihan menunggak') %></div>
+        </div>
+        <div class="sc s" style="cursor:pointer" onclick="location.href='/admin/customers'">
+          <i class="bi bi-calendar-day sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.new_today', 'Daftar Hari Ini') %></div>
+          <div class="sc-val"><%= custStats ? custStats.newToday : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.new_today_suffix', 'Pelanggan baru masuk hari ini') %></div>
+        </div>
+        <div class="sc p" style="cursor:pointer" onclick="location.href='/admin/customers'">
+          <i class="bi bi-calendar2-week sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.new_this_month', 'Daftar Bulan Ini') %></div>
+          <div class="sc-val"><%= custStats ? custStats.newThisMonth : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.new_month_suffix', 'Pelanggan baru masuk bulan ini') %></div>
+        </div>
+      </div>
+
+      <!-- Billing Stats -->
+      <% if (typeof billing !== 'undefined' && billing) { %>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px">
+        <i class="bi bi-receipt"></i> <%= t('admin.dashboard.billing_summary_month', 'Ringkasan Billing Bulan Ini') %>
+      </div>
+      <div class="stat-grid">
+        <div class="sc s" style="cursor:pointer" onclick="location.href='/admin/billing'">
+          <i class="bi bi-cash-stack sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.revenue_month', 'Pendapatan Bulan Ini') %></div>
+          <div class="sc-val" style="font-size:20px">Rp&nbsp;<%= billing.thisMonth.toLocaleString('id-ID') %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.collected', 'Sudah terkumpul') %></div>
+        </div>
+        <div class="sc p" style="cursor:pointer" onclick="location.href='/admin/billing'">
+          <i class="bi bi-badge-check sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.paid_invoices_month', 'Tagihan Lunas Bulan Ini') %></div>
+          <div class="sc-val"><%= billing.paidCountThisMonth || 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.paid_invoices_suffix', 'Tagihan berhasil dibayar') %></div>
+        </div>
+        <div class="sc d" style="cursor:pointer" onclick="location.href='/admin/billing?status=unpaid'">
+          <i class="bi bi-hourglass sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.unpaid_invoices', 'Tagihan Belum Bayar') %></div>
+          <div class="sc-val"><%= billing.unpaidCount %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.awaiting_payment', 'Menunggu pembayaran') %></div>
+        </div>
+        <div class="sc w" style="cursor:pointer" onclick="location.href='/admin/reports'">
+          <i class="bi bi-bar-chart-line sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.total_receivable', 'Total Piutang') %></div>
+          <div class="sc-val" style="font-size:20px">Rp&nbsp;<%= billing.pendingAmount.toLocaleString('id-ID') %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.not_collected', 'Belum tertagih') %></div>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- ONU Stats (pindah ke bawah) -->
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px">
         <i class="bi bi-router"></i> <%= t('admin.dashboard.onu_status_title', 'Status ONU') %>
       </div>
       <div class="stat-grid">
@@ -119,64 +211,6 @@
           <div class="sc-sub"><%= t('admin.dashboard.needs_attention', 'Perlu perhatian') %></div>
         </div>
       </div>
-
-      <!-- Billing Stats -->
-      <% if (typeof billing !== 'undefined' && billing) { %>
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px">
-        <i class="bi bi-receipt"></i> <%= t('admin.dashboard.billing_summary_month', 'Ringkasan Billing Bulan Ini') %>
-      </div>
-      <div class="stat-grid">
-        <div class="sc s" style="cursor:pointer" onclick="location.href='/admin/billing'">
-          <i class="bi bi-cash-stack sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.revenue_month', 'Pendapatan Bulan Ini') %></div>
-          <div class="sc-val" style="font-size:20px">Rp&nbsp;<%= billing.thisMonth.toLocaleString('id-ID') %></div>
-          <div class="sc-sub"><%= t('admin.dashboard.collected', 'Sudah terkumpul') %></div>
-        </div>
-        <div class="sc p" style="cursor:pointer" onclick="location.href='/admin/customers'">
-          <i class="bi bi-people sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.active_customers', 'Pelanggan Aktif') %></div>
-          <div class="sc-val"><%= custStats ? custStats.active : 0 %></div>
-          <div class="sc-sub"><%= t('admin.dashboard.from', 'Dari') %> <%= custStats ? custStats.total : 0 %> <%= t('admin.dashboard.total_customers_suffix', 'total pelanggan') %></div>
-        </div>
-        <div class="sc d" style="cursor:pointer" onclick="location.href='/admin/billing?status=unpaid'">
-          <i class="bi bi-hourglass sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.unpaid_invoices', 'Tagihan Belum Bayar') %></div>
-          <div class="sc-val"><%= billing.unpaidCount %></div>
-          <div class="sc-sub"><%= t('admin.dashboard.awaiting_payment', 'Menunggu pembayaran') %></div>
-        </div>
-        <div class="sc w" style="cursor:pointer" onclick="location.href='/admin/reports'">
-          <i class="bi bi-bar-chart-line sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.total_receivable', 'Total Piutang') %></div>
-          <div class="sc-val" style="font-size:20px">Rp&nbsp;<%= billing.pendingAmount.toLocaleString('id-ID') %></div>
-          <div class="sc-sub"><%= t('admin.dashboard.not_collected', 'Belum tertagih') %></div>
-        </div>
-      </div>
-
-      <!-- New Customers Stats -->
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px">
-        <i class="bi bi-person-plus"></i> <%= t('admin.dashboard.new_customers_summary', 'Pelanggan Baru') %>
-      </div>
-      <div class="stat-grid">
-        <div class="sc s" style="cursor:pointer" onclick="location.href='/admin/customers'">
-          <i class="bi bi-calendar2-week sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.new_this_month', 'Bulan Ini') %></div>
-          <div class="sc-val"><%= custStats ? custStats.newThisMonth : 0 %></div>
-          <div class="sc-sub"><%= t('admin.dashboard.new_month_suffix', 'Pelanggan baru masuk bulan ini') %></div>
-        </div>
-        <div class="sc p" style="cursor:pointer" onclick="location.href='/admin/customers'">
-          <i class="bi bi-calendar-day sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.new_today', 'Hari Ini') %></div>
-          <div class="sc-val"><%= custStats ? custStats.newToday : 0 %></div>
-          <div class="sc-sub"><%= t('admin.dashboard.new_today_suffix', 'Pelanggan baru masuk hari ini') %></div>
-        </div>
-        <div class="sc w" style="cursor:pointer" onclick="location.href='/admin/customers'">
-          <i class="bi bi-person-lines-fill sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.total_customers', 'Total Pelanggan') %></div>
-          <div class="sc-val"><%= custStats ? custStats.total : 0 %></div>
-          <div class="sc-sub"><%= t('admin.dashboard.all_time', 'Seluruh masa') %></div>
-        </div>
-      </div>
-      <% } %>
 
       <!-- Row: Donut + Recent Devices -->
       <div class="dash-main-grid">
