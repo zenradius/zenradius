@@ -274,10 +274,10 @@ function editPayroll(type, id, name){
   document.getElementById('f_absence').value = d ? d.absence_deduction_per_day : 0;
   document.getElementById('f_bonus').value = d ? d.bonus_per_ticket : 0;
   document.getElementById('f_commission').value = d ? d.commission_percentage : 0;
-  document.getElementById('payrollModal').style.display = 'flex';
+  document.getElementById('payrollModal').classList.add('show');
 }
 
-function closeModal(){ document.getElementById('payrollModal').style.display = 'none'; }
+function closeModal(){ document.getElementById('payrollModal').classList.remove('show'); }
 
 function editDeduction(id){
   const amount = prompt('Jumlah potongan lain (Rp):','0');

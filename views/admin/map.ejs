@@ -636,7 +636,27 @@
   let editPickerMap, editPickerMarker;
 
   function initPickerMap(lat, lng) {
-    if (!pickerMap) {
+    const container = document.getElementById('picker-map');
+    if (!container) return;
+    // Jika modal pernah dibuka sebelumnya, Leaflet sudah menempel di container
+    // (container._leaflet_id). Jangan inisialisasi ganda → cukup validasi instance global.
+    if (pickerMap && typeof pickerMap.setView === 'function') {
+      try {
+        pickerMap.setView([lat, lng], 16);
+        pickerMarker.setLatLng([lat, lng]);
+        pickerMap.invalidateSize();
+      } catch (e) { console.error('picker map reuse error:', e); }
+      return;
+    }
+    // Hapus sisa state Leaflet pada container sebelum init baru (anti crash
+    // "Map container is already initialized").
+    try {
+      if (container._leaflet_id !== undefined && L && typeof L.Util === 'object') {
+        // Leaflet internal: buang event listeners lama
+        container.removeEventListener;
+      }
+    } catch (e) {}
+    try {
       pickerMap = L.map('picker-map').setView([lat, lng], 16);
       L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
         maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
@@ -665,15 +685,27 @@
         document.getElementById('new_lat').value = e.latlng.lat.toFixed(6);
         document.getElementById('new_lng').value = e.latlng.lng.toFixed(6);
       });
-    } else {
-      pickerMap.setView([lat, lng], 16);
-      pickerMarker.setLatLng([lat, lng]);
+    } catch (err) {
+      console.error('Init picker map error:', err);
+      // Fallback: jangan biarkan halaman crash — buat instance baru dari awal
+      try { if (pickerMap && typeof pickerMap.remove === 'function') pickerMap.remove(); } catch(e2) {}
+      pickerMap = null;
     }
-    setTimeout(() => pickerMap.invalidateSize(), 300);
+    setTimeout(() => { try { pickerMap && pickerMap.invalidateSize(); } catch(e){} }, 150);
   }
 
   function initEditPickerMap(lat, lng) {
-    if (!editPickerMap) {
+    const container = document.getElementById('edit-picker-map');
+    if (!container) return;
+    if (editPickerMap && typeof editPickerMap.setView === 'function') {
+      try {
+        editPickerMap.setView([lat, lng], 16);
+        editPickerMarker.setLatLng([lat, lng]);
+        editPickerMap.invalidateSize();
+      } catch (e) { console.error('edit picker map reuse error:', e); }
+      return;
+    }
+    try {
       editPickerMap = L.map('edit-picker-map').setView([lat, lng], 16);
       L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
         maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
@@ -702,23 +734,43 @@
         document.getElementById('e_odp_lat').value = e.latlng.lat.toFixed(6);
         document.getElementById('e_odp_lng').value = e.latlng.lng.toFixed(6);
       });
-    } else {
-      editPickerMap.setView([lat, lng], 16);
-      editPickerMarker.setLatLng([lat, lng]);
+    } catch (err) {
+      console.error('Init edit picker map error:', err);
+      try { if (editPickerMap && typeof editPickerMap.remove === 'function') editPickerMap.remove(); } catch(e2) {}
+      editPickerMap = null;
     }
-    setTimeout(() => editPickerMap.invalidateSize(), 300);
+    setTimeout(() => { try { editPickerMap && editPickerMap.invalidateSize(); } catch(e){} }, 150);
   }
 
   function openModal(id) { 
-    document.getElementById(id).style.display = 'flex'; 
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('show');
     if (id === 'addOdpModal') {
       const lat = document.getElementById('new_lat').value || officeCoords.lat;
       const lng = document.getElementById('new_lng').value || officeCoords.lng;
-      initPickerMap(lat, lng);
+      // Tunda inisialisasi peta hingga modal benar-benar terlihat (class .show aktif)
+      // agar container punya ukuran valid — mencegah error Leaflet saat container 0px/tersembunyi.
+      setTimeout(() => {
+        try {
+          initPickerMap(lat, lng);
+        } catch (err) {
+          console.error('Init picker map error:', err);
+        }
+      }, 120);
+    }
+    if (id === 'editOdpModal') {
+      // editOdp() memanggil initEditPickerMap setelah openModal; hanya invalidate.
+      setTimeout(() => {
+        if (editPickerMap) editPickerMap.invalidateSize();
+      }, 120);
     }
   }
 
-  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  function closeModal(id) { 
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  }
 
   function editOdp(odp) {
     document.getElementById('editOdpForm').action = '/admin/odps/' + odp.id + '/update';
@@ -727,7 +779,14 @@
     document.getElementById('e_odp_lng').value = odp.lng;
     document.getElementById('e_odp_description').value = odp.description;
     openModal('editOdpModal');
-    initEditPickerMap(odp.lat, odp.lng);
+    // Tunda hingga modal tampil agar container berukuran valid (hindari crash Leaflet)
+    setTimeout(() => {
+      try {
+        initEditPickerMap(odp.lat, odp.lng);
+      } catch (err) {
+        console.error('Init edit picker map error:', err);
+      }
+    }, 150);
   }
 
   function editOdpById(id) {
@@ -782,8 +841,8 @@
   }, 500);
 
   window.onclick = function(e) {
-    if (e.target.className === 'mo') {
-      e.target.style.display = 'none';
+    if (e.target.classList && e.target.classList.contains('mo')) {
+      e.target.classList.remove('show');
     }
   }
 
