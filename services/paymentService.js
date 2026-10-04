@@ -611,6 +611,113 @@ async function getTripayChannels() {
   }
 }
 
+/**
+ * Query status transaksi ke payment gateway (untuk polling QRIS otomatis
+ * jika webhook/callback belum diterima server).
+ * Mengembalikan { status: 'paid'|'pending'|'failed'|null, raw } atau throws.
+ * status null berarti gateway tidak bisa dicek / data tidak tersedia.
+ */
+async function queryGatewayTransactionStatus(gateway, reference) {
+  const g = String(gateway || '').toLowerCase();
+  const ref = String(reference || '').trim();
+  const settings = getSettingsWithCache();
+  if (!ref) return { status: null, raw: null };
+
+  if (g === 'tripay') {
+    const apiKey = settings.tripay_api_key;
+    const isLive = settings.tripay_mode === 'live' || settings.tripay_mode === 'production';
+    if (!apiKey) return { status: null, raw: null };
+    const baseUrl = isLive
+      ? 'https://tripay.co.id/api/transaction/detail'
+      : 'https://tripay.co.id/api-sandbox/transaction/detail';
+    const res = await axios.get(baseUrl, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      params: { reference: ref },
+      timeout: 8000
+    });
+    const data = res.data;
+    if (!data || !data.success || !data.data) return { status: null, raw: data };
+    const statusRaw = String(data.data.status || '').toLowerCase();
+    if (['paid', 'paid_partial', 'expired_fully_paid'].includes(statusRaw)) return { status: 'paid', raw: data.data };
+    if (['expired', 'canceled', 'refund', 'fail', 'failed'].includes(statusRaw)) return { status: 'failed', raw: data.data };
+    return { status: 'pending', raw: data.data };
+  }
+
+  if (g === 'midtrans') {
+    const serverKey = settings.midtrans_server_key;
+    if (!serverKey) return { status: null, raw: null };
+    const auth = Buffer.from(serverKey + ':').toString('base64');
+    const res = await axios.get(`https://api.sandbox.midtrans.com/v2/${encodeURIComponent(ref)}/status`, {
+      headers: { Accept: 'application/json', Authorization: `Basic ${auth}` },
+      timeout: 8000
+    });
+    const transactionStatus = String(res.data.transaction_status || '');
+    const fraud = String(res.data.fraud_status || '');
+    if (transactionStatus === 'capture' || transactionStatus === 'settlement') return { status: 'paid', raw: res.data };
+    if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') return { status: 'failed', raw: res.data };
+    return { status: 'pending', raw: res.data };
+  }
+
+  if (g === 'xendit') {
+    const apiKey = settings.xendit_api_key;
+    if (!apiKey) return { status: null, raw: null };
+    const res = await axios.get(`https://api.xendit.co/v2/invoices/${encodeURIComponent(ref)}`, {
+      headers: { Authorization: `Basic ${Buffer.from(apiKey + ':').toString('base64')}` },
+      timeout: 8000
+    });
+    const st = String(res.data.status || '').toLowerCase();
+    if (['paid', 'settled'].includes(st)) return { status: 'paid', raw: res.data };
+    if (['expired', 'cancelled', 'cancelled_by_payer'].includes(st)) return { status: 'failed', raw: res.data };
+    return { status: 'pending', raw: res.data };
+  }
+
+  if (g === 'duitku') {
+    const merchantCode = settings.duitku_merchant_code;
+    const apiKey = settings.duitku_api_key;
+    if (!merchantCode || !apiKey) return { status: null, raw: null };
+    const md5 = crypto.createHash('md5').update(`${merchantCode}${ref}${apiKey}`).digest('hex');
+    const isLive = settings.duitku_mode === 'live' || settings.duitku_mode === 'production';
+    const baseUrl = isLive
+      ? 'https://api-sandbox.duitku.com/api/merchant/transactionStatus' // sandbox default
+      : 'https://api-sandbox.duitku.com/api/merchant/transactionStatus';
+    const res = await axios.post(baseUrl,
+      { merchantCode, merchantOrderId: ref, signature: md5 },
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 8000 }
+    );
+    const code = Number(res.data.statusCode);
+    if (code === 00 || code === 01) return { status: 'paid', raw: res.data };
+    if (code === 02) return { status: 'pending', raw: res.data };
+    return { status: null, raw: res.data };
+  }
+
+  if (g === 'ipaymu') {
+    const va = settings.ipaymu_va;
+    const apiKey = settings.ipaymu_api_key;
+    if (!va || !apiKey) return { status: null, raw: null };
+    const isLive = settings.ipaymu_mode === 'live' || settings.ipaymu_mode === 'production';
+    const baseUrl = isLive
+      ? 'https://my.ipaymu.com/api/v2/transaction'
+      : 'https://sandbox.ipaymu.com/api/v2/transaction';
+    const res = await axios.get(baseUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        signature: apiKey,
+        va: va,
+        timestamp: String(Math.floor(Date.now() / 1000))
+      },
+      params: { key: ref },
+      timeout: 8000
+    });
+    const data = res.data;
+    const st = String(data.statusCode || '');
+    if (st === '200') return { status: 'paid', raw: data };
+    return { status: null, raw: data };
+  }
+
+  return { status: null, raw: null };
+}
+
 module.exports = {
   createTripayTransaction,
   createMidtransTransaction,
@@ -622,5 +729,6 @@ module.exports = {
   verifyMidtransWebhook,
   verifyDuitkuWebhook,
   verifyIpaymuWebhook,
+  queryGatewayTransactionStatus,
   getFallbackEmail
 };

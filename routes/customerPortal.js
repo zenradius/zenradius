@@ -1491,9 +1491,40 @@ router.get('/voucher/status/:orderId', async (req, res) => {
   }
 
   try {
-    const order = db.prepare('SELECT id, status, voucher_code FROM public_voucher_orders WHERE id = ?').get(orderId);
+    const order = db.prepare('SELECT id, status, voucher_code, payment_gateway, payment_reference, payment_order_id FROM public_voucher_orders WHERE id = ?').get(orderId);
     if (!order) {
       return res.status(404).json({ error: 'Order tidak ditemukan', status: 'error' });
+    }
+
+    // Jika masih pending, cek langsung ke payment gateway (polling QRIS otomatis)
+    if (order.status === 'pending' && order.payment_gateway && order.payment_reference) {
+      try {
+        const paymentSvc = require('../services/paymentService');
+        const gs = await paymentSvc.queryGatewayTransactionStatus(
+          order.payment_gateway,
+          String(order.payment_reference || order.payment_order_id || '')
+        );
+        if (gs && gs.status === 'paid') {
+          // Gateway sudah mencatat transaksi lunas — lakukan fulfillment voucher
+          // (sama seperti alur callback webhook) agar voucher_code keluar.
+          try {
+            const voucherFulfillmentSvc = require('../services/voucherFulfillmentService');
+            await voucherFulfillmentSvc.fulfillVoucherOrder(orderId, { methodLabel: String(order.payment_gateway || 'QRIS') });
+          } catch (ffErr) {
+            logger.warn(`[VOUCHER-STATUS] Fulfillment gagal (order=${orderId}): ${ffErr && ffErr.message ? ffErr.message : String(ffErr)}`);
+            // Fallback: paling tidak tandai paid agar tidak poll terus
+            db.prepare(`UPDATE public_voucher_orders SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='pending'`).run('paid', orderId);
+          }
+          const row = db.prepare('SELECT id, status, voucher_code FROM public_voucher_orders WHERE id = ?').get(orderId);
+          return res.json({
+            success: true,
+            status: String(row.status || 'pending'),
+            voucher_code: String(row.status) === 'fulfilled' ? row.voucher_code : null
+          });
+        }
+      } catch (gwErr) {
+        logger.warn(`[VOUCHER-STATUS] Gateway check skipped: ${gwErr && gwErr.message ? gwErr.message : String(gwErr)}`);
+      }
     }
 
     return res.json({
@@ -3318,6 +3349,29 @@ router.get('/payment/status/:invoiceId', async (req, res) => {
 
     if (!inv) {
       return res.status(404).json({ error: 'Invoice tidak ditemukan', status: 'error' });
+    }
+
+    // Jika masih unpaid & ada referensi gateway, cek langsung ke payment gateway
+    // (polling QRIS otomatis agar tidak bergantung hanya pada webhook/callback).
+    if (String(inv.status || '') !== 'paid' && inv.payment_gateway && inv.payment_reference) {
+      try {
+        const paymentSvc = require('../services/paymentService');
+        const gs = await paymentSvc.queryGatewayTransactionStatus(
+          inv.payment_gateway,
+          String(inv.payment_reference || inv.payment_order_id || '')
+        );
+        if (gs && gs.status === 'paid') {
+          db.prepare(`UPDATE invoices SET status='paid', paid_at=NOW_LOCAL(), notes=COALESCE(NULLIF(notes,''),'Lunas via ' || ?) WHERE id=?`).run(String(inv.payment_gateway || 'gateway').toUpperCase(), invoiceId);
+          const updated = billingSvc.getInvoiceById(invoiceId);
+          return res.json({
+            success: true,
+            status: String(updated.status || 'unpaid'),
+            paid_at: updated.paid_at || null
+          });
+        }
+      } catch (gwErr) {
+        logger.warn(`[PAYMENT-STATUS] Gateway check skipped: ${gwErr && gwErr.message ? gwErr.message : String(gwErr)}`);
+      }
     }
 
     const loginId = req.session && req.session.phone;
