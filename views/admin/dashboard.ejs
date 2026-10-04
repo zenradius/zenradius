@@ -181,37 +181,6 @@
       </div>
       <% } %>
 
-      <!-- ONU Stats (pindah ke bawah) -->
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px">
-        <i class="bi bi-router"></i> <%= t('admin.dashboard.onu_status_title', 'Status ONU') %>
-      </div>
-      <div class="stat-grid">
-        <div class="sc p">
-          <i class="bi bi-router sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.total_onu', 'Total ONU') %></div>
-          <div class="sc-val" id="stat-total"><span class="text-muted" style="font-size:16px">...</span></div>
-          <div class="sc-sub"><%= t('admin.dashboard.onu_registered', 'Perangkat terdaftar') %></div>
-        </div>
-        <div class="sc s">
-          <i class="bi bi-wifi sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.online', 'Online') %></div>
-          <div class="sc-val" id="stat-online"><span class="text-muted" style="font-size:16px">...</span></div>
-          <div class="sc-sub"><%= t('admin.dashboard.active_now', 'Aktif saat ini') %></div>
-        </div>
-        <div class="sc d">
-          <i class="bi bi-wifi-off sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.offline', 'Offline') %></div>
-          <div class="sc-val" id="stat-offline"><span class="text-muted" style="font-size:16px">...</span></div>
-          <div class="sc-sub"><%= t('admin.dashboard.no_response', 'Tidak merespons') %></div>
-        </div>
-        <div class="sc w">
-          <i class="bi bi-exclamation-triangle sc-icon"></i>
-          <div class="sc-label"><%= t('admin.dashboard.warning', 'Warning') %></div>
-          <div class="sc-val" id="stat-warning"><span class="text-muted" style="font-size:16px">...</span></div>
-          <div class="sc-sub"><%= t('admin.dashboard.needs_attention', 'Perlu perhatian') %></div>
-        </div>
-      </div>
-
       <!-- Row: Donut + Recent Devices -->
       <div class="dash-main-grid">
 
@@ -594,11 +563,15 @@ async function loadStats() {
     const offline = d.offline || 0;
     const pct     = total > 0 ? Math.round(online / total * 100) : 0;
 
-    // Dashboard stats
-    document.getElementById('stat-total').textContent   = total;
-    document.getElementById('stat-online').textContent  = online;
-    document.getElementById('stat-offline').textContent = offline;
-    document.getElementById('stat-warning').textContent = d.warning || 0;
+    // Dashboard stats (kartu ONU di dashboard utama sudah dihapus — guard jika ada)
+    const elTotal = document.getElementById('stat-total');
+    const elOnline = document.getElementById('stat-online');
+    const elOffline = document.getElementById('stat-offline');
+    const elWarning = document.getElementById('stat-warning');
+    if (elTotal) elTotal.textContent = total;
+    if (elOnline) elOnline.textContent = online;
+    if (elOffline) elOffline.textContent = offline;
+    if (elWarning) elWarning.textContent = d.warning || 0;
 
     // Monitoring mini stats
     document.getElementById('m-total').textContent  = total;
