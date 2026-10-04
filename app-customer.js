@@ -1771,7 +1771,7 @@ app.use(domainLicense.requireDomainLicense({
     '/voucher', '/daftar', '/cek-daftar', '/cek-tagihan', '/404',
     '/teknisi', '/teknisi/login', '/teknisi/logout', '/mitra', '/mitra/login', '/mitra/logout',
     '/penagih', '/penagih/login', '/penagih/logout'
-  ] /* Allow these paths */ });
+  ] /* Allow these paths */ }));
 
 const mobileApi = require('./routes/mobileApi');
 app.use('/api/mobile/v1', mobileApi);
