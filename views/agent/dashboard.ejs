@@ -468,7 +468,7 @@
     .df-tone-wifi{ background: var(--idim, rgba(59,130,246,0.12)); }
     .df-tone-ewallet{ background: rgba(16,185,129,0.12); }
     .df-tone-voucher{ background: color-mix(in srgb, var(--brand1) 12%, transparent); }tone-ewallet{ background: rgba(16,185,129,0.12); }
-    .df-tone-voucher{ background: rgba(168,85,247,0.12); }
+    .df-tone-voucher{ background: var(--soft-primary); }
 
     @media (min-width: 900px){
       .kpi{ grid-template-columns: 1fr 1fr 1fr 1fr; }
@@ -846,7 +846,7 @@
                   game: { title: 'Game', icon: 'bi-controller', tone: 'rgba(236,72,153,0.12)' },
                   wifi: { title: 'WiFi', icon: 'bi-router', tone: 'rgba(59,130,246,0.12)' },
                   ewallet: { title: 'E-Wallet', icon: 'bi-wallet2', tone: 'rgba(16,185,129,0.12)' },
-                  voucher: { title: 'Voucher', icon: 'bi-ticket-perforated', tone: 'rgba(168,85,247,0.12)' }
+                  voucher: { title: 'Voucher', icon: 'bi-ticket-perforated', tone: 'var(--soft-primary)' }
                 };
                 const calcGroup = (groupKey) => {
                   const brandsInGroup = (digiflazzBrandsData || []).filter(b => groupKeyOf(b.category) === groupKey);
