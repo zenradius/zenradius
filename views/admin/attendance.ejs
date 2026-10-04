@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -16,8 +16,8 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .type-technician { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
-    .type-admin { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+    .type-technician { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .type-admin { background: color-mix(in srgb, var(--primary) 15%, transparent); color: var(--accent); }
     .type-cashier { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
     .type-collector { background: rgba(249, 115, 22, 0.15); color: #f97316; }
     
@@ -174,8 +174,8 @@
         <div class="sc-label">Teknisi</div>
         <div class="sc-val"><%= techStats.total || 0 %></div>
         <div class="sc-sub">
-          <span style="color:#22c55e"><%= techStats.checked_in || 0 %> aktif</span> •
-          <span style="color:#3b82f6"><%= techStats.checked_out || 0 %> selesai</span>
+          <span style="color:#22c55e"><%= techStats.checked_in || 0 %> aktif</span> â€¢
+          <span style="color:var(--primary)"><%= techStats.checked_out || 0 %> selesai</span>
         </div>
       </div>
       <div class="sc p">
@@ -183,8 +183,8 @@
         <div class="sc-label">Admin</div>
         <div class="sc-val"><%= adminStats.total || 0 %></div>
         <div class="sc-sub">
-          <span style="color:#22c55e"><%= adminStats.checked_in || 0 %> aktif</span> •
-          <span style="color:#3b82f6"><%= adminStats.checked_out || 0 %> selesai</span>
+          <span style="color:#22c55e"><%= adminStats.checked_in || 0 %> aktif</span> â€¢
+          <span style="color:var(--primary)"><%= adminStats.checked_out || 0 %> selesai</span>
         </div>
       </div>
       <div class="sc s">
@@ -192,8 +192,8 @@
         <div class="sc-label">Kasir</div>
         <div class="sc-val"><%= cashierStats.total || 0 %></div>
         <div class="sc-sub">
-          <span style="color:#22c55e"><%= cashierStats.checked_in || 0 %> aktif</span> •
-          <span style="color:#3b82f6"><%= cashierStats.checked_out || 0 %> selesai</span>
+          <span style="color:#22c55e"><%= cashierStats.checked_in || 0 %> aktif</span> â€¢
+          <span style="color:var(--primary)"><%= cashierStats.checked_out || 0 %> selesai</span>
         </div>
       </div>
       <div class="sc w">
@@ -201,8 +201,8 @@
         <div class="sc-label">Kolektor</div>
         <div class="sc-val"><%= collectorStats.total || 0 %></div>
         <div class="sc-sub">
-          <span style="color:#22c55e"><%= collectorStats.checked_in || 0 %> aktif</span> •
-          <span style="color:#3b82f6"><%= collectorStats.checked_out || 0 %> selesai</span>
+          <span style="color:#22c55e"><%= collectorStats.checked_in || 0 %> aktif</span> â€¢
+          <span style="color:var(--primary)"><%= collectorStats.checked_out || 0 %> selesai</span>
         </div>
       </div>
     </div>
@@ -310,14 +310,14 @@
               <td>
                 <%= formatTimeLocal(att.check_in_time) %>
                 <% if (att.check_in_note) { %>
-                  <div class="time-info">💬 <%= att.check_in_note %></div>
+                  <div class="time-info">ðŸ’¬ <%= att.check_in_note %></div>
                 <% } %>
               </td>
               <td>
                 <% if (att.check_out_time) { %>
                   <%= formatTimeLocal(att.check_out_time) %>
                   <% if (att.check_out_note) { %>
-                    <div class="time-info">💬 <%= att.check_out_note %></div>
+                    <div class="time-info">ðŸ’¬ <%= att.check_out_note %></div>
                   <% } %>
                 <% } else { %>
                   <span class="text-muted">-</span>
@@ -387,7 +387,7 @@
       </div>
       <% } else { %>
       <div class="card-bd" style="text-align:center;padding:60px 20px">
-        <div style="font-size:64px;margin-bottom:16px;opacity:0.3">📭</div>
+        <div style="font-size:64px;margin-bottom:16px;opacity:0.3">ðŸ“­</div>
         <h3 style="color:var(--muted);font-weight:500">Tidak ada data absensi</h3>
         <p style="color:var(--muted);font-size:14px">Belum ada karyawan yang melakukan absensi pada tanggal ini.</p>
       </div>
@@ -438,10 +438,10 @@
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert('✓ ' + data.message);
+        alert('âœ“ ' + data.message);
         window.location.reload();
       } else {
-        alert('✕ ' + data.message);
+        alert('âœ• ' + data.message);
       }
     })
     .catch(err => {

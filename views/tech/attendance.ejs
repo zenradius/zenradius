@@ -1,4 +1,4 @@
-<%- include('partials/header') %>
+﻿<%- include('partials/header') %>
 
 <div class="mb-4">
   <div class="text-secondary small">Absensi Karyawan</div>
@@ -14,7 +14,7 @@
 <% } %>
 
 <!-- Status Hari Ini -->
-<div class="t-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+<div class="t-card" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border: none;">
   <h6 class="fw-bold mb-3" style="color: white;"><i class="bi bi-clock-history me-2"></i>Status Hari Ini</h6>
   
   <% if (todayAttendance) { %>
@@ -94,7 +94,7 @@
         <input id="checkoutPhoto" type="file" accept="image/*" capture="user" onchange="updatePhotoInfo('checkoutPhoto', 'checkoutPhotoInfo', 'checkoutPhotoPreviewWrap', 'checkoutPhotoPreview')" style="display: none;">
         
         <div style="margin: 12px 0;">
-          <button type="button" onclick="document.getElementById('checkoutPhoto').click()" class="btn d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; border-radius: 50%; background: #7c3aed; color: white; font-size: 24px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4); border: none; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'">
+          <button type="button" onclick="document.getElementById('checkoutPhoto').click()" class="btn d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 24px; box-shadow: 0 4px 12px rgba(59,130,246,0.35); border: none; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'">
             <i class="bi bi-camera-fill"></i>
           </button>
           <div style="font-size: 11px; color: rgba(255, 255, 255, 0.6); margin-top: 6px;">Ketuk tombol kamera untuk mengambil foto selfie</div>
@@ -166,19 +166,19 @@
 </h6>
 
 <div class="stat-grid">
-  <div class="stat-box" style="border-left: 3px solid #3b82f6;">
+  <div class="stat-box" style="border-left: 3px solid var(--primary);">
     <div class="val text-primary"><%= summary.total_days || 0 %></div>
     <div class="lbl">Total Hari</div>
   </div>
-  <div class="stat-box" style="border-left: 3px solid #10b981;">
+  <div class="stat-box" style="border-left: 3px solid var(--success);">
     <div class="val text-success"><%= summary.completed_days || 0 %></div>
     <div class="lbl">Hari Lengkap</div>
   </div>
-  <div class="stat-box" style="border-left: 3px solid #f59e0b;">
+  <div class="stat-box" style="border-left: 3px solid var(--warning);">
     <div class="val text-warning"><%= summary.total_minutes ? Math.floor(summary.total_minutes / 60) : 0 %></div>
     <div class="lbl">Total Jam</div>
   </div>
-  <div class="stat-box" style="border-left: 3px solid #8b5cf6;">
+  <div class="stat-box" style="border-left: 3px solid var(--accent);">
     <div class="val" style="color: #a78bfa;"><%= summary.avg_minutes ? Math.floor(summary.avg_minutes / 60) : 0 %></div>
     <div class="lbl">Rata-rata Jam</div>
   </div>
@@ -601,10 +601,10 @@
       const result = await response.json();
       
       if (result.success) {
-        alert('✓ ' + result.message);
+        alert('âœ“ ' + result.message);
         window.location.reload();
       } else {
-        alert('✗ ' + result.message);
+        alert('âœ— ' + result.message);
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Check-in Sekarang';
       }
@@ -636,10 +636,10 @@
       const result = await response.json();
       
       if (result.success) {
-        alert('✓ ' + result.message);
+        alert('âœ“ ' + result.message);
         window.location.reload();
       } else {
-        alert('✗ ' + result.message);
+        alert('âœ— ' + result.message);
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-box-arrow-right me-2"></i>Check-out Sekarang';
       }

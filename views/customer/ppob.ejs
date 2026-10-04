@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
@@ -20,11 +20,11 @@
     }
     body{font-family:'Outfit',sans-serif;background:linear-gradient(135deg,#0b1f2b 0%,#173945 38%,#102935 100%);color:var(--text);min-height:100vh}
     
-    .topbar{background:linear-gradient(180deg,rgba(23,57,69,0.97),rgba(19,50,62,0.92));border-bottom:1px solid rgba(34,211,238,0.22);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+    .topbar{background:linear-gradient(180deg,rgba(23,57,69,0.97),rgba(19,50,62,0.92));border-bottom:1px solid color-mix(in srgb, var(--primary) 22%, transparent);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
     .topbar a{color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500;transition:color .2s}
     .topbar a:hover{color:var(--accent)}
     .topbar h1{font-size:18px;font-weight:700;color:#f1f5f9;display:flex;align-items:center;gap:8px}
-    .topbar .badge{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:#062b36;font-size:11px;padding:3px 10px;border-radius:999px;font-weight:700;box-shadow:0 8px 18px rgba(34,211,238,0.28)}
+    .topbar .badge{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:#062b36;font-size:11px;padding:3px 10px;border-radius:999px;font-weight:700;box-shadow:0 8px 18px color-mix(in srgb, var(--primary) 28%, transparent)}
     
     .container{max-width:1000px;margin:0 auto;padding:24px 16px}
     
@@ -35,11 +35,11 @@
     
     /* Balance Widget Card */
     .balance-card{background:linear-gradient(145deg,rgba(23,57,69,0.98),rgba(12,34,42,0.96));border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;position:relative;overflow:hidden;box-shadow:0 20px 40px rgba(3,7,18,0.24)}
-    .balance-card::before{content:'';position:absolute;top:-50%;left:-20%;width:300px;height:300px;background:radial-gradient(circle,rgba(34,211,238,0.14) 0%,rgba(15,23,42,0) 70%);pointer-events:none}
+    .balance-card::before{content:'';position:absolute;top:-50%;left:-20%;width:300px;height:300px;background:radial-gradient(circle,color-mix(in srgb, var(--primary) 14%, transparent) 0%,rgba(15,23,42,0) 70%);pointer-events:none}
     .balance-info h2{font-size:32px;font-weight:800;color:#f8fafc;margin-top:6px;letter-spacing:-0.5px}
     .balance-info p{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px}
-    .btn-topup{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:#062b36;border:none;border-radius:14px;padding:12px 20px;font-size:14px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 12px 26px rgba(34,211,238,0.18);transition:all .2s;font-family:'Outfit',sans-serif}
-    .btn-topup:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(34,211,238,0.28);opacity:0.98}
+    .btn-topup{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:#062b36;border:none;border-radius:14px;padding:12px 20px;font-size:14px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 12px 26px color-mix(in srgb, var(--primary) 18%, transparent);transition:all .2s;font-family:'Outfit',sans-serif}
+    .btn-topup:hover{transform:translateY(-2px);box-shadow:0 16px 34px color-mix(in srgb, var(--primary) 28%, transparent);opacity:0.98}
 
     .section-title{font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin:28px 0 12px;display:flex;align-items:center;gap:6px}
     
@@ -47,24 +47,24 @@
     .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
     .cat-tabs::-webkit-scrollbar{height:4px}
     .cat-tabs::-webkit-scrollbar-thumb{background:#334155;border-radius:999px}
-    .cat-tab{padding:8px 18px;border-radius:999px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:'Outfit',sans-serif}
-    .cat-tab:hover,.cat-tab.active{background:#0ea5e9;border-color:#0ea5e9;color:#fff;box-shadow:0 4px 12px rgba(14,165,233,0.25)}
+    .cat-tab{padding:8px 18px;border-radius:999px;border:1px solid var(--border, #334155);background:var(--bg2, #1e293b);color:var(--muted, #94a3b8);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:'Outfit',sans-serif}
+    .cat-tab:hover,.cat-tab.active{background:var(--accent, #0ea5e9);border-color:var(--accent, #0ea5e9);color:#fff;box-shadow:0 4px 12px rgba(14,165,233,0.25)}
     
     /* Catalog Layout */
     .page-layout{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start}
     
     .brand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
     .brand-card{background:linear-gradient(145deg,rgba(23,57,69,0.82),rgba(11,23,31,0.9));border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:all .2s;box-shadow:0 12px 30px rgba(1,6,10,0.18)}
-    .brand-card:hover{border-color:rgba(34,211,238,0.38);transform:translateY(-2px)}
+    .brand-card:hover{border-color:color-mix(in srgb, var(--primary) 38%, transparent);transform:translateY(-2px)}
     .brand-head{padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px;color:#f1f5f9;background:rgba(16,34,42,0.4)}
     .brand-head .icon{color:var(--accent);margin-right:8px}
     .brand-items{border-top:1px solid var(--border)}
     .prod-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s}
-    .prod-item:hover{background:rgba(34,211,238,0.05)}
+    .prod-item:hover{background:color-mix(in srgb, var(--primary) 5%, transparent)}
     .prod-item:last-child{border-bottom:none}
     .prod-name{font-size:14px;font-weight:600;color:var(--text);line-height:1.3}
     .prod-price{font-size:14px;font-weight:700;color:var(--success);white-space:nowrap}
-    .prod-item.selected{background:linear-gradient(135deg,rgba(34,211,238,0.16),rgba(6,182,212,0.12)) !important;border-left:4px solid var(--accent)}
+    .prod-item.selected{background:linear-gradient(135deg,color-mix(in srgb, var(--primary) 16%, transparent),rgba(6,182,212,0.12)) !important;border-left:4px solid var(--accent)}
     .prod-item.selected .prod-name{color:#fff}
     .prod-item.selected .prod-price{color:#dff7ff}
     
@@ -80,9 +80,9 @@
     .form-group{margin-bottom:18px}
     .form-group label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px}
     .form-group input{width:100%;background:rgba(7,17,24,0.8);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:14px;color:var(--text);outline:none;transition:all .2s;font-family:'Outfit',sans-serif}
-    .form-group input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(34,211,238,0.18)}
+    .form-group input:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--primary) 18%, transparent)}
     
-    .btn-beli{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:#062b36;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif;box-shadow:0 16px 28px rgba(34,211,238,0.2)}
+    .btn-beli{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:#062b36;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif;box-shadow:0 16px 28px color-mix(in srgb, var(--primary) 20%, transparent)}
     .btn-beli:hover{opacity:.98;transform:translateY(-1px)}
     .btn-beli:disabled{background:rgba(148,163,184,0.25) !important;color:#dbeafe;box-shadow:none;cursor:not-allowed;transform:none}
     
@@ -108,13 +108,13 @@
     /* PPOB Category Grid */
     .ppob-category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
     .ppob-category-card{display:block;background:linear-gradient(145deg,rgba(23,57,69,0.84),rgba(18,41,49,0.78));border:1px solid var(--border);border-radius:16px;padding:0;transition:all .3s cubic-bezier(0.4,0,0.2,1);overflow:hidden;position:relative;text-decoration:none;box-shadow:0 12px 24px rgba(0,0,0,0.15)}
-    .ppob-category-card::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,rgba(34,211,238,0.08),rgba(7,89,133,0.06));opacity:0;transition:opacity .3s ease}
-    .ppob-category-card:hover{transform:translateY(-4px);border-color:rgba(34,211,238,0.38);box-shadow:0 16px 34px rgba(0,0,0,0.24)}
+    .ppob-category-card::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,color-mix(in srgb, var(--primary) 8%, transparent),rgba(7,89,133,0.06));opacity:0;transition:opacity .3s ease}
+    .ppob-category-card:hover{transform:translateY(-4px);border-color:color-mix(in srgb, var(--primary) 38%, transparent);box-shadow:0 16px 34px rgba(0,0,0,0.24)}
     .ppob-category-card:hover::before{opacity:1}
     .ppob-category-card:active{transform:translateY(-2px)}
     .ppob-card-inner{padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;z-index:1}
     .ppob-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;box-shadow:0 10px 20px rgba(0,0,0,0.24);transition:all .3s ease}
-    .ppob-category-card:hover .ppob-icon{transform:scale(1.1) rotate(5deg);box-shadow:0 14px 26px rgba(34,211,238,0.22)}
+    .ppob-category-card:hover .ppob-icon{transform:scale(1.1) rotate(5deg);box-shadow:0 14px 26px color-mix(in srgb, var(--primary) 22%, transparent)}
     .ppob-label{font-size:13px;font-weight:600;color:var(--text);text-align:center;line-height:1.3}
     
     /* Gradient Classes */
@@ -146,7 +146,7 @@
   <div class="topbar">
     <a href="/pelanggan/dashboard"><i class="bi bi-arrow-left"></i> Kembali</a>
     <h1>
-      <i class="bi bi-phone" style="color:#0ea5e9"></i>
+      <i class="bi bi-phone" style="color:var(--accent, #0ea5e9)"></i>
       <% if (selectedCategory) { %>
         <%= selectedCategory %>
       <% } else { %>
@@ -225,7 +225,7 @@
       <a href="/pelanggan/ppob" class="btn" style="background:#1e293b;border:1px solid #334155;color:#94a3b8;padding:8px 16px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
         <i class="bi bi-arrow-left"></i> Kembali ke Kategori
       </a>
-      <span style="margin-left:12px;color:#64748b;font-size:13px">Kategori: <strong style="color:#0ea5e9"><%= selectedCategory %></strong></span>
+      <span style="margin-left:12px;color:var(--muted, #64748b);font-size:13px">Kategori: <strong style="color:var(--accent, #0ea5e9)"><%= selectedCategory %></strong></span>
     </div>
 
     <div class="page-layout">
@@ -260,7 +260,7 @@
       <div>
         <p class="section-title">Konfirmasi Pembelian</p>
         <div class="order-form">
-          <h3><i class="bi bi-credit-card" style="color:#0ea5e9"></i> Pembelian Instant</h3>
+          <h3><i class="bi bi-credit-card" style="color:var(--accent, #0ea5e9)"></i> Pembelian Instant</h3>
           
           <div class="selected-prod-info" id="selectedInfo">
             <div class="selected-prod-name" id="selectedName">-</div>
@@ -289,7 +289,7 @@
 
     <!-- Riwayat Transaksi -->
     <div class="history-card">
-      <h3><i class="bi bi-clock-history" style="color:#0ea5e9"></i> Riwayat Pembelian Saldo & PPOB</h3>
+      <h3><i class="bi bi-clock-history" style="color:var(--accent, #0ea5e9)"></i> Riwayat Pembelian Saldo & PPOB</h3>
       <div class="table-responsive">
         <% if (history.length === 0) { %>
           <div class="no-data">

@@ -21,7 +21,7 @@
 
     body{
       background-color: var(--bg);
-      background-image: linear-gradient(140deg, rgba(68, 203, 184, 0.24) 0%, rgba(46, 160, 211, 0.22) 46%, rgba(49, 184, 168, 0.17) 100%);
+      background-image: var(--body-bg-image, linear-gradient(140deg, rgba(68, 203, 184, 0.24) 0%, rgba(46, 160, 211, 0.22) 46%, rgba(49, 184, 168, 0.17) 100%));
       color: var(--text);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, sans-serif;
       padding-bottom: calc(110px + env(safe-area-inset-bottom));
@@ -32,9 +32,9 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      background: rgba(14, 38, 50, 0.84);
+      background: var(--portal-surface);
       backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(220, 236, 238, 0.12);
+      border-bottom: 1px solid var(--border);
     }
 
     .topbar .inner{
@@ -57,9 +57,9 @@
     .brand .icon{
       width:42px;height:42px;border-radius:14px;
       display:flex;align-items:center;justify-content:center;
-      background: rgba(99, 102, 241, 0.12);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      color: #c7d2fe;
+      background: var(--soft-primary);
+      border: 1px solid color-mix(in srgb, var(--brand1) 35%, transparent);
+      color: var(--brand1);
       flex: 0 0 auto;
     }
 
@@ -289,27 +289,27 @@
       content:'';
       position:absolute;
       top:0;left:0;right:0;bottom:0;
-      background:linear-gradient(135deg,rgba(99,102,241,0.05) 0%,rgba(59,130,246,0.05) 100%);
+      background:linear-gradient(135deg,var(--brand1) 0%,var(--brand2) 100%);
       opacity:0;
       transition:opacity .25s ease;
     }
     .payment-card-agent:hover{
       border-color:var(--brand1);
       transform:translateY(-2px);
-      box-shadow:0 12px 30px rgba(0,0,0,0.3),0 0 0 1px rgba(99,102,241,0.2);
+      box-shadow:0 12px 30px rgba(0,0,0,0.3),0 0 0 1px color-mix(in srgb, var(--brand1) 20%, transparent);
     }
-    .payment-card-agent:hover::before{opacity:1}
+    .payment-card-agent:hover::before{opacity:.08}
     .payment-radio-agent:checked + .payment-card-agent{
       border-color:var(--brand1);
-      background:rgba(99,102,241,0.12);
-      box-shadow:0 8px 20px rgba(99,102,241,0.3);
+      background:var(--soft-primary);
+      box-shadow:0 8px 20px color-mix(in srgb, var(--brand1) 30%, transparent);
     }
     .payment-radio-agent:checked + .payment-card-agent::after{
-      content:'?';
+      content:'\2713';
       position:absolute;
       top:8px;right:8px;
       width:20px;height:20px;
-      background:linear-gradient(135deg,#6366f1,#3b82f6);
+      background:linear-gradient(135deg,var(--brand1),var(--brand2));
       border-radius:50%;
       display:flex;
       align-items:center;
@@ -317,7 +317,7 @@
       font-size:12px;
       font-weight:900;
       color:#fff;
-      box-shadow:0 4px 12px rgba(99,102,241,0.4);
+      box-shadow:0 4px 12px color-mix(in srgb, var(--brand1) 40%, transparent);
     }
     
     .payment-icon-agent{
@@ -331,9 +331,9 @@
       position:relative;
       z-index:1;
     }
-    .badge-qris{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
-    .badge-dana{background:linear-gradient(135deg,#3b82f6,#0ea5e9);color:#fff}
-    .badge-ovo{background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff}
+    .badge-qris{background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff}
+    .badge-dana{background:linear-gradient(135deg,var(--brand2),var(--brand1));color:#fff}
+    .badge-ovo{background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff}
     .badge-shopee{background:linear-gradient(135deg,#f97316,#f43f5e);color:#fff}
     .badge-linkaja{background:linear-gradient(135deg,#ef4444,#f43f5e);color:#fff}
     .badge-gopay{background:linear-gradient(135deg,#22c55e,#10b981);color:#fff}
@@ -390,11 +390,11 @@
     }
     .bn-item i{ font-size: 16px; color: var(--muted); }
     .bn-item.active{
-      border-color: rgba(99, 102, 241, 0.55);
-      background: rgba(99, 102, 241, 0.12);
-      color: #c7d2fe;
+      border-color: color-mix(in srgb, var(--brand1) 55%, transparent);
+      background: var(--soft-primary);
+      color: var(--brand1);
     }
-    .bn-item.active i{ color: #c7d2fe; }
+    .bn-item.active i{ color: var(--brand1); }
 
     .vgrid{
       display:grid;
@@ -415,8 +415,8 @@
     }
     .vcard:active{ transform: scale(0.99); }
     .vcard.sel{
-      background: rgba(99, 102, 241, 0.14);
-      border-color: rgba(99, 102, 241, 0.55);
+      background: var(--soft-primary);
+      border-color: color-mix(in srgb, var(--brand1) 55%, transparent);
     }
     .vcard .t{
       display:flex;
@@ -459,14 +459,15 @@
     }
     .chip.g{ border-color: rgba(34,197,94,0.35); background: rgba(34,197,94,0.10); color:#bbf7d0; }
     .chip.r{ border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.10); color:#fecaca; }
-    .chip.b{ border-color: rgba(99,102,241,0.35); background: rgba(99,102,241,0.10); color:#c7d2fe; }
+    .chip.b{ border-color: color-mix(in srgb, var(--brand1) 35%, transparent); background: var(--soft-primary); color: var(--brand1); }
 
-    .df-tone-pulsa{ background: rgba(99,102,241,0.15); }
+    .df-tone-pulsa{ background: var(--soft-primary); }
     .df-tone-data{ background: rgba(34,197,94,0.12); }
     .df-tone-pln{ background: rgba(245,158,11,0.12); }
     .df-tone-game{ background: rgba(236,72,153,0.12); }
-    .df-tone-wifi{ background: rgba(59,130,246,0.12); }
+    .df-tone-wifi{ background: var(--idim, rgba(59,130,246,0.12)); }
     .df-tone-ewallet{ background: rgba(16,185,129,0.12); }
+    .df-tone-voucher{ background: color-mix(in srgb, var(--brand1) 12%, transparent); }tone-ewallet{ background: rgba(16,185,129,0.12); }
     .df-tone-voucher{ background: rgba(168,85,247,0.12); }
 
     @media (min-width: 900px){
@@ -839,7 +840,7 @@
                   return 'other';
                 };
                 const groupMeta = {
-                  pulsa: { title: 'Pulsa', icon: 'bi-phone', tone: 'rgba(99,102,241,0.15)' },
+                  pulsa: { title: 'Pulsa', icon: 'bi-phone', tone: 'var(--soft-primary)' },
                   data: { title: 'Data', icon: 'bi-wifi', tone: 'rgba(34,197,94,0.12)' },
                   pln: { title: 'PLN', icon: 'bi-lightning-charge', tone: 'rgba(245,158,11,0.12)' },
                   game: { title: 'Game', icon: 'bi-controller', tone: 'rgba(236,72,153,0.12)' },

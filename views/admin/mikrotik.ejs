@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -14,8 +14,8 @@
     /* mtab active styling is now globally handled dynamically in admin.css to support multiple themes */
     html[data-theme="light"] .mtab { background: transparent; color: var(--muted); }
     html[data-theme="light"] .mtab:hover { background: rgba(0,0,0,0.04); color: var(--text); }
-    html[data-theme="light"] .mtab.active { background: linear-gradient(135deg,#6366f1 0%,#818cf8 52%,#7c3aed 100%); color: #ffffff; border-color: rgba(99,102,241,.48); box-shadow: 0 8px 20px rgba(99,102,241,.12); }
-    html[data-theme="light"] .tab.active { background: linear-gradient(135deg,#6366f1 0%,#818cf8 52%,#7c3aed 100%); color: #ffffff; border-color: rgba(99,102,241,.48); box-shadow: 0 8px 20px rgba(99,102,241,.12); }
+    html[data-theme="light"] .mtab.active { background: linear-gradient(135deg,var(--primary) 0%,var(--primary) 52%,var(--accent) 100%); color: #ffffff; border-color: color-mix(in srgb, var(--primary) .4800%, transparent); box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) .1200%, transparent); }
+    html[data-theme="light"] .tab.active { background: linear-gradient(135deg,var(--primary) 0%,var(--primary) 52%,var(--accent) 100%); color: #ffffff; border-color: color-mix(in srgb, var(--primary) .4800%, transparent); box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) .1200%, transparent); }
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.3s; font-weight: 500; }
     /* tab active styling is now globally handled dynamically in admin.css to support multiple themes */

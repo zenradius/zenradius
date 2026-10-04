@@ -73,7 +73,7 @@
                   <td><code><%= c.username %></code></td>
                   <td><span class="text-muted"><%= c.password %></span></td>
                   <td><%= c.phone || '-' %></td>
-                  <td><span class="badge" style="background:rgba(99,102,241,0.15);color:#818cf8"><%= c.area || '-' %></span></td>
+                  <td><span class="badge" style="background:var(--pdim);color:var(--primary)"><%= c.area || '-' %></span></td>
                   <td>
                     <span class="badge <%= c.is_active ? 'bs' : 'bd' %>"><%= c.is_active ? t('common.active','Aktif') : t('common.inactive','Nonaktif') %></span>
                   </td>

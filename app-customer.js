@@ -1768,9 +1768,10 @@ app.use(domainLicense.requireDomainLicense({
     '/pelanggan/login', '/pelanggan/register', '/pelanggan/register/status',
     '/pelanggan/forgot-password', '/pelanggan/login-otp', '/pelanggan/otp',
     '/pelanggan/tos', '/pelanggan/privacy', '/pelanggan/about', '/pelanggan/contact',
-    '/voucher', '/daftar', '/cek-daftar', '/cek-tagihan', '/404'
-  ]
-}));
+    '/voucher', '/daftar', '/cek-daftar', '/cek-tagihan', '/404',
+    '/teknisi', '/teknisi/login', '/teknisi/logout', '/mitra', '/mitra/login', '/mitra/logout',
+    '/penagih', '/penagih/login', '/penagih/logout'
+  ] /* Allow these paths */ });
 
 const mobileApi = require('./routes/mobileApi');
 app.use('/api/mobile/v1', mobileApi);

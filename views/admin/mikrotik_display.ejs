@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
@@ -72,7 +72,7 @@
       font-weight: 800;
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      background: linear-gradient(90deg, var(--primary), #60a5fa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -1137,7 +1137,7 @@
             {
               label: 'Upload (TX)',
               data: [],
-              borderColor: '#3b82f6',
+              borderColor: 'var(--primary)',
               backgroundColor: 'rgba(59, 130, 246, 0.05)',
               fill: true,
               tension: 0.4,

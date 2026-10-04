@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
@@ -30,12 +30,12 @@
       --landing-bg: var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
             radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
             linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));
-      /* Admin panel palette — dipakai untuk menyelaraskan halaman QRIS dengan pop-up Detail Pesanan Voucher di admin */
+      /* Admin panel palette â€” dipakai untuk menyelaraskan halaman QRIS dengan pop-up Detail Pesanan Voucher di admin */
       --admin-bg2: var(--bg2, #173945);
       --admin-bg3: var(--bg3, #1b4656);
       --admin-border: var(--border, rgba(190,239,255,0.22));
       --admin-primary: var(--primary, #22D3EE);
-      --admin-pdim: var(--pdim, rgba(34,211,238,0.14));
+      --admin-pdim: var(--pdim, color-mix(in srgb, var(--primary) 14%, transparent));
       --admin-btn-bg: var(--btn-bg, linear-gradient(135deg,#236060 0%,#183f51 52%,#194251 100%));
       --admin-btn-color: var(--btn-color, #f4fffd);
       --admin-btn-border: var(--btn-border, rgba(126,231,219,.48));
@@ -71,7 +71,7 @@
     .qrimg{width:100%;max-width:360px;border-radius:20px;background:color-mix(in srgb, var(--portal-surface, #fff) 8%, #fff);padding:14px;box-shadow:0 16px 36px rgba(2,10,14,.45)}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid var(--admin-border)}
-    .pill-u{background: color-mix(in srgb, var(--soft-primary, var(--admin-pdim)) 86%, transparent);color:var(--portal-primary, #a5f4ed);border-color: color-mix(in srgb, var(--portal-line, rgba(34,211,238,.28)) 86%, transparent)}
+    .pill-u{background: color-mix(in srgb, var(--soft-primary, var(--admin-pdim)) 86%, transparent);color:var(--portal-primary, #a5f4ed);border-color: color-mix(in srgb, var(--portal-line, color-mix(in srgb, var(--primary) .2800%, transparent)) 86%, transparent)}
     .form-control{
       background: color-mix(in srgb, var(--portal-surface, #fff) 10%, transparent);
       border: 1px solid color-mix(in srgb, var(--portal-line, var(--admin-border)) 86%, transparent);
@@ -97,7 +97,7 @@
     .qr-hero .hero-copy .headline{font-size:16px;font-weight:800;color:var(--portal-ink, #f8fafc)}
     .qr-hero .hero-copy .subline{font-size:14px;line-height:1.6;color:color-mix(in srgb, var(--portal-ink, rgba(237,247,245,.82)) 88%, transparent)}
     .qr-hero .hero-copy .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-    .qr-hero .hero-copy .chip-row .pill{background:color-mix(in srgb, var(--soft-primary, rgba(34,211,238,.12)) 82%, transparent);border-color:color-mix(in srgb, var(--portal-line, rgba(34,211,238,.18)) 86%, transparent);color:var(--portal-primary, #a5f4ed)}
+    .qr-hero .hero-copy .chip-row .pill{background:color-mix(in srgb, var(--soft-primary, color-mix(in srgb, var(--primary) .1200%, transparent)) 82%, transparent);border-color:color-mix(in srgb, var(--portal-line, color-mix(in srgb, var(--primary) .1800%, transparent)) 86%, transparent);color:var(--portal-primary, #a5f4ed)}
     .qr-hero .qr-stage{background:linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-raised, var(--admin-bg3)) 92%, transparent), color-mix(in srgb, var(--portal-surface, var(--admin-bg2)) 96%, transparent));border:1px solid color-mix(in srgb, var(--portal-line, var(--admin-border)) 86%, transparent);border-radius:20px;padding:18px;display:flex;align-items:center;justify-content:center}
     .qr-hero .qr-stage .qrimg{box-shadow:0 18px 38px rgba(2,10,14,.46)}
     .action-row{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}
@@ -164,7 +164,7 @@
             <div class="fw-bold" style="font-size:18px"><%= customerName || (isVoucher ? 'Pembeli Voucher' : 'Pelanggan') %></div>
             <div class="muted small">
               <%= refPrefix %>-<%= refId %>
-              <% if (periodText) { %> • <%= periodText %><% } %>
+              <% if (periodText) { %> â€¢ <%= periodText %><% } %>
             </div>
           </div>
 
@@ -222,7 +222,7 @@
             </div>
             <div class="muted small muted-note mt-3 text-center">
               Status pembayaran diperbarui otomatis setelah transaksi terverifikasi.
-              <br><i class="bi bi-check2-circle me-1"></i>Tidak perlu mengirim bukti pembayaran — transaksi diverifikasi otomatis oleh sistem.
+              <br><i class="bi bi-check2-circle me-1"></i>Tidak perlu mengirim bukti pembayaran â€” transaksi diverifikasi otomatis oleh sistem.
             </div>
           </div>
 

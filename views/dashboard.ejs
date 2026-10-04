@@ -818,7 +818,7 @@
     }
 
     .notif-item:hover {
-      background: rgba(99, 102, 241, 0.12);
+      background: var(--soft-primary);
     }
 
     .notif-item.unread {
@@ -832,16 +832,16 @@
       --bs-table-bg: rgba(15, 23, 42, 0.6);
       --bs-table-border-color: rgba(255,255,255,0.08);
       --bs-table-hover-color: #ffffff;
-      --bs-table-hover-bg: rgba(99, 102, 241, 0.15);
+      --bs-table-hover-bg: var(--soft-primary);
       --bs-table-striped-color: #ffffff;
       --bs-table-active-color: #ffffff;
-      --bs-table-active-bg: rgba(99, 102, 241, 0.2);
+      --bs-table-active-bg: var(--soft-primary);
       color: #ffffff !important;
       margin-bottom: 0 !important;
     }
     .invoice-table thead tr {
       background: rgba(30, 41, 59, 0.95) !important;
-      border-bottom: 2px solid rgba(99,102,241,0.4) !important;
+      border-bottom: 2px solid color-mix(in srgb, var(--accent-primary) 40%, transparent) !important;
     }
     .invoice-table thead th {
       color: #ffffff !important;
@@ -857,7 +857,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.08) !important;
     }
     .invoice-table tbody tr:hover td {
-      background: rgba(99, 102, 241, 0.15) !important;
+      background: var(--soft-primary) !important;
       color: #ffffff !important;
     }
     .invoice-table tbody td {
@@ -1251,7 +1251,7 @@
       <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 position-relative" style="z-index:1">
         <div>
           <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge" style="background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.4); border-radius:8px; font-size:11px;">
+            <span class="badge" style="background:var(--soft-primary); color:var(--accent-primary); border:1px solid color-mix(in srgb, var(--accent-primary) 40%, transparent); border-radius:8px; font-size:11px;">
               ID: <%= profile ? (profile.genieacs_tag || profile.pppoe_username || profile.phone) : customer.phone %>
             </span>
             <% if (profile) { %>
@@ -1273,7 +1273,7 @@
 
         <!-- RE-SYNC / ONU POLL BUTTON -->
         <div id="deviceSyncPanel" data-sync-in-progress="<%= customer.syncInProgress ? 'true' : 'false' %>">
-          <button type="button" id="btnDeviceRefresh" class="btn btn-outline-light btn-sm fw-bold px-3 py-2" style="border-radius:12px; border-color:rgba(99,102,241,0.4); background:rgba(15,23,42,0.6);">
+          <button type="button" id="btnDeviceRefresh" class="btn btn-outline-light btn-sm fw-bold px-3 py-2" style="border-radius:12px; border-color:color-mix(in srgb, var(--accent-primary) 40%, transparent); background:rgba(15,23,42,0.6);">
             <i class="bi bi-arrow-repeat me-1"></i> Poll ONU Sekarang
           </button>
           <div id="deviceSyncNotice" class="small mt-1 text-muted text-md-end" style="font-size:11px;"></div>
@@ -1337,7 +1337,7 @@
         <div class="action-label">Restart Modem</div>
       </div>
       <div class="action-item" onclick="const m = new bootstrap.Modal(document.getElementById('profileModal')); m.show();">
-        <div class="action-icon ai-profile" style="background: linear-gradient(135deg, #a78bfa, #7c3aed);"><i class="bi bi-person-circle"></i></div>
+        <div class="action-icon ai-profile" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));"><i class="bi bi-person-circle"></i></div>
         <div class="action-label">Profil</div>
       </div>
       <% if (showPPOB) { %>
@@ -1507,7 +1507,7 @@
             <div class="table-responsive d-none d-md-block">
               <table class="table table-hover align-middle invoice-table" style="margin-bottom:0;">
                 <thead>
-                  <tr style="border-bottom: 2px solid rgba(99,102,241,0.4); background:rgba(30,41,59,0.8);">
+                  <tr style="border-bottom: 2px solid color-mix(in srgb, var(--accent-primary) 40%, transparent); background:rgba(30,41,59,0.8);">
                     <th class="text-white text-start fw-bold" style="padding:12px 14px; font-size:13px;">Aksi</th>
                     <th class="text-white text-center fw-bold" style="padding:12px 8px; font-size:13px;">Pilih</th>
                     <th class="text-white fw-bold" style="padding:12px 14px; font-size:13px;">Periode</th>
@@ -1630,7 +1630,7 @@
       <div class="accordion-item glass-card mb-3" id="ticket-section">
         <h2 class="accordion-header">
           <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTicket">
-            <i class="bi bi-headset me-2 text-purple" style="color:#a855f7;"></i> Tiket Keluhan & Bantuan
+            <i class="bi bi-headset me-2" style="color:var(--accent-primary);"></i> Tiket Keluhan & Bantuan
           </button>
         </h2>
         <div id="collapseTicket" class="accordion-collapse collapse" data-bs-parent="#customerAccordion">
@@ -1866,33 +1866,33 @@
   <!-- MODAL PROFIL - CHANGE PASSWORD PORTAL -->
   <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid rgba(167,139,250,0.4); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
+      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
         <div class="modal-header border-0 pb-0" style="padding:24px 24px 10px;">
-          <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-person-circle me-2 text-purple" style="color:#a78bfa;"></i>Pengaturan Profil</h5>
+          <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-person-circle me-2" style="color:var(--accent-primary);"></i>Pengaturan Profil</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <form action="/pelanggan/change-portal-password" method="POST">
           <div class="modal-body p-4">
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Password Saat Ini</label>
-              <input type="password" name="current_password" class="form-control text-white p-3" style="background:rgba(30,41,59,0.95); border:1px solid rgba(167,139,250,0.4); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Masukkan password portal lama Anda" required>
+              <input type="password" name="current_password" class="form-control text-white p-3" style="background:rgba(30,41,59,0.95); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Masukkan password portal lama Anda" required>
               <div class="form-text small" style="color:#e2e8f0; font-weight:600;">Password untuk login ke portal pelanggan</div>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Password Baru (Minimal 8 Karakter)</label>
-              <input type="password" name="new_password" class="form-control text-white p-3" minlength="8" maxlength="63" style="background:rgba(30,41,59,0.95); border:1px solid rgba(167,139,250,0.4); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Masukkan password baru Anda" required>
+              <input type="password" name="new_password" class="form-control text-white p-3" minlength="8" maxlength="63" style="background:rgba(30,41,59,0.95); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Masukkan password baru Anda" required>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Konfirmasi Password Baru</label>
-              <input type="password" name="confirm_password" class="form-control text-white p-3" minlength="8" maxlength="63" style="background:rgba(30,41,59,0.95); border:1px solid rgba(167,139,250,0.4); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Ulangi password baru Anda" required>
+              <input type="password" name="confirm_password" class="form-control text-white p-3" minlength="8" maxlength="63" style="background:rgba(30,41,59,0.95); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Ulangi password baru Anda" required>
               <div class="form-text small" style="color:#e2e8f0; font-weight:600;">Pastikan password baru sama persis dengan yang di atas</div>
             </div>
           </div>
           <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex gap-2">
             <button type="button" class="btn btn-outline-secondary px-4 text-white" data-bs-dismiss="modal" style="border-radius:12px;">Batal</button>
-            <button type="submit" class="btn text-white fw-bold px-4 flex-grow-1" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); border:none; border-radius:12px;">Ubah Password</button>
+            <button type="submit" class="btn text-white fw-bold px-4 flex-grow-1" style="background:linear-gradient(135deg,var(--accent-primary),var(--accent-primary-strong)); border:none; border-radius:12px;">Ubah Password</button>
           </div>
         </form>
       </div>
@@ -1902,9 +1902,9 @@
   <!-- MODAL TIKET KELUHAN -->
   <div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid rgba(168,85,247,0.4); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
+      <div class="modal-content" style="background:linear-gradient(135deg, var(--card-bg), var(--bg3, rgba(19, 50, 62, 0.92))); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:24px; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.6);">
         <div class="modal-header border-0 pb-0" style="padding:24px 24px 10px;">
-          <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-headset me-2 text-purple fs-4" style="color:#a855f7;"></i>Buat Tiket Keluhan Baru</h5>
+          <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-headset me-2 fs-4" style="color:var(--accent-primary);"></i>Buat Tiket Keluhan Baru</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <form action="/pelanggan/tickets/create" method="POST" enctype="multipart/form-data">
@@ -1912,7 +1912,7 @@
           <div class="modal-body p-4">
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Jenis Kendala / Subjek</label>
-              <select name="subject" class="form-select text-white p-3" style="background:rgba(30,41,59,0.95); border:1px solid rgba(168,85,247,0.4); border-radius:14px; font-weight:600; color:#ffffff;" required>
+              <select name="subject" class="form-select text-white p-3" style="background:rgba(30,41,59,0.95); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:14px; font-weight:600; color:#ffffff;" required>
                 <option value="" disabled selected class="bg-dark text-white">-- Pilih Jenis Kendala --</option>
                 <option value="Koneksi Terputus / Tidak Bisa Konek" class="bg-dark text-white">Koneksi Terputus / Tidak Bisa Konek</option>
                 <option value="Koneksi Lambat / Lemot" class="bg-dark text-white">Koneksi Lambat / Lemot</option>
@@ -1924,16 +1924,16 @@
             </div>
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Detail Pesan / Penjelasan Kendala</label>
-              <textarea name="message" class="form-control text-white p-3" rows="3" style="background:rgba(30,41,59,0.95); border:1px solid rgba(168,85,247,0.4); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Contoh: Lampu indikator PON kedap-kedip merah sejak tadi pagi di Dusun Janggar..." required></textarea>
+              <textarea name="message" class="form-control text-white p-3" rows="3" style="background:rgba(30,41,59,0.95); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Contoh: Lampu indikator PON kedap-kedip merah sejak tadi pagi di Dusun Janggar..." required></textarea>
             </div>
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Foto Lampiran (Opsional)</label>
-              <input type="file" name="photos" class="form-control text-white" accept="image/*" multiple style="background:rgba(30,41,59,0.95); border:1px solid rgba(168,85,247,0.4); border-radius:14px; color:#ffffff;">
+              <input type="file" name="photos" class="form-control text-white" accept="image/*" multiple style="background:rgba(30,41,59,0.95); border:1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent); border-radius:14px; color:#ffffff;">
             </div>
           </div>
           <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex gap-2">
             <button type="button" class="btn btn-outline-secondary px-4 text-white" data-bs-dismiss="modal" style="border-radius:12px;">Batal</button>
-            <button type="submit" class="btn text-white fw-bold px-4 flex-grow-1" style="background:linear-gradient(135deg,#a855f7,#7c3aed); border-radius:12px;">Kirim Tiket Keluhan</button>
+            <button type="submit" class="btn text-white fw-bold px-4 flex-grow-1" style="background:linear-gradient(135deg,var(--accent-primary),var(--accent-primary-strong)); border-radius:12px;">Kirim Tiket Keluhan</button>
           </div>
         </form>
       </div>

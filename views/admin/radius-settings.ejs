@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -15,7 +15,7 @@
     
     html[data-theme="light"] .mtab { background: #ffffff !important; color: #64748b !important; border-color: #cbd5e1 !important; }
     html[data-theme="light"] .mtab:hover { color: #0f172a !important; background: #f1f5f9 !important; }
-    html[data-theme="light"] .mtab.active { color: #ffffff !important; background: #4f46e5 !important; border-color: #4f46e5 !important; }
+    html[data-theme="light"] .mtab.active { color: #ffffff !important; background: var(--primary) !important; border-color: var(--primary) !important; }
 
     .settings-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; }
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -61,7 +61,7 @@
     <% } %>
 
     <% if (typeof onlineRegistrations !== 'undefined' && onlineRegistrations && onlineRegistrations.length > 0) { %>
-    <div class="card" style="margin-bottom:16px;border-color:rgba(99,102,241,.45)">
+    <div class="card" style="margin-bottom:16px;border-color:var(--border)">
       <div class="card-hd">
         <h6><i class="bi bi-person-lines-fill"></i> Pendaftaran Online (<%= onlineRegistrations.length %>)</h6>
         <div class="d-flex gap-1 flex-wrap">
@@ -81,7 +81,7 @@
               <td><%= registration.package_name || '-' %></td>
               <td>
                 <% if (registration.registration_status === 'pending_survey') { %><span class="badge bw">Menunggu Survey</span>
-                <% } else if (registration.registration_status === 'surveyed') { %><span class="badge bp">Layak — Menunggu Approval</span>
+                <% } else if (registration.registration_status === 'surveyed') { %><span class="badge bp">Layak â€” Menunggu Approval</span>
                 <% } else if (registration.registration_status === 'approved') { %><span class="badge bs">Disetujui</span>
                 <% } else if (registration.registration_status === 'rejected') { %><span class="badge bd">Ditolak</span>
                 <% } else { %><span class="badge bd">Tidak Layak</span><% } %>
@@ -210,9 +210,9 @@
           </select>
           <% if (typeof routers !== 'undefined' && routers && routers.length > 0) { %>
           <select class="fs" style="width:160px;" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
-            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>>📡 Semua Router</option>
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>>ðŸ“¡ Semua Router</option>
             <% routers.forEach(r => { %>
-              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>>📶 <%= r.name %></option>
+              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>>ðŸ“¶ <%= r.name %></option>
             <% }) %>
           </select>
           <% } %>
@@ -312,7 +312,7 @@
               </td>
               <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                 <div><%= c.address || '-' %></div>
-                <% if (c.area) { %><div style="font-size:11px;color:#818cf8"><i class="bi bi-geo-alt"></i> <%= c.area %></div><% } %>
+                <% if (c.area) { %><div style="font-size:11px;color:var(--primary)"><i class="bi bi-geo-alt"></i> <%= c.area %></div><% } %>
               </td>
               <td>
                 <% if (c.status==='active') { %><span class="badge bs"><i class="bi bi-circle-fill" style="font-size:7px"></i><%= t('admin.customers.filter.active', 'Aktif') %></span>
@@ -370,7 +370,7 @@
         <% const isRadiusActive = (typeof settings !== 'undefined' && settings && String(settings.radius_enabled) === '1'); %>
         <% if (isRadiusActive) { %>
         <!-- SECTION 1: MODE AUTENTIKASI KONEKSI (UTAMA) -->
-        <div style="background: rgba(99, 102, 241, 0.08); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.25); margin-bottom: 16px;">
+        <div style="background: var(--pdim); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
           <div class="fw6 mb-2" style="color:var(--primary); font-size:13px; display:flex; align-items:center; justify-content:space-between;">
             <span><i class="bi bi-cpu text-primary me-1"></i> Mode Autentikasi Pelanggan (Utama)</span>
             <span class="badge bp" style="font-size:10px; padding:3px 8px;">Diutamakan MikroTik API</span>
@@ -378,8 +378,8 @@
           <div class="form-row" style="margin-bottom:0;" id="add_radius_select_fg">
             <div class="fg" style="margin-bottom:0;">
               <select class="fs" name="is_radius" id="add_is_radius" style="font-weight:700; height:42px;" onchange="handleAuthModeChange('add', this.value)">
-                <option value="0" selected>🌐 MikroTik API (Lokal /ppp secret - Utama & Default)</option>
-                <option value="1">🖧 RADIUS Server (Billing Database Only)</option>
+                <option value="0" selected>ðŸŒ MikroTik API (Lokal /ppp secret - Utama & Default)</option>
+                <option value="1">ðŸ–§ RADIUS Server (Billing Database Only)</option>
               </select>
               <small class="text-muted" style="font-size:11px; display:block; margin-top:4px;">
                 Mode MikroTik API mengelola kredensial PPP langsung di menu /ppp secret RouterOS MikroTik.
@@ -438,7 +438,7 @@
               <select class="fs" name="package_id" required>
                 <option value="">-- Pilih Paket --</option>
                 <% packages.forEach(p => { %>
-                <option value="<%= p.id %>"><%= p.name %> — Rp <%= p.price.toLocaleString('id-ID') %></option>
+                <option value="<%= p.id %>"><%= p.name %> â€” Rp <%= p.price.toLocaleString('id-ID') %></option>
                 <% }) %>
               </select>
             </div>
@@ -674,7 +674,7 @@
         
         <% if (isRadiusActive) { %>
         <!-- SECTION 1: MODE AUTENTIKASI KONEKSI (UTAMA) -->
-        <div style="background: rgba(99, 102, 241, 0.08); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.25); margin-bottom: 16px;">
+        <div style="background: var(--pdim); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
           <div class="fw6 mb-2" style="color:var(--primary); font-size:13px; display:flex; align-items:center; justify-content:space-between;">
             <span><i class="bi bi-cpu text-primary me-1"></i> Mode Autentikasi Pelanggan (Utama)</span>
             <span class="badge bp" style="font-size:10px; padding:3px 8px;">Diutamakan MikroTik API</span>
@@ -682,8 +682,8 @@
           <div class="form-row" style="margin-bottom:0;" id="e_radius_select_fg">
             <div class="fg" style="margin-bottom:0;">
               <select class="fs" name="is_radius" id="e_is_radius" style="font-weight:700; height:42px;" onchange="handleAuthModeChange('edit', this.value)">
-                <option value="0">🌐 MikroTik API (Lokal /ppp secret - Utama & Default)</option>
-                <option value="1">🖧 RADIUS Server (Billing Database Only)</option>
+                <option value="0">ðŸŒ MikroTik API (Lokal /ppp secret - Utama & Default)</option>
+                <option value="1">ðŸ–§ RADIUS Server (Billing Database Only)</option>
               </select>
               <small class="text-muted" style="font-size:11px; display:block; margin-top:4px;">
                 Mode MikroTik API mengelola kredensial PPP langsung di menu /ppp secret RouterOS MikroTik.
@@ -742,7 +742,7 @@
               <select class="fs" name="package_id" id="e_package" required>
                 <option value="">-- Pilih Paket --</option>
                 <% packages.forEach(p => { %>
-                <option value="<%= p.id %>"><%= p.name %> — Rp <%= p.price.toLocaleString('id-ID') %></option>
+                <option value="<%= p.id %>"><%= p.name %> â€” Rp <%= p.price.toLocaleString('id-ID') %></option>
                 <% }) %>
               </select>
             </div>
@@ -1330,7 +1330,7 @@ function showRegistrationDetail(btn) {
   steps.forEach((s, idx) => {
     const isLast = idx === steps.length - 1;
     html += `<div style="display:flex;gap:10px;align-items:flex-start;position:relative">
-      <div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--pdim, rgba(34,211,238,.12));color:var(--primary, #22d3ee);flex-shrink:0"><i class="bi bi-${s.icon}"></i></div>
+      <div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--pdim, color-mix(in srgb, var(--primary) .1200%, transparent));color:var(--primary, #22d3ee);flex-shrink:0"><i class="bi bi-${s.icon}"></i></div>
       <div style="flex:1;padding-bottom:${isLast ? '0' : '14px'}">
         <div style="font-weight:700;color:var(--text)">${s.label}</div>
         <div style="font-size:11px;color:var(--muted)">${s.time}</div>
@@ -1373,7 +1373,7 @@ function copyToClipboard(elementId, label) {
     return;
   }
     navigator.clipboard.writeText(text).then(() => {
-    alert('✅ ' + label + ' berhasil disalin: ' + text);
+    alert('âœ… ' + label + ' berhasil disalin: ' + text);
   }).catch(() => {
     const input = document.createElement('textarea');
     input.value = text;
@@ -1381,7 +1381,7 @@ function copyToClipboard(elementId, label) {
     input.select();
     document.execCommand('copy');
     document.body.removeChild(input);
-    alert('✅ ' + label + ' berhasil disalin: ' + text);
+    alert('âœ… ' + label + ' berhasil disalin: ' + text);
   });
 }
 
@@ -1773,7 +1773,7 @@ function monthsRangesText(months) {
     s = m; p = m;
   }
   ranges.push([s, p]);
-  return ranges.map(([a, b]) => (a === b ? PAY_MNS[a - 1] : (PAY_MNS[a - 1] + '–' + PAY_MNS[b - 1]))).join(', ');
+  return ranges.map(([a, b]) => (a === b ? PAY_MNS[a - 1] : (PAY_MNS[a - 1] + 'â€“' + PAY_MNS[b - 1]))).join(', ');
 }
 
 function updatePayTotal() {
@@ -1980,7 +1980,7 @@ document.querySelector('#editForm')?.addEventListener('submit', function(event) 
 
 setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),4000);
 
-// ── Auto-buka modal edit setelah approve pendaftaran online (lengkapi PPPoE dll) ──
+// â”€â”€ Auto-buka modal edit setelah approve pendaftaran online (lengkapi PPPoE dll) â”€â”€
 (function () {
   let targetId = '';
   try {

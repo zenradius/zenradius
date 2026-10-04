@@ -40,7 +40,7 @@
         <div class="muted" style="font-size:12px">
           <%= company %>
           <% if (session.collectorArea) { %>
-            <span class="badge bg-indigo ms-1" style="background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3)"><i class="bi bi-geo-alt"></i> Area: <%= session.collectorArea %></span>
+            <span class="badge bg-indigo ms-1" style="background:var(--soft-primary);color:var(--primary);border:1px solid color-mix(in srgb, var(--primary) 40%, transparent);">3)"><i class="bi bi-geo-alt"></i> Area: <%= session.collectorArea %></span>
           <% } else { %>
             <span class="badge bg-secondary ms-1" style="font-weight:normal;opacity:0.7"><i class="bi bi-globe"></i> Semua Area</span>
           <% } %>
@@ -166,7 +166,7 @@
                   <% } else if (isPending) { %>
                     <span class="badgey w"><i class="bi bi-hourglass"></i> MENUNGGU APPROVAL</span>
                   <% } else if (noInvoice) { %>
-                    <span class="badgey w" style="background:rgba(99,102,241,0.15);color:#a5b4fc;border-color:rgba(99,102,241,0.3)"><i class="bi bi-file-earmark-plus"></i> BELUM TAGIHAN</span>
+                    <span class="badgey w" style="background:var(--soft-primary);color:var(--primary);border-color:color-mix(in srgb, var(--primary) 40%, transparent)"><i class="bi bi-file-earmark-plus"></i> BELUM TAGIHAN</span>
                   <% } else { %>
                     <span class="badgey d"><i class="bi bi-exclamation-circle"></i> BELUM BAYAR</span>
                   <% } %>
@@ -175,7 +175,7 @@
 
               <table class="tbl mt-2" style="width:100%;border-collapse:collapse">
                 <tr><td>Periode</td><td><%= month %>/<%= year %></td></tr>
-                <tr><td>Area / Wilayah</td><td><strong style="color:#a5b4fc"><%= inv.customer_area || '-' %></strong></td></tr>
+                <tr><td>Area / Wilayah</td><td><strong style="color:var(--primary)"><%= inv.customer_area || '-' %></strong></td></tr>
                 <tr><td>Jatuh Tempo</td><td><%= inv.isolate_day ? ('Tgl ' + inv.isolate_day) : '-' %></td></tr>
                 <tr><td>ID Pelanggan</td><td>#<%= inv.customer_id %></td></tr>
                 <tr><td>PPPoE</td><td><%= inv.pppoe_username ? inv.pppoe_username : '-' %></td></tr>

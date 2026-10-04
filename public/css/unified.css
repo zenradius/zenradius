@@ -362,7 +362,7 @@ input::placeholder {
 }
 
 .customer-foot a {
-  color: #a5b4fc;
+  color: var(--portal-primary, #2dd4bf);
   text-decoration: none;
   font-weight: 700;
 }

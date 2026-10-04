@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
@@ -30,7 +30,7 @@
     }
     .status-checked-out {
       background: rgba(59, 130, 246, 0.15);
-      color: #3b82f6;
+      color: var(--primary);
     }
     .status-not-checked-in {
       background: rgba(239, 68, 68, 0.15);
@@ -120,9 +120,9 @@
       <div class="card-bd">
         <% if (todayAttendance) { %>
           <% if (todayAttendance.status === 'checked_in') { %>
-            <span class="status-badge status-checked-in">✓ Sudah Check-in</span>
+            <span class="status-badge status-checked-in">âœ“ Sudah Check-in</span>
           <% } else { %>
-            <span class="status-badge status-checked-out">✓ Sudah Check-out</span>
+            <span class="status-badge status-checked-out">âœ“ Sudah Check-out</span>
           <% } %>
 
           <div class="info-row">
@@ -183,7 +183,7 @@
             <input id="checkoutPhoto" type="file" accept="image/*" capture="user" style="display: none;" onchange="updatePhotoInfo('checkoutPhoto', 'checkoutPhotoInfo', 'checkoutPhotoPreviewWrap', 'checkoutPhotoPreview')">
             
             <div style="text-align: center; margin: 16px 0;">
-              <button type="button" onclick="document.getElementById('checkoutPhoto').click()" class="btn btn-p d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4); border: none; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'">
+              <button type="button" onclick="document.getElementById('checkoutPhoto').click()" class="btn btn-p d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 40%, transparent); border: none; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'">
                 <i class="bi bi-camera-fill"></i>
               </button>
               <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Ketuk tombol kamera untuk mengambil foto selfie</div>
@@ -207,7 +207,7 @@
           <% } %>
 
         <% } else { %>
-          <span class="status-badge status-not-checked-in">✕ Belum Check-in</span>
+          <span class="status-badge status-not-checked-in">âœ• Belum Check-in</span>
           <p style="color: var(--muted); margin: 16px 0;">Silakan lakukan check-in untuk memulai hari kerja Anda.</p>
           
           <textarea id="checkinNote" class="note-input" placeholder="Catatan check-in (opsional)"></textarea>
@@ -238,7 +238,7 @@
         <% } %>
 
         <div id="locationInfo" class="location-info" style="display: none;">
-          📍 Mengambil lokasi GPS...
+          ðŸ“ Mengambil lokasi GPS...
         </div>
       </div>
     </div>
@@ -724,7 +724,7 @@
           };
           if (locInfo) {
             locInfo.className = 'location-info';
-            locInfo.innerHTML = `📍 GPS Aktif: ${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}`;
+            locInfo.innerHTML = `ðŸ“ GPS Aktif: ${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}`;
           }
           refreshAllPhotoPreviews();
         },
@@ -736,7 +736,7 @@
           if (locInfo) {
             locInfo.style.background = 'rgba(239, 68, 68, 0.15)';
             locInfo.style.color = '#ef4444';
-            locInfo.innerHTML = `⚠️ ${msg}`;
+            locInfo.innerHTML = `âš ï¸ ${msg}`;
           }
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -745,7 +745,7 @@
       if (locInfo) {
         locInfo.style.background = 'rgba(239, 68, 68, 0.15)';
         locInfo.style.color = '#ef4444';
-        locInfo.innerHTML = '⚠️ Browser Anda tidak mendukung GPS Geolocation.';
+        locInfo.innerHTML = 'âš ï¸ Browser Anda tidak mendukung GPS Geolocation.';
       }
     }
   });

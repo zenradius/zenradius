@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -170,7 +170,7 @@
   .rs-card h3{margin:18px 0 8px;font-size:20px;font-weight:700;color:var(--text)}
   .rs-card p{margin:0;font-size:13px;line-height:1.6;color:var(--muted)}
   .cf-card{max-width:440px;padding:28px 26px 24px}
-  .cf-icon{width:64px;height:64px;margin:0 auto;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--primary);background:var(--pdim);border:1px solid rgba(34,211,238,.35)}
+  .cf-icon{width:64px;height:64px;margin:0 auto;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--primary);background:var(--pdim);border:1px solid color-mix(in srgb, var(--primary) .3500%, transparent)}
   .cf-icon.warn{color:var(--warning);background:var(--wdim);border-color:rgba(251,191,36,.35)}
   .cf-list{list-style:none;margin:18px 0 0;padding:0;text-align:left;display:grid;gap:8px}
   .cf-list li{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--muted);padding:9px 12px;border-radius:10px;background:var(--bg3);border:1px solid var(--border)}
@@ -187,7 +187,7 @@
   .rs-steps{margin:22px 0 16px;text-align:left;display:grid;gap:8px}
   .rs-step{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);padding:8px 12px;border-radius:10px;background:var(--bg3);border:1px solid transparent}
   .rs-dot{width:9px;height:9px;border-radius:50%;background:rgba(190,239,255,.25);flex:none}
-  .rs-step.active{color:var(--text);background:var(--pdim);border-color:rgba(34,211,238,.3)}
+  .rs-step.active{color:var(--text);background:var(--pdim);border-color:color-mix(in srgb, var(--primary) .300%, transparent)}
   .rs-step.active .rs-dot{background:var(--primary);box-shadow:0 0 0 4px var(--pdim);animation:rsPulse 1.2s ease-in-out infinite}
   .rs-step.done{color:var(--text)}
   .rs-step.done .rs-dot{background:var(--success)}
@@ -257,7 +257,7 @@
       title: 'Restart Aplikasi?',
       desc: 'Koneksi panel akan terputus beberapa detik. Halaman ini akan terbuka kembali secara otomatis setelah server siap.',
       items: [
-        'Proses biasanya selesai dalam 5–15 detik',
+        'Proses biasanya selesai dalam 5â€“15 detik',
         'Sesi login Anda tetap tersimpan',
         'Tidak ada data yang hilang'
       ],

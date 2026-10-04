@@ -224,3 +224,96 @@
   border-color: var(--border) !important;
 }
 
+/* ==========================================================================
+   BOOTSTRAP UTILITY REMAP — anti "color leak"
+   --------------------------------------------------------------------------
+   Bootstrap's stock utility classes (.text-*, .bg-*, .border-*, .btn-*)
+   hardcode their own palette (blue/green/red...) regardless of the active
+   theme.  These rules remap every one of those classes to the active theme
+   tokens for BOTH themes (Ocean/current and Space).  Together with the
+   component CSS that already consumes var(--*) tokens, this guarantees a
+   uniform look on every page, A to Z — no page can "leak" Bootstrap's
+   default blue or a mismatched tone ever again.
+   NOTE: .btn-primary is intentionally untouched here — it is already themed
+   via var(--portal-primary) in style.css/unified.css (higher-design rule).
+   ========================================================================== */
+
+/* ── Text utilities ── */
+.text-primary{color:var(--primary,var(--portal-primary))!important}
+.text-secondary{color:var(--muted)!important}
+.text-success{color:var(--success)!important}
+.text-danger{color:var(--danger)!important}
+.text-warning{color:var(--warning)!important}
+.text-info{color:var(--info,var(--accent))!important}
+.text-light{color:var(--text)!important}
+.text-dark{color:var(--text)!important}
+.text-body{color:var(--text)!important}
+.text-white{color:#fff!important}
+.text-muted{color:var(--muted)!important}
+
+/* ── Background utilities (soft glass tints — matches existing app style) ── */
+.bg-primary{background:var(--pdim,var(--soft-primary))!important;color:var(--primary,var(--portal-primary))!important;border:1px solid color-mix(in srgb,var(--primary,var(--portal-primary)) 35%,transparent)!important}
+.bg-secondary{background-color:var(--bg3)!important;color:var(--text)!important}
+.bg-success{background:var(--sdim,var(--soft-success))!important;color:var(--success)!important;border:1px solid color-mix(in srgb,var(--success) 35%,transparent)!important}
+.bg-danger{background:var(--ddim,var(--soft-danger))!important;color:var(--danger)!important;border:1px solid color-mix(in srgb,var(--danger) 35%,transparent)!important}
+.bg-warning{background:var(--wdim,var(--soft-warning))!important;color:var(--warning)!important;border:1px solid color-mix(in srgb,var(--warning) 35%,transparent)!important}
+.bg-info{background:var(--idim,rgba(96,165,250,.14))!important;color:var(--info,var(--accent))!important;border:1px solid color-mix(in srgb,var(--info,var(--accent)) 35%,transparent)!important}
+.bg-light{background-color:var(--bg3)!important;color:var(--text)!important}
+.bg-dark{background-color:var(--bg)!important;color:var(--text)!important}
+.bg-body{background-color:var(--bg)!important;color:var(--text)!important}
+.bg-white{background-color:var(--bg2)!important;color:var(--text)!important}
+
+/* ── Border utilities ── */
+.border-primary{border-color:var(--primary)!important}
+.border-secondary{border-color:var(--border)!important}
+.border-success{border-color:var(--success)!important}
+.border-danger{border-color:var(--danger)!important}
+.border-warning{border-color:var(--warning)!important}
+.border-info{border-color:var(--info,var(--accent))!important}
+.border-light{border-color:var(--border)!important}
+.border-dark{border-color:var(--border)!important}
+
+/* ── Button utilities (non-primary) ── */
+.btn-info{
+  background:linear-gradient(135deg,var(--info,var(--accent)) 0%,var(--primary) 100%);
+  border-color:var(--info,var(--accent));color:#fff!important;
+}
+.btn-info:hover,.btn-info:focus,.btn-info:active{
+  background:linear-gradient(135deg,var(--info,var(--accent)) 0%,var(--primary) 100%);
+  border-color:var(--primary);filter:brightness(1.1);color:#fff!important;
+}
+.btn-success{
+  background:linear-gradient(135deg,var(--success) 0%,color-mix(in srgb,var(--success) 70%,#000) 100%);
+  border-color:var(--success);color:#04210f!important;font-weight:600;
+}
+.btn-success:hover,.btn-success:focus,.btn-success:active{
+  background:linear-gradient(135deg,var(--success) 0%,color-mix(in srgb,var(--success) 70%,#000) 100%);
+  border-color:var(--success);filter:brightness(1.08);color:#04210f!important;
+}
+.btn-warning{
+  background:linear-gradient(135deg,var(--warning) 0%,color-mix(in srgb,var(--warning) 70%,#000) 100%);
+  border-color:var(--warning);color:#241a02!important;font-weight:600;
+}
+.btn-warning:hover,.btn-warning:focus,.btn-warning:active{
+  background:linear-gradient(135deg,var(--warning) 0%,color-mix(in srgb,var(--warning) 70%,#000) 100%);
+  border-color:var(--warning);filter:brightness(1.08);color:#241a02!important;
+}
+.btn-danger{
+  background:linear-gradient(135deg,var(--danger) 0%,color-mix(in srgb,var(--danger) 70%,#000) 100%);
+  border-color:var(--danger);color:#fff!important;font-weight:600;
+}
+.btn-danger:hover,.btn-danger:focus,.btn-danger:active{
+  background:linear-gradient(135deg,var(--danger) 0%,color-mix(in srgb,var(--danger) 70%,#000) 100%);
+  border-color:var(--danger);filter:brightness(1.08);color:#fff!important;
+}
+.btn-outline-primary{color:var(--primary)!important;border-color:var(--primary)!important}
+.btn-outline-primary:hover{background-color:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important}
+.btn-outline-success,.btn-link-success{color:var(--success)!important;border-color:var(--success)!important}
+.btn-outline-success:hover{background-color:var(--success)!important;color:#04210f!important;border-color:var(--success)!important}
+.btn-outline-danger,.btn-link-danger{color:var(--danger)!important;border-color:var(--danger)!important}
+.btn-outline-danger:hover{background-color:var(--danger)!important;color:#fff!important;border-color:var(--danger)!important}
+.btn-outline-warning{color:var(--warning)!important;border-color:var(--warning)!important}
+.btn-outline-warning:hover{background-color:var(--warning)!important;color:#241a02!important;border-color:var(--warning)!important}
+.btn-outline-info{color:var(--info,var(--accent))!important;border-color:var(--info,var(--accent))!important}
+.btn-outline-info:hover{background-color:var(--info,var(--accent))!important;color:#fff!important;border-color:var(--info,var(--accent))!important}
+

@@ -54,20 +54,20 @@
       backdrop-filter: blur(4px);
     }
     .form-control::placeholder{color:rgba(255,255,255,.40)}
-    .form-control:focus{background:rgba(255,255,255,.06);color:#fff;border-color:var(--primary, #3b82f6);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+    .form-control:focus{background:rgba(255,255,255,.06);color:#fff;border-color:var(--portal-primary, #3b82f6);box-shadow:0 0 0 3px var(--pdim, rgba(59,130,246,.25))}
     .btn-login{
-      background:linear-gradient(135deg,#3b82f6 0%,#7c5cff 100%);color:#ffffff;
+      background:linear-gradient(135deg,var(--portal-primary, #3b82f6) 0%,var(--portal-primary-strong, #7c5cff) 100%);color:#ffffff;
       border:1px solid rgba(255,255,255,0.08);padding:10px 22px;border-radius:10px;
       width:auto;min-width:160px;max-width:220px;font-weight:800;font-size:13px;margin:10px auto 0;
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 30px rgba(59,130,246,0.3);
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 30px var(--pdim, rgba(59,130,246,0.3));
       transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
     }
-    .btn-login:hover{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)!important;border-color:rgba(255,255,255,0.18)!important;color:#fff!important;transform:translateY(-1px);box-shadow:0 12px 40px rgba(99,102,241,0.4)}
+    .btn-login:hover{background:linear-gradient(135deg,var(--portal-primary-strong, #4f46e5) 0%,var(--portal-teal-strong, #7c3aed) 100%)!important;border-color:rgba(255,255,255,0.18)!important;color:#fff!important;transform:translateY(-1px);box-shadow:0 12px 40px var(--pdim, rgba(99,102,241,0.4))}
     .brand-icon{font-size:40px;color:var(--primary, #3b82f6);margin-bottom:10px}
     .login-copy{color:rgba(255,255,255,0.64);font-size:12px;line-height:1.55;margin:8px auto 24px;max-width:310px}
     .agent-footer{margin-top:22px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.40);font-size:11px;text-align:center}
     .back-link{margin-top:14px;font-size:12px;color:rgba(255,255,255,0.64);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-    .back-link:hover{color:#3b82f6}
+    .back-link:hover{color:var(--portal-primary, #3b82f6)}
     .password-field-wrapper{position:relative}
     .password-field-wrapper .eye-toggle{
       position:absolute;right:12px;top:50%;transform:translateY(-50%);
@@ -81,8 +81,8 @@
     .btn-pwa{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,0.64);border-radius:9px;font-size:12px;transition:all .25s}
     .btn-pwa:hover{background:rgba(255,255,255,.06);color:#fff}
     .login-links{width:100%;max-width:320px;display:flex;justify-content:space-between;gap:12px;margin-top:14px;font-size:12px}
-    .login-links a{color:#3b82f6;font-weight:700;text-decoration:none;transition:color 0.2s;}
-    .login-links a:hover{color:#7c5cff;text-decoration:underline}
+    .login-links a{color:var(--portal-primary, #3b82f6);font-weight:700;text-decoration:none;transition:color 0.2s;}
+    .login-links a:hover{color:var(--portal-primary-strong, #7c5cff);text-decoration:underline}
     .alert-success{background:rgba(74,222,128,.1);color:#86efac;border:1px solid rgba(74,222,128,.22)}
   </style>
 </head>

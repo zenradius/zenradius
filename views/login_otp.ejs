@@ -234,25 +234,25 @@
         @media (prefers-color-scheme: light) {
             body {
                 background: var(--bg);
-                background-image: radial-gradient(circle at 8% 0%, #e0f2fe 0%, transparent 34%),
-                                  radial-gradient(circle at 100% 100%, #f0f9ff 0%, transparent 42%),
-                                  linear-gradient(135deg, #f8fafc 0%, #f1f5f9 52%, #e2e8f0 100%);
+                background-image: var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+                                  radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
+                                  linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));
             }
 
             .card {
                 background: var(--bg);
-                border: 1px solid rgba(79, 70, 229, 0.2);
-                box-shadow: 0 20px 48px rgba(0, 0, 0, 0.1);
+                border: 1px solid var(--border);
+                box-shadow: 0 20px 48px rgba(3, 14, 20, 0.45);
             }
 
             .fc {
-                background: rgba(79, 70, 229, 0.05);
-                border: 1px solid rgba(79, 70, 229, 0.2);
+                background: rgba(255,255,255,.06);
+                border: 1px solid var(--border);
             }
 
             .fc:focus {
-                border-color: rgba(79, 70, 229, 0.55);
-                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px var(--pdim);
             }
         }
     </style>
