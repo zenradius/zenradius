@@ -1169,7 +1169,7 @@
 
         <!-- CUSTOMER BALANCE / SALDO PPOB -->
         <% if (showPPOB) { %>
-        <a href="/customer/topup" class="btn btn-sm d-inline-flex align-items-center gap-1 text-decoration-none shadow-sm header-btn header-balance-btn">
+        <a href="/pelanggan/topup" class="btn btn-sm d-inline-flex align-items-center gap-1 text-decoration-none shadow-sm header-btn header-balance-btn">
           <i class="bi bi-wallet2" style="color:var(--accent-primary);"></i> Rp <%= customerBalance.toLocaleString('id-ID') %>
         </a>
         <% } %>
@@ -1188,14 +1188,14 @@
         <% } %>
 
         <!-- RECONNECT INTERNET INSTAN -->
-        <form method="POST" action="/customer/reconnect" class="d-inline" title="Refresh & Re-connect Internet Instan">
+        <form method="POST" action="/pelanggan/reconnect" class="d-inline" title="Refresh & Re-connect Internet Instan">
           <button type="submit" class="btn text-white btn-sm fw-bold d-inline-flex align-items-center gap-1 shadow-sm header-btn header-reconnect-btn">
             <i class="bi bi-arrow-repeat"></i> Re-Connect
           </button>
         </form>
 
         <!-- LOGOUT -->
-        <form method="POST" action="/customer/logout" class="d-inline">
+        <form method="POST" action="/pelanggan/logout" class="d-inline">
           <button type="submit" class="btn btn-outline-danger btn-sm header-logout-btn">
             <i class="bi bi-box-arrow-right"></i>
           </button>
@@ -1222,7 +1222,7 @@
     <script>
       const promoCarousel = document.getElementById('promoCarousel');
       if (promoCarousel) {
-        fetch('/customer/api/promo-slides')
+        fetch('/pelanggan/api/promo-slides')
           .then(r => r.json())
           .then(slides => {
             if (!slides || slides.length === 0) {
@@ -1341,7 +1341,7 @@
         <div class="action-label">Profil</div>
       </div>
       <% if (showPPOB) { %>
-      <a href="/customer/ppob" class="action-item">
+      <a href="/pelanggan/ppob" class="action-item">
         <div class="action-icon ai-ppob"><i class="bi bi-lightning-charge-fill"></i></div>
         <div class="action-label">Pulsa & PPOB</div>
       </a>
@@ -1525,17 +1525,17 @@
                             <button class="btn btn-sm text-dark fw-bold shadow-sm" onclick="openPaymentModal('<%= inv.id %>', '<%= itemAmt %>')" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); border:none; border-radius:8px; padding: 7px 14px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
                               <i class="bi bi-qr-code-scan" style="font-size:15px; color:#0f172a;"></i> <span>Bayar</span>
                             </button>
-                            <a href="/customer/invoice/<%= inv.id %>/pdf" class="btn btn-sm text-white fw-bold shadow-sm ms-1" style="background: rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Unduh Tagihan PDF">
+                            <a href="/pelanggan/invoice/<%= inv.id %>/pdf" class="btn btn-sm text-white fw-bold shadow-sm ms-1" style="background: rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Unduh Tagihan PDF">
                               <i class="bi bi-file-earmark-pdf-fill" style="font-size:15px; color:#38bdf8;"></i> <span style="color:#ffffff;">PDF</span>
                             </a>
                           <% } else { %>
-                            <a href="/customer/invoice/<%= inv.id %>/print-thermal" class="btn btn-sm text-white fw-bold shadow-sm" style="background: linear-gradient(135deg, #059669, #10b981); border:none; border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Cetak Struk Bluetooth Thermal 58mm">
+                            <a href="/pelanggan/invoice/<%= inv.id %>/print-thermal" class="btn btn-sm text-white fw-bold shadow-sm" style="background: linear-gradient(135deg, #059669, #10b981); border:none; border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Cetak Struk Bluetooth Thermal 58mm">
                               <i class="bi bi-receipt" style="font-size:15px; color:#ffffff;"></i> <span>Struk Thermal</span>
                             </a>
-                            <a href="/customer/invoice/<%= inv.id %>/print" class="btn btn-sm fw-bold shadow-sm ms-1" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)); color:#062c2a; border:none; border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Cetak Faktur A4 Standar">
+                            <a href="/pelanggan/invoice/<%= inv.id %>/print" class="btn btn-sm fw-bold shadow-sm ms-1" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)); color:#062c2a; border:none; border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Cetak Faktur A4 Standar">
                               <i class="bi bi-printer-fill" style="font-size:15px; color:#ffffff;"></i> <span>Faktur A4</span>
                             </a>
-                            <a href="/customer/invoice/<%= inv.id %>/pdf" class="btn btn-sm text-white fw-bold shadow-sm ms-1" style="background: linear-gradient(135deg, #0284c7, var(--accent-primary-strong)); border:none; border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Unduh PDF">
+                            <a href="/pelanggan/invoice/<%= inv.id %>/pdf" class="btn btn-sm text-white fw-bold shadow-sm ms-1" style="background: linear-gradient(135deg, #0284c7, var(--accent-primary-strong)); border:none; border-radius:8px; padding: 7px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;" target="_blank" title="Unduh PDF">
                               <i class="bi bi-file-earmark-pdf-fill" style="font-size:15px; color:#ffffff;"></i> <span>PDF</span>
                             </a>
                           <% } %>
@@ -1597,19 +1597,19 @@
                             <button class="btn text-dark w-100" onclick="openPaymentModal('<%= inv.id %>', '<%= itemAmt %>')" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border:none; padding:10px; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow: 0 8px 16px rgba(251, 191, 36, 0.2);">
                               <i class="bi bi-qr-code-scan" style="font-size:17px; color:#0f172a;"></i> <span>BAYAR SEKARANG (QRIS)</span>
                             </button>
-                            <a href="/customer/invoice/<%= inv.id %>/pdf" class="btn text-white w-100" style="background: var(--soft-primary); border:1px solid var(--accent-primary); padding:8px; display:flex; align-items:center; justify-content:center; gap:6px;" target="_blank" title="Unduh Tagihan PDF">
+                            <a href="/pelanggan/invoice/<%= inv.id %>/pdf" class="btn text-white w-100" style="background: var(--soft-primary); border:1px solid var(--accent-primary); padding:8px; display:flex; align-items:center; justify-content:center; gap:6px;" target="_blank" title="Unduh Tagihan PDF">
                               <i class="bi bi-file-earmark-pdf-fill" style="font-size:16px; color:var(--accent-primary);"></i> <span style="color:#ffffff;">Unduh PDF</span>
                             </a>
                           </div>
                         <% } else { %>
                           <div class="d-flex gap-2 flex-wrap">
-                            <a href="/customer/invoice/<%= inv.id %>/print-thermal" class="btn text-white flex-fill" style="background: linear-gradient(135deg, #10b981, #059669); border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px rgba(16, 185, 129, 0.15);" target="_blank" title="Cetak Struk Thermal">
+                            <a href="/pelanggan/invoice/<%= inv.id %>/print-thermal" class="btn text-white flex-fill" style="background: linear-gradient(135deg, #10b981, #059669); border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px rgba(16, 185, 129, 0.15);" target="_blank" title="Cetak Struk Thermal">
                               <i class="bi bi-receipt" style="font-size:15px;"></i> <span>Struk</span>
                             </a>
-                            <a href="/customer/invoice/<%= inv.id %>/print" class="btn flex-fill" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)); color:#062c2a; border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px var(--soft-primary);" target="_blank" title="Cetak Faktur A4">
+                            <a href="/pelanggan/invoice/<%= inv.id %>/print" class="btn flex-fill" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong)); color:#062c2a; border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px var(--soft-primary);" target="_blank" title="Cetak Faktur A4">
                               <i class="bi bi-printer-fill" style="font-size:15px;"></i> <span>A4</span>
                             </a>
-                            <a href="/customer/invoice/<%= inv.id %>/pdf" class="btn text-white flex-fill" style="background: linear-gradient(135deg, #0284c7, #0369a1); border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px rgba(2, 132, 199, 0.15);" target="_blank" title="Unduh PDF">
+                            <a href="/pelanggan/invoice/<%= inv.id %>/pdf" class="btn text-white flex-fill" style="background: linear-gradient(135deg, #0284c7, #0369a1); border:none; padding:8px; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow: 0 6px 14px rgba(2, 132, 199, 0.15);" target="_blank" title="Unduh PDF">
                               <i class="bi bi-file-earmark-pdf-fill" style="font-size:15px;"></i> <span>PDF</span>
                             </a>
                           </div>
@@ -1778,7 +1778,7 @@
         </div>
         <div class="modal-body p-4">
           <!-- SSID FORM -->
-          <form action="/customer/change-ssid" method="POST" id="ssidForm" style="margin-bottom: 24px;">
+          <form action="/pelanggan/change-ssid" method="POST" id="ssidForm" style="margin-bottom: 24px;">
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Nama WiFi (SSID)</label>
               <input type="text" name="ssid" id="modalSsidInput" class="form-control text-white p-3" maxlength="32" style="background:rgba(30,41,59,0.95); border:1px solid var(--accent-primary); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Contoh: WiFi_Rumah_Keluarga" required>
@@ -1791,7 +1791,7 @@
           <div style="border-top: 1px solid rgba(100, 116, 139, 0.3); margin: 24px 0;"></div>
 
           <!-- PASSWORD FORM -->
-          <form action="/customer/change-password" method="POST" id="passwordForm">
+          <form action="/pelanggan/change-password" method="POST" id="passwordForm">
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Password WiFi Baru (Minimal 8 Karakter)</label>
               <input type="password" name="password" id="modalPassInput" class="form-control text-white p-3" minlength="8" maxlength="63" style="background:rgba(30,41,59,0.95); border:1px solid var(--accent-primary); border-radius:14px; font-weight:600; color:#ffffff;" placeholder="Contoh: Rahasia12345">
@@ -1819,7 +1819,7 @@
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-shield-lock me-2 text-success fs-4"></i>Ubah Password WiFi</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form action="/customer/change-password" method="POST">
+        <form action="/pelanggan/change-password" method="POST">
           <div class="modal-body p-4">
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Password WiFi Baru (Minimal 8 Karakter)</label>
@@ -1846,7 +1846,7 @@
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-arrow-clockwise me-2 text-warning fs-4"></i>Reboot Router / Modem</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form action="/customer/reboot" method="POST">
+        <form action="/pelanggan/reboot" method="POST">
           <div class="modal-body p-4 text-center">
             <div class="p-3 mb-3 rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex">
               <i class="bi bi-exclamation-triangle-fill fs-1"></i>
@@ -1871,7 +1871,7 @@
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-person-circle me-2 text-purple" style="color:#a78bfa;"></i>Pengaturan Profil</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form action="/customer/change-portal-password" method="POST">
+        <form action="/pelanggan/change-portal-password" method="POST">
           <div class="modal-body p-4">
             <div class="mb-3">
               <label class="form-label fw-bold" style="color:#f8fafc; font-size:13px;">Password Saat Ini</label>
@@ -1907,7 +1907,7 @@
           <h5 class="modal-title fw-bold text-white fs-5"><i class="bi bi-headset me-2 text-purple fs-4" style="color:#a855f7;"></i>Buat Tiket Keluhan Baru</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form action="/customer/tickets/create" method="POST" enctype="multipart/form-data">
+        <form action="/pelanggan/tickets/create" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="customerId" value="<%= profile ? profile.id : '' %>">
           <div class="modal-body p-4">
             <div class="mb-3">
@@ -1971,7 +1971,7 @@
       if (selectedBatchInvoiceIds.length > 1) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/customer/payment/batch/create';
+        form.action = '/pelanggan/payment/batch/create';
         for (const invoiceId of selectedBatchInvoiceIds) {
           const input = document.createElement('input');
           input.type = 'hidden'; input.name = 'invoice_ids'; input.value = invoiceId;
@@ -1985,7 +1985,7 @@
         return;
       }
       if (!currentInvId) return;
-      window.location.href = `/customer/payment/create/${encodeURIComponent(currentInvId)}?method=${methodCode}`;
+      window.location.href = `/pelanggan/payment/create/${encodeURIComponent(currentInvId)}?method=${methodCode}`;
     }
 
     function openBatchPaymentModal() {
@@ -2028,7 +2028,7 @@
 
     async function refreshPaymentStatus() {
       try {
-        const response = await fetch('/customer/payment/status', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+        const response = await fetch('/pelanggan/payment/status', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
         const status = await response.json();
         if (response.ok && status.success) {
           const knownUnpaid = <%= unpaidCount %>;
@@ -2126,7 +2126,7 @@
 
     async function fetchTrafficData() {
       try {
-        const res = await fetch('/customer/api/pppoe-traffic', { cache: 'no-store' });
+        const res = await fetch('/pelanggan/api/pppoe-traffic', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
 
@@ -2167,7 +2167,7 @@
           btnRefresh.disabled = true;
           btnRefresh.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Memeriksa ONU...';
           try {
-            await fetch('/customer/poll-onu', { method: 'POST' });
+            await fetch('/pelanggan/poll-onu', { method: 'POST' });
             location.reload();
           } catch (e) {
             location.reload();
@@ -2252,7 +2252,7 @@
     });
   </script>
   <script>
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).catch(() => {});
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/pelanggan/' }).catch(() => {});
   </script>
 </body>
 

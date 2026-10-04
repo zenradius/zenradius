@@ -476,7 +476,7 @@ router.get('/qris/static.jpg', async (req, res) => {
   const sendPretty = (status, title, detail) => {
     if (!wantsHtml()) return res.status(status).send(title);
     const baseUrl = getBaseUrl(req, getSettingsWithCache());
-    const loginLink = `${baseUrl}/customer/login`;
+    const loginLink = `${baseUrl}/pelanggan/login`;
     res.set('Content-Type', 'text/html; charset=utf-8');
     return res.status(status).send(`<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{font-family:system-ui,Segoe UI,Arial; margin:0; background:#0b1220; color:#e5e7eb} .wrap{max-width:520px;margin:0 auto;padding:24px} .card{background:#0f172a;border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:18px} h1{font-size:18px;margin:0 0 8px} p{margin:0 0 12px;color:#cbd5e1;line-height:1.45} a{display:inline-block;background:#1d4ed8;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px}</style></head><body><div class="wrap"><div class="card"><h1>${title}</h1><p>${detail || ''}</p><a href="${loginLink}">Buka Portal Pelanggan</a></div></div></body></html>`);
   };
@@ -814,7 +814,7 @@ function renderPaymentInstructionPage(res, settings, options = {}) {
   const view = mode === 'qris' ? 'qris_auto' : 'payment-instruction';
   return res.render(view, {
     settings,
-    backUrl: options.backUrl || '/customer/topup',
+    backUrl: options.backUrl || '/pelanggan/topup',
     changeMethodUrl: options.changeMethodUrl || '',
     cancelUrl: options.cancelUrl || '',
     info: options.info || null,
@@ -1140,6 +1140,98 @@ router.get('/check-billing', async (req, res) => {
     error,
     info
   });
+});
+
+// ── Alias bahasa Indonesia (root-level) ──
+// /cek-tagihan = alias /check-billing (render view yang sama)
+router.get('/cek-tagihan', async (req, res) => {
+  const settings = getSettingsWithCache();
+  const query = String(req.query.q || '').trim();
+  const error = String(req.query.err || '').trim() || null;
+  const info = String(req.query.info || '').trim() || null;
+  try {
+    const data = { settings, query, error, info, customer: null, invoices: [], unpaidInvoices: [], invoiceTokens: {}, matches: [], paymentChannels: [] };
+    if (query) {
+      const customer = customerSvc.findCustomerByAny(query);
+      if (customer) {
+        data.customer = customer;
+        const lookup = customer.pppoe_username || customer.genieacs_tag || customer.phone || String(customer.id);
+        data.invoices = billingSvc.getInvoicesByAny(lookup) || [];
+        data.unpaidInvoices = data.invoices.filter(i => i.status === 'unpaid');
+        const secret = settings.session_secret;
+        const exp = Date.now() + 15 * 60 * 1000;
+        data.invoiceTokens = data.unpaidInvoices.reduce((acc, inv) => {
+          acc[String(inv.id)] = signPublicToken({ invoiceId: Number(inv.id), customerId: Number(inv.customer_id), lookup, exp }, secret);
+          return acc;
+        }, {});
+      } else {
+        const invs = billingSvc.getInvoicesByAny(query) || [];
+        const unpaid = (Array.isArray(invs) ? invs : []).filter(i => i && i.status === 'unpaid');
+        const map = new Map();
+        for (const inv of unpaid) {
+          const customerId = Number(inv.customer_id || 0);
+          if (!Number.isFinite(customerId) || customerId <= 0) continue;
+          const prev = map.get(customerId) || { customer_id: customerId, customer_name: inv.customer_name || '-', customer_phone: inv.customer_phone || '', unpaid_count: 0, total_amount: 0 };
+          prev.unpaid_count += 1;
+          prev.total_amount += Number(inv.amount || 0) || 0;
+          map.set(customerId, prev);
+        }
+        data.matches = Array.from(map.values()).sort((a, b) => {
+          const au = Number(a.unpaid_count || 0);
+          const bu = Number(b.unpaid_count || 0);
+          if (au !== bu) return bu - au;
+          return String(a.customer_name || '').localeCompare(String(b.customer_name || ''), 'id');
+        });
+      }
+    }
+    return res.render('public_check_billing', data);
+  } catch (e) {
+    logger.error('[Cek Tagihan] Error: ' + (e?.message || e));
+    return res.render('public_check_billing', { settings, query, error: 'Terjadi kesalahan, silakan coba lagi.', info: null, customer: null, invoices: [], unpaidInvoices: [], invoiceTokens: {}, matches: [], paymentChannels: [] });
+  }
+});
+
+// /daftar = alias /register (render view yang sama)
+router.get('/daftar', (req, res) => {
+  const settings = getSettingsWithCache();
+  const packages = customerSvc.getAllPackages().filter(p => p.is_active !== 0);
+  const areas = areaSvc.getAllAreas();
+  const selectedPackageId = String(req.query.package || '').trim();
+  return res.render('register', { error: null, success: null, settings, packages, areas, selectedPackageId });
+});
+
+// /cek-daftar = alias /register/status (render view yang sama)
+router.get('/cek-daftar', (req, res) => {
+  const settings = getSettingsWithCache();
+  const error = String(req.query.err || '').trim() || null;
+  const info = String(req.query.info || '').trim() || null;
+  return res.render('register_status', { settings, error, info, result: null, query: '' });
+});
+router.post('/cek-daftar', async (req, res) => {
+  const settings = getSettingsWithCache();
+  const q = String(req.body?.q || '').trim();
+  if (!q) {
+    return res.render('register_status', { settings, error: 'Masukkan nomor registrasi atau nomor WhatsApp untuk mengecek status.', info: null, result: null, query: q });
+  }
+  try {
+    let reg = null;
+    const qUpper = q.toUpperCase();
+    if (/^REG-\d{4}-\d+$/i.test(qUpper)) reg = customerSvc.getRegistrationByNumber(qUpper);
+    if (!reg) {
+      const digits = String(q || '').replace(/\D/g, '');
+      if (digits.length >= 9) {
+        const normalizedPhone = normalizeWaDigits(digits) || (digits.startsWith('0') ? '62' + digits.slice(1) : digits);
+        reg = customerSvc.getRegistrationByPhone(normalizedPhone);
+      }
+    }
+    if (!reg) {
+      return res.render('register_status', { settings, error: 'Data pendaftaran tidak ditemukan. Periksa kembali nomor registrasi atau nomor WhatsApp Anda.', info: null, result: null, query: q });
+    }
+    return res.render('register_status', { settings, error: null, info: null, result: reg, query: q });
+  } catch (e) {
+    logger.error('[Cek Daftar] Error: ' + (e?.message || e));
+    return res.render('register_status', { settings, error: 'Terjadi kesalahan. Silakan coba lagi.', info: null, result: null, query: q });
+  }
 });
 
 let _voucherLastGoodProfiles = null;
@@ -2248,7 +2340,7 @@ router.post('/login', loginRateLimiter, async (req, res) => {
         logger.error('[CUSTOMER LOGIN] Session save failed:', err2);
       }
       if (customer && customer.status === 'suspended') {
-        return res.redirect('/isolated');
+        return res.redirect('/isolir');
       }
       return res.redirect('/customer/dashboard');
     });
@@ -2294,7 +2386,7 @@ router.post('/login-otp', loginRateLimiter, (req, res) => {
         }
         const custAfterOtp = customerSvc.findCustomerByAny(pendingPhone);
         if (custAfterOtp && custAfterOtp.status === 'suspended') {
-          return res.redirect('/isolated');
+          return res.redirect('/isolir');
         }
         return res.redirect('/customer/dashboard');
       });
@@ -2315,7 +2407,7 @@ router.use((req, res, next) => {
   if (!loginId) return next();
   const profile = findCustomerProfileByLoginId(loginId);
   if (profile && profile.status === 'suspended') {
-    return res.redirect('/isolated');
+    return res.redirect('/isolir');
   }
   next();
 });
@@ -3527,7 +3619,7 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
       if (!qrisQrUrl) throw new Error('QRIS statis belum diatur oleh admin');
       return res.render('qris_static', {
         settings,
-        backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
+        backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolir',
         error: null,
         info: null,
         kind: 'invoice',
@@ -3578,8 +3670,8 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
         if (storedInstruction && storedModeMatches && (storedInstruction.qrImageUrl || storedInstruction.details.paymentNo)) {
           logger.info(`[Payment] Reusing existing link for INV-${inv.id}`);
           return renderPaymentInstructionPage(res, settings, {
-            backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
-            changeMethodUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
+            backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolir',
+            changeMethodUrl: loginId ? '/customer/dashboard#billing-section' : '/isolir',
             cancelUrl: `/customer/payment/cancel/${encodeURIComponent(String(inv.id))}`,
             info: null,
             helpText: storedInstruction.mode === 'qris'
@@ -3608,7 +3700,7 @@ router.get('/payment/create/:invoiceId', async (req, res) => {
       const adminWaDigits = getFirstAdminWaDigits(settings);
       return res.render('qris_static', {
         settings,
-        backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolated',
+        backUrl: loginId ? '/customer/dashboard#billing-section' : '/isolir',
         error: null,
         info: null,
         kind: 'invoice',

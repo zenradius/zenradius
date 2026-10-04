@@ -3360,7 +3360,7 @@ router.post('/billing/:id/whatsapp', requireAdminSession, async (req, res) => {
       const parsed = new URL(baseUrl);
       baseUrl = parsed.origin;
     } catch {}
-    const loginLink = `${baseUrl}/customer/login`;
+    const loginLink = `${baseUrl}/pelanggan/login`;
 
     const comp = company();
     const defaultAutoBilling = `{Halo|Selamat Pagi|Yth.} Pelanggan {{nama}},\n\n{Ini adalah|Berikut} pengingat {sebelum tanggal jatuh tempo|pembayaran tagihan internet} Anda.\n\n📦 *Paket:* {{paket}}\n💰 *Total Tagihan:* Rp {{tagihan}}\n📅 *Periode:* {{rincian}}\n\n{Mohon|Silakan} {segera lakukan|lakukan} pembayaran melalui portal pelanggan: {{link}}\n\n{Terima kasih atas perhatian dan kerja samanya.|Terima kasih.}\nSalam,\nAdmin ${comp}`;

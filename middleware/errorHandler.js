@@ -164,10 +164,18 @@ function notFoundHandler(req, res, next) {
         text: 'Halaman tidak ditemukan'
       };
     }
-    res.status(404).render('error', {
-      title: '404 - Not Found',
-      error: 'Halaman yang Anda cari tidak ditemukan',
-      statusCode: 404
+    // Coba render view 404 kustom; fallback ke error.ejs jika tidak tersedia.
+    const settings = (() => { try { return require('../services/settingsService').getSettingsWithCache(); } catch (e) { return {}; } })();
+    const viewBase = { settings, lang: (req.session && req.session.lang) || 'id', appTheme: 'current', brandVersion: global.brandVersion || 'zenradius' };
+    res.status(404).render('404', viewBase, (renderErr, html) => {
+      if (renderErr) {
+        return res.status(404).render('error', {
+          title: '404 - Not Found',
+          error: 'Halaman yang Anda cari tidak ditemukan',
+          statusCode: 404
+        });
+      }
+      res.send(html);
     });
   }
 }

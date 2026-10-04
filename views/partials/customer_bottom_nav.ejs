@@ -84,19 +84,19 @@
 </style>
 
 <nav class="customer-bottom-nav">
-  <a href="/customer/dashboard#home-section" class="nav-item <%= activeNav === 'home' ? 'active' : '' %>">
+  <a href="/pelanggan/dashboard#home-section" class="nav-item <%= activeNav === 'home' ? 'active' : '' %>">
     <span class="nav-icon-wrap"><i class="bi bi-house-door-fill"></i></span>
     <span>Beranda</span>
   </a>
-  <a href="/customer/dashboard#billing-section" class="nav-item <%= activeNav === 'billing' ? 'active' : '' %>">
+  <a href="/pelanggan/dashboard#billing-section" class="nav-item <%= activeNav === 'billing' ? 'active' : '' %>">
     <span class="nav-icon-wrap"><i class="bi bi-receipt-cutoff text-warning"></i></span>
     <span>Tagihan</span>
   </a>
-  <a href="/customer/dashboard#home-section" class="nav-item" onclick="triggerWifiSettingsNav()" title="WiFi Settings" style="cursor:pointer;">
+  <a href="/pelanggan/dashboard#home-section" class="nav-item" onclick="triggerWifiSettingsNav()" title="WiFi Settings" style="cursor:pointer;">
     <span class="nav-icon-wrap"><i class="bi bi-wifi" style="color:var(--accent-primary);"></i></span>
     <span>WiFi</span>
   </a>
-  <a href="/customer/topup" class="nav-item" title="Top Up Saldo">
+  <a href="/pelanggan/topup" class="nav-item" title="Top Up Saldo">
     <span class="nav-icon-wrap"><i class="bi bi-wallet2" style="color:var(--accent-success, #34d399);"></i></span>
     <span>Top Up</span>
   </a>
@@ -113,7 +113,7 @@
       const ssid = (typeof customer !== 'undefined' && customer && customer.ssid) ? customer.ssid : '';
       openWifiSettingsModal(devId, ssid);
     } else {
-      window.location.href = '/customer/dashboard#home-section';
+      window.location.href = '/pelanggan/dashboard#home-section';
     }
   }
 
@@ -123,7 +123,7 @@
       const m = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
       m.show();
     } else {
-      window.location.href = '/customer/dashboard#home-section';
+      window.location.href = '/pelanggan/dashboard#home-section';
     }
   }
 

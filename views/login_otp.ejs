@@ -270,7 +270,7 @@
                 </div>
             <% } %>
 
-            <form action="/customer/login-otp" method="POST" onsubmit="return validateOTPForm(event)">
+            <form action="/pelanggan/login-otp" method="POST" onsubmit="return validateOTPForm(event)">
                 <div class="fg">
                     <label class="fl" for="otp">Masukkan 4 Digit Kode OTP</label>
                     <div class="field">
@@ -286,7 +286,7 @@
             </form>
 
             <div class="back-link">
-                <a href="/customer/login"><i class="bi bi-arrow-left"></i> Kembali ke Login</a>
+                <a href="/pelanggan/login"><i class="bi bi-arrow-left"></i> Kembali ke Login</a>
             </div>
 
             <div class="foot">
@@ -326,7 +326,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).catch(() => {});
+                navigator.serviceWorker.register('/sw.js', { scope: '/pelanggan/' }).catch(() => {});
             });
         }
     </script>

@@ -513,13 +513,13 @@
 
           <div>
             <div class="button-group" style="margin-bottom: 16px;">
-              <a href="/customer/check-billing" class="btn primary"><i class="bi bi-search"></i> Cek Tagihan</a>
+              <a href="/cek-tagihan" class="btn primary"><i class="bi bi-search"></i> Cek Tagihan</a>
               <button type="button" id="btn-install-pwa" class="btn wa" style="margin: 0; display: inline-flex; background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(126, 231, 219, 0.38); color: #d9fffb;">
                 <i class="bi bi-download"></i> Aplikasi Pelanggan
               </button>
             </div>
 
-            <a href="/customer/login" class="btn secondary" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+            <a href="/pelanggan/login" class="btn secondary" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
               <i class="bi bi-box-arrow-in-right"></i> Login
             </a>
           </div>
@@ -557,7 +557,7 @@
           </div>
 
           <div>
-            <form action="/customer/reconnect" method="POST" style="margin-bottom: 12px;" onsubmit="handleReconnect(event, this)">
+            <form action="/pelanggan/reconnect" method="POST" style="margin-bottom: 12px;" onsubmit="handleReconnect(event, this)">
               <button type="submit" class="btn primary" id="reconnectBtn" style="box-shadow: 0 4px 12px rgba(45, 212, 191, 0.15);">
                 <i class="bi bi-arrow-repeat"></i> Aktifkan Sekarang (Re-Connect)
               </button>
@@ -596,11 +596,11 @@
 
             let checkCount = 0;
             function checkStatus() {
-              fetch('/isolated/status', { method: 'GET' })
+              fetch('/isolir/status', { method: 'GET' })
                 .then(r => r.json())
                 .then(d => {
                   if (d.status === 'active' || d.unpaid_count === 0) {
-                    setTimeout(() => window.location.href = '/customer/dashboard', 1000);
+                    setTimeout(() => window.location.href = '/pelanggan/dashboard', 1000);
                   } else if (++checkCount < 10) {
                     setTimeout(checkStatus, 3000);
                   }
@@ -681,8 +681,8 @@
 
           <div>
             <div class="button-group">
-              <a href="/customer/check-billing" class="btn secondary"><i class="bi bi-receipt"></i> Riwayat</a>
-              <form method="post" action="/customer/logout" style="margin: 0; display: contents;">
+              <a href="/cek-tagihan" class="btn secondary"><i class="bi bi-receipt"></i> Riwayat</a>
+              <form method="post" action="/pelanggan/logout" style="margin: 0; display: contents;">
                 <button type="submit" class="btn secondary"><i class="bi bi-box-arrow-right"></i> Keluar</button>
               </form>
             </div>
@@ -702,7 +702,7 @@
               const invoiceId = btn.getAttribute('data-invoice-id');
               const publicToken = btn.getAttribute('data-public-token');
               const method = document.querySelector('input[name="payment_method"]:checked')?.value || 'QRIS';
-              window.location.href = `/customer/payment/create/${invoiceId}?t=${encodeURIComponent(publicToken)}&method=${encodeURIComponent(method)}`;
+              window.location.href = `/pelanggan/payment/create/${invoiceId}?t=${encodeURIComponent(publicToken)}&method=${encodeURIComponent(method)}`;
             }
 
             // Polling status using dataset from script tag
@@ -712,7 +712,7 @@
               const invoiceId = '<%= invoices.length > 0 ? invoices[0].id : "" %>';
               if (!invoiceId) return;
 
-              const url = `/customer/payment/status/${invoiceId}${publicToken ? '?t=' + encodeURIComponent(publicToken) : ''}`;
+              const url = `/pelanggan/payment/status/${invoiceId}${publicToken ? '?t=' + encodeURIComponent(publicToken) : ''}`;
 
               fetch(url, { method: 'GET' })
                 .then(r => r.json())
@@ -722,7 +722,7 @@
                     if (msgBox) {
                       msgBox.innerHTML = '<div class="status-message success"><i class="bi bi-check-circle-fill"></i> Pembayaran berhasil! Mengaktifkan akses...</div>';
                     }
-                    setTimeout(() => window.location.href = '/customer/dashboard', 2000);
+                    setTimeout(() => window.location.href = '/pelanggan/dashboard', 2000);
                   } else if (++pollCount < 30) {
                     setTimeout(pollStatus, 3000);
                   }

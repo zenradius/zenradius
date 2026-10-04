@@ -208,7 +208,7 @@ function startCronJobs() {
 
     const waSvc = require('./whatsappService');
     const company = getSetting('company_header', 'ZenRadius');
-    const loginLink = `${String(getSetting('public_base_url', '') || 'http://localhost:3001').replace(/\/+$/, '')}/customer/login`;
+    const loginLink = `${String(getSetting('public_base_url', '') || 'http://localhost:3001').replace(/\/+$/, '')}/pelanggan/login`;
     const baseDelayMs = (Number(getSetting('whatsapp_broadcast_delay', 5) || 5) * 1000);
     const batchSize = 15;
     const batchPauseMs = 120000;

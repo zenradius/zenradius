@@ -127,8 +127,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (path.startsWith('/customer/')) {
-    event.respondWith(networkFirst(req, '/customer/login'));
+  if (path.startsWith('/customer/') || path.startsWith('/pelanggan/')) {
+    event.respondWith(networkFirst(req, '/pelanggan/login'));
     return;
   }
 

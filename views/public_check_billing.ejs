@@ -106,7 +106,7 @@
         <p class="muted small mb-0 mx-auto" style="max-width:460px;line-height:1.7;">Akses rincian lembar tagihan Anda secara instan, transparan, dan akurat. Cukup masukkan <strong style="color:#d9fffb;">ID Pelanggan</strong> atau <strong style="color:#d9fffb;">Nomor WhatsApp</strong> untuk meninjau periode pembayaran.</p>
       </div>
       <div class="body">
-        <form method="GET" action="/customer/check-billing" class="mb-3">
+        <form method="GET" action="/cek-tagihan" class="mb-3">
           <div class="row g-2 align-items-center">
             <div class="col-12 col-md-8">
               <div class="field">
@@ -167,7 +167,7 @@
                     <td class="text-end fw-semibold"><%= Number(m.unpaid_count || 0) %></td>
                     <td class="text-end fw-semibold">Rp <%= Number(m.total_amount || 0).toLocaleString('id-ID') %></td>
                     <td class="text-end">
-                      <a class="btn btn-outline-light btn-sm btnx" href="/customer/check-billing?q=<%= encodeURIComponent(String(m.customer_id)) %>">
+                      <a class="btn btn-outline-light btn-sm btnx" href="/cek-tagihan?q=<%= encodeURIComponent(String(m.customer_id)) %>">
                         Lihat
                       </a>
                     </td>
@@ -253,7 +253,7 @@
                 </div>
               </div>
 
-              <form id="payForm" method="POST" action="/customer/public/payment/create/0" class="d-grid gap-2">
+              <form id="payForm" method="POST" action="/pelanggan/public/payment/create/0" class="d-grid gap-2">
                 <input type="hidden" name="token" id="pay_token" value="">
                 <input type="hidden" name="method" id="pay_method" value="">
 
@@ -264,7 +264,7 @@
                   <div class="form-check d-flex align-items-start gap-2">
                     <input class="form-check-input flex-shrink-0" type="checkbox" name="tos" id="billing_tos" value="1" style="width: 18px; height: 18px; border-color: rgba(45, 212, 191, 0.4); margin-top: 3px;" required checked>
                     <label class="form-check-label small muted" for="billing_tos" style="user-select: none; line-height: 1.45;">
-                      Saya menyetujui seluruh <a href="/customer/tos" target="_blank" class="fw-bold" style="color: #2dd4bf; text-decoration: underline;">Syarat & Ketentuan (TOS)</a> dan kebijakan transaksi yang berlaku di <%= settings.company_header || 'ZenRadius' %>.
+                      Saya menyetujui seluruh <a href="/pelanggan/tos" target="_blank" class="fw-bold" style="color: #2dd4bf; text-decoration: underline;">Syarat & Ketentuan (TOS)</a> dan kebijakan transaksi yang berlaku di <%= settings.company_header || 'ZenRadius' %>.
                     </label>
                   </div>
                 </div>
@@ -421,7 +421,7 @@
                   const amount = Number(selectedInv.dataset.amount || 0) || 0;
                   const methodCode = selectedMethod ? String(selectedMethod.dataset.code || selectedMethod.value || '').trim() : '';
 
-                  payForm.action = `/customer/public/payment/create/${encodeURIComponent(invId)}`;
+                  payForm.action = `/pelanggan/public/payment/create/${encodeURIComponent(invId)}`;
                   payToken.value = token;
                   payMethod.value = methodCode;
                   

@@ -545,7 +545,7 @@
               </div>
             <% } else if (String(order.status) === 'pending' && (String(order.payment_gateway || '') === 'qris_static' || order.qris_amount_unique)) { %>
               <% if (orderToken) { %>
-                <a class="btn btn-primary btnx mt-3 w-100" href="/customer/voucher/qris/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
+                <a class="btn btn-primary btnx mt-3 w-100" href="/pelanggan/voucher/qris/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
                   <i class="bi bi-qr-code-scan me-1"></i> Buka QRIS Statis
                 </a>
               <% } else { %>
@@ -553,7 +553,7 @@
               <% } %>
             <% } else if (String(order.status) === 'pending' && (order.payment_link || order.payment_payload)) { %>
               <% if (orderToken) { %>
-                <a class="btn btn-primary btnx mt-3 w-100" href="/customer/voucher/payment/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
+                <a class="btn btn-primary btnx mt-3 w-100" href="/pelanggan/voucher/payment/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
                   <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
                 </a>
               <% } else { %>
@@ -564,7 +564,7 @@
           <hr style="border-color: rgba(148,163,184,.18)">
         <% } %>
 
-        <form method="POST" action="/customer/public/voucher/create-payment" class="d-grid gap-2" id="voucherForm">
+        <form method="POST" action="/pelanggan/public/voucher/create-payment" class="d-grid gap-2" id="voucherForm">
           <!-- Hidden TOS state injector to bypass backend checks cleanly -->
           <input type="hidden" name="tos" value="1">
           <!-- Anti-bot: honeypot field (must stay empty) + form render timestamp (rejects instant/scripted submits) -->

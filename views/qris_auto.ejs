@@ -323,8 +323,8 @@
         try {
           var token = <%- JSON.stringify(String(publicToken || '')) %>;
           var url = kindSafe === 'voucher'
-            ? '/customer/voucher/status/' + refId + '?t=' + encodeURIComponent(token)
-            : '/customer/payment/status/' + refId + '?t=' + encodeURIComponent(token);
+            ? '/pelanggan/voucher/status/' + refId + '?t=' + encodeURIComponent(token)
+            : '/pelanggan/payment/status/' + refId + '?t=' + encodeURIComponent(token);
 
           var res = await fetch(url, {
             method: 'GET',
@@ -345,8 +345,8 @@
               window.location.href = backUrl;
             } else {
               var redirectUrl = kindSafe === 'voucher'
-                ? '/customer/voucher?order=' + refId + '&t=' + encodeURIComponent(token)
-                : '/customer/billing?invoice=' + refId;
+                ? '/pelanggan/voucher?order=' + refId + '&t=' + encodeURIComponent(token)
+                : '/pelanggan/billing?invoice=' + refId;
               window.location.href = redirectUrl;
             }
             return;

@@ -1247,10 +1247,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.redirect('/customer/login');
+  res.redirect('/pelanggan/login');
 });
 
-app.get('/isolated', (req, res) => {
+function renderIsolatedPage(req, res) {
   try {
     const settings = getSettingsWithCache();
     
@@ -1324,9 +1324,15 @@ app.get('/isolated', (req, res) => {
       hasUnpaidInvoices: false
     });
   }
-});
+}
 
-app.get('/isolated/status', (req, res) => {
+// Halaman isolir (pelanggan yang diisolir karena belum bayar) — diakses dari
+// perangkat pelanggan (GenieACS/hotspot redirect) maupun manual.
+// /isolated (lama) tetap dipertahankan agar link/MikroTik yang sudah ada tidak putus.
+app.get('/isolated', renderIsolatedPage);
+app.get('/isolir', renderIsolatedPage);
+
+function renderIsolatedStatus(req, res) {
   try {
     let customer = null;
     
@@ -1370,8 +1376,10 @@ app.get('/isolated/status', (req, res) => {
     logger.error(`[ISOLATED-STATUS] Error: ${e.message}`);
     res.status(500).json({ error: 'Server error', status: 'error' });
   }
-});
+}
 
+app.get('/isolated/status', renderIsolatedStatus);
+app.get('/isolir/status', renderIsolatedStatus);
 function getActivePaymentChannelsForIsolated(settings) {
   const channels = [];
   
@@ -1422,7 +1430,7 @@ app.get('/manifest.webmanifest', (req, res) => {
     name: companyName,
     short_name: shortName,
     description: `Portal Pelanggan ${companyName}`,
-    start_url: '/customer/login?source=pwa',
+    start_url: '/pelanggan/login?source=pwa',
     scope: '/customer/',
     display: 'standalone',
     orientation: 'portrait',
@@ -1754,7 +1762,11 @@ app.use(domainLicense.requireDomainLicense({
   allowPaths: [
     '/admin/login', '/admin/logout', '/admin/settings', '/api/settings',
     '/license', '/css', '/js', '/img', '/manifest', '/sw.js', '/favicon',
-    '/customer/payment/callback', '/webhook', '/acs', '/health', '/app/connect'
+    '/customer/payment/callback', '/webhook', '/acs', '/health', '/app/connect',
+    '/pelanggan/login', '/pelanggan/register', '/pelanggan/register/status',
+    '/pelanggan/forgot-password', '/pelanggan/login-otp', '/pelanggan/otp',
+    '/pelanggan/tos', '/pelanggan/privacy', '/pelanggan/about', '/pelanggan/contact',
+    '/voucher', '/daftar', '/cek-daftar', '/cek-tagihan', '/404'
   ]
 }));
 
@@ -1778,6 +1790,16 @@ app.get('/app/connect', (req, res) => {
 
 const customerPortal = require('./routes/customerPortal');
 app.use('/customer', customerPortal);
+app.use('/pelanggan', customerPortal);
+
+// Halaman publik root-level bahasa Indonesia: domain.com/voucher, /daftar, /cek-daftar, /cek-tagihan
+app.use((req, res, next) => {
+  const first = '/' + (req.path.split('/')[1] || '');
+  if (['/voucher', '/daftar', '/cek-daftar', '/cek-tagihan'].includes(first)) {
+    return customerPortal(req, res, next);
+  }
+  return next();
+});
 
 const adminPortal = require('./routes/adminPortal');
 app.use('/admin', adminPortal);
@@ -1785,13 +1807,39 @@ app.use('/admin', adminPortal);
 app.use('/administrator', (req, res) => res.redirect(301, '/admin' + (req.url || '')));
 
 const techPortal = require('./routes/techPortal');
-app.use('/tech', techPortal);
+// Redirect /tech/* → /teknisi/* (301) untuk link lama, sebelum mount baru
+app.use((req, res, next) => {
+  const first = '/' + (req.path.split('/')[1] || '');
+  if (first === '/tech') {
+    return res.redirect(301, '/teknisi' + (req.url.slice(4) || ''));
+  }
+  return next();
+});
+app.use('/teknisi', techPortal);
 
 const agentPortal = require('./routes/agentPortal');
-app.use('/agent', agentPortal);
+// Redirect /agent/* → /mitra/* (301)
+app.use((req, res, next) => {
+  const first = '/' + (req.path.split('/')[1] || '');
+  if (first === '/agent') {
+    return res.redirect(301, '/mitra' + (req.url.slice(5) || ''));
+  }
+  return next();
+});
+app.use('/mitra', agentPortal);
 
 const collectorPortal = require('./routes/collectorPortal');
-app.use('/collector', collectorPortal);
+// Redirect /collector/* → /penagih/* (301)
+app.use((req, res, next) => {
+  const first = '/' + (req.path.split('/')[1] || '');
+  if (first === '/collector') {
+    return res.redirect(301, '/penagih' + (req.url.slice(9) || ''));
+  }
+  return next();
+});
+app.use('/penagih', collectorPortal);
+
+app.use('/kasir', (req, res) => res.redirect(301, '/admin' + (req.url || '')));
 
 function startServer(portToUse) {
     logger.info(`Mencoba memulai server pada port ${portToUse}...`);
@@ -1894,6 +1942,12 @@ const radiusSvc = require('./services/radiusServerService');
 if (getSetting('radius_enabled', '0') === '1') {
   radiusSvc.start();
 }
+
+// Halaman 404 kustom bahasa Indonesia (akses langsung: /404)
+app.get('/404', (req, res) => {
+  const settings = getSettingsWithCache();
+  res.status(404).render('404', { settings, lang: req.session?.lang || 'id', appTheme: 'current', brandVersion: global.brandVersion || 'zenradius' });
+});
 
 app.use(notFoundHandler);
 app.use(errorHandler);

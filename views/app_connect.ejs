@@ -150,7 +150,7 @@
         <i class="bi bi-download"></i> Install Aplikasi Pelanggan (PWA)
       </button>
 
-      <a href="/customer/login<%= cid ? ('?cid=' + encodeURIComponent(cid)) : '' %>" class="btn btn-primary">
+      <a href="/pelanggan/login<%= cid ? ('?cid=' + encodeURIComponent(cid)) : '' %>" class="btn btn-primary">
         <i class="bi bi-box-arrow-in-right"></i> Masuk ke Portal Web Pelanggan
       </a>
 
@@ -191,7 +191,7 @@
         deferredPwaPromptConnect.userChoice.finally(() => { deferredPwaPromptConnect = null; });
       } else {
         // Fallback jika event belum tersedia (browser tidak mendukung / sudah terinstall)
-        window.location.href = '/customer/login<%= cid ? ("?cid=" + encodeURIComponent(cid)) : "" %>';
+        window.location.href = '/pelanggan/login<%= cid ? ("?cid=" + encodeURIComponent(cid)) : "" %>';
       }
     }
   </script>

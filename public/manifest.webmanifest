@@ -1,7 +1,7 @@
 {
   "name": "ZenRadius",
   "short_name": "ZenRadius",
-  "start_url": "/customer/login?source=pwa",
+  "start_url": "/pelanggan/login?source=pwa",
   "scope": "/customer/",
   "display": "standalone",
   "orientation": "portrait",

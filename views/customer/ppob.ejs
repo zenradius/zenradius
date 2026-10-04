@@ -144,7 +144,7 @@
 </head>
 <body>
   <div class="topbar">
-    <a href="/customer/dashboard"><i class="bi bi-arrow-left"></i> Kembali</a>
+    <a href="/pelanggan/dashboard"><i class="bi bi-arrow-left"></i> Kembali</a>
     <h1>
       <i class="bi bi-phone" style="color:#0ea5e9"></i>
       <% if (selectedCategory) { %>
@@ -171,7 +171,7 @@
         <h2>Rp <%= Number(customer.balance || 0).toLocaleString('id-ID') %></h2>
       </div>
       <div>
-        <a href="/customer/topup" class="btn-topup">
+        <a href="/pelanggan/topup" class="btn-topup">
           <i class="bi bi-plus-circle-fill"></i> Isi Saldo (Top-Up)
         </a>
       </div>
@@ -208,7 +208,7 @@
         digiflazzCategories.forEach(cat => {
           const catInfo = categoryIcons[cat] || { icon: 'bi-grid-fill', gradientClass: 'gradient-gray' };
         %>
-        <a href="/customer/ppob?category=<%= encodeURIComponent(cat) %>" class="ppob-category-card">
+        <a href="/pelanggan/ppob?category=<%= encodeURIComponent(cat) %>" class="ppob-category-card">
           <div class="ppob-card-inner">
             <div class="ppob-icon <%= catInfo.gradientClass %>">
               <i class="bi <%= catInfo.icon %>"></i>
@@ -222,7 +222,7 @@
     <% } else { %>
     <!-- Tampilan Produk (ketika ada filter kategori) -->
     <div style="margin-bottom:20px">
-      <a href="/customer/ppob" class="btn" style="background:#1e293b;border:1px solid #334155;color:#94a3b8;padding:8px 16px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
+      <a href="/pelanggan/ppob" class="btn" style="background:#1e293b;border:1px solid #334155;color:#94a3b8;padding:8px 16px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
         <i class="bi bi-arrow-left"></i> Kembali ke Kategori
       </a>
       <span style="margin-left:12px;color:#64748b;font-size:13px">Kategori: <strong style="color:#0ea5e9"><%= selectedCategory %></strong></span>
@@ -267,7 +267,7 @@
             <div class="selected-prod-price" id="selectedPrice">Rp 0</div>
           </div>
 
-          <form method="POST" action="/customer/ppob/buy" id="ppobForm">
+          <form method="POST" action="/pelanggan/ppob/buy" id="ppobForm">
             <input type="hidden" name="sku" id="hiddenSku">
             <input type="hidden" name="product_name" id="hiddenName">
             <input type="hidden" name="price" id="hiddenPrice">

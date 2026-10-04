@@ -148,7 +148,7 @@
           <i class="bi bi-info-circle me-2"></i>
           Kode OTP telah dikirim ke nomor <strong><%= phone %></strong>
         </div>
-        <form method="POST" action="/customer/otp">
+        <form method="POST" action="/pelanggan/otp">
           <input type="hidden" name="phone" value="<%= phone %>">
           <div class="form-floating">
             <input type="text" class="form-control" id="otp" name="otp" placeholder="Kode OTP" required pattern="[0-9]{<%= otp_length %>}" maxlength="<%= otp_length %>" autofocus>
@@ -169,7 +169,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).catch(() => {});
+        navigator.serviceWorker.register('/sw.js', { scope: '/pelanggan/' }).catch(() => {});
       });
     }
   </script>

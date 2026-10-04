@@ -818,7 +818,7 @@ async function suspendCustomer(id) {
             const host = /^https?:\/\//i.test(hostRaw) ? hostRaw.replace(/\/+$/, '') : `${proto}://${hostRaw}`;
             baseUrl = (port === 80 || port === 443) ? host : `${host}:${port}`;
           }
-          const loginLink = `${baseUrl}/customer/login`;
+          const loginLink = `${baseUrl}/pelanggan/login`;
 
           const formattedMsg = template
             .replace(/{{nama}}/gi, customer.name || 'Pelanggan')

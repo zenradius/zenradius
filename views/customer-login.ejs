@@ -4,19 +4,19 @@
   heading: 'Portal Pelanggan',
   subtitle: (settings && settings.company_header) || brandName || '',
   copy: 'Cek tagihan, bayar online, pantau koneksi internet Anda, dan hubungi bantuan kapan saja.',
-  action: '/customer/login',
+  action: '/pelanggan/login',
   usernameField: 'phone',
   usernameType: 'text',
   usernameLabel: 'Email atau Nomor WhatsApp',
   usernamePlaceholder: 'Email atau nomor WhatsApp',
   appLabel: 'Aplikasi Pelanggan',
   manifest: '/manifest.webmanifest',
-  swScope: '/customer/',
+  swScope: '/pelanggan/',
   backLink: '/',
   links: [
-    { href: '/customer/register', label: 'Belum punya akun? Daftar' },
-    { href: '/customer/register/status', label: 'Cek Status Pendaftaran' },
-    { href: '/customer/forgot-password', label: 'Lupa kata sandi?' }
+    { href: '/daftar', label: 'Belum punya akun? Daftar' },
+    { href: '/cek-daftar', label: 'Cek Status Pendaftaran' },
+    { href: '/pelanggan/forgot-password', label: 'Lupa kata sandi?' }
   ],
   idPrefix: 'customer'
 }) %>

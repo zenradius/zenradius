@@ -470,12 +470,12 @@
       <% if (success) { %>
         <div class="alert alert-success"><i class="bi bi-check-circle"></i><%= success %></div>
         <div style="text-align:center;margin-top:16px;display:flex;flex-direction:column;gap:8px;width:100%">
-          <a href="/customer/register/status" class="btn-p" style="max-width:none"><i class="bi bi-search"></i> Cek Status Pendaftaran</a>
-          <a href="/customer/login" class="btn-p" style="max-width:200px"><i class="bi bi-box-arrow-in-right"></i> Kembali ke Login</a>
+          <a href="/cek-daftar" class="btn-p" style="max-width:none"><i class="bi bi-search"></i> Cek Status Pendaftaran</a>
+          <a href="/pelanggan/login" class="btn-p" style="max-width:200px"><i class="bi bi-box-arrow-in-right"></i> Kembali ke Login</a>
           <a href="/" style="font-size:12px;color:#7dd3fc;font-weight:700;text-decoration:none;margin-top:4px"><i class="bi bi-house-door me-1"></i>Kembali ke Beranda</a>
         </div>
       <% } else { %>
-        <form method="POST" action="/customer/register" id="register-form" onsubmit="return validateRegisterForm(event)">
+        <form method="POST" action="/daftar" id="register-form" onsubmit="return validateRegisterForm(event)">
           <div class="fg">
             <label class="fl" for="reg-name">Nama Lengkap Sesuai Identitas</label>
             <div class="field"><i class="bi bi-person"></i><input class="fc" id="reg-name" name="name" type="text" placeholder="Contoh: Budi Santoso" required autofocus></div>
@@ -561,7 +561,7 @@
           <div class="terms-box">
             <label style="display:flex;align-items:flex-start;gap:10px;margin:0;cursor:pointer;font-weight:500">
               <input type="checkbox" name="agree_terms" value="1" required style="margin-top:2px;flex-shrink:0;width:16px;height:16px;cursor:pointer">
-              <span style="flex:1">Saya menyetujui <a href="/customer/tos" target="_blank" rel="noopener noreferrer">Syarat & Ketentuan</a> dan <a href="/customer/privacy" target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a>.</span>
+              <span style="flex:1">Saya menyetujui <a href="/pelanggan/tos" target="_blank" rel="noopener noreferrer">Syarat & Ketentuan</a> dan <a href="/pelanggan/privacy" target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a>.</span>
             </label>
           </div>
 
@@ -571,8 +571,8 @@
 
       <div class="links" style="margin-top:14px;border-top:1px solid rgba(190,239,255,.12);padding-top:12px">
         <a href="/"><i class="bi bi-house-door me-1"></i>Kembali ke Beranda</a>
-        <a href="/customer/register/status"><i class="bi bi-search me-1"></i>Cek Status Pendaftaran</a>
-        <a href="/customer/login">Sudah punya akun? Login</a>
+        <a href="/cek-daftar"><i class="bi bi-search me-1"></i>Cek Status Pendaftaran</a>
+        <a href="/pelanggan/login">Sudah punya akun? Login</a>
       </div>
 
       <div class="foot">
@@ -1006,7 +1006,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).catch(() => {});
+        navigator.serviceWorker.register('/sw.js', { scope: '/pelanggan/' }).catch(() => {});
       });
     }
   </script>

@@ -2147,8 +2147,8 @@
               <i class="bi bi-person-circle me-1"></i> Member
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="/customer/login"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a></li>
-              <li><a class="dropdown-item" href="/customer/register"><i class="bi bi-person-plus me-2"></i>Daftar</a></li>
+              <li><a class="dropdown-item" href="/pelanggan/login"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a></li>
+              <li><a class="dropdown-item" href="/daftar"><i class="bi bi-person-plus me-2"></i>Daftar</a></li>
             </ul>
           </div>
         </div>
@@ -2177,13 +2177,13 @@
           </p>
 
           <div class="hero-cta-grid">
-            <a href="/customer/register" class="btn btn-primary btn-lg rounded-3 fw-bold px-4 py-3 shadow-lg flex-fill d-inline-flex align-items-center justify-content-center" style="min-width: 260px;">
+            <a href="/daftar" class="btn btn-primary btn-lg rounded-3 fw-bold px-4 py-3 shadow-lg flex-fill d-inline-flex align-items-center justify-content-center" style="min-width: 260px;">
               <i class="bi bi-person-plus-fill me-2 fs-5"></i> Daftar Sekarang
             </a>
             <button type="button" id="btn-install-pwa-hero" class="btn btn-warning btn-lg rounded-3 fw-bold px-4 py-3 shadow-lg text-dark flex-fill d-inline-flex align-items-center justify-content-center" style="min-width: 260px;" onclick="triggerPwaInstall()">
               <i class="bi bi-download me-2 fs-5"></i> Download Aplikasi
             </button>
-            <a href="/customer/check-billing" class="btn btn-outline-light btn-lg rounded-3 fw-bold px-4 py-3 w-100 d-inline-flex align-items-center justify-content-center cta-billing">
+            <a href="/cek-tagihan" class="btn btn-outline-light btn-lg rounded-3 fw-bold px-4 py-3 w-100 d-inline-flex align-items-center justify-content-center cta-billing">
               <i class="bi bi-receipt me-2 fs-5"></i> Cek Tagihan
             </a>
           </div>
@@ -2228,7 +2228,7 @@
             </div>
 
             <div class="login-card-body">
-              <form method="POST" action="/customer/login">
+              <form method="POST" action="/pelanggan/login">
                 <div class="form-floating">
                   <input type="tel" class="form-control" id="phone" name="phone" placeholder=" " required autofocus>
                   <label for="phone">
@@ -2262,7 +2262,7 @@
                 </button>
               </form>
 
-              <form id="forgot-password-form" method="POST" action="/customer/forgot-password" class="d-none">
+              <form id="forgot-password-form" method="POST" action="/pelanggan/forgot-password" class="d-none">
                 <input type="hidden" name="phone" id="forgot-phone">
               </form>
 
@@ -2282,10 +2282,10 @@
 
               <!-- Fast Tool Shortcuts -->
               <div class="quick-tools-grid">
-                <a href="/customer/check-billing" class="btn-quick-tool">
+                <a href="/cek-tagihan" class="btn-quick-tool">
                   <i class="bi bi-receipt fs-5" style="color: var(--portal-primary-strong, #22a7f0);"></i> Cek Tagihan
                 </a>
-                <a href="/customer/voucher" class="btn-quick-tool">
+                <a href="/voucher" class="btn-quick-tool">
                   <i class="bi bi-ticket-perforated fs-5" style="color: var(--portal-accent, #fbbf24);"></i> Dapatkan Voucher
                 </a>
               </div>
@@ -2293,7 +2293,7 @@
               <div class="text-center mt-4 pt-2 border-top border-secondary border-opacity-20">
                 <p class="mb-0 small" style="color: var(--portal-muted, #C8D0E0);">
                   <%= t('customer.not_subscribed', 'Belum menjadi pelanggan?') %>
-                  <a href="/customer/register" class="fw-bold text-decoration-none ms-1" style="color: var(--portal-primary, #4ddbff);">
+                  <a href="/daftar" class="fw-bold text-decoration-none ms-1" style="color: var(--portal-primary, #4ddbff);">
                     <%= t('customer.register_new', 'Daftar Sekarang') %> <i class="bi bi-arrow-right"></i>
                   </a>
                 </p>
@@ -2412,7 +2412,7 @@
                 <li><i class="bi bi-check-circle-fill"></i> Dukungan teknis 24/7</li>
               </ul>
 
-              <a href="/customer/register?package=<%= encodeURIComponent(p.id) %>" class="btn-pkg-action">
+              <a href="/daftar?package=<%= encodeURIComponent(p.id) %>" class="btn-pkg-action">
                 <i class="bi bi-person-plus me-1"></i> Daftar Sekarang
               </a>
             </div>
@@ -2438,7 +2438,7 @@
 
       <div class="row g-4 justify-content-center">
         <div class="col-md-6 col-lg-3">
-          <a href="/customer/check-billing" class="text-decoration-none info-card-link">
+          <a href="/cek-tagihan" class="text-decoration-none info-card-link">
             <div class="glass-card info-card">
               <div class="info-icon">
                 <i class="bi bi-receipt fs-3" style="color: var(--portal-primary-strong, #22a7f0);"></i>
@@ -2452,7 +2452,7 @@
         </div>
 
         <div class="col-md-6 col-lg-3">
-          <a href="/customer/voucher" class="text-decoration-none info-card-link">
+          <a href="/voucher" class="text-decoration-none info-card-link">
             <div class="glass-card info-card">
               <div class="info-icon">
                 <i class="bi bi-ticket-perforated fs-3" style="color: var(--portal-accent, #fbbf24);"></i>
@@ -2466,7 +2466,7 @@
         </div>
 
         <div class="col-md-6 col-lg-3">
-          <a href="/customer/register" class="text-decoration-none info-card-link">
+          <a href="/daftar" class="text-decoration-none info-card-link">
             <div class="glass-card info-card">
               <div class="info-icon">
                 <i class="bi bi-person-plus fs-3" style="color: var(--success, #10B981);"></i>
@@ -2705,11 +2705,11 @@
     <div class="container">
       <div class="footer-panel">
         <ul class="footer-legal">
-          <li><a href="/customer/about"><%= t('customer.footer.about', 'Tentang Kami') %></a></li>
-          <li><a href="/customer/contact"><%= t('customer.footer.contact', 'Kontak Kami') %></a></li>
-          <li><a href="/customer/tos"><%= t('customer.footer.tos', 'Syarat & Ketentuan') %></a></li>
-          <li><a href="/customer/privacy"><%= t('customer.footer.privacy', 'Kebijakan Privasi') %></a></li>
-          <li><a href="/customer/tos#refund"><%= t('customer.footer.refund', 'Kebijakan Refund') %></a></li>
+          <li><a href="/pelanggan/about"><%= t('customer.footer.about', 'Tentang Kami') %></a></li>
+          <li><a href="/pelanggan/contact"><%= t('customer.footer.contact', 'Kontak Kami') %></a></li>
+          <li><a href="/pelanggan/tos"><%= t('customer.footer.tos', 'Syarat & Ketentuan') %></a></li>
+          <li><a href="/pelanggan/privacy"><%= t('customer.footer.privacy', 'Kebijakan Privasi') %></a></li>
+          <li><a href="/pelanggan/tos#refund"><%= t('customer.footer.refund', 'Kebijakan Refund') %></a></li>
         </ul>
       </div>
 
@@ -2865,7 +2865,7 @@
     // Defer service worker registration
     if ('serviceWorker' in navigator) {
       setTimeout(() => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).catch(() => {});
+        navigator.serviceWorker.register('/sw.js', { scope: '/pelanggan/' }).catch(() => {});
       }, 1500);
     }
 

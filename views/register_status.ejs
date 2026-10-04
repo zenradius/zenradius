@@ -33,7 +33,7 @@
     <% if (error) { %><div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><%= error %></div><% } %>
 
     <% if (!result) { %>
-      <form method="POST" action="/customer/register/status">
+      <form method="POST" action="/cek-daftar">
         <div class="mb-3">
           <label class="form-label text-white small fw-bold">Nomor Registrasi / Nomor WhatsApp</label>
           <input class="fc" type="text" name="q" value="<%= query || '' %>" placeholder="REG-2026-0001 atau 081234567890" required autofocus>
@@ -74,8 +74,8 @@
     <div class="text-center mt-4">
       <div class="links d-flex justify-content-center gap-3">
         <a href="/"><i class="bi bi-house-door me-1"></i> Beranda</a>
-        <a href="/customer/register"><i class="bi bi-person-plus-fill me-1"></i> Daftar Baru</a>
-        <a href="/customer/login"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a>
+        <a href="/daftar"><i class="bi bi-person-plus-fill me-1"></i> Daftar Baru</a>
+        <a href="/pelanggan/login"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a>
       </div>
       <div class="small mt-3" style="color:rgba(237,250,250,.45);font-size:11px">&copy; <%= new Date().getFullYear() %> <%- footerInfo %></div>
     </div>
