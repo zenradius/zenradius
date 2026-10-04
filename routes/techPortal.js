@@ -107,11 +107,11 @@ function requireTechSession(req, res, next) {
   if (req.session && req.session.isTechnician && req.session.techId) {
 
     if (req.session.role && req.session.role !== 'teknisi') {
-      return res.redirect('/tech/login');
+      return res.redirect('/teknisi/login');
     }
     return next();
   }
-  res.redirect('/tech/login');
+  res.redirect('/teknisi/login');
 }
 
 function requireMenuAccess(menuKey) {
@@ -119,7 +119,7 @@ function requireMenuAccess(menuKey) {
     const access = sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session);
     if (!access.allowed) {
       req.session._msg = { type: 'error', text: 'Menu ini sedang dinonaktifkan oleh Admin.' };
-      return res.redirect('/tech');
+      return res.redirect('/teknisi');
     }
     return next();
   };
@@ -154,7 +154,7 @@ try {
 } catch (e) {}
 
 router.get('/login', (req, res) => {
-  if (req.session && req.session.isTechnician) return res.redirect('/tech');
+  if (req.session && req.session.isTechnician) return res.redirect('/teknisi');
   res.render('tech/login', { title: 'Teknisi Login', company: company(), error: null });
 });
 
@@ -177,7 +177,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
           logger.error('[TECH LOGIN] Session save failed:', err);
           return res.render('tech/login', { title: 'Teknisi Login', company: company(), error: 'Kesalahan sistem. Silakan coba lagi.' });
         }
-        return res.redirect('/tech');
+        return res.redirect('/teknisi');
       });
     });
   }
@@ -186,7 +186,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
 
 router.get('/logout', (req, res) => {
   req.session.destroy();
-  res.redirect('/tech/login');
+  res.redirect('/teknisi/login');
 });
 
 router.get('/', requireTechSession, (req, res) => {
@@ -323,7 +323,7 @@ router.post('/tickets/:id/take', requireTechSession, (req, res) => {
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal mengambil tiket: ' + e.message };
   }
-  res.redirect('/tech');
+  res.redirect('/teknisi');
 });
 
 router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10), async (req, res) => {
@@ -422,7 +422,7 @@ router.post('/tickets/:id/update', requireTechSession, upload.array('photos', 10
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal update keluhan: ' + e.message };
   }
-  res.redirect('/tech');
+  res.redirect('/teknisi');
 });
 
 router.get('/monitoring', requireTechSession, requireMenuAccess('tech_monitoring'), async (req, res) => {
@@ -574,10 +574,10 @@ router.post('/customers', requireTechSession, requireMenuAccess('tech_create_cus
     }
 
     req.session._msg = { type: 'success', text: `Pelanggan "${name}" berhasil dibuat.` };
-    res.redirect('/tech/customers/new');
+    res.redirect('/teknisi/customers/new');
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal membuat pelanggan: ' + e.message };
-    res.redirect('/tech/customers/new');
+    res.redirect('/teknisi/customers/new');
   }
 });
 

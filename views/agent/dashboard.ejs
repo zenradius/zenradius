@@ -6,7 +6,7 @@
   <title>Pusat Layanan Agen - <%= company %></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="manifest" href="/agent/manifest.webmanifest">
+  <link rel="manifest" href="/mitra/manifest.webmanifest">
   <link href="/css/style.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/theme-tokens.css">
   <script src="/js/app-ui.js" defer></script>
@@ -484,7 +484,7 @@
           <p class="sub"><%= company %></p>
         </div>
       </div>
-      <a href="/agent/logout" class="btn-logout"><i class="bi bi-box-arrow-right"></i></a>
+      <a href="/mitra/logout" class="btn-logout"><i class="bi bi-box-arrow-right"></i></a>
     </div>
   </div>
 
@@ -505,7 +505,7 @@
           <h6><i class="bi bi-receipt"></i> <%= t('agent.receipt_last', 'Struk Terakhir') %></h6>
           <div class="d-flex gap-2" style="align-items:center">
             <span class="pill"><i class="bi bi-clock"></i> <%= t('agent.new', 'Baru') %></span>
-            <form method="POST" action="/agent/receipt/clear" style="margin:0">
+            <form method="POST" action="/mitra/receipt/clear" style="margin:0">
               <button type="submit" class="btn-mini" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
                 <i class="bi bi-x-lg"></i> Keluar
               </button>
@@ -525,7 +525,7 @@
             </table>
             <div class="d-flex gap-2 mt-3" style="flex-wrap:wrap">
               <% if (receipt.tx_id) { %>
-                <a class="btn-mini" href="/agent/print/tx/<%= receipt.tx_id %>" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
+                <a class="btn-mini" href="/mitra/print/tx/<%= receipt.tx_id %>" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
                   <i class="bi bi-printer"></i> <%= t('agent.print_thermal', 'Print Thermal') %>
                 </a>
               <% } %>
@@ -547,7 +547,7 @@
             </table>
             <div class="d-flex gap-2 mt-3" style="flex-wrap:wrap">
               <% if (receipt.tx_id) { %>
-                <a class="btn-mini" href="/agent/print/tx/<%= receipt.tx_id %>" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
+                <a class="btn-mini" href="/mitra/print/tx/<%= receipt.tx_id %>" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
                   <i class="bi bi-printer"></i> <%= t('agent.print_thermal', 'Print Thermal') %>
                 </a>
               <% } %>
@@ -616,7 +616,7 @@
         <% } %>
       </div>
       <div class="bd">
-        <form method="POST" action="/agent/topup/create" class="d-grid gap-3">
+        <form method="POST" action="/mitra/topup/create" class="d-grid gap-3">
           <input type="number" name="amount" class="form-control" min="10000" step="1000" placeholder="Nominal top-up (min Rp 10.000)" required>
           
           <% if (paymentChannels && paymentChannels.length > 0) { %>
@@ -682,7 +682,7 @@
         <span class="pill"><i class="bi bi-search"></i> <%= t('agent.search', 'Cari') %></span>
       </div>
       <div class="bd">
-        <form method="GET" action="/agent" class="d-flex gap-2" style="align-items:stretch">
+        <form method="GET" action="/mitra" class="d-flex gap-2" style="align-items:stretch">
           <input type="text" name="q" class="form-control" value="<%= q || '' %>" placeholder="<%= t('agent.search_placeholder', 'No HP / PPPoE / Tag / ID') %>">
           <button class="btn-ghost" type="submit" style="min-width:84px"><i class="bi bi-search"></i></button>
         </form>
@@ -721,7 +721,7 @@
                   <tr><td>Alamat</td><td><%= inv.customer_address ? inv.customer_address : '-' %></td></tr>
                 </table>
 
-                <form method="POST" action="/agent/pay-invoice" class="mt-3">
+                <form method="POST" action="/mitra/pay-invoice" class="mt-3">
                   <input type="hidden" name="invoice_id" value="<%= inv.id %>">
                   <div class="d-grid gap-2">
                     <input type="text" name="note" class="form-control" placeholder="<%= t('agent.note_optional', 'Catatan (opsional)') %>" <%= isPaid ? 'disabled' : '' %>>
@@ -748,7 +748,7 @@
         <% if (!prices || prices.length === 0) { %>
           <div class="text-muted" style="color:var(--muted)!important;font-size:12px"><%= t('agent.no_voucher_profiles', 'Belum ada profile voucher untuk agent ini. Minta admin mengatur harga & profile.') %></div>
         <% } else { %>
-          <form method="POST" action="/agent/sell-voucher" class="d-grid gap-2" id="voucherForm">
+          <form method="POST" action="/mitra/sell-voucher" class="d-grid gap-2" id="voucherForm">
             <input type="hidden" name="price_id" id="priceIdInput" value="">
             <div class="vgrid" id="voucherGrid">
               <% prices.forEach(p => { 
@@ -1069,12 +1069,12 @@
                 <% if (tx.type === 'voucher_sale' || tx.type === 'invoice_payment' || tx.type === 'pulsa') { %>
                   <div class="tx-actions">
                     <% if (tx.type === 'voucher_sale' || tx.type === 'invoice_payment') { %>
-                      <a class="btn-mini" href="/agent/print/tx/<%= tx.id %>" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
+                      <a class="btn-mini" href="/mitra/print/tx/<%= tx.id %>" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
                         <i class="bi bi-printer"></i> <%= t('agent.print_thermal', 'Print Thermal') %>
                       </a>
                     <% } %>
                     <% if (tx.type === 'pulsa' && String(tx.digi_status || '').toLowerCase() === 'pending') { %>
-                      <form method="POST" action="/agent/pulsa/check" style="margin:0">
+                      <form method="POST" action="/mitra/pulsa/check" style="margin:0">
                         <input type="hidden" name="tx_id" value="<%= tx.id %>">
                         <button type="submit" class="btn-mini" style="display:inline-flex;align-items:center;gap:8px">
                           <i class="bi bi-arrow-repeat"></i> Cek Status
@@ -1562,7 +1562,7 @@
           lastOrderContext.target = target;
 
           try {
-            const res = await fetch('/agent/api/pulsa/order', {
+            const res = await fetch('/mitra/api/pulsa/order', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ sku, target, sell_price: sellPrice, buyer_phone: buyerPhone })
@@ -1702,7 +1702,7 @@
     &copy; <%= new Date().getFullYear() %> <%- footerInfo %>
   </footer>
   <script>
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/agent/' }).catch(() => {});
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/mitra/' }).catch(() => {});
   </script>
 </body>
 </html>

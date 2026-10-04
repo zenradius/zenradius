@@ -135,7 +135,9 @@ app.use((req, res, next) => {
   
   const p = req.path || '';
   const isSensitive = p.startsWith('/admin') || p.startsWith('/tech') ||
-    p.startsWith('/agent') || p.startsWith('/collector') || p.startsWith('/customer');
+    p.startsWith('/teknisi') || p.startsWith('/agent') || p.startsWith('/mitra') ||
+    p.startsWith('/collector') || p.startsWith('/penagih') || p.startsWith('/customer') ||
+    p.startsWith('/pelanggan') || p.startsWith('/isolir') || p.startsWith('/isolated');
   if (isSensitive) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.setHeader('Pragma', 'no-cache');
@@ -1442,15 +1444,15 @@ app.get('/manifest.webmanifest', (req, res) => {
     ]
   });
 });
-app.get('/tech/manifest.webmanifest', (req, res) => {
+app.get('/teknisi/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
   const companyName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
   res.send({
     name: `${companyName} - Teknisi`,
     short_name: companyName.length > 12 ? companyName.slice(0, 12) : companyName,
     description: `Pusat operasional teknisi ${companyName}`,
-    start_url: '/tech?source=pwa',
-    scope: '/tech/',
+    start_url: '/teknisi?source=pwa',
+    scope: '/teknisi/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#0f172a',
@@ -1460,15 +1462,15 @@ app.get('/tech/manifest.webmanifest', (req, res) => {
     ]
   });
 });
-app.get('/collector/manifest.webmanifest', (req, res) => {
+app.get('/penagih/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
   const companyName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
   res.send({
     name: `${companyName} - Kolektor`,
     short_name: companyName.length > 12 ? companyName.slice(0, 12) : companyName,
     description: `Pusat operasional kolektor ${companyName}`,
-    start_url: '/collector?source=pwa',
-    scope: '/collector/',
+    start_url: '/penagih?source=pwa',
+    scope: '/penagih/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#0f172a',
@@ -1478,15 +1480,15 @@ app.get('/collector/manifest.webmanifest', (req, res) => {
     ]
   });
 });
-app.get('/agent/manifest.webmanifest', (req, res) => {
+app.get('/mitra/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
   const companyName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
   res.send({
     name: `${companyName} - Agen`,
     short_name: companyName.length > 12 ? companyName.slice(0, 12) : companyName,
     description: `Pusat layanan agen ${companyName}`,
-    start_url: '/agent?source=pwa',
-    scope: '/agent/',
+    start_url: '/mitra?source=pwa',
+    scope: '/mitra/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#0f172a',
@@ -1811,7 +1813,7 @@ const techPortal = require('./routes/techPortal');
 app.use((req, res, next) => {
   const first = '/' + (req.path.split('/')[1] || '');
   if (first === '/tech') {
-    return res.redirect(301, '/teknisi' + (req.url.slice(4) || ''));
+    return res.redirect(301, '/teknisi' + (req.url.slice('/tech'.length) || ''));
   }
   return next();
 });
@@ -1833,7 +1835,7 @@ const collectorPortal = require('./routes/collectorPortal');
 app.use((req, res, next) => {
   const first = '/' + (req.path.split('/')[1] || '');
   if (first === '/collector') {
-    return res.redirect(301, '/penagih' + (req.url.slice(9) || ''));
+    return res.redirect(301, '/penagih' + (req.url.slice('/collector'.length) || ''));
   }
   return next();
 });

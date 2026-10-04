@@ -142,8 +142,8 @@ self.addEventListener('fetch', (event) => {
   // is shown immediately; cached copy only used when offline.
   if (path === '/img/logo.png' || path === '/img/icon.png' ||
       path === '/manifest.webmanifest' || path === '/admin/manifest.webmanifest' ||
-      path === '/tech/manifest.webmanifest' || path === '/collector/manifest.webmanifest' ||
-      path === '/agent/manifest.webmanifest') {
+      path === '/teknisi/manifest.webmanifest' || path === '/penagih/manifest.webmanifest' ||
+      path === '/mitra/manifest.webmanifest') {
     event.respondWith(networkFirst(req));
     return;
   }

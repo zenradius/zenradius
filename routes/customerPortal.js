@@ -4718,16 +4718,16 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
 
 router.post('/agent-topup/create', express.urlencoded({ extended: true }), async (req, res) => {
   const settings = getSettingsWithCache();
-  if (!req.session.isAgent) return res.redirect('/agent/login');
+  if (!req.session.isAgent) return res.redirect('/mitra/login');
   const agentId = req.session.agentId;
   const agent = agentSvc.getAgentById(agentId);
-  if (!agent) return res.redirect('/agent');
+  if (!agent) return res.redirect('/mitra');
 
   const amount = parseInt(req.body.amount || '0');
   let method = String(req.body.method || 'QRIS').toUpperCase();
   if (!amount || amount < 10000) {
     req.session._msg = { type: 'error', text: 'Minimal top-up Rp 10.000' };
-    return res.redirect('/agent');
+    return res.redirect('/mitra');
   }
 
   try {
@@ -4811,7 +4811,7 @@ router.post('/agent-topup/create', express.urlencoded({ extended: true }), async
   } catch(e) {
     logger.error('[AgentTopup] Error: ' + e.message);
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
-    return res.redirect('/agent');
+    return res.redirect('/mitra');
   }
 });
 

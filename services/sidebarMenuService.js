@@ -66,21 +66,21 @@ const MENU_DEFINITIONS = [
   { key: 'theme_settings', section: 'system', href: '/admin/theme-settings', icon: 'bi bi-palette2', labelKey: 'admin.nav.theme_settings', labelDefault: 'Tema Aplikasi', roles: ['admin'], activePages: ['theme_settings'] },
   { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update System', roles: ['admin'], activePages: ['update'] },
 
-  { key: 'tech_dashboard', section: 'tech', href: '/tech', icon: 'bi bi-briefcase-fill', labelKey: 'tech.nav.my_tasks', labelDefault: 'Tugas Saya', roles: ['teknisi'], bottomNav: true, activePages: ['dashboard'] },
-  { key: 'tech_pool', section: 'tech', href: '/tech/pool', icon: 'bi bi-inbox-fill', labelKey: 'tech.nav.new_tickets', labelDefault: 'Tiket Baru', roles: ['teknisi'], bottomNav: true, activePages: ['pool'] },
-  { key: 'tech_attendance', section: 'tech', href: '/tech/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'tech.nav.attendance', labelDefault: 'Absensi', roles: ['teknisi'], bottomNav: true, activePages: ['attendance'] },
-  { key: 'tech_map', section: 'tech', href: '/tech/map', icon: 'bi bi-map-fill', labelKey: 'tech.nav.map', labelDefault: 'Peta', roles: ['teknisi'], bottomNav: true, activePages: ['map'] },
-  { key: 'tech_monitoring', section: 'tech', href: '/tech/monitoring', icon: 'bi bi-display-fill', labelKey: 'tech.nav.monitor', labelDefault: 'Monitor', roles: ['teknisi'], bottomNav: true, activePages: ['monitoring'] },
-  { key: 'tech_create_customer', section: 'tech', href: '/tech/customers/new', icon: 'bi bi-person-plus-fill', labelKey: 'tech.new_customer', labelDefault: 'Tambah Pelanggan', roles: ['teknisi'], bottomNav: false, activePages: ['create_customer'] },
+  { key: 'tech_dashboard', section: 'tech', href: '/teknisi', icon: 'bi bi-briefcase-fill', labelKey: 'tech.nav.my_tasks', labelDefault: 'Tugas Saya', roles: ['teknisi'], bottomNav: true, activePages: ['dashboard'] },
+  { key: 'tech_pool', section: 'tech', href: '/teknisi/pool', icon: 'bi bi-inbox-fill', labelKey: 'tech.nav.new_tickets', labelDefault: 'Tiket Baru', roles: ['teknisi'], bottomNav: true, activePages: ['pool'] },
+  { key: 'tech_attendance', section: 'tech', href: '/teknisi/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'tech.nav.attendance', labelDefault: 'Absensi', roles: ['teknisi'], bottomNav: true, activePages: ['attendance'] },
+  { key: 'tech_map', section: 'tech', href: '/teknisi/map', icon: 'bi bi-map-fill', labelKey: 'tech.nav.map', labelDefault: 'Peta', roles: ['teknisi'], bottomNav: true, activePages: ['map'] },
+  { key: 'tech_monitoring', section: 'tech', href: '/teknisi/monitoring', icon: 'bi bi-display-fill', labelKey: 'tech.nav.monitor', labelDefault: 'Monitor', roles: ['teknisi'], bottomNav: true, activePages: ['monitoring'] },
+  { key: 'tech_create_customer', section: 'tech', href: '/teknisi/customers/new', icon: 'bi bi-person-plus-fill', labelKey: 'tech.new_customer', labelDefault: 'Tambah Pelanggan', roles: ['teknisi'], bottomNav: false, activePages: ['create_customer'] },
 
-  { key: 'agent_home', section: 'agent', href: '/agent#section-top', icon: 'bi bi-house', labelKey: 'agent.nav.home', labelDefault: 'Beranda', roles: ['reseller'], bottomNav: true, activePages: ['top'] },
-  { key: 'agent_billing', section: 'agent', href: '/agent#section-bill', icon: 'bi bi-receipt', labelKey: 'agent.nav.billing', labelDefault: 'Tagihan', roles: ['reseller'], bottomNav: true, activePages: ['bill'] },
-  { key: 'agent_voucher', section: 'agent', href: '/agent#section-voucher', icon: 'bi bi-ticket-perforated', labelKey: 'agent.nav.voucher', labelDefault: 'Voucher', roles: ['reseller'], bottomNav: true, activePages: ['voucher'] },
-  { key: 'agent_pulsa', section: 'agent', href: '/agent#section-pulsa', icon: 'bi bi-phone', labelKey: 'agent.nav.pulsa', labelDefault: 'Pulsa', roles: ['reseller'], bottomNav: true, activePages: ['pulsa'] },
-  { key: 'agent_history', section: 'agent', href: '/agent#section-history', icon: 'bi bi-clock-history', labelKey: 'agent.nav.history', labelDefault: 'Riwayat', roles: ['reseller'], bottomNav: true, activePages: ['history'] },
+  { key: 'agent_home', section: 'agent', href: '/mitra#section-top', icon: 'bi bi-house', labelKey: 'agent.nav.home', labelDefault: 'Beranda', roles: ['reseller'], bottomNav: true, activePages: ['top'] },
+  { key: 'agent_billing', section: 'agent', href: '/mitra#section-bill', icon: 'bi bi-receipt', labelKey: 'agent.nav.billing', labelDefault: 'Tagihan', roles: ['reseller'], bottomNav: true, activePages: ['bill'] },
+  { key: 'agent_voucher', section: 'agent', href: '/mitra#section-voucher', icon: 'bi bi-ticket-perforated', labelKey: 'agent.nav.voucher', labelDefault: 'Voucher', roles: ['reseller'], bottomNav: true, activePages: ['voucher'] },
+  { key: 'agent_pulsa', section: 'agent', href: '/mitra#section-pulsa', icon: 'bi bi-phone', labelKey: 'agent.nav.pulsa', labelDefault: 'Pulsa', roles: ['reseller'], bottomNav: true, activePages: ['pulsa'] },
+  { key: 'agent_history', section: 'agent', href: '/mitra#section-history', icon: 'bi bi-clock-history', labelKey: 'agent.nav.history', labelDefault: 'Riwayat', roles: ['reseller'], bottomNav: true, activePages: ['history'] },
 
-  { key: 'collector_dashboard', section: 'collector', href: '/collector', icon: 'bi bi-grid-3x3-gap', labelKey: 'collector.nav.dashboard', labelDefault: 'Dashboard', roles: ['kolektor'], bottomNav: true, activePages: ['dashboard'] },
-  { key: 'collector_attendance', section: 'collector', href: '/collector/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'collector.nav.attendance', labelDefault: 'Absensi', roles: ['kolektor'], bottomNav: true, activePages: ['attendance'] }
+  { key: 'collector_dashboard', section: 'collector', href: '/penagih', icon: 'bi bi-grid-3x3-gap', labelKey: 'collector.nav.dashboard', labelDefault: 'Dashboard', roles: ['kolektor'], bottomNav: true, activePages: ['dashboard'] },
+  { key: 'collector_attendance', section: 'collector', href: '/penagih/attendance', icon: 'bi bi-calendar-check-fill', labelKey: 'collector.nav.attendance', labelDefault: 'Absensi', roles: ['kolektor'], bottomNav: true, activePages: ['attendance'] }
 ];
 
 const DEFAULT_MENU_STATES = {

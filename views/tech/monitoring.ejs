@@ -281,7 +281,7 @@ async function loadDevices() {
   container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="text-secondary mt-2 small">Memuat data perangkat...</p></div>`;
   const acsFilter = document.getElementById('server-filter').value;
   try {
-    const res = await fetch(`/tech/api/devices?acs=${encodeURIComponent(acsFilter)}`);
+    const res = await fetch(`/teknisi/api/devices?acs=${encodeURIComponent(acsFilter)}`);
     const data = await res.json();
     allDevices = data.devices || [];
     filterDevices(); // Apply client search if any
@@ -414,15 +414,15 @@ document.getElementById('btn-submit-action').addEventListener('click', async fun
   if (type === 'ssid') {
     const ssid = document.getElementById('new-ssid').value.trim();
     if (!ssid) return alert('SSID tidak boleh kosong');
-    url = `/tech/api/device/${tag}/ssid`;
+    url = `/teknisi/api/device/${tag}/ssid`;
     body = { ssid };
   } else if (type === 'pass') {
     const password = document.getElementById('new-password').value.trim();
     if (password.length < 8) return alert('Password minimal 8 karakter');
-    url = `/tech/api/device/${tag}/password`;
+    url = `/teknisi/api/device/${tag}/password`;
     body = { password };
   } else if (type === 'reboot') {
-    url = `/tech/api/device/${tag}/reboot`;
+    url = `/teknisi/api/device/${tag}/reboot`;
     body = {};
   }
   
@@ -508,7 +508,7 @@ async function toggleWifiFields() {
         band5Fields.style.opacity = '0.5';
         
         try {
-            const res = await fetch(`/tech/api/wifi-settings/${encodeURIComponent(deviceId)}?acsId=${encodeURIComponent(acsId)}`);
+            const res = await fetch(`/teknisi/api/wifi-settings/${encodeURIComponent(deviceId)}?acsId=${encodeURIComponent(acsId)}`);
             const d = await res.json();
             
             if (d && d.success && Array.isArray(d.bands)) {
@@ -577,7 +577,7 @@ async function openAddWanModal(deviceId, acsId, sn, manufacturer, model) {
     
     // Async fetch WLAN actual SSID names
     try {
-        const res = await fetch(`/tech/api/wifi-settings/${encodeURIComponent(deviceId)}?acsId=${encodeURIComponent(acsId)}`);
+        const res = await fetch(`/teknisi/api/wifi-settings/${encodeURIComponent(deviceId)}?acsId=${encodeURIComponent(acsId)}`);
         const d = await res.json();
         if (d && d.success && Array.isArray(d.bands)) {
             d.bands.forEach(b => {
@@ -629,7 +629,7 @@ async function submitAddWanForm(e) {
     };
     
     try {
-        const res = await fetch(`/tech/api/add-wan/${encodeURIComponent(deviceId)}`, {
+        const res = await fetch(`/teknisi/api/add-wan/${encodeURIComponent(deviceId)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)

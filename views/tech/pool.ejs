@@ -35,7 +35,7 @@
         <div class="text-light"><%= ticket.message %></div>
       </div>
       
-      <form method="POST" action="/tech/tickets/<%= ticket.id %>/take">
+      <form method="POST" action="/teknisi/tickets/<%= ticket.id %>/take">
         <button type="submit" class="btn btn-primary btn-action" onclick="return confirm(<%- JSON.stringify(t('tech.pool.take_confirm', 'Ambil tiket ini untuk Anda kerjakan sekarang?')) %>)">
           <i class="bi bi-hand-index-thumb-fill me-2"></i> <%= t('tech.pool.take_action', 'Ambil Tugas Ini') %>
         </button>

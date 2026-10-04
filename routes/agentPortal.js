@@ -118,11 +118,11 @@ function tripayMethodCandidatesForAmount(tripayChannels, amount) {
 function requireAgentSession(req, res, next) {
   if (req.session && req.session.isAgent && req.session.agentId) {
     if (req.session.role && req.session.role !== 'reseller') {
-      return res.redirect('/agent/login');
+      return res.redirect('/mitra/login');
     }
     return next();
   }
-  return res.redirect('/agent/login');
+  return res.redirect('/mitra/login');
 }
 
 function flashMsg(req) {
@@ -157,7 +157,7 @@ function requireMenuAccess(menuKey) {
         return res.status(403).json({ success: false, message: 'Menu ini sedang dinonaktifkan oleh Admin.' });
       }
       req.session._msg = { type: 'warning', text: 'Menu ini sedang dinonaktifkan oleh Admin.' };
-      return res.redirect('/agent');
+      return res.redirect('/mitra');
     }
     return next();
   };
@@ -172,7 +172,7 @@ try {
 } catch (e) {}
 
 router.get('/login', (req, res) => {
-  if (req.session && req.session.isAgent) return res.redirect('/agent');
+  if (req.session && req.session.isAgent) return res.redirect('/mitra');
   res.render('agent/login', { title: 'Login Agent', company: company(), error: null });
 });
 
@@ -196,7 +196,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
           logger.error('[AGENT LOGIN] Session save failed:', err);
           return res.render('agent/login', { title: 'Login Agent', company: company(), error: 'Kesalahan sistem. Silakan coba lagi.' });
         }
-        return res.redirect('/agent');
+        return res.redirect('/mitra');
       });
     });
   }
@@ -205,7 +205,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
 
 router.get('/logout', (req, res) => {
   req.session.destroy();
-  res.redirect('/agent/login');
+  res.redirect('/mitra/login');
 });
 
 router.get('/', requireAgentSession, async (req, res) => {
@@ -330,13 +330,13 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
   const settings = getSettings();
   const agentId = req.session.agentId;
   const agent = agentSvc.getAgentById(agentId);
-  if (!agent) return res.redirect('/agent/login');
+  if (!agent) return res.redirect('/mitra/login');
 
   const amount = parseInt(req.body.amount || '0');
   let method = String(req.body.method || 'QRIS').toUpperCase();
   if (!amount || amount < 10000) {
     req.session._msg = { type: 'error', text: 'Minimal top-up Rp 10.000' };
-    return res.redirect('/agent');
+    return res.redirect('/mitra');
   }
 
   try {
@@ -364,7 +364,7 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
 
     const invoiceLike = { id: `AGTOP${reqId}`, amount, item_name: `Top-Up Deposit Agent ${agent.name}`, sku: `AGTOP-${reqId}` };
     const buyer = { name: agent.name, phone: agent.phone || '', email: '' };
-    const returnPath = `/agent?info=topup_pending`;
+    const returnPath = `/mitra?info=topup_pending`;
 
     let result;
     if (gateway === 'midtrans') result = await paymentSvc.createMidtransTransaction(invoiceLike, buyer, method === 'SNAP' ? 'snap' : method, appUrl, { returnPath, orderPrefix: 'AGTOP', itemName: invoiceLike.item_name });
@@ -407,7 +407,7 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
     const view = instructionData.mode === 'qris' ? 'qris_auto' : 'payment-instruction';
     return res.render(view, {
       settings,
-      backUrl: '/agent',
+      backUrl: '/mitra',
       changeMethodUrl: '',
       cancelUrl: '',
       info: null,
@@ -425,7 +425,7 @@ router.post('/topup/create', requireAgentSession, express.urlencoded({ extended:
     });
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
-    return res.redirect('/agent');
+    return res.redirect('/mitra');
   }
 });
 
@@ -476,7 +476,7 @@ router.post('/pay-invoice', requireAgentSession, requireMenuAccess('agent_billin
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
   }
-  res.redirect('/agent');
+  res.redirect('/mitra');
 });
 
 router.post('/sell-voucher', requireAgentSession, requireMenuAccess('agent_voucher'), express.urlencoded({ extended: true }), async (req, res) => {
@@ -523,7 +523,7 @@ router.post('/sell-voucher', requireAgentSession, requireMenuAccess('agent_vouch
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
   }
-  res.redirect('/agent');
+  res.redirect('/mitra');
 });
 
 router.post('/pulsa', requireAgentSession, requireMenuAccess('agent_pulsa'), express.urlencoded({ extended: true }), async (req, res) => {
@@ -582,7 +582,7 @@ router.post('/pulsa', requireAgentSession, requireMenuAccess('agent_pulsa'), exp
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
   }
-  res.redirect('/agent');
+  res.redirect('/mitra');
 });
 
 router.post('/api/pulsa/order', requireAgentSession, requireMenuAccess('agent_pulsa'), express.json({ limit: '50kb' }), async (req, res) => {
@@ -663,14 +663,14 @@ router.post('/pulsa/check', requireAgentSession, requireMenuAccess('agent_pulsa'
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal cek status: ' + e.message };
   }
-  res.redirect('/agent');
+  res.redirect('/mitra');
 });
 
 router.post('/receipt/clear', requireAgentSession, (req, res) => {
   try {
     delete req.session._agentReceipt;
   } catch {}
-  res.redirect('/agent');
+  res.redirect('/mitra');
 });
 
 router.get('/print/tx/:id', requireAgentSession, (req, res) => {

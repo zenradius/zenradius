@@ -128,8 +128,8 @@
         <div class="muted" style="font-size:12px"><%= collectorName %></div>
       </div>
       <div class="d-flex gap-2">
-        <a class="btn btn-outline-light btn-sm" href="/collector"><i class="bi bi-house-door-fill"></i> Beranda</a>
-        <a class="btn btn-outline-danger btn-sm" href="/collector/logout"><i class="bi bi-box-arrow-left"></i></a>
+        <a class="btn btn-outline-light btn-sm" href="/penagih"><i class="bi bi-house-door-fill"></i> Beranda</a>
+        <a class="btn btn-outline-danger btn-sm" href="/penagih/logout"><i class="bi bi-box-arrow-left"></i></a>
       </div>
     </div>
 
@@ -362,22 +362,22 @@
   <!-- Bottom Navigation -->
   <div class="bn">
     <div class="bnw">
-      <a class="bni" href="/collector">
+      <a class="bni" href="/penagih">
         <i class="bi bi-grid-3x3-gap"></i><span>Semua</span>
       </a>
-      <a class="bni" href="/collector?scope=today#data-tagihan">
+      <a class="bni" href="/penagih?scope=today#data-tagihan">
         <i class="bi bi-calendar-check"></i><span>Hari Ini</span>
       </a>
-      <a class="bni" href="/collector?scope=unpaid#data-tagihan">
+      <a class="bni" href="/penagih?scope=unpaid#data-tagihan">
         <i class="bi bi-exclamation-circle"></i><span>Belum</span>
       </a>
-      <a class="bni" href="/collector?scope=isolir#data-tagihan">
+      <a class="bni" href="/penagih?scope=isolir#data-tagihan">
         <i class="bi bi-shield-exclamation"></i><span>Isolir</span>
       </a>
-      <a class="bni" href="/collector?scope=multi#data-tagihan">
+      <a class="bni" href="/penagih?scope=multi#data-tagihan">
         <i class="bi bi-layers"></i><span>&gt;1 Bln</span>
       </a>
-      <a class="bni active" href="/collector/attendance">
+      <a class="bni active" href="/penagih/attendance">
         <i class="bi bi-calendar-check-fill"></i><span>Absensi</span>
       </a>
     </div>
@@ -745,7 +745,7 @@
         const location = await getLocation();
         const note = document.getElementById('checkinNote').value.trim();
 
-        const response = await fetch('/collector/attendance/checkin', {
+        const response = await fetch('/penagih/attendance/checkin', {
           method: 'POST',
           body: await buildAttendanceFormData(location, note, 'checkinPhoto')
         });
@@ -780,7 +780,7 @@
         const location = await getLocation();
         const note = document.getElementById('checkoutNote').value.trim();
 
-        const response = await fetch('/collector/attendance/checkout', {
+        const response = await fetch('/penagih/attendance/checkout', {
           method: 'POST',
           body: await buildAttendanceFormData(location, note, 'checkoutPhoto')
         });

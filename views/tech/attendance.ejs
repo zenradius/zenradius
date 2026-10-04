@@ -593,7 +593,7 @@
       const location = await getLocation();
       const note = document.getElementById('checkinNote').value.trim();
 
-      const response = await fetch('/tech/attendance/checkin', {
+      const response = await fetch('/teknisi/attendance/checkin', {
         method: 'POST',
         body: await buildAttendanceFormData(location, note, 'checkinPhoto')
       });
@@ -628,7 +628,7 @@
       const location = await getLocation();
       const note = document.getElementById('checkoutNote').value.trim();
 
-      const response = await fetch('/tech/attendance/checkout', {
+      const response = await fetch('/teknisi/attendance/checkout', {
         method: 'POST',
         body: await buildAttendanceFormData(location, note, 'checkoutPhoto')
       });

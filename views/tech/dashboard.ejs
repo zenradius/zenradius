@@ -55,7 +55,7 @@
     if (notes === null) return;
     if (!String(notes || '').trim()) { alert('Catatan hasil survei wajib diisi.'); return; }
     try {
-      const resp = await fetch(`/tech/api/registrations/${encodeURIComponent(id)}/survey`, {
+      const resp = await fetch(`/teknisi/api/registrations/${encodeURIComponent(id)}/survey`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ result, notes: String(notes).trim() })
@@ -140,7 +140,7 @@
               <h6 class="modal-title"><i class="bi bi-check-circle me-2"></i><%= t('tech.ticket.resolve_title', 'Selesaikan Tugas') %></h6>
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="/tech/tickets/<%= ticket.id %>/update" enctype="multipart/form-data" id="resolveForm<%= ticket.id %>">
+            <form method="POST" action="/teknisi/tickets/<%= ticket.id %>/update" enctype="multipart/form-data" id="resolveForm<%= ticket.id %>">
               <div class="modal-body">
                 <div class="alert alert-info" style="font-size: 13px;">
                   <i class="bi bi-info-circle me-2"></i>Tugas untuk <b><%= ticket.customer_name %></b> - <b><%= ticket.subject %></b>
@@ -272,7 +272,7 @@ async function openWifiManager(button) {
   wifiManagerModal = wifiManagerModal || new bootstrap.Modal(document.getElementById('wifiManagerModal'));
   wifiManagerModal.show();
   try {
-    const response = await fetch(`/tech/api/device/${encodeURIComponent(wifiManagerTag)}`);
+    const response = await fetch(`/teknisi/api/device/${encodeURIComponent(wifiManagerTag)}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Perangkat tidak ditemukan');
     document.getElementById('wifiManagerCurrentSsid').textContent = data.ssid || '-';
@@ -286,7 +286,7 @@ async function openWifiManager(button) {
 async function submitWifiChange(endpoint, payload, button) {
   button.disabled = true;
   try {
-    const response = await fetch(`/tech/api/device/${encodeURIComponent(wifiManagerTag)}/${endpoint}`, {
+    const response = await fetch(`/teknisi/api/device/${encodeURIComponent(wifiManagerTag)}/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

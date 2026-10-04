@@ -14,11 +14,11 @@ const sidebarMenuSvc = require('../services/sidebarMenuService');
 function requireCollectorSession(req, res, next) {
   if (req.session && req.session.isCollector && req.session.collectorId) {
     if (req.session.role && req.session.role !== 'kolektor') {
-      return res.redirect('/collector/login');
+      return res.redirect('/penagih/login');
     }
     return next();
   }
-  return res.redirect('/collector/login');
+  return res.redirect('/penagih/login');
 }
 
 function requireMenuAccess(menuKey) {
@@ -26,7 +26,7 @@ function requireMenuAccess(menuKey) {
     const access = sidebarMenuSvc.evaluateMenuAccess(menuKey, req.session);
     if (!access.allowed) {
       req.session._msg = { type: 'error', text: 'Menu ini sedang dinonaktifkan oleh Admin.' };
-      return res.redirect('/collector');
+      return res.redirect('/penagih');
     }
     return next();
   };
@@ -62,7 +62,7 @@ try {
 } catch (e) {}
 
 router.get('/login', (req, res) => {
-  if (req.session && req.session.isCollector) return res.redirect('/collector');
+  if (req.session && req.session.isCollector) return res.redirect('/penagih');
   res.render('collector/login', { title: 'Login Kolektor', company: company(), error: null });
 });
 
@@ -89,7 +89,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
           logger.error('[COLLECTOR LOGIN] Session save failed:', err);
           return res.render('collector/login', { title: 'Login Kolektor', company: company(), error: 'Kesalahan sistem. Silakan coba lagi.' });
         }
-        return res.redirect('/collector');
+        return res.redirect('/penagih');
       });
     });
   }
@@ -98,7 +98,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
 
 router.get('/logout', (req, res) => {
   req.session.destroy();
-  res.redirect('/collector/login');
+  res.redirect('/penagih/login');
 });
 
 router.get('/attendance', requireCollectorSession, requireMenuAccess('collector_attendance'), (req, res) => {
@@ -129,7 +129,7 @@ router.get('/attendance', requireCollectorSession, requireMenuAccess('collector_
     });
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal memuat absensi: ' + e.message };
-    res.redirect('/collector');
+    res.redirect('/penagih');
   }
 });
 
@@ -445,7 +445,7 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
         }
       }
 
-      req.session._msg = { type: 'success', text: `Pembayaran berhasil diproses, tagihan lunas${unisolatedText}. <a href="/collector/invoice/${invoiceId}/print-thermal" target="_blank" class="btn btn-sm btn-dark ms-2 fw-bold"><i class="bi bi-printer"></i> Cetak Struk (Bluetooth Thermal)</a>` };
+      req.session._msg = { type: 'success', text: `Pembayaran berhasil diproses, tagihan lunas${unisolatedText}. <a href="/penagih/invoice/${invoiceId}/print-thermal" target="_blank" class="btn btn-sm btn-dark ms-2 fw-bold"><i class="bi bi-printer"></i> Cetak Struk (Bluetooth Thermal)</a>` };
     } else {
       
       db.prepare(`
@@ -464,7 +464,7 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
   if (req.body.status) qs.set('status', String(req.body.status));
   if (req.body.search) qs.set('search', String(req.body.search));
   const suffix = qs.toString() ? ('?' + qs.toString()) : '';
-  res.redirect('/collector' + suffix);
+  res.redirect('/penagih' + suffix);
 });
 
 router.get('/invoice/:id/print-thermal', requireCollectorSession, (req, res) => {

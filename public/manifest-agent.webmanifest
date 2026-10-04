@@ -1,8 +1,8 @@
 {
   "name": "Pusat Layanan Agen ZenRadius",
   "short_name": "Agen ZenRadius",
-  "start_url": "/agent/login",
-  "scope": "/agent/",
+  "start_url": "/mitra/login",
+  "scope": "/mitra/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#173945",

@@ -1,8 +1,8 @@
 {
   "name": "Pusat Operasional Teknisi ZenRadius",
   "short_name": "Teknisi ZenRadius",
-  "start_url": "/tech/login",
-  "scope": "/tech/",
+  "start_url": "/teknisi/login",
+  "scope": "/teknisi/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#173945",

@@ -8,7 +8,7 @@
     </div>
   </div>
 
-  <form method="POST" action="/tech/customers">
+  <form method="POST" action="/teknisi/customers">
     <div class="mb-3">
       <label class="form-label text-secondary small">Nama Pelanggan <span class="text-danger">*</span></label>
       <input name="name" class="form-control rounded-4" required>
@@ -306,7 +306,7 @@
     infoEl.innerText = '';
     if (!odpId) return;
     try {
-      const res = await fetch(`/tech/api/odps/${encodeURIComponent(odpId)}/ports`);
+      const res = await fetch(`/teknisi/api/odps/${encodeURIComponent(odpId)}/ports`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal ambil info ODP');
       const used = Array.isArray(data.usedPorts) ? data.usedPorts.join(', ') : '';
@@ -323,7 +323,7 @@
     if (hint) hint.innerText = 'Memuat user PPPoE dari MikroTik...';
     if (list) list.innerHTML = '';
     try {
-      const url = routerId ? `/tech/api/mikrotik/pppoe-users?routerId=${encodeURIComponent(routerId)}` : `/tech/api/mikrotik/pppoe-users`;
+      const url = routerId ? `/teknisi/api/mikrotik/pppoe-users?routerId=${encodeURIComponent(routerId)}` : `/teknisi/api/mikrotik/pppoe-users`;
       const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal memuat user PPPoE');
@@ -345,7 +345,7 @@
     const sel = document.getElementById('isolir_profile');
     if (sel) sel.innerHTML = '';
     try {
-      const url = routerId ? `/tech/api/mikrotik/pppoe-profiles?routerId=${encodeURIComponent(routerId)}` : `/tech/api/mikrotik/pppoe-profiles`;
+      const url = routerId ? `/teknisi/api/mikrotik/pppoe-profiles?routerId=${encodeURIComponent(routerId)}` : `/teknisi/api/mikrotik/pppoe-profiles`;
       const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal memuat profile PPPoE');

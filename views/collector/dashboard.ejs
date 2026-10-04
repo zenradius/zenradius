@@ -6,7 +6,7 @@
   <title><%= title %> | <%= company %></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="manifest" href="/collector/manifest.webmanifest">
+  <link rel="manifest" href="/penagih/manifest.webmanifest">
   <link href="/css/style.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/theme-tokens.css">
   <script src="/js/app-ui.js" defer></script>
@@ -47,10 +47,10 @@
         </div>
       </div>
       <div class="d-flex gap-2">
-        <a class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" href="/collector/attendance">
+        <a class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" href="/penagih/attendance">
           <i class="bi bi-calendar-check"></i> Absensi
         </a>
-        <a class="btn btn-outline-light btn-sm" href="/collector/logout"><i class="bi bi-box-arrow-left"></i></a>
+        <a class="btn btn-outline-light btn-sm" href="/penagih/logout"><i class="bi bi-box-arrow-left"></i></a>
       </div>
     </div>
 
@@ -62,28 +62,28 @@
 
     <div class="row g-2 mb-3">
       <div class="col-6 col-md-3">
-        <a class="cardx p-3 d-block text-decoration-none" href="/collector?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'today', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
+        <a class="cardx p-3 d-block text-decoration-none" href="/penagih?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'today', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
           <div class="muted" style="font-size:12px">Tagihan Hari Ini (tgl <%= todayDay %>)</div>
           <div style="font-weight:900;font-size:20px"><%= Number(summary?.today_count || 0) %></div>
           <div class="muted" style="font-size:12px">Rp <%= Number(summary?.today_total || 0).toLocaleString('id-ID') %></div>
         </a>
       </div>
       <div class="col-6 col-md-3">
-        <a class="cardx p-3 d-block text-decoration-none" href="/collector?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'unpaid', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
+        <a class="cardx p-3 d-block text-decoration-none" href="/penagih?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'unpaid', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
           <div class="muted" style="font-size:12px">Tagihan Belum Bayar</div>
           <div style="font-weight:900;font-size:20px"><%= Number(summary?.unpaid_count || 0) %></div>
           <div class="muted" style="font-size:12px">Rp <%= Number(summary?.unpaid_total || 0).toLocaleString('id-ID') %></div>
         </a>
       </div>
       <div class="col-6 col-md-3">
-        <a class="cardx p-3 d-block text-decoration-none" href="/collector?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'isolir', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
+        <a class="cardx p-3 d-block text-decoration-none" href="/penagih?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'isolir', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
           <div class="muted" style="font-size:12px">Tagihan Isolir</div>
           <div style="font-weight:900;font-size:20px"><%= Number(summary?.isolir_count || 0) %></div>
           <div class="muted" style="font-size:12px">Rp <%= Number(summary?.isolir_total || 0).toLocaleString('id-ID') %></div>
         </a>
       </div>
       <div class="col-6 col-md-3">
-        <a class="cardx p-3 d-block text-decoration-none" href="/collector?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'multi', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
+        <a class="cardx p-3 d-block text-decoration-none" href="/penagih?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'multi', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
           <div class="muted" style="font-size:12px">Menunggak &gt; 1 Bulan</div>
           <div style="font-weight:900;font-size:20px"><%= Number(summary?.multi_customer_count || 0) %></div>
           <div class="muted" style="font-size:12px">Rp <%= Number(summary?.multi_total || 0).toLocaleString('id-ID') %></div>
@@ -96,7 +96,7 @@
         <div style="font-weight:800"><i class="bi bi-receipt"></i> Daftar Tagihan</div>
         <span class="badgey"><i class="bi bi-shield-check"></i>Read Only</span>
       </div>
-      <form method="GET" action="/collector" class="d-flex gap-2 flex-wrap">
+      <form method="GET" action="/penagih" class="d-flex gap-2 flex-wrap">
         <select class="form-control" name="month" style="max-width:110px">
           <% for (let m=1; m<=12; m++) { %>
             <option value="<%= m %>" <%= Number(month)===m ? 'selected' : '' %>><%= String(m).padStart(2,'0') %></option>
@@ -188,7 +188,7 @@
                   <a class="btn btn-outline-light btn-sm" target="_blank" href="https://www.google.com/maps?q=<%= encodeURIComponent(inv.lat + ',' + inv.lng) %>"><i class="bi bi-geo-alt"></i> Map</a>
                 <% } %>
                 <% if (isPaid && inv.invoice_id) { %>
-                  <a class="btn btn-primary btn-sm fw-bold shadow-sm" target="_blank" href="/collector/invoice/<%= inv.invoice_id %>/print-thermal">
+                  <a class="btn btn-primary btn-sm fw-bold shadow-sm" target="_blank" href="/penagih/invoice/<%= inv.invoice_id %>/print-thermal">
                     <i class="bi bi-printer"></i> Cetak Struk (Thermal)
                   </a>
                   <a class="btn btn-outline-info btn-sm fw-bold" target="_blank" href="/pelanggan/invoice/<%= inv.invoice_id %>/pdf">
@@ -198,7 +198,7 @@
                     <i class="bi bi-whatsapp"></i> Kirim WA PDF
                   </button>
                 <% } else if (!isPaid && !isPending) { %>
-                  <form method="POST" action="/collector/payment-request" class="d-flex gap-2" style="flex:1;min-width:260px">
+                  <form method="POST" action="/penagih/payment-request" class="d-flex gap-2" style="flex:1;min-width:260px">
                     <input type="hidden" name="customer_id" value="<%= inv.customer_id %>">
                     <input type="hidden" name="invoice_id" value="<%= inv.invoice_id || '' %>">
                     <input type="hidden" name="month" value="<%= month %>">
@@ -248,7 +248,7 @@
                   <td style="font-size:12px">
                     <% if (st === 'approved') { %>
                       <span class="badgey s">APPROVED</span>
-                      <a href="/collector/invoice/<%= r.invoice_id %>/print-thermal" target="_blank" class="btn btn-sm btn-outline-light ms-1" style="font-size:11px;padding:2px 6px;" title="Cetak Struk Thermal"><i class="bi bi-printer"></i> Struk</a>
+                      <a href="/penagih/invoice/<%= r.invoice_id %>/print-thermal" target="_blank" class="btn btn-sm btn-outline-light ms-1" style="font-size:11px;padding:2px 6px;" title="Cetak Struk Thermal"><i class="bi bi-printer"></i> Struk</a>
                     <% } else if (st === 'rejected') { %>
                       <span class="badgey d">REJECTED</span>
                     <% } else { %>
@@ -283,23 +283,23 @@
   %>
   <div class="bn">
     <div class="bnw">
-      <a class="bni <%= (!activeScope && (activeStatus === 'all' || activeStatus === 'paid' || activeStatus === 'unpaid')) ? 'active' : '' %>" href="/collector?<%= qsAll %>#data-tagihan">
+      <a class="bni <%= (!activeScope && (activeStatus === 'all' || activeStatus === 'paid' || activeStatus === 'unpaid')) ? 'active' : '' %>" href="/penagih?<%= qsAll %>#data-tagihan">
         <i class="bi bi-grid-3x3-gap"></i><span>Semua</span>
       </a>
-      <a class="bni <%= activeScope === 'today' ? 'active' : '' %>" href="/collector?<%= qsToday %>#data-tagihan">
+      <a class="bni <%= activeScope === 'today' ? 'active' : '' %>" href="/penagih?<%= qsToday %>#data-tagihan">
         <i class="bi bi-calendar-check"></i><span>Hari Ini</span>
       </a>
-      <a class="bni <%= activeScope === 'unpaid' ? 'active' : '' %>" href="/collector?<%= qsUnpaid %>#data-tagihan">
+      <a class="bni <%= activeScope === 'unpaid' ? 'active' : '' %>" href="/penagih?<%= qsUnpaid %>#data-tagihan">
         <i class="bi bi-exclamation-circle"></i><span>Belum</span>
       </a>
-      <a class="bni <%= activeScope === 'isolir' ? 'active' : '' %>" href="/collector?<%= qsIsolir %>#data-tagihan">
+      <a class="bni <%= activeScope === 'isolir' ? 'active' : '' %>" href="/penagih?<%= qsIsolir %>#data-tagihan">
         <i class="bi bi-shield-exclamation"></i><span>Isolir</span>
       </a>
-      <a class="bni <%= activeScope === 'multi' ? 'active' : '' %>" href="/collector?<%= qsMulti %>#data-tagihan">
+      <a class="bni <%= activeScope === 'multi' ? 'active' : '' %>" href="/penagih?<%= qsMulti %>#data-tagihan">
         <i class="bi bi-layers"></i><span>&gt;1 Bln</span>
       </a>
       <% if ((collectorBottomNav || []).some(m => m.key === 'collector_attendance')) { %>
-      <a class="bni" href="/collector/attendance">
+      <a class="bni" href="/penagih/attendance">
         <i class="bi bi-calendar-check-fill"></i><span>Absensi</span>
       </a>
       <% } %>
@@ -320,7 +320,7 @@
     async function sendWaPdf(invId) {
       if (!confirm('Kirimkan dokumen Invoice PDF ke WhatsApp pelanggan sekarang?')) return;
       try {
-        const res = await fetch('/collector/invoice/' + invId + '/send-pdf-wa', { method: 'POST' });
+        const res = await fetch('/penagih/invoice/' + invId + '/send-pdf-wa', { method: 'POST' });
         const data = await res.json();
         alert(data.message || (data.success ? 'Berhasil dikirim!' : 'Gagal mengirim'));
       } catch (e) {
@@ -329,7 +329,7 @@
     }
   </script>
   <script>
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/collector/' }).catch(() => {});
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/penagih/' }).catch(() => {});
   </script>
 </body>
 </html>
