@@ -231,16 +231,17 @@ function createCustomer(data) {
   );
 }
 
-/** Generate nomor pelanggan unik 8 digit (contoh: 12345678). */
+/** Generate nomor pelanggan unik 6 digit acak (contoh: 657585, 838468). */
 function generateCustomerNo() {
-  const row = db.prepare("SELECT MAX(CAST(customer_no AS INTEGER)) AS mx FROM customers WHERE customer_no IS NOT NULL AND customer_no != '' AND CAST(customer_no AS INTEGER) > 0").get();
-  let next = Number(row?.mx || 0) + 1;
-  // fallback jika kolom belum ada / kosong
-  if (!Number.isFinite(next) || next < 1) {
-    const cnt = db.prepare('SELECT COUNT(*) AS c FROM customers').get().c || 0;
-    next = Math.max(1, cnt + 1);
+  // Coba beberapa kali sampai dapat nomor acak 6 digit yang belum dipakai
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const n = Math.floor(100000 + Math.random() * 900000); // 100000-999999
+    const exists = db.prepare('SELECT id FROM customers WHERE customer_no = ? LIMIT 1').get(String(n));
+    if (!exists) return String(n);
   }
-  return String(next).padStart(8, '0');
+  // Fallback: angka 7 digit acak jika 20x percobaan gagal (sangat jarang)
+  const fallback = Math.floor(1000000 + Math.random() * 9000000);
+  return String(fallback);
 }
 
 /** Buat pendaftar online yang harus melewati survei dan approval sebelum aktif. */

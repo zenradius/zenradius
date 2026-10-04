@@ -875,14 +875,21 @@ try { db.exec("ALTER TABLE customers ADD COLUMN registration_reject_reason TEXT 
 try { db.exec("ALTER TABLE customers ADD COLUMN registration_number TEXT DEFAULT ''"); } catch (e) {}
 try { db.exec("ALTER TABLE customers ADD COLUMN customer_no TEXT DEFAULT ''"); } catch (e) {}
 
-// Backfill customer_no (8 digit) untuk semua pelanggan yang belum punya.
-// Format: 8 digit dari 10000000 + id (agar unik & konsisten).
+// Backfill nomor pelanggan acak 6 digit unik untuk pelanggan yang belum punya.
+// (Nomor lama 8-digit yang sudah ada TIDAK diubah; hanya isi yang kosong.)
 try {
-  db.exec(`
-    UPDATE customers
-    SET customer_no = printf('%08d', 10000000 + (id * 1) / 1)
-    WHERE customer_no IS NULL OR customer_no = ''
-  `);
+  const pendingNo = db.prepare("SELECT id FROM customers WHERE customer_no IS NULL OR customer_no = ''").all();
+  const usedNos = new Set(db.prepare("SELECT customer_no FROM customers WHERE customer_no IS NOT NULL AND customer_no != ''").all().map(r => String(r.customer_no)));
+  for (const row of pendingNo) {
+    let n = '';
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const candidate = String(Math.floor(100000 + Math.random() * 900000));
+      if (!usedNos.has(candidate)) { n = candidate; break; }
+    }
+    if (!n) n = String(Math.floor(1000000 + Math.random() * 9000000));
+    usedNos.add(n);
+    db.prepare("UPDATE customers SET customer_no = ? WHERE id = ?").run(n, row.id);
+  }
 } catch (e) {}
 
 // Backfill nomor registrasi untuk pendaftar online yang belum punya

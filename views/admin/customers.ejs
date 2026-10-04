@@ -242,7 +242,7 @@
           <% customers.forEach((c, i) => { %>
             <tr>
               <td>
-                <span class="mono" style="font-weight:800;color:var(--primary);font-size:12px"><%= (c.customer_no || String(c.id).padStart(8, '0')).replace(/(\d{4})(\d{4})/, '$1 $2') %></span>
+                <span class="mono" style="font-weight:800;color:var(--primary);font-size:12px"><%= (c.customer_no || String(c.id).padStart(8, '0')).replace(/(\d{3})(\d{3})/, '$1 $2') %></span>
               </td>
               <td class="fw6">
                 <a href="javascript:void(0)" onclick="viewCustDetail(<%= i %>)" style="color:var(--primary);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;" title="Klik untuk lihat detail pelanggan & MikroTik">
@@ -1401,7 +1401,7 @@ function viewCustDetail(idx) {
     if (document.getElementById('v_cust_id')) document.getElementById('v_cust_id').textContent = c.id || '-';
     if (document.getElementById('v_cust_no')) {
       const no = (c.customer_no || String(c.id || '').padStart(8, '0'));
-      document.getElementById('v_cust_no').textContent = no.replace(/(\d{4})(\d{4})/, '$1 $2') || '-';
+      document.getElementById('v_cust_no').textContent = no.replace(/(\d{3})(\d{3})/, '$1 $2') || '-';
     }
 
     if (document.getElementById('v_online_badge')) {

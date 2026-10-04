@@ -1854,8 +1854,8 @@ router.post('/public/voucher/create-payment', voucherPurchaseRateLimiter, async 
         : 'Transfer sesuai nominal ke nomor virtual account. Pesanan diproses otomatis setelah pembayaran terverifikasi.',
       kind: 'voucher',
       invoiceId: Number(orderId),
-      customerName: order.buyer_phone ? `WA: ${order.buyer_phone}` : 'Pembeli Voucher',
-      periodText: `${order.profile_name || ''}${order.validity ? ' • ' + String(order.validity) : ''}`,
+      customerName: buyerPhone ? `WA: ${buyerPhone}` : 'Pembeli Voucher',
+      periodText: `${selected.name || ''}${selected.validity ? ' • ' + String(selected.validity) : ''}`,
       publicToken: String(token || ''),
       adminWaDigits: getFirstAdminWaDigits(settings),
       ...instructionData
