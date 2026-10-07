@@ -1,16 +1,16 @@
 ﻿<!DOCTYPE html>
-<html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
+<html lang="id" data-app-theme="space">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voucher Hotspot | <%= settings.company_header || 'ZenRadius - Pusat Layanan' %></title>
+  <title>Voucher Hotspot | ZenRadius</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
+  <link rel="icon" href="/img/icon.png?v=1" type="image/png">
   <link rel="stylesheet" href="/css/unified.css">
   <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
@@ -57,15 +57,6 @@
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
     .cardx{background: linear-gradient(180deg, var(--admin-bg2) 0%, var(--admin-bg3) 100%);backdrop-filter: blur(12px);border: 1px solid var(--admin-border);border-radius: 16px;box-shadow: 0 16px 38px rgba(2, 10, 14, 0.32);overflow:hidden;max-width: 720px;width:100%;position: relative;}
     .cardx::before { content:""; position:absolute; inset:0 auto auto 0; width:100%; height:140%; background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%, rgba(148,163,184,0.04)); pointer-events:none; }
-    .body{
-      padding: 26px 26px 6px;
-      position: relative;
-    }
-    @media (min-width: 992px){
-      .wrap{padding: 32px 24px}
-      .cardx{max-width: 1040px}
-      .body{padding: 34px 38px 10px}
-    }
     /* Premium Modern Header Card with Nebular Glassmorphism & Fixed Background Image support */
     .head {
       position: relative;
@@ -115,11 +106,6 @@
       align-items: center;
       gap: 12px;
       margin-top: 22px;
-      max-width: 720px;
-    }
-    @media (min-width: 992px){
-      .hero-steps{ max-width: 820px; gap: 14px }
-      .hero-step{ padding: 9px 18px }
     }
     .hero-step {
       display: inline-flex;
@@ -249,11 +235,6 @@
       box-shadow:0 24px 48px rgba(2, 10, 14, .5);
       transform:scale(0.95);
       transition:transform .25s cubic-bezier(0.34, 1.56, 0.64, 1);
-      max-height: calc(100dvh - 40px);
-      overflow-y:auto;
-    }
-    @media (min-width: 768px){
-      .c-modal{ max-width: 540px; padding: 26px }
     }
     .c-modal-overlay.active .c-modal{
       transform:scale(1);
@@ -367,16 +348,7 @@
       background-image: radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--admin-primary) 55%, transparent) 0%, transparent 45%), radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--admin-primary) 40%, transparent) 0%, transparent 55%), linear-gradient(135deg, var(--admin-bg2, #173740) 0%, var(--admin-bg2, #183f51) 52%, var(--admin-bg2, #194251) 100%);
       border:1px solid var(--admin-border);
       box-shadow:0 8px 24px rgba(2,44,99,.18);
-      display:flex;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-      gap:6px 14px;
     }
-    .cmpk-card .cmpk-signature{position:absolute;top:14px;right:16px}
-    .cmpk-card .cmpk-ribbon{position:relative;z-index:2}
-    .cmpk-card .cmpk-name{flex:0 0 100%;padding-right:24px}
-    .cmpk-card .cmpk-offer{position:relative;z-index:2;margin-top:2px}
     .cmpk-ribbon{
       display:inline-flex;
       align-items:center;
@@ -411,9 +383,6 @@
       opacity:.85;
     }
     .pm-grid-modal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px}
-    @media (min-width: 768px){
-      .pm-grid-modal{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-    }
     .pm-item-modal{min-height:68px;display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;background:color-mix(in srgb,var(--portal-panel-strong) 90%,transparent);border:1px solid var(--portal-line);cursor:pointer;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;position:relative}
     .pm-item-modal:hover{border-color:var(--portal-primary);background:color-mix(in srgb,var(--soft-primary) 70%,var(--portal-panel-strong))}
     .pm-radio-modal:checked + .pm-item-modal{background:color-mix(in srgb,var(--soft-primary) 82%,var(--portal-panel-strong));border-color:var(--portal-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--portal-primary) 18%,transparent)}
@@ -424,7 +393,6 @@
     @media(max-width:520px){.pm-grid-modal{grid-template-columns:1fr}}
     
     .payment-methods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:12px}
-    @media (min-width: 992px){.payment-methods-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
     @media (max-width: 768px){.payment-methods-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}}
     @media (max-width: 576px){.payment-methods-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
     .pm-radio{position:absolute;opacity:0;pointer-events:none}
@@ -467,8 +435,6 @@
     .hero-step .hs-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--admin-btn-bg);color:var(--admin-btn-color);font-size:11px;font-weight:800;flex:0 0 auto}
     .hero-step .hs-icon{color:var(--admin-primary);font-size:14px}
     .hero-step-arrow{display:inline-flex;align-items:center;color:rgba(190,239,255,.4);font-size:14px}
-    /* filter-title – header section of content */
-    .filter-title{margin-bottom:14px !important}
     @media (max-width: 576px){
       .hero-steps{gap:6px}
       .hero-step{padding:6px 10px;font-size:11px;gap:6px}
@@ -477,12 +443,82 @@
     }
   </style>
   <link rel="stylesheet" href="/css/voucher-cards.css?v=1">
-</head>
+<style data-theme-preview>[data-app-theme="space"]{
+  /* admin.css tokens */
+  --bg:#0B1028; --bg2:#121B4A; --bg3:#1C2660;
+  --border:rgba(255,255,255,.14);
+  --text:#FFFFFF; --muted:#94A3B8;
+  --primary:#1C5CFF; --pdim:rgba(28,92,255,.16);
+  --accent:#08D8EC;
+  --success:#10B981; --sdim:rgba(16,185,129,.15);
+  --warning:#F59E0B; --wdim:rgba(245,158,11,.15);
+  --danger:#EF4444; --ddim:rgba(239,68,68,.15);
+  --info:#0EA5E9; --idim:rgba(14,165,233,.15);
+  --btn-bg:linear-gradient(100deg,#2937FF 0%,#1C5CFF 55%,#08D8EC 100%);
+  --btn-color:#FFFFFF;
+  --btn-border:rgba(255,255,255,.16);
+  --btn-shadow:0 10px 24px rgba(31,83,255,.35);
+  --btn-bg-hover:linear-gradient(100deg,#1C5CFF 0%,#08D8EC 100%);
+  --btn-border-hover:rgba(8,216,236,.6);
+  --btn-color-hover:#FFFFFF;
+  --btn-g-bg:rgba(255,255,255,.06);
+  --btn-g-border:rgba(255,255,255,.16);
+  --sb-item-active-bg:linear-gradient(100deg,#2937FF 0%,#1C5CFF 60%,#08D8EC 100%);
+  --sb-item-active-border:#1C5CFF;
+  --sb-item-active-color:#FFFFFF;
+
+  /* sidebar tokens — deep navy */
+  --sb-bg:#0B1028;
+  --sb-bg-secondary:#121B4A;
+  --sb-hover:#1C2660;
+  --sb-text:#94A3B8;
+  --sb-border:rgba(255,255,255,.12);
+
+  /* navbar tokens */
+  --nav-bg:rgba(11,16,40,.92);
+  --nav-border:rgba(255,255,255,.12);
+  --nav-text:#FFFFFF;
+  --nav-text-secondary:#94A3B8;
+  --nav-hover:#1C2660;
+  --nav-active:#1C5CFF;
+
+  /* portal tokens */
+  --portal-bg:#0B1028;
+  --portal-surface:#121B4A;
+  --portal-surface-raised:#1C2660;
+  --portal-ink:#FFFFFF;
+  --portal-muted:#94A3B8;
+  --portal-primary:#1C5CFF;
+  --portal-primary-strong:#08D8EC;
+  --portal-teal:#08D8EC;
+  --portal-teal-strong:#06B6D4;
+  --portal-accent:#F59E0B;
+  --portal-line:rgba(255,255,255,.16);
+  --card-bg:#121B4A;
+  --soft-primary:rgba(28,92,255,.16);
+  --soft-success:rgba(16,185,129,.15);
+  --soft-warning:rgba(245,158,11,.15);
+  --soft-danger:rgba(239,68,68,.15);
+  --btn-color:#ffffff;
+
+  /* page background — deep space navy (loginpage-5) */
+  --body-bg-solid:#0B1028;
+  --body-bg-image:radial-gradient(circle at 15% -10%,rgba(66,122,255,.50) 0%,transparent 45%),radial-gradient(circle at 88% 10%,rgba(138,92,255,.42) 0%,transparent 46%),linear-gradient(165deg,#0B1028 0%,#020617 55%,#0A0B22 100%);
+
+  /* brand gradient — electric blue */
+  --space-gradient:linear-gradient(100deg,#2937FF 0%,#1C5CFF 55%,#08D8EC 100%);
+
+  /* shape / typography */
+  --z-radius-card:12px;
+  --z-radius-btn:10px;
+  --z-radius-icon:10px;
+  --z-font-family:'Inter',sans-serif;
+}</style></head>
 <body>
   <div class="wrap">
     <div class="cardx">
       <div class="head">
-        <img class="brand-logo" src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="ZenRadius" onerror="this.style.display='none'">
+        <img class="brand-logo" src="/img/logo.png?v=1" alt="ZenRadius" onerror="this.style.display='none'">
         <p class="muted small mb-0 mx-auto brand-desc" style="max-width:480px;line-height:1.7;text-align:center;">Dapatkan voucher internet harian dan mingguan secara instan â€” pilih paket, bayar, dan langsung terhubung.</p>
         <div class="hero-steps">
           <span class="hero-step"><span class="hs-num">1</span><i class="bi bi-ui-checks-grid hs-icon"></i> Pilih Paket</span>
@@ -493,118 +529,17 @@
         </div>
       </div>
       <div class="body">
-        <% if (error) { %>
-          <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle me-2"></i><%= error %>
-          </div>
-        <% } %>
-        <% if (info) { %>
-          <div class="alert alert-success">
-            <i class="bi bi-check-circle me-2"></i><%= info %>
-          </div>
-        <% } %>
+        
+        
 
-        <% if (order) { %>
-          <% const st = String(order.status || 'pending'); %>
-          <div class="order-status-card mb-3">
-            <div class="order-status-head">
-              <div class="order-status-id">
-                <span class="order-status-label">Status Pesanan</span>
-                <span class="order-status-meta">Order #<%= order.id %> &middot; WA <%= order.buyer_phone %></span>
-              </div>
-              <% if (st === 'fulfilled') { %>
-                <span class="pill pill-p"><i class="bi bi-check-circle-fill"></i> Selesai</span>
-              <% } else if (st === 'paid') { %>
-                <span class="pill pill-u"><i class="bi bi-arrow-repeat spin-slow"></i> Diproses</span>
-              <% } else { %>
-                <span class="pill pill-u"><i class="bi bi-clock-history"></i> Menunggu Pembayaran</span>
-              <% } %>
-            </div>
-
-            <!-- Progress Stepper -->
-            <div class="order-steps">
-              <div class="order-step <%= 'is-done' %>">
-                <div class="order-step-dot"><i class="bi bi-check-lg"></i></div>
-                <div class="order-step-text">Pesanan Dibuat</div>
-              </div>
-              <div class="order-step-line <%= (st === 'paid' || st === 'fulfilled') ? 'is-done' : '' %>"></div>
-              <div class="order-step <%= (st === 'paid' || st === 'fulfilled') ? 'is-done' : (st === 'pending' ? 'is-active' : '') %>">
-                <div class="order-step-dot"><i class="bi <%= (st === 'paid' || st === 'fulfilled') ? 'bi-check-lg' : 'bi-credit-card' %>"></i></div>
-                <div class="order-step-text">Pembayaran</div>
-              </div>
-              <div class="order-step-line <%= st === 'fulfilled' ? 'is-done' : '' %>"></div>
-              <div class="order-step <%= st === 'fulfilled' ? 'is-done' : (st === 'paid' ? 'is-active' : '') %>">
-                <div class="order-step-dot"><i class="bi <%= st === 'fulfilled' ? 'bi-check-lg' : 'bi-ticket-perforated' %>"></i></div>
-                <div class="order-step-text">Voucher Siap</div>
-              </div>
-            </div>
-
-            <div class="order-detail-row">
-              <div class="order-detail-item">
-                <span class="order-detail-k">Paket</span>
-                <span class="order-detail-v"><%= order.profile_name %></span>
-              </div>
-              <div class="order-detail-item">
-                <span class="order-detail-k">Durasi</span>
-                <span class="order-detail-v"><%= order.validity || '-' %></span>
-              </div>
-              <div class="order-detail-item">
-                <span class="order-detail-k">Harga</span>
-                <span class="order-detail-v">Rp <%= Number(order.price || 0).toLocaleString('id-ID') %></span>
-              </div>
-            </div>
-
-            <% if (String(order.status) === 'fulfilled' && order.voucher_code) { %>
-              <div class="order-result order-result-success mt-3">
-                <div class="order-result-title"><i class="bi bi-patch-check-fill me-2"></i>Voucher Siap Digunakan</div>
-                <div class="order-result-codes">
-                  <div class="order-code-box order-code-box-single">
-                    <span class="order-code-k">Kode Voucher (Username &amp; Password)</span>
-                    <span class="order-code-v"><%= order.voucher_code %></span>
-                  </div>
-                </div>
-                <% if (Number(order.wa_sent || 0) === 1) { %>
-                  <div class="muted small mt-2"><i class="bi bi-whatsapp me-1"></i>Voucher berhasil dikirim ke WhatsApp Anda.</div>
-                <% } else if (order.wa_error) { %>
-                  <div class="text-warning small mt-2"><i class="bi bi-exclamation-triangle me-1"></i>Pengiriman WhatsApp gagal, namun voucher tetap aktif dan tersimpan.</div>
-                  <div class="muted small">Silakan catat/screenshot kode voucher di atas sebagai cadangan.</div>
-                <% } else { %>
-                  <div class="muted small mt-2">Simpan halaman ini sebagai cadangan jika notifikasi WhatsApp belum diterima.</div>
-                <% } %>
-              </div>
-            <% } else if (String(order.status) === 'paid') { %>
-              <div class="order-result order-result-info mt-3">
-                <div class="order-result-title"><i class="bi bi-stars me-2"></i>Pembayaran Berhasil Dikonfirmasi</div>
-                <div class="muted small">Voucher Anda sedang disiapkan secara otomatis dan akan tersedia sesaat lagi. Halaman ini akan diperbarui secara otomatis.</div>
-                <div class="order-progress-bar mt-2"><div class="order-progress-fill"></div></div>
-              </div>
-            <% } else if (String(order.status) === 'pending' && (String(order.payment_gateway || '') === 'qris_static' || order.qris_amount_unique)) { %>
-              <% if (orderToken) { %>
-                <a class="btn btn-primary btnx mt-3 w-100" href="/pelanggan/voucher/qris/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
-                  <i class="bi bi-qr-code-scan me-1"></i> Buka QRIS Statis
-                </a>
-              <% } else { %>
-                <div class="alert alert-warning mt-3 mb-0">Link QRIS tidak tersedia.</div>
-              <% } %>
-            <% } else if (String(order.status) === 'pending' && (order.payment_link || order.payment_payload)) { %>
-              <% if (orderToken) { %>
-                <a class="btn btn-primary btnx mt-3 w-100" href="/pelanggan/voucher/payment/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>">
-                  <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
-                </a>
-              <% } else { %>
-                <div class="alert alert-warning mt-3 mb-0">Instruksi pembayaran tidak tersedia.</div>
-              <% } %>
-            <% } %>
-          </div>
-          <hr style="border-color: rgba(148,163,184,.18)">
-        <% } %>
+        
 
         <form method="POST" action="/pelanggan/public/voucher/create-payment" class="d-grid gap-2" id="voucherForm">
           <!-- Hidden TOS state injector to bypass backend checks cleanly -->
           <input type="hidden" name="tos" value="1">
           <!-- Anti-bot: honeypot field (must stay empty) + form render timestamp (rejects instant/scripted submits) -->
           <input type="text" name="website" id="hp_website" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
-          <input type="hidden" name="form_ts" value="<%= Date.now() %>">
+          <input type="hidden" name="form_ts" value="1791360774884">
 
           <div class="row g-2">
             <div class="col-12">
@@ -613,42 +548,28 @@
                 <span>Pilih Paket Internet Terbaik</span>
                 <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--portal-line),transparent);margin-left:8px"></div>
               </div>
-              <% if (!profiles || profiles.length === 0) { %>
-                <div class="muted small mt-1">Belum ada profile voucher (metadata Mikhmon) di MikroTik.</div>
-              <% } else { %>
+              
                 <div class="voucher-grid mt-1">
-                  <%
-                    function formatCardValidity(value) {
-                      const raw = String(value || '-').trim();
-                      const match = raw.match(/^(\d+)\s*([wdhms])$/i);
-                      const units = { w: 'Minggu', d: 'Hari', h: 'Jam', m: 'Menit', s: 'Detik' };
-                      return match ? `${Number(match[1])} ${units[match[2].toLowerCase()]}` : raw;
-                    }
-                    (profiles || []).forEach((p, idx) => {
-                      const price = Number(p.price || 0);
-                      const priceText = price.toLocaleString('id-ID');
-                      const priceClass = priceText.length > 9 ? 'v-price-extra-long' : (priceText.length > 6 ? 'v-price-long' : '');
-                      const validityText = formatCardValidity(p.validity);
-                  %>
+                  
                     <input
                       class="voucher-radio"
                       type="radio"
                       name="profile_name"
-                      id="vprofile_<%= idx %>"
-                      value="<%= p.name %>"
-                      data-price="<%= price %>"
-                      data-validity="<%= validityText %>"
-                      aria-label="<%= p.name %>, Rp <%= priceText %>, <%= validityText %>"
+                      id="vprofile_0"
+                      value="Paket Hemat 30 Mbps"
+                      data-price="150000"
+                      data-validity="-"
+                      aria-label="Paket Hemat 30 Mbps, Rp 150.000, -"
                       aria-describedby="step1Hint"
-                      <%= idx === 0 ? 'required' : '' %>
+                      required
                     >
-                    <label class="voucher-card" for="vprofile_<%= idx %>">
+                    <label class="voucher-card" for="vprofile_0">
                       <span class="v-selected" aria-hidden="true"><i class="bi bi-check-circle-fill"></i> Dipilih</span>
                       <div class="v-brand" aria-hidden="true">
                         <div class="v-brand-logo-container">
-                          <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" alt="Logo" class="v-brand-real-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                          <img src="/img/logo.png?v=1" alt="Logo" class="v-brand-real-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                           <div class="v-brand-fallback-group" style="display:none">
-                            <span class="v-brand-name"><%= settings.company_header || 'WiFi' %></span>
+                            <span class="v-brand-name">ZenRadius</span>
                             <span class="v-brand-sub">HOTSPOT</span>
                           </div>
                         </div>
@@ -656,11 +577,11 @@
                       <span class="v-tagline">Internet Cepat, Hidup Lebih Mudah</span>
                       <span class="v-ribbon">VOUCHER INTERNET</span>
                       <span class="v-offer">
-                        <span class="voucher-price <%= priceClass %>"><span class="v-currency">Rp</span><%= priceText %></span>
+                        <span class="voucher-price v-price-long"><span class="v-currency">Rp</span>150.000</span>
                         <span class="v-divider" aria-hidden="true"></span>
-                        <span class="v-validity <%= validityText.length > 9 ? 'v-validity-long' : '' %>"><%= validityText %></span>
+                        <span class="v-validity ">-</span>
                       </span>
-                      <span class="v-package" title="<%= p.name %>"><%= p.name %></span>
+                      <span class="v-package" title="Paket Hemat 30 Mbps">Paket Hemat 30 Mbps</span>
                       <span class="v-benefits">
                         <span class="v-benefit">
                           <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></span>
@@ -677,13 +598,109 @@
                       </span>
                       <span class="v-signature" aria-hidden="true">Stay<br>Connected</span>
                     </label>
-                  <% }) %>
+                  
+                    <input
+                      class="voucher-radio"
+                      type="radio"
+                      name="profile_name"
+                      id="vprofile_1"
+                      value="Paket Keluarga 50 Mbps"
+                      data-price="250000"
+                      data-validity="-"
+                      aria-label="Paket Keluarga 50 Mbps, Rp 250.000, -"
+                      aria-describedby="step1Hint"
+                      
+                    >
+                    <label class="voucher-card" for="vprofile_1">
+                      <span class="v-selected" aria-hidden="true"><i class="bi bi-check-circle-fill"></i> Dipilih</span>
+                      <div class="v-brand" aria-hidden="true">
+                        <div class="v-brand-logo-container">
+                          <img src="/img/logo.png?v=1" alt="Logo" class="v-brand-real-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                          <div class="v-brand-fallback-group" style="display:none">
+                            <span class="v-brand-name">ZenRadius</span>
+                            <span class="v-brand-sub">HOTSPOT</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span class="v-tagline">Internet Cepat, Hidup Lebih Mudah</span>
+                      <span class="v-ribbon">VOUCHER INTERNET</span>
+                      <span class="v-offer">
+                        <span class="voucher-price v-price-long"><span class="v-currency">Rp</span>250.000</span>
+                        <span class="v-divider" aria-hidden="true"></span>
+                        <span class="v-validity ">-</span>
+                      </span>
+                      <span class="v-package" title="Paket Keluarga 50 Mbps">Paket Keluarga 50 Mbps</span>
+                      <span class="v-benefits">
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></span>
+                          <span>Akses<br>Cepat</span>
+                        </span>
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
+                          <span>Aman<br>&amp; Stabil</span>
+                        </span>
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-phone"></i></span>
+                          <span>Bisa di Semua<br>Perangkat</span>
+                        </span>
+                      </span>
+                      <span class="v-signature" aria-hidden="true">Stay<br>Connected</span>
+                    </label>
+                  
+                    <input
+                      class="voucher-radio"
+                      type="radio"
+                      name="profile_name"
+                      id="vprofile_2"
+                      value="Paket Bisnis 100 Mbps"
+                      data-price="400000"
+                      data-validity="-"
+                      aria-label="Paket Bisnis 100 Mbps, Rp 400.000, -"
+                      aria-describedby="step1Hint"
+                      
+                    >
+                    <label class="voucher-card" for="vprofile_2">
+                      <span class="v-selected" aria-hidden="true"><i class="bi bi-check-circle-fill"></i> Dipilih</span>
+                      <div class="v-brand" aria-hidden="true">
+                        <div class="v-brand-logo-container">
+                          <img src="/img/logo.png?v=1" alt="Logo" class="v-brand-real-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                          <div class="v-brand-fallback-group" style="display:none">
+                            <span class="v-brand-name">ZenRadius</span>
+                            <span class="v-brand-sub">HOTSPOT</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span class="v-tagline">Internet Cepat, Hidup Lebih Mudah</span>
+                      <span class="v-ribbon">VOUCHER INTERNET</span>
+                      <span class="v-offer">
+                        <span class="voucher-price v-price-long"><span class="v-currency">Rp</span>400.000</span>
+                        <span class="v-divider" aria-hidden="true"></span>
+                        <span class="v-validity ">-</span>
+                      </span>
+                      <span class="v-package" title="Paket Bisnis 100 Mbps">Paket Bisnis 100 Mbps</span>
+                      <span class="v-benefits">
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></span>
+                          <span>Akses<br>Cepat</span>
+                        </span>
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
+                          <span>Aman<br>&amp; Stabil</span>
+                        </span>
+                        <span class="v-benefit">
+                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-phone"></i></span>
+                          <span>Bisa di Semua<br>Perangkat</span>
+                        </span>
+                      </span>
+                      <span class="v-signature" aria-hidden="true">Stay<br>Connected</span>
+                    </label>
+                  
                 </div>
                 <div class="p-3 mt-3 rounded-3" style="background:rgba(45,212,191,0.04);border:1px solid var(--portal-line);display:flex;align-items:start;gap:10px;" id="step1Hint">
                   <i class="bi bi-info-circle" style="color:var(--portal-primary);font-size:15px;margin-top:2px"></i>
                   <span style="font-size:12.5px;line-height:1.5;color:rgba(168,190,194,0.95)">Pilih salah satu paket voucher di atas untuk melanjutkan ke pengisian nomor WhatsApp dan proses pembayaran. Perlu diperhatikan, <strong style="color:#fff">satu kode voucher hanya berlaku untuk satu perangkat</strong> â€” kode yang telah diaktivasi pada perangkat pertama tidak dapat digunakan kembali pada perangkat lain.</span>
                 </div>
-              <% } %>
+              
             </div>
           </div>
 
@@ -726,81 +743,67 @@
                 <!-- Payment channels inside popup -->
                 <div class="mb-2">
                   <div class="c-modal-section-label"><i class="bi bi-credit-card-2-front"></i> Pilih Metode Pembayaran</div>
-                  <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
-                  <% if (!hasStaticQris && (!paymentChannels || paymentChannels.length === 0)) { %>
-                    <input type="hidden" name="method" value="QRIS">
-                    <div class="pm-item-modal" style="cursor:default;grid-column:1/-1">
-                      <div class="pm-icon"><i class="bi bi-qr-code-scan"></i></div>
-                      <span class="pm-label">QRIS Otomatis</span>
-                    </div>
-                  <% } else { %>
+                  
+                  
                     <div class="pm-grid-modal">
-                      <% if (hasStaticQris) { %>
+                      
+                      
                         <input
                           class="pm-radio-modal"
                           type="radio"
                           name="method"
-                          id="pm_static"
-                          value="QRIS_STATIC"
+                          id="pm_0"
+                          value="QRIS"
                           checked
                           style="position:absolute;opacity:0;pointer-events:none"
                         >
-                        <label class="pm-item-modal" for="pm_static">
-                          <div class="pm-icon"><i class="bi bi-qr-code-scan"></i></div>
-                          <span class="pm-label">QRIS Statis</span>
+                        <label class="pm-item-modal" for="pm_0">
+                          <div class="pm-icon">
+                            
+                              <i class="bi-qr-code-scan"></i>
+                            
+                          </div>
+                          <span class="pm-label">QRIS Otomatis</span>
                         </label>
-                      <% } %>
-                      <% paymentChannels.forEach((ch, idx) => {
-                        const code = String(ch.code || '').toUpperCase();
-                        const name = ch.name || code;
-                        const group = String(ch.group || '').toLowerCase();
-                        const isQris = code === 'QRIS' || code.includes('QRIS');
-                        const isVa = code.includes('VA') || group.includes('virtual');
-                        const displayName = isQris ? 'QRIS Otomatis' : (isVa ? String(name).replace(/Virtual Account/i, 'VA') : name);
-                        let icon = 'bi-wallet2';
-
-                        if (isQris) {
-                          icon = 'bi-qr-code-scan';
-                        } else if (code.includes('DANA')) {
-                          icon = 'bi-wallet2';
-                        } else if (code.includes('OVO')) {
-                          icon = 'bi-wallet2';
-                        } else if (code.includes('SHOPEE')) {
-                          icon = 'bi-wallet2';
-                        } else if (code.includes('LINKAJA')) {
-                          icon = 'bi-wallet2';
-                        } else if (code.includes('GOPAY')) {
-                          icon = 'bi-wallet2';
-                        } else if (isVa) {
-                          icon = 'bi-bank';
-                        } else if (code.includes('SNAP') || code.includes('XENDIT') || code.includes('DUITKU')) {
-                          icon = 'bi-credit-card';
-                        }
-                      %>
+                      
                         <input
                           class="pm-radio-modal"
                           type="radio"
                           name="method"
-                          id="pm_<%= idx %>"
-                          value="<%= code %>"
-                          <%= (!hasStaticQris && idx === 0) ? 'checked' : '' %>
+                          id="pm_1"
+                          value="BCAVA"
+                          
                           style="position:absolute;opacity:0;pointer-events:none"
                         >
-                        <label class="pm-item-modal" for="pm_<%= idx %>">
+                        <label class="pm-item-modal" for="pm_1">
                           <div class="pm-icon">
-                            <% if (ch.icon_url) { %>
-                              <img src="<%= ch.icon_url %>" alt="<%= name %>">
-                            <% } else if (isVa && typeof bankLogoFor === 'function' && bankLogoFor(code)) { %>
-                              <i class="bi bi-bank" style="color:<%= bankLogoFor(code) %>"></i>
-                            <% } else { %>
-                              <i class="<%= icon %>"></i>
-                            <% } %>
+                            
+                              <i class="bi-bank"></i>
+                            
                           </div>
-                          <span class="pm-label"><%= displayName %></span>
+                          <span class="pm-label">BCA VA</span>
                         </label>
-                      <% }) %>
+                      
+                        <input
+                          class="pm-radio-modal"
+                          type="radio"
+                          name="method"
+                          id="pm_2"
+                          value="DANA"
+                          
+                          style="position:absolute;opacity:0;pointer-events:none"
+                        >
+                        <label class="pm-item-modal" for="pm_2">
+                          <div class="pm-icon">
+                            
+                              <i class="bi-wallet2"></i>
+                            
+                          </div>
+                          <span class="pm-label">DANA</span>
+                        </label>
+                      
                     </div>
-                  <% } %>
+                  
                 </div>
 
               </div>
@@ -811,17 +814,13 @@
                 </button>
               </div>
             </div>
-            <div class="form-check form-check-inline ms-3">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" required>
-              <label class="form-check-label" for="inlineCheckbox1">Saya setuju dengan <a href="/tos" target="_blank" class="text-decoration-underline">Syarat & Ketentuan</a></label>
-            </div>
           </div>
         </form>
 
-        <footer class="site-footer" style="background:var(--portal-bg, #173945);border-top:1px solid rgba(190,239,255,0.32);padding:20px 16px 16px;margin-top:32px;border-radius:0 0 16px 16px;position:relative;">
+        <footer class="site-footer" style="background:var(--portal-bg, #173945);border-top:1px solid rgba(190,239,255,0.32);padding:26px 0 18px;margin-top:32px;margin-left:-20px;margin-right:-20px;margin-bottom:-20px;border-radius:0 0 16px 16px">
           <div class="container text-center">
             <div class="footer-bottom text-center" style="font-family:var(--font-sans);font-size:0.8rem;color:rgba(237, 250, 250, 0.72);margin-top:4px;padding-top:0">
-              &copy; <%= new Date().getFullYear() %> <%- footerInfo %>
+              &copy; 2026 ZenRadius
             </div>
           </div>
         </footer>
@@ -862,12 +861,6 @@
       });
     })();
   </script>
-  <% if (order && (String(order.status) === 'paid' || String(order.status) === 'pending') && !order.voucher_code) { %>
-  <script>
-    setTimeout(() => {
-      try { window.location.reload(); } catch (e) {}
-    }, 5000);
-  </script>
-  <% } %>
+  
 </body>
 </html>
