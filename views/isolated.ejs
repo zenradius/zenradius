@@ -63,9 +63,6 @@
     .method-option{border:1px solid color-mix(in srgb, var(--border, rgba(124,221,218,.16)) 90%, transparent);border-radius:12px;padding:11px 13px;background:rgba(255,255,255,.03);cursor:pointer;transition:all .2s ease;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted,#a8bec2);font-weight:500;text-align:left;}
     .method-option:hover{border-color:var(--primary,#2dd4bf);background:color-mix(in srgb, var(--primary,#2dd4bf) 10%, transparent);}
     .method-option input[type="radio"]{accent-color:var(--primary,#2dd4bf);width:15px;height:15px;flex:0 0 auto;}
-    .chk-group{display:flex;align-items:flex-start;gap:9px;margin:13px 0;padding:10px 12px;background:color-mix(in srgb, var(--primary,#2dd4bf) 6%, transparent);border-radius:10px;border:1px solid color-mix(in srgb, var(--primary,#2dd4bf) 14%, transparent);text-align:left;}
-    .chk-group input[type="checkbox"]{accent-color:var(--primary,#2dd4bf);width:15px;height:15px;margin-top:2px;flex:0 0 auto;cursor:pointer;}
-    .chk-group label{cursor:pointer;font-size:11px;color:var(--muted,#a8bec2);line-height:1.4;user-select:none;}
     .status-msg{padding:10px;border-radius:9px;margin-top:10px;text-align:center;font-weight:600;font-size:12px;}
     .status-msg.loading{background:color-mix(in srgb, var(--primary,#2dd4bf) 10%, transparent);color:var(--primary,#2dd4bf);display:flex;align-items:center;justify-content:center;gap:6px;}
     .status-msg.success{background:rgba(74,222,128,.12);color:#4ade80;}
@@ -190,12 +187,7 @@
           <% }) %>
         </div>
 
-        <div class="chk-group">
-          <input type="checkbox" id="tosCheckbox" name="accept_tos" value="1" required />
-          <label for="tosCheckbox">Saya menyetujui detail tagihan &amp; ketentuan pembayaran otomatis</label>
-        </div>
-
-        <button type="button" class="btnx btn-primary btn-full" id="submitBtn" disabled
+        <button type="button" class="btnx btn-primary btn-full" id="submitBtn"
                 data-invoice-id="<%= invoices[0].id %>"
                 data-public-token="<%= invoices[0].publicToken %>"
                 onclick="goToPayment(this)">
@@ -296,15 +288,6 @@
 
 <% if (customer && hasUnpaidInvoices) { %>
   <script>
-    const tosCheckbox = document.getElementById('tosCheckbox');
-    const submitBtn = document.getElementById('submitBtn');
-
-    if (tosCheckbox && submitBtn) {
-      tosCheckbox.addEventListener('change', () => {
-        submitBtn.disabled = !tosCheckbox.checked;
-      });
-    }
-
     function goToPayment(btn) {
       const invoiceId = btn.getAttribute('data-invoice-id');
       const publicToken = btn.getAttribute('data-public-token');
