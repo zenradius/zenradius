@@ -1382,43 +1382,64 @@ function renderIsolatedStatus(req, res) {
 
 app.get('/isolated/status', renderIsolatedStatus);
 app.get('/isolir/status', renderIsolatedStatus);
+function isGatewayReady(settings, g) {
+  if (g === 'tripay') return !!(settings.tripay_enabled && settings.tripay_api_key);
+  if (g === 'midtrans') return !!(settings.midtrans_enabled && settings.midtrans_server_key);
+  if (g === 'xendit') return !!(settings.xendit_enabled && settings.xendit_api_key);
+  if (g === 'duitku') return !!(settings.duitku_enabled && settings.duitku_api_key);
+  if (g === 'ipaymu') return !!(settings.ipaymu_enabled && settings.ipaymu_api_key);
+  if (g === 'qris_static') return !!(settings.qris_static_enabled && settings.qris_static_payload);
+  return false;
+}
+
+function resolveGatewayForIsolated(settings) {
+  const def = String(settings?.default_gateway || 'tripay').toLowerCase();
+  const order = ['ipaymu', 'tripay', 'midtrans', 'xendit', 'duitku', 'qris_static'];
+  if (isGatewayReady(settings, def)) return def;
+  for (const g of order) if (isGatewayReady(settings, g)) return g;
+  return null;
+}
+
 function getActivePaymentChannelsForIsolated(settings) {
   const channels = [];
-  
-  if (settings.qris_static_enabled && settings.qris_static_payload) {
-    channels.push({
-      code: 'QRIS_STATIC',
-      name: '🟦 QRIS Statis (Instant)',
-      enabled: true
-    });
+  const gateway = resolveGatewayForIsolated(settings);
+
+  const isVirtualAcct = (code) => String(code || '').toUpperCase().includes('VA') || String(code || '').toUpperCase().endsWith('VA');
+
+  if (gateway === 'qris_static') {
+    channels.push({ code: 'QRIS_STATIC', name: 'QRIS Statis (Instant)', group: 'QRIS', enabled: true });
+  } else {
+    // Tampilkan pilihan QRIS + Virtual Account bank sama seperti portal lain
+    if (gateway === 'tripay') {
+      channels.push({ code: 'QRIS', name: 'QRIS', group: 'QRIS', enabled: true });
+      channels.push({ code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', enabled: true });
+    } else if (gateway === 'midtrans') {
+      channels.push({ code: 'SNAP', name: 'Semua Metode (Snap)', group: 'E-Wallet', enabled: true });
+      channels.push({ code: 'QRIS', name: 'QRIS', group: 'QRIS', enabled: true });
+      channels.push({ code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', enabled: true });
+    } else if (gateway === 'xendit' || gateway === 'duitku' || gateway === 'ipaymu') {
+      channels.push({ code: 'QRIS', name: 'QRIS', group: 'QRIS', enabled: true });
+      channels.push({ code: 'BCAVA', name: 'BCA Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'BNIVA', name: 'BNI Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'BRIVA', name: 'BRI Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'PERMATAVA', name: 'Permata Virtual Account', group: 'Virtual Account', enabled: true });
+      channels.push({ code: 'MANDIRIVA', name: 'Mandiri Virtual Account', group: 'Virtual Account', enabled: true });
+    }
+    if (channels.length === 0) {
+      channels.push({ code: 'QRIS_STATIC', name: 'QRIS Statis (Instant)', group: 'QRIS', enabled: false });
+    }
   }
-  
-  if (settings.tripay_enabled && settings.tripay_api_key) {
-    channels.push({
-      code: 'TRIPAY',
-      name: '💳 Transfer Bank / E-Wallet (Tripay)',
-      enabled: true
-    });
-  }
-  
-  if (settings.midtrans_enabled && settings.midtrans_server_key) {
-    channels.push({
-      code: 'MIDTRANS',
-      name: '💳 Midtrans Snap',
-      enabled: true
-    });
-  }
-  
-  if (settings.xendit_enabled && settings.xendit_api_key) {
-    channels.push({
-      code: 'XENDIT',
-      name: '💳 Xendit',
-      enabled: true
-    });
-  }
-  
+
   return channels.length > 0 ? channels : [
-    { code: 'QRIS_STATIC', name: '🟦 QRIS Statis', enabled: false }
+    { code: 'QRIS_STATIC', name: 'QRIS Statis', enabled: false }
   ];
 }
 

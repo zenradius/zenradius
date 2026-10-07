@@ -171,14 +171,14 @@
             const code = String(chan.code || '').toUpperCase();
             const isQris = code.includes('QRIS');
             const isVa = code.includes('VA') || String(chan.group || '').toLowerCase().includes('virtual');
-            const displayName = code === 'QRIS_STATIC' ? 'QRIS Statis' : (isQris ? 'QRIS Otomatis' : (isVa ? String(chan.name || code).replace(/Virtual Account/i, 'VA') : chan.name));
+            const displayName = code === 'QRIS_STATIC' ? 'QRIS Statis' : (isQris ? 'QRIS' : (isVa ? String(chan.name || code).replace(/Virtual Account/i, 'VA') : chan.name));
             const bankColor = isVa && typeof bankLogoFor === 'function' ? bankLogoFor(code) : '';
           %>
             <label class="method-option">
               <input type="radio" name="payment_method" value="<%= chan.code %>" <%= idx === 0 ? 'checked' : '' %>>
-              <span style="display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px;width:26px;">
                 <% if (isQris) { %>
-                  <i class="bi bi-qr-code-scan" style="font-size:20px;color:var(--primary,#2dd4bf);"></i>
+                  <i class="bi bi-qr-code-scan" style="font-size:19px;color:var(--primary,#2dd4bf);"></i>
                 <% } else if (isVa) { %>
                   <i class="bi bi-bank" style="<%= bankColor ? 'color:' + bankColor : '' %>"></i>
                 <% } else { %>
