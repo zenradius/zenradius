@@ -1,35 +1,361 @@
-// Tulis ulang views/isolated.ejs dengan desain mirip 404
-const fs = require('fs');
-const P = 'views/isolated.ejs';
-let o = '';
+<!DOCTYPE html>
+<html lang="id" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= (customer && !hasUnpaidInvoices) ? 'Layanan Aktif' : 'Layanan Terisolir' %> | <%= company %></title>
+  <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/unified.css">
+  <link rel="stylesheet" href="/css/theme-tokens.css">
+  <script src="/js/app-ui.js" defer></script>
+  <style>
+:root{--font-sans:'Plus Jakarta Sans','Inter',system-ui,-apple-system,sans-serif;--font-display:'Space Grotesk','Plus Jakarta Sans',sans-serif;}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--body-bg-solid, #101820);background-image:var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%), radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%), linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));color:var(--text, #edf7f5);font-family:var(--font-sans);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;-webkit-tap-highlight-color:transparent;overflow-x:hidden;}
+    .bg-grid{position:fixed;inset:0;pointer-events:none;opacity:.5;background-image:linear-gradient(color-mix(in srgb, var(--primary,#2dd4bf) 7%, transparent) 1px, transparent 1px),linear-gradient(90deg, color-mix(in srgb, var(--primary,#2dd4bf) 7%, transparent) 1px, transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse at center, black 30%, transparent 75%);mask-image:radial-gradient(ellipse at center, black 30%, transparent 75%);}
+    .blob{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.28}
+    .blob-1{width:340px;height:340px;background:var(--primary,#2dd4bf);top:-120px;left:-80px;animation:drift 14s ease-in-out infinite}
+    .blob-2{width:380px;height:380px;background:var(--accent,#22a7f0);bottom:-140px;right:-100px;animation:drift 18s ease-in-out infinite reverse}
+    @keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-24px)}}
+    .box{position:relative;z-index:2;max-width:720px;width:100%;text-align:center;background:color-mix(in srgb, var(--bg2, #173945) 90%, transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid color-mix(in srgb, var(--border, rgba(124,221,218,.22)) 70%, transparent);border-radius:28px;padding:32px 30px 26px;box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);animation:floatIn .5s cubic-bezier(.21,1.02,.73,1);}
+    @keyframes floatIn{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+    .scene{position:relative;width:100%;height:104px;margin:0 auto 0}
+    .scene .router{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:92px;height:26px;border-radius:13px;background:linear-gradient(135deg, color-mix(in srgb, var(--bg3, #1b4656) 92%, transparent), color-mix(in srgb, var(--bg2, #173945) 94%, transparent));border:1px solid color-mix(in srgb, var(--border, rgba(124,221,218,.35)) 80%, transparent);box-shadow:0 10px 24px rgba(0,0,0,.4), 0 0 0 5px color-mix(in srgb, var(--primary,#2dd4bf) 14%, transparent);animation:routerPulse 3s ease-in-out infinite;z-index:3;}
+    .scene .router::before{content:'';position:absolute;top:7px;left:16px;width:5px;height:5px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;}
+    @keyframes routerPulse{0%,100%{box-shadow:0 10px 24px rgba(0,0,0,.4),0 0 0 5px color-mix(in srgb, var(--primary,#2dd4bf) 14%, transparent)}50%{box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 10px color-mix(in srgb, var(--primary,#2dd4bf) 25%, transparent)}}
+    .bars{position:absolute;left:50%;transform:translateX(-50%);bottom:26px;display:flex;align-items:flex-end;gap:5px;z-index:2}
+    .bars span{width:9px;border-radius:4px 4px 2px 2px;background:linear-gradient(180deg,var(--primary,#2dd4bf),var(--accent,#22a7f0));opacity:.95}
+    .bars .b1{height:14px;animation:wave 1.4s ease-in-out infinite}.bars .b2{height:22px;animation:wave 1.4s .15s ease-in-out infinite}.bars .b3{height:32px;animation:wave 1.4s .3s ease-in-out infinite}.bars .b4{height:46px;animation:wave 1.4s .45s ease-in-out infinite}.bars .b5{height:26px;animation:wave 1.4s .6s ease-in-out infinite}
+    @keyframes wave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+    .bars .cut{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(45deg);width:64px;height:6px;border-radius:99px;background:#f87171;box-shadow:0 0 16px rgba(248,113,113,.7);animation:cutFlash 1.4s ease-in-out infinite;z-index:3;}
+    @keyframes cutFlash{0%,100%{opacity:.5}50%{opacity:1}}
+    .badge-status{display:inline-flex;align-items:center;gap:6px;margin:0 auto 12px;padding:5px 14px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--primary,#2dd4bf);background:color-mix(in srgb, var(--primary,#2dd4bf) 12%, transparent);border:1px solid color-mix(in srgb, var(--primary,#2dd4bf) 30%, transparent);}
+    .badge-status.is-error{color:#ff7b72;background:color-mix(in srgb,#ff7b72 12%,transparent);border-color:color-mix(in srgb,#ff7b72 30%,transparent);}
+    .badge-status.is-success{color:#4ade80;background:color-mix(in srgb,#4ade80 12%,transparent);border-color:color-mix(in srgb,#4ade80 30%,transparent);}
+    .code{font-size:54px;font-weight:800;line-height:.95;font-family:var(--font-display);background:linear-gradient(135deg, var(--primary,#2dd4bf) 0%, var(--accent,#22a7f0) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block;letter-spacing:-2px;margin-bottom:10px;}
+    h1.title{font-size:23px;font-weight:800;letter-spacing:-.3px;margin:0 0 8px;}
+    p.sub{color:var(--muted,#a8bec2);font-size:13.5px;line-height:1.65;margin:0 auto 18px;max-width:460px;}
+    .panel-content{text-align:left;margin:0 auto;max-width:520px;}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:6px 0 18px;}
+    .btnx{border-radius:14px;font-weight:700;padding:12px 22px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform .18s, box-shadow .18s, filter .18s;font-size:13.5px;border:none;cursor:pointer;}
+    .btnx:hover{transform:translateY(-2px);filter:brightness(1.06)}
+    .btn-primary{background:linear-gradient(135deg, var(--primary,#2dd4bf), var(--accent,#22a7f0));color:var(--btn-color, #06121a);box-shadow:0 10px 26px color-mix(in srgb, var(--primary,#2dd4bf) 28%, transparent);}
+    .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+    .btn-ghost{border:1px solid color-mix(in srgb, var(--border, rgba(190,239,255,.24)) 90%, transparent);color:var(--text,#e5fffc);background:color-mix(in srgb, var(--btn-g-bg, rgba(190,239,255,.06)) 90%, transparent);}
+    .btn-ghost:hover{background:color-mix(in srgb, var(--primary,#2dd4bf) 12%, transparent);border-color:color-mix(in srgb, var(--primary,#2dd4bf) 40%, transparent);}
+    .btn-full{width:100%;justify-content:center;}
+    .divider{display:flex;align-items:center;gap:12px;color:var(--muted, rgba(168,190,194,.5));font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:4px 0 14px;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:color-mix(in srgb, var(--border, rgba(124,221,218,.12)) 90%, transparent);}
+    .info-list{display:grid;gap:8px;margin-top:4px;}
+    .info-item{background:rgba(255,255,255,.03);border:1px solid color-mix(in srgb, var(--border, rgba(124,221,218,.14)) 90%, transparent);border-radius:12px;padding:9px 13px;display:flex;align-items:center;gap:11px;text-align:left;}
+    .info-icon{width:30px;height:30px;background:color-mix(in srgb, var(--primary,#2dd4bf) 12%, transparent);color:var(--primary,#2dd4bf);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto;}
+    .info-label{font-size:9px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;color:var(--muted,#8fb0b5);display:block;}
+    .info-value{font-size:12.5px;font-weight:700;color:var(--text,#e5fffc);display:block;word-break:break-all;}
+    .inv-item{background:rgba(255,255,255,.03);border:1px solid color-mix(in srgb, var(--border, rgba(124,221,218,.14)) 90%, transparent);border-radius:12px;padding:10px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    .inv-period{font-size:12.5px;font-weight:600;}
+    .inv-amount{font-size:13px;font-weight:700;color:var(--primary,#2dd4bf);white-space:nowrap;}
+    .method-option{border:1px solid color-mix(in srgb, var(--border, rgba(124,221,218,.16)) 90%, transparent);border-radius:12px;padding:11px 13px;background:rgba(255,255,255,.03);cursor:pointer;transition:all .2s ease;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted,#a8bec2);font-weight:500;text-align:left;}
+    .method-option:hover{border-color:var(--primary,#2dd4bf);background:color-mix(in srgb, var(--primary,#2dd4bf) 10%, transparent);}
+    .method-option input[type="radio"]{accent-color:var(--primary,#2dd4bf);width:15px;height:15px;flex:0 0 auto;}
+    .chk-group{display:flex;align-items:flex-start;gap:9px;margin:13px 0;padding:10px 12px;background:color-mix(in srgb, var(--primary,#2dd4bf) 6%, transparent);border-radius:10px;border:1px solid color-mix(in srgb, var(--primary,#2dd4bf) 14%, transparent);text-align:left;}
+    .chk-group input[type="checkbox"]{accent-color:var(--primary,#2dd4bf);width:15px;height:15px;margin-top:2px;flex:0 0 auto;cursor:pointer;}
+    .chk-group label{cursor:pointer;font-size:11px;color:var(--muted,#a8bec2);line-height:1.4;user-select:none;}
+    .status-msg{padding:10px;border-radius:9px;margin-top:10px;text-align:center;font-weight:600;font-size:12px;}
+    .status-msg.loading{background:color-mix(in srgb, var(--primary,#2dd4bf) 10%, transparent);color:var(--primary,#2dd4bf);display:flex;align-items:center;justify-content:center;gap:6px;}
+    .status-msg.success{background:rgba(74,222,128,.12);color:#4ade80;}
+    .status-msg.error{background:rgba(255,123,114,.12);color:#ff7b72;}
+    .spinner{display:inline-block;width:13px;height:13px;border:2px solid color-mix(in srgb, var(--primary,#2dd4bf) 20%, transparent);border-top-color:var(--primary,#2dd4bf);border-radius:50%;animation:spin .6s linear infinite;flex:0 0 auto;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .scroll-inv{max-height:120px;overflow-y:auto;margin-bottom:12px;padding-right:2px;}
+    .foot{margin-top:26px;padding-top:14px;border-top:1px solid color-mix(in srgb, var(--border, rgba(124,221,218,.12)) 90%, transparent);font-size:11px;color:var(--muted,rgba(168,190,194,.6));text-align:center;}
+    .foot a{color:var(--primary,#2dd4bf);text-decoration:none;font-weight:700;}
+    .foot a:hover{text-decoration:underline;}
+    @media(max-width:560px){
+      .box{padding:26px 18px 22px;border-radius:22px;}
+      .code{font-size:44px;}
+      h1.title{font-size:20px;}
+      .btnx{width:100%;justify-content:center;}
+    }  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+<div class="box">
+    <div class="scene" aria-hidden="true">
+      <div class="bars">
+        <span class="b1"></span><span class="b2"></span><span class="b3"></span><span class="b4"></span><span class="b5"></span>
+        <% if (!(customer && !hasUnpaidInvoices)) { %><span class="cut"></span><% } %>
+      </div>
+      <div class="router"></div>
+    </div>
 
-o += '<!DOCTYPE html>\n';
-o += '<html lang="id" data-app-theme="<%= typeof appTheme !== \'undefined\' ? appTheme : \'current\' %>">\n';
-o += '<head>\n';
-o += '  <meta charset="UTF-8">\n';
-o += '  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">\n';
-o += '  <title><%= (customer && !hasUnpaidInvoices) ? \'Layanan Aktif\' : \'Layanan Terisolir\' %> | <%= company %></title>\n';
-o += '  <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">\n';
-o += '  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">\n';
-o += '  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">\n';
-o += '  <link rel="preconnect" href="https://fonts.googleapis.com">\n';
-o += '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n';
-o += '  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">\n';
-o += '  <link rel="stylesheet" href="/css/style.css">\n';
-o += '  <link rel="stylesheet" href="/css/unified.css">\n';
-o += '  <link rel="stylesheet" href="/css/theme-tokens.css">\n';
-o += '  <script src="/js/app-ui.js" defer></script>\n';
-o += '  <style>\n';
-o += CSS_PART1;
-o += CSS_PART2;
-o += '  </style>\n';
-o += '</head>\n';
-o += '<body>\n';
-o += '  <div class="bg-grid"></div>\n';
-o += '  <div class="blob blob-1"></div>\n';
-o += '  <div class="blob blob-2"></div>\n';
-o += BODY_PART;
-o += '\n</body>\n</html>\n';
+    <% if (customer && !hasUnpaidInvoices) { %>
+      <div class="badge-status is-success"><i class="bi bi-check-circle-fill"></i> Sinyal Terhubung</div>
+      <h1 class="title">Layanan Aktif</h1>
+      <p class="sub">Seluruh tagihan Anda telah terlunasi secara penuh. Sistem sedang memproses pembukaan isolir untuk memulihkan koneksi internet Anda.</p>
+    <% } else if (customer) { %>
+      <div class="badge-status is-error"><i class="bi bi-wifi-off"></i> Layanan Terisolir</div>
+      <h1 class="title">Akses Ditangguhkan Sementara</h1>
+      <p class="sub">Akses internet Anda ditangguhkan karena masa aktif paket telah berakhir. Segera lakukan pelunasan tagihan di bawah ini untuk memulihkan koneksi secara instan.</p>
+    <% } else { %>
+      <div class="badge-status is-error"><i class="bi bi-wifi-off"></i> Menunggu Pembayaran</div>
+      <h1 class="title">Konfirmasi Transaksi</h1>
+      <p class="sub">Sistem tidak dapat mengidentifikasi ID pelanggan secara otomatis melalui jalur koneksi ini. Silakan periksa status tagihan Anda secara manual dengan memasukkan nomor WhatsApp terdaftar.</p>
+    <% } %>
 
-fs.writeFileSync(P, o, 'utf8');
-console.log('Ditulis: ' + P + ' (' + o.length + ' chars)');
+    <div class="panel-content">
+<% if (!customer) { %>
+      <div class="actions">
+        <a href="/cek-tagihan" class="btnx btn-primary"><i class="bi bi-search"></i> Cek Tagihan</a>
+        <button type="button" id="btn-install-pwa" class="btnx btn-ghost" style="margin:0;">
+          <i class="bi bi-download"></i> Aplikasi Pelanggan
+        </button>
+      </div>
+      <a href="/pelanggan/login" class="btnx btn-ghost btn-full"><i class="bi bi-box-arrow-in-right"></i> Login Pelanggan</a>
+    <% } %>
+
+    <% if (customer && !hasUnpaidInvoices) { %>
+      <div class="info-list" style="margin-bottom:16px;">
+        <div class="info-item">
+          <div class="info-icon"><i class="bi bi-person-fill"></i></div>
+          <div style="min-width:0;flex:1;">
+            <span class="info-label">Nama Pelanggan</span>
+            <span class="info-value"><%= customer.name %></span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon"><i class="bi bi-phone"></i></div>
+          <div style="min-width:0;flex:1;">
+            <span class="info-label">Kontak</span>
+            <span class="info-value"><%= customer.phone %></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-msg loading">
+        <div class="spinner"></div> Tagihan Lunas! Menyambungkan akses...
+      </div>
+      <div style="height:10px;"></div>
+      <form action="/pelanggan/reconnect" method="POST" style="margin:0;" onsubmit="handleReconnect(event, this)">
+        <button type="submit" class="btnx btn-primary btn-full" id="reconnectBtn">
+          <i class="bi bi-arrow-repeat"></i> Aktifkan Sekarang (Re-Connect)
+        </button>
+      </form>
+      <div id="reconnectMsg"></div>
+      <p style="font-size:10.5px;color:var(--muted,#8fb0b5);margin:10px auto 0;text-align:center;">Halaman akan mereload otomatis. Jika belum tersambung dalam 30 detik, silakan klik tombol reconnect di atas.</p>
+    <% } %>
+<% if (customer && hasUnpaidInvoices) { %>
+      <p style="font-size:12px;color:var(--muted,#a8bec2);text-align:center;margin:0 auto 10px;line-height:1.5;">Yth. Pelanggan <strong style="color:var(--text,#e5fffc);"><%= customer.name %></strong>, harap lakukan pelunasan tagihan di bawah ini agar akses internet Anda dapat segera diaktifkan kembali.</p>
+
+      <div class="scroll-inv">
+        <% invoices.forEach((inv) => { %>
+          <div class="inv-item">
+            <span class="inv-period"><%= new Date(inv.period_year, inv.period_month - 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) %></span>
+            <span class="inv-amount">Rp <%= (inv.amount || 0).toLocaleString('id-ID') %></span>
+          </div>
+        <% }); %>
+      </div>
+
+      <div class="divider">Pilih Metode Pembayaran</div>
+
+      <form id="paymentForm">
+        <div style="display:grid;gap:8px;margin-bottom:4px;">
+          <% paymentChannels.forEach((chan, idx) => {
+            const code = String(chan.code || '').toUpperCase();
+            const isQris = code.includes('QRIS');
+            const isVa = code.includes('VA') || String(chan.group || '').toLowerCase().includes('virtual');
+            const displayName = code === 'QRIS_STATIC' ? 'QRIS Statis' : (isQris ? 'QRIS Otomatis' : (isVa ? String(chan.name || code).replace(/Virtual Account/i, 'VA') : chan.name));
+            const bankColor = isVa && typeof bankLogoFor === 'function' ? bankLogoFor(code) : '';
+          %>
+            <label class="method-option">
+              <input type="radio" name="payment_method" value="<%= chan.code %>" <%= idx === 0 ? 'checked' : '' %>>
+              <span style="display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px;">
+                <% if (isQris) { %>
+                  <i class="bi bi-qr-code-scan" style="font-size:20px;color:var(--primary,#2dd4bf);"></i>
+                <% } else if (isVa) { %>
+                  <i class="bi bi-bank" style="<%= bankColor ? 'color:' + bankColor : '' %>"></i>
+                <% } else { %>
+                  <i class="bi bi-credit-card"></i>
+                <% } %>
+              </span>
+              <span><%= displayName %></span>
+            </label>
+          <% }) %>
+        </div>
+
+        <div class="chk-group">
+          <input type="checkbox" id="tosCheckbox" name="accept_tos" value="1" required />
+          <label for="tosCheckbox">Saya menyetujui detail tagihan &amp; ketentuan pembayaran otomatis</label>
+        </div>
+
+        <button type="button" class="btnx btn-primary btn-full" id="submitBtn" disabled
+                data-invoice-id="<%= invoices[0].id %>"
+                data-public-token="<%= invoices[0].publicToken %>"
+                onclick="goToPayment(this)">
+          <i class="bi bi-wallet2"></i> BAYAR SEKARANG
+        </button>
+      </form>
+      <div id="statusMessage"></div>
+
+      <div class="actions" style="margin-top:16px;">
+        <a href="/cek-tagihan" class="btnx btn-ghost"><i class="bi bi-receipt"></i> Riwayat</a>
+        <form method="post" action="/pelanggan/logout" style="margin:0;display:contents;">
+          <button type="submit" class="btnx btn-ghost"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+        </form>
+      </div>
+    <% } %>
+</div><!-- /panel-content -->
+
+    <div class="divider" style="margin-top:4px;">Informasi Layanan</div>
+    <div class="info-list">
+      <div class="info-item">
+        <div class="info-icon"><i class="bi bi-building"></i></div>
+        <div style="min-width:0;flex:1;">
+          <span class="info-label">Penyedia Layanan</span>
+          <span class="info-value"><%= company %></span>
+        </div>
+      </div>
+      <% if (adminPhone) { %>
+        <div class="info-item">
+          <div class="info-icon"><i class="bi bi-telephone-fill"></i></div>
+          <div style="min-width:0;flex:1;">
+            <span class="info-label">Pusat Bantuan</span>
+            <span class="info-value"><%= adminPhone %></span>
+          </div>
+        </div>
+      <% } %>
+      <% if (address) { %>
+        <div class="info-item">
+          <div class="info-icon"><i class="bi bi-geo-alt-fill"></i></div>
+          <div style="min-width:0;flex:1;">
+            <span class="info-label">Lokasi Kantor</span>
+            <span class="info-value"><%= address %></span>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="foot">
+      &copy; <%= new Date().getFullYear() %> <%- footerInfo %>
+    </div>
+  </div><!-- /box -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<% if (customer && !hasUnpaidInvoices) { %>
+  <script>
+    async function handleReconnect(e, form) {
+      e.preventDefault();
+      const btn = document.getElementById('reconnectBtn');
+      const msgDiv = document.getElementById('reconnectMsg');
+      if (btn) btn.disabled = true;
+      if (msgDiv) msgDiv.innerHTML = '<div class="status-msg loading"><div class="spinner"></div> Sedang refresh koneksi...</div>';
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' }
+        });
+        const d = await res.json();
+        if (d.success) {
+          if (msgDiv) msgDiv.innerHTML = '<div class="status-msg success"><i class="bi bi-check-circle-fill"></i> ' + d.message + '</div>';
+          setTimeout(() => window.location.reload(), 3000);
+        } else {
+          throw new Error(d.message || 'Gagal merefresh koneksi.');
+        }
+      } catch (err) {
+        if (msgDiv) msgDiv.innerHTML = '<div class="status-msg error"><i class="bi bi-exclamation-triangle-fill"></i> ' + err.message + '</div>';
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    let checkCount = 0;
+    function checkStatus() {
+      fetch('/isolir/status', { method: 'GET' })
+        .then(r => r.json())
+        .then(d => {
+          if (d.status === 'active' || d.unpaid_count === 0) {
+            setTimeout(() => window.location.href = '/pelanggan/dashboard', 1000);
+          } else if (++checkCount < 10) {
+            setTimeout(checkStatus, 3000);
+          }
+        })
+        .catch(() => {
+          if (++checkCount < 10) setTimeout(checkStatus, 3000);
+        });
+    }
+    setTimeout(checkStatus, 3000);
+  </script>
+<% } %>
+
+<% if (customer && hasUnpaidInvoices) { %>
+  <script>
+    const tosCheckbox = document.getElementById('tosCheckbox');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (tosCheckbox && submitBtn) {
+      tosCheckbox.addEventListener('change', () => {
+        submitBtn.disabled = !tosCheckbox.checked;
+      });
+    }
+
+    function goToPayment(btn) {
+      const invoiceId = btn.getAttribute('data-invoice-id');
+      const publicToken = btn.getAttribute('data-public-token');
+      const method = document.querySelector('input[name="payment_method"]:checked')?.value || 'QRIS';
+      window.location.href = `/pelanggan/payment/create/${invoiceId}?t=${encodeURIComponent(publicToken)}&method=${encodeURIComponent(method)}`;
+    }
+
+    let pollCount = 0;
+    function pollStatus() {
+      const publicToken = '<%= invoices.length > 0 ? invoices[0].publicToken : "" %>';
+      const invoiceId = '<%= invoices.length > 0 ? invoices[0].id : "" %>';
+      if (!invoiceId) return;
+
+      const url = `/pelanggan/payment/status/${invoiceId}${publicToken ? '?t=' + encodeURIComponent(publicToken) : ''}`;
+
+      fetch(url, { method: 'GET' })
+        .then(r => r.json())
+        .then(d => {
+          if (d.status === 'paid' || d.paid_at) {
+            const msgBox = document.getElementById('statusMessage');
+            if (msgBox) {
+              msgBox.innerHTML = '<div class="status-msg success"><i class="bi bi-check-circle-fill"></i> Pembayaran berhasil! Mengaktifkan akses...</div>';
+            }
+            setTimeout(() => window.location.href = '/pelanggan/dashboard', 2000);
+          } else if (++pollCount < 30) {
+            setTimeout(pollStatus, 3000);
+          }
+        })
+        .catch(() => {
+          if (++pollCount < 30) setTimeout(pollStatus, 3000);
+        });
+    }
+    setTimeout(pollStatus, 4000);
+  </script>
+<% } %>
+
+<script>
+  let deferredPwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+  });
+
+  document.getElementById('btn-install-pwa')?.addEventListener('click', () => {
+    if (deferredPwaPrompt) {
+      deferredPwaPrompt.prompt();
+      deferredPwaPrompt.userChoice.then(() => {
+        deferredPwaPrompt = null;
+      });
+    }
+  });
+</script>
+</body>
+</html>
