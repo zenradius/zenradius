@@ -5,17 +5,17 @@
 
 /* ── CSS Variables for Consistent theming — fallback default to Space Theme values ── */
 :root {
-  --portal-bg: var(--bg, #121622);
-  --portal-surface: var(--bg2, #1A1F31);
-  --portal-surface-raised: var(--bg3, #242B42);
-  --portal-ink: var(--text, #F1F5F9);
+  --portal-bg: var(--bg, #0B1028);
+  --portal-surface: var(--bg2, #121B4A);
+  --portal-surface-raised: var(--bg3, #1C2660);
+  --portal-ink: var(--text, #FFFFFF);
   --portal-muted: var(--muted, #94A3B8);
-  --portal-primary: var(--primary, #3B82F6);
-  --portal-primary-strong: var(--primary, #1D4ED8);
-  --portal-accent: var(--accent, #06B6D4);
-  --portal-line: var(--border, #2A334E);
-  --card-bg: var(--bg2, #1A1F31);
-  --soft-primary: var(--pdim, rgba(59,130,246,.15));
+  --portal-primary: var(--primary, #1C5CFF);
+  --portal-primary-strong: var(--primary, #08D8EC);
+  --portal-accent: var(--accent, #08D8EC);
+  --portal-line: var(--border, rgba(255,255,255,.14));
+  --card-bg: var(--bg2, #121B4A);
+  --soft-primary: var(--pdim, rgba(28,92,255,.16));
   --soft-success: var(--sdim, rgba(16,185,129,.15));
   --soft-warning: var(--wdim, rgba(245,158,11,.15));
   --soft-danger: var(--ddim, rgba(239,68,68,.15));

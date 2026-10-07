@@ -84,74 +84,74 @@
   --z-font-family:'Inter',sans-serif;
 }
 
-/* ── ZENRADIUS SPACE ("space") — Deep Space Blue UI Theme ──
-   Inovasi gelap berdasarkan palet premium berkarakter luar angkasa (Deep Space Blue).
-   Sesuai gambar referensi: background biru luar angkasa malam yang khas, card indigo gelap,
-   aktif state menggunakan gradien biru langit muda, dan teks yang cerah & kontras. ── */
+/* ── ZENRADIUS SPACE ("space") — palet loginpage-5: Deep Navy + Electric Blue ──
+   Sumber: C:\Users\ZenRadius\Downloads\loginpage-5 (Mikrotik login theme by Erik Sanjaya).
+   Kunci: bg #0b1028→#020617, card #121b4a→#050a27, btn #2937ff→#1c5cff→#08d8ec,
+   blob ungu #8a5cff & biru #427aff, aksen elektrik #1c5cff / #60a5fa. */
 [data-app-theme="space"]{
   /* admin.css tokens */
-  --bg:#121622; --bg2:#1A1F31; --bg3:#242B42;
-  --border:#2A334E;
-  --text:#F1F5F9; --muted:#94A3B8;
-  --primary:#3B82F6; --pdim:rgba(59,130,246,.15);
-  --accent:#06B6D4;
+  --bg:#0B1028; --bg2:#121B4A; --bg3:#1C2660;
+  --border:rgba(255,255,255,.14);
+  --text:#FFFFFF; --muted:#94A3B8;
+  --primary:#1C5CFF; --pdim:rgba(28,92,255,.16);
+  --accent:#08D8EC;
   --success:#10B981; --sdim:rgba(16,185,129,.15);
   --warning:#F59E0B; --wdim:rgba(245,158,11,.15);
   --danger:#EF4444; --ddim:rgba(239,68,68,.15);
   --info:#0EA5E9; --idim:rgba(14,165,233,.15);
-  --btn-bg:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);
+  --btn-bg:linear-gradient(100deg,#2937FF 0%,#1C5CFF 55%,#08D8EC 100%);
   --btn-color:#FFFFFF;
-  --btn-border:#1D4ED8;
-  --btn-shadow:0 8px 20px rgba(30,64,175,.28);
-  --btn-bg-hover:linear-gradient(135deg,#1E40AF 0%,#1E3A8A 100%);
-  --btn-border-hover:#1E3A8A;
+  --btn-border:rgba(255,255,255,.16);
+  --btn-shadow:0 10px 24px rgba(31,83,255,.35);
+  --btn-bg-hover:linear-gradient(100deg,#1C5CFF 0%,#08D8EC 100%);
+  --btn-border-hover:rgba(8,216,236,.6);
   --btn-color-hover:#FFFFFF;
-  --btn-g-bg:#242B42;
-  --btn-g-border:#2A334E;
-  --sb-item-active-bg:linear-gradient(135deg,#2563EB 0%,#1D4ED8 100%);
-  --sb-item-active-border:#3B82F6;
+  --btn-g-bg:rgba(255,255,255,.06);
+  --btn-g-border:rgba(255,255,255,.16);
+  --sb-item-active-bg:linear-gradient(100deg,#2937FF 0%,#1C5CFF 60%,#08D8EC 100%);
+  --sb-item-active-border:#1C5CFF;
   --sb-item-active-color:#FFFFFF;
 
-  /* sidebar tokens — deep space solid navy/slate */
-  --sb-bg:#121622;
-  --sb-bg-secondary:#1A1F31;
-  --sb-hover:#1D2437;
+  /* sidebar tokens — deep navy */
+  --sb-bg:#0B1028;
+  --sb-bg-secondary:#121B4A;
+  --sb-hover:#1C2660;
   --sb-text:#94A3B8;
-  --sb-border:#2A334E;
+  --sb-border:rgba(255,255,255,.12);
 
-  /* navbar tokens — clean transparent slate */
-  --nav-bg:rgba(26,31,49,.92);
-  --nav-border:#2A334E;
-  --nav-text:#F1F5F9;
+  /* navbar tokens */
+  --nav-bg:rgba(11,16,40,.92);
+  --nav-border:rgba(255,255,255,.12);
+  --nav-text:#FFFFFF;
   --nav-text-secondary:#94A3B8;
-  --nav-hover:#242B42;
-  --nav-active:#3B82F6;
+  --nav-hover:#1C2660;
+  --nav-active:#1C5CFF;
 
-  /* portal tokens (style.css / unified.css / voucher-cards.css) */
-  --portal-bg:#121622;
-  --portal-surface:#1A1F31;
-  --portal-surface-raised:#242B42;
-  --portal-ink:#F1F5F9;
+  /* portal tokens */
+  --portal-bg:#0B1028;
+  --portal-surface:#121B4A;
+  --portal-surface-raised:#1C2660;
+  --portal-ink:#FFFFFF;
   --portal-muted:#94A3B8;
-  --portal-primary:#3B82F6;
-  --portal-primary-strong:#1D4ED8;
-  --portal-teal:#06B6D4;
-  --portal-teal-strong:#0891B2;
+  --portal-primary:#1C5CFF;
+  --portal-primary-strong:#08D8EC;
+  --portal-teal:#08D8EC;
+  --portal-teal-strong:#06B6D4;
   --portal-accent:#F59E0B;
-  --portal-line:#2A334E;
-  --card-bg:#1A1F31;
-  --soft-primary:rgba(59,130,246,.15);
+  --portal-line:rgba(255,255,255,.16);
+  --card-bg:#121B4A;
+  --soft-primary:rgba(28,92,255,.16);
   --soft-success:rgba(16,185,129,.15);
   --soft-warning:rgba(245,158,11,.15);
   --soft-danger:rgba(239,68,68,.15);
   --btn-color:#ffffff;
 
-  /* page background — realistic space atmosphere matching prompt image */
-  --body-bg-solid:#121622;
-  --body-bg-image:radial-gradient(circle at 12% -8%,rgba(59,130,246,.22) 0%,transparent 38%),radial-gradient(circle at 88% 8%,rgba(6,182,212,.16) 0%,transparent 40%),radial-gradient(circle at 50% 100%,rgba(16,185,129,.08) 0%,transparent 45%),radial-gradient(circle at 100% 100%,rgba(29,64,175,.20) 0%,transparent 50%),linear-gradient(165deg,#0A0D16 0%,#121622 40%,#161B2C 70%,#0E1220 100%);
+  /* page background — deep space navy (loginpage-5) */
+  --body-bg-solid:#0B1028;
+  --body-bg-image:radial-gradient(circle at 15% -10%,rgba(66,122,255,.50) 0%,transparent 45%),radial-gradient(circle at 88% 10%,rgba(138,92,255,.42) 0%,transparent 46%),linear-gradient(165deg,#0B1028 0%,#020617 55%,#0A0B22 100%);
 
-  /* brand gradient — premium glowing accent */
-  --space-gradient:linear-gradient(135deg,#3B82F6 0%,#06B6D4 55%,#10B981 100%);
+  /* brand gradient — electric blue */
+  --space-gradient:linear-gradient(100deg,#2937FF 0%,#1C5CFF 55%,#08D8EC 100%);
 
   /* shape / typography */
   --z-radius-card:12px;
