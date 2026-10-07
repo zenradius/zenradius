@@ -180,18 +180,72 @@
       .hero-step .hs-icon { font-size: 13px; }
       .hero-step-arrow { display: none; }
     }
-    .order-step-dot {
-      box-shadow: 0 4px 14px color-mix(in srgb, var(--portal-primary) 35%, transparent);
+    .order-status-card{
+      background: color-mix(in srgb, var(--portal-panel-strong) 92%, transparent);
+      border: 1px solid var(--portal-line);
+      border-radius: 16px;
+      padding: 18px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .order-status-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto auto 0;
+      width:120px;
+      height:120px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--portal-primary) 10%, transparent) 0%, transparent 70%);
+      pointer-events:none;
+    }
+    .order-status-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;position:relative}
+    .order-status-label{display:block;font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--portal-text)}
+    .order-status-meta{display:block;font-size:12px;color:var(--portal-muted);margin-top:2px}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.04);color:var(--portal-muted);white-space:nowrap}
+    .pill-u{background: rgba(251, 113, 133, .12);color:#fca5a5;border-color: rgba(251, 113, 133, .28)}
+    .pill-p{background: rgba(63, 185, 80, .12);color:#86efac;border-color: rgba(63, 185, 80, .28)}
+    @keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    .spin-slow{display:inline-block;animation:spinSlow 2.2s linear infinite}
+
+    .order-steps{display:flex;align-items:center;margin:20px 0 6px;position:relative}
+    .order-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;width:84px}
+    .order-step-dot{
+      width:34px;height:34px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      background: rgba(255,255,255,0.06);
+      border:2px solid var(--portal-line);
+      color: var(--portal-muted);
+      font-size:14px;
+      transition: all .3s ease;
+      z-index:2;
+    }
+    .order-step.is-done .order-step-dot{
+      background: linear-gradient(135deg, var(--portal-primary), var(--portal-primary-strong));
+      border-color: transparent;
+      color:#062c2a;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--portal-primary) 40%, transparent);
     }
     .order-step.is-active .order-step-dot{
       border-color: var(--portal-primary);
       color: var(--portal-primary);
       box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-primary) 14%, transparent);
+      animation: softGlow 2.2s ease-in-out infinite;
     }
-    .order-step-text{font-size:10.5px;text-align:center;color:var(--portal-muted);font-weight:600;letter-spacing:.2px}
+    .order-step-text{font-size:11px;text-align:center;color:var(--portal-muted);font-weight:600;letter-spacing:.2px;line-height:1.25;max-width:86px}
     .order-step.is-done .order-step-text,.order-step.is-active .order-step-text{color:var(--portal-text)}
-    .order-step-line{flex:1 1 auto;height:2px;background:var(--portal-line);margin:0 -4px;margin-bottom:16px;transition: background .3s ease}
+    .order-step-line{flex:1 1 auto;height:2px;background:var(--portal-line);margin:0 -6px;margin-bottom:22px;transition: background .3s ease}
     .order-step-line.is-done{background: linear-gradient(90deg, var(--portal-primary), var(--portal-primary-strong))}
+    @media (min-width: 992px){
+      .order-step{width:100px}
+      .order-step-dot{width:38px;height:38px}
+      .order-step-text{font-size:11.5px}
+    }
+    /* Mobile-first: label memendek di layar kecil, tapi tetap terbaca jelas */
+    @media (max-width: 576px){
+      .order-status-card{padding:16px 12px}
+      .order-step{width:72px}
+      .order-step-dot{width:30px;height:30px;font-size:13px}
+      .order-step-text{font-size:10px;max-width:76px}
+    }
 
     .order-detail-row{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:16px;padding-top:14px;border-top:1px solid var(--portal-line)}
     .order-detail-item{display:flex;flex-direction:column;gap:2px}
@@ -567,13 +621,68 @@
         
 
         
+          
+          <div class="order-status-card mb-3">
+            <div class="order-status-head">
+              <div class="order-status-id">
+                <span class="order-status-label">Status Pesanan</span>
+                <span class="order-status-meta">Order #123 &middot; WA 6281234567890</span>
+              </div>
+              
+                <span class="pill pill-u"><i class="bi bi-clock-history"></i> Menunggu Pembayaran</span>
+              
+            </div>
+
+            <!-- Progress Stepper -->
+            <div class="order-steps">
+              <div class="order-step is-done">
+                <div class="order-step-dot"><i class="bi bi-check-lg"></i></div>
+                <div class="order-step-text">Pesanan Dibuat</div>
+              </div>
+              <div class="order-step-line "></div>
+              <div class="order-step is-active">
+                <div class="order-step-dot"><i class="bi bi-credit-card"></i></div>
+                <div class="order-step-text">Pembayaran</div>
+              </div>
+              <div class="order-step-line "></div>
+              <div class="order-step ">
+                <div class="order-step-dot"><i class="bi bi-ticket-perforated"></i></div>
+                <div class="order-step-text">Voucher Siap</div>
+              </div>
+            </div>
+
+            <div class="order-detail-row">
+              <div class="order-detail-item">
+                <span class="order-detail-k">Paket</span>
+                <span class="order-detail-v">Paket 30M</span>
+              </div>
+              <div class="order-detail-item">
+                <span class="order-detail-k">Durasi</span>
+                <span class="order-detail-v">30 Hari</span>
+              </div>
+              <div class="order-detail-item">
+                <span class="order-detail-k">Harga</span>
+                <span class="order-detail-v">Rp 150.000</span>
+              </div>
+            </div>
+
+            
+              
+                <a class="btn btn-primary btnx mt-3 w-100" href="/pelanggan/voucher/payment/123?t=abc">
+                  <i class="bi bi-credit-card me-1"></i> Lanjutkan Pembayaran
+                </a>
+              
+            
+          </div>
+          <hr style="border-color: rgba(148,163,184,.18)">
+        
 
         <form method="POST" action="/pelanggan/public/voucher/create-payment" class="d-grid gap-2" id="voucherForm">
           <!-- Hidden TOS state injector to bypass backend checks cleanly -->
           <input type="hidden" name="tos" value="1">
           <!-- Anti-bot: honeypot field (must stay empty) + form render timestamp (rejects instant/scripted submits) -->
           <input type="text" name="website" id="hp_website" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
-          <input type="hidden" name="form_ts" value="1791362679608">
+          <input type="hidden" name="form_ts" value="1791365059474">
 
           <div class="row g-2">
             <div class="col-12">
@@ -583,157 +692,7 @@
                 <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--portal-line),transparent);margin-left:8px"></div>
               </div>
               
-                <div class="voucher-grid mt-1">
-                  
-                    <input
-                      class="voucher-radio"
-                      type="radio"
-                      name="profile_name"
-                      id="vprofile_0"
-                      value="Paket Hemat 30 Mbps"
-                      data-price="150000"
-                      data-validity="30 Hari"
-                      aria-label="Paket Hemat 30 Mbps, Rp 150.000, 30 Hari"
-                      aria-describedby="step1Hint"
-                      required
-                    >
-                    <label class="voucher-card" for="vprofile_0">
-                      <span class="v-selected" aria-hidden="true"><i class="bi bi-check-circle-fill"></i> Dipilih</span>
-                      <div class="v-brand" aria-hidden="true">
-                        <div class="v-brand-logo-container">
-                          <img src="/img/logo.png?v=1" alt="Logo" class="v-brand-real-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                          <div class="v-brand-fallback-group" style="display:none">
-                            <span class="v-brand-name">ZenRadius</span>
-                            <span class="v-brand-sub">HOTSPOT</span>
-                          </div>
-                        </div>
-                      </div>
-                      <span class="v-tagline">Internet Cepat, Hidup Lebih Mudah</span>
-                      <span class="v-ribbon">VOUCHER INTERNET</span>
-                      <span class="v-offer">
-                        <span class="voucher-price v-price-long"><span class="v-currency">Rp</span>150.000</span>
-                        <span class="v-divider" aria-hidden="true"></span>
-                        <span class="v-validity ">30 Hari</span>
-                      </span>
-                      <span class="v-package" title="Paket Hemat 30 Mbps">Paket Hemat 30 Mbps</span>
-                      <span class="v-benefits">
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></span>
-                          <span>Akses<br>Cepat</span>
-                        </span>
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
-                          <span>Aman<br>&amp; Stabil</span>
-                        </span>
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-phone"></i></span>
-                          <span>Bisa di Semua<br>Perangkat</span>
-                        </span>
-                      </span>
-                      <span class="v-signature" aria-hidden="true">Stay<br>Connected</span>
-                    </label>
-                  
-                    <input
-                      class="voucher-radio"
-                      type="radio"
-                      name="profile_name"
-                      id="vprofile_1"
-                      value="Paket Keluarga 50 Mbps"
-                      data-price="250000"
-                      data-validity="30 Hari"
-                      aria-label="Paket Keluarga 50 Mbps, Rp 250.000, 30 Hari"
-                      aria-describedby="step1Hint"
-                      
-                    >
-                    <label class="voucher-card" for="vprofile_1">
-                      <span class="v-selected" aria-hidden="true"><i class="bi bi-check-circle-fill"></i> Dipilih</span>
-                      <div class="v-brand" aria-hidden="true">
-                        <div class="v-brand-logo-container">
-                          <img src="/img/logo.png?v=1" alt="Logo" class="v-brand-real-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                          <div class="v-brand-fallback-group" style="display:none">
-                            <span class="v-brand-name">ZenRadius</span>
-                            <span class="v-brand-sub">HOTSPOT</span>
-                          </div>
-                        </div>
-                      </div>
-                      <span class="v-tagline">Internet Cepat, Hidup Lebih Mudah</span>
-                      <span class="v-ribbon">VOUCHER INTERNET</span>
-                      <span class="v-offer">
-                        <span class="voucher-price v-price-long"><span class="v-currency">Rp</span>250.000</span>
-                        <span class="v-divider" aria-hidden="true"></span>
-                        <span class="v-validity ">30 Hari</span>
-                      </span>
-                      <span class="v-package" title="Paket Keluarga 50 Mbps">Paket Keluarga 50 Mbps</span>
-                      <span class="v-benefits">
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></span>
-                          <span>Akses<br>Cepat</span>
-                        </span>
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
-                          <span>Aman<br>&amp; Stabil</span>
-                        </span>
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-phone"></i></span>
-                          <span>Bisa di Semua<br>Perangkat</span>
-                        </span>
-                      </span>
-                      <span class="v-signature" aria-hidden="true">Stay<br>Connected</span>
-                    </label>
-                  
-                    <input
-                      class="voucher-radio"
-                      type="radio"
-                      name="profile_name"
-                      id="vprofile_2"
-                      value="Paket Bisnis 100 Mbps"
-                      data-price="400000"
-                      data-validity="14 Hari"
-                      aria-label="Paket Bisnis 100 Mbps, Rp 400.000, 14 Hari"
-                      aria-describedby="step1Hint"
-                      
-                    >
-                    <label class="voucher-card" for="vprofile_2">
-                      <span class="v-selected" aria-hidden="true"><i class="bi bi-check-circle-fill"></i> Dipilih</span>
-                      <div class="v-brand" aria-hidden="true">
-                        <div class="v-brand-logo-container">
-                          <img src="/img/logo.png?v=1" alt="Logo" class="v-brand-real-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                          <div class="v-brand-fallback-group" style="display:none">
-                            <span class="v-brand-name">ZenRadius</span>
-                            <span class="v-brand-sub">HOTSPOT</span>
-                          </div>
-                        </div>
-                      </div>
-                      <span class="v-tagline">Internet Cepat, Hidup Lebih Mudah</span>
-                      <span class="v-ribbon">VOUCHER INTERNET</span>
-                      <span class="v-offer">
-                        <span class="voucher-price v-price-long"><span class="v-currency">Rp</span>400.000</span>
-                        <span class="v-divider" aria-hidden="true"></span>
-                        <span class="v-validity ">14 Hari</span>
-                      </span>
-                      <span class="v-package" title="Paket Bisnis 100 Mbps">Paket Bisnis 100 Mbps</span>
-                      <span class="v-benefits">
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></span>
-                          <span>Akses<br>Cepat</span>
-                        </span>
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
-                          <span>Aman<br>&amp; Stabil</span>
-                        </span>
-                        <span class="v-benefit">
-                          <span class="v-benefit-icon" aria-hidden="true"><i class="bi bi-phone"></i></span>
-                          <span>Bisa di Semua<br>Perangkat</span>
-                        </span>
-                      </span>
-                      <span class="v-signature" aria-hidden="true">Stay<br>Connected</span>
-                    </label>
-                  
-                </div>
-                <div class="p-3 mt-3 rounded-3" style="background:rgba(45,212,191,0.04);border:1px solid var(--portal-line);display:flex;align-items:start;gap:10px;" id="step1Hint">
-                  <i class="bi bi-info-circle" style="color:var(--portal-primary);font-size:15px;margin-top:2px"></i>
-                  <span style="font-size:12.5px;line-height:1.5;color:rgba(168,190,194,0.95)">Pilih salah satu paket voucher di atas untuk melanjutkan ke pengisian nomor WhatsApp dan proses pembayaran. Perlu diperhatikan, <strong style="color:#fff">satu kode voucher hanya berlaku untuk satu perangkat</strong> â€” kode yang telah diaktivasi pada perangkat pertama tidak dapat digunakan kembali pada perangkat lain.</span>
-                </div>
+                <div class="muted small mt-1">Belum ada profile voucher (metadata Mikhmon) di MikroTik.</div>
               
             </div>
           </div>
@@ -779,117 +738,10 @@
                   <div class="c-modal-section-label"><i class="bi bi-credit-card-2-front"></i> Pilih Metode Pembayaran</div>
                   
                   
-                    <div class="pm-grid-modal">
-                      
-                      
-                        <input
-                          class="pm-radio-modal"
-                          type="radio"
-                          name="method"
-                          id="pm_0"
-                          value="QRIS"
-                          checked
-                          style="position:absolute;opacity:0;pointer-events:none"
-                        >
-                        <label class="pm-item-modal" for="pm_0">
-                          <div class="pm-icon">
-                            
-                              <i class="bi-qr-code-scan"></i>
-                            
-                          </div>
-                          <span class="pm-label">QRIS Otomatis</span>
-                        </label>
-                      
-                        <input
-                          class="pm-radio-modal"
-                          type="radio"
-                          name="method"
-                          id="pm_1"
-                          value="BCAVA"
-                          
-                          style="position:absolute;opacity:0;pointer-events:none"
-                        >
-                        <label class="pm-item-modal" for="pm_1">
-                          <div class="pm-icon">
-                            
-                              <i class="bi-bank"></i>
-                            
-                          </div>
-                          <span class="pm-label">BCA VA</span>
-                        </label>
-                      
-                        <input
-                          class="pm-radio-modal"
-                          type="radio"
-                          name="method"
-                          id="pm_2"
-                          value="BNIVA"
-                          
-                          style="position:absolute;opacity:0;pointer-events:none"
-                        >
-                        <label class="pm-item-modal" for="pm_2">
-                          <div class="pm-icon">
-                            
-                              <i class="bi-bank"></i>
-                            
-                          </div>
-                          <span class="pm-label">BNI VA</span>
-                        </label>
-                      
-                        <input
-                          class="pm-radio-modal"
-                          type="radio"
-                          name="method"
-                          id="pm_3"
-                          value="BRIVA"
-                          
-                          style="position:absolute;opacity:0;pointer-events:none"
-                        >
-                        <label class="pm-item-modal" for="pm_3">
-                          <div class="pm-icon">
-                            
-                              <i class="bi-bank"></i>
-                            
-                          </div>
-                          <span class="pm-label">BRI VA</span>
-                        </label>
-                      
-                        <input
-                          class="pm-radio-modal"
-                          type="radio"
-                          name="method"
-                          id="pm_4"
-                          value="DANA"
-                          
-                          style="position:absolute;opacity:0;pointer-events:none"
-                        >
-                        <label class="pm-item-modal" for="pm_4">
-                          <div class="pm-icon">
-                            
-                              <i class="bi-wallet2"></i>
-                            
-                          </div>
-                          <span class="pm-label">DANA</span>
-                        </label>
-                      
-                        <input
-                          class="pm-radio-modal"
-                          type="radio"
-                          name="method"
-                          id="pm_5"
-                          value="SHOPEEPAY"
-                          
-                          style="position:absolute;opacity:0;pointer-events:none"
-                        >
-                        <label class="pm-item-modal" for="pm_5">
-                          <div class="pm-icon">
-                            
-                              <i class="bi-wallet2"></i>
-                            
-                          </div>
-                          <span class="pm-label">ShopeePay</span>
-                        </label>
-                      
+                    <input type="hidden" name="method" value="QRIS">
+                    <div class="pm-item-modal" style="cursor:default;grid-column:1/-1">
+                      <div class="pm-icon"><i class="bi bi-qr-code-scan"></i></div>
+                      <span class="pm-label">QRIS Otomatis</span>
                     </div>
                   
                 </div>
@@ -901,10 +753,6 @@
                   Bayar & Aktivasi <i class="bi bi-lightning-charge-fill ms-1"></i>
                 </button>
               </div>
-            </div>
-            <div class="form-check form-check-inline ms-3">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" required>
-              <label class="form-check-label" for="inlineCheckbox1">Saya setuju dengan <a href="/tos" target="_blank" class="text-decoration-underline">Syarat & Ketentuan</a></label>
             </div>
           </div>
         </form>
@@ -952,6 +800,12 @@
         }
       });
     })();
+  </script>
+  
+  <script>
+    setTimeout(() => {
+      try { window.location.reload(); } catch (e) {}
+    }, 5000);
   </script>
   
 </body>

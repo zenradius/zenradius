@@ -180,18 +180,72 @@
       .hero-step .hs-icon { font-size: 13px; }
       .hero-step-arrow { display: none; }
     }
-    .order-step-dot {
-      box-shadow: 0 4px 14px color-mix(in srgb, var(--portal-primary) 35%, transparent);
+    .order-status-card{
+      background: color-mix(in srgb, var(--portal-panel-strong) 92%, transparent);
+      border: 1px solid var(--portal-line);
+      border-radius: 16px;
+      padding: 18px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .order-status-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto auto 0;
+      width:120px;
+      height:120px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--portal-primary) 10%, transparent) 0%, transparent 70%);
+      pointer-events:none;
+    }
+    .order-status-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;position:relative}
+    .order-status-label{display:block;font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--portal-text)}
+    .order-status-meta{display:block;font-size:12px;color:var(--portal-muted);margin-top:2px}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.04);color:var(--portal-muted);white-space:nowrap}
+    .pill-u{background: rgba(251, 113, 133, .12);color:#fca5a5;border-color: rgba(251, 113, 133, .28)}
+    .pill-p{background: rgba(63, 185, 80, .12);color:#86efac;border-color: rgba(63, 185, 80, .28)}
+    @keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    .spin-slow{display:inline-block;animation:spinSlow 2.2s linear infinite}
+
+    .order-steps{display:flex;align-items:center;margin:20px 0 6px;position:relative}
+    .order-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;width:84px}
+    .order-step-dot{
+      width:34px;height:34px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      background: rgba(255,255,255,0.06);
+      border:2px solid var(--portal-line);
+      color: var(--portal-muted);
+      font-size:14px;
+      transition: all .3s ease;
+      z-index:2;
+    }
+    .order-step.is-done .order-step-dot{
+      background: linear-gradient(135deg, var(--portal-primary), var(--portal-primary-strong));
+      border-color: transparent;
+      color:#062c2a;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--portal-primary) 40%, transparent);
     }
     .order-step.is-active .order-step-dot{
       border-color: var(--portal-primary);
       color: var(--portal-primary);
       box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-primary) 14%, transparent);
+      animation: softGlow 2.2s ease-in-out infinite;
     }
-    .order-step-text{font-size:10.5px;text-align:center;color:var(--portal-muted);font-weight:600;letter-spacing:.2px}
+    .order-step-text{font-size:11px;text-align:center;color:var(--portal-muted);font-weight:600;letter-spacing:.2px;line-height:1.25;max-width:86px}
     .order-step.is-done .order-step-text,.order-step.is-active .order-step-text{color:var(--portal-text)}
-    .order-step-line{flex:1 1 auto;height:2px;background:var(--portal-line);margin:0 -4px;margin-bottom:16px;transition: background .3s ease}
+    .order-step-line{flex:1 1 auto;height:2px;background:var(--portal-line);margin:0 -6px;margin-bottom:22px;transition: background .3s ease}
     .order-step-line.is-done{background: linear-gradient(90deg, var(--portal-primary), var(--portal-primary-strong))}
+    @media (min-width: 992px){
+      .order-step{width:100px}
+      .order-step-dot{width:38px;height:38px}
+      .order-step-text{font-size:11.5px}
+    }
+    /* Mobile-first: label memendek di layar kecil, tapi tetap terbaca jelas */
+    @media (max-width: 576px){
+      .order-status-card{padding:16px 12px}
+      .order-step{width:72px}
+      .order-step-dot{width:30px;height:30px;font-size:13px}
+      .order-step-text{font-size:10px;max-width:76px}
+    }
 
     .order-detail-row{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:16px;padding-top:14px;border-top:1px solid var(--portal-line)}
     .order-detail-item{display:flex;flex-direction:column;gap:2px}
@@ -810,10 +864,6 @@
                   Bayar & Aktivasi <i class="bi bi-lightning-charge-fill ms-1"></i>
                 </button>
               </div>
-            </div>
-            <div class="form-check form-check-inline ms-3">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" required>
-              <label class="form-check-label" for="inlineCheckbox1">Saya setuju dengan <a href="/tos" target="_blank" class="text-decoration-underline">Syarat & Ketentuan</a></label>
             </div>
           </div>
         </form>
