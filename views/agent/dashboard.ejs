@@ -139,7 +139,7 @@
       padding: 8px 10px;
       border-radius: 999px;
       background: rgba(15, 23, 42, 0.45);
-      border: 1px solid rgba(124, 221, 218, 0.15);
+      border: 1px solid color-mix(in srgb, var(--brand1) 15%, transparent);
       color: var(--text);
       font-weight: 700;
       font-size: 12px;
@@ -163,7 +163,7 @@
 
     .form-control, .form-select{
       background: rgba(15, 23, 42, 0.55);
-      border: 1px solid rgba(124, 221, 218, 0.24);
+      border: 1px solid color-mix(in srgb, var(--brand1) 24%, transparent);
       color: var(--text);
       border-radius: 14px;
       padding: 12px 12px;
@@ -171,8 +171,8 @@
     .form-control:focus, .form-select:focus{
       background: rgba(15, 23, 42, 0.55);
       color: var(--text);
-      border-color: #2dd4bf;
-      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+      border-color: var(--brand1);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand1) 12%, transparent);
     }
     .form-control::placeholder{ color: rgba(148,163,184,0.75); }
 

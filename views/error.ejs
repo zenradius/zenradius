@@ -44,10 +44,9 @@
     body {
       font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
       background-color: var(--bg);
-      background-image:
-        radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+      background-image: var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
         radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
-        linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+        linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));
       color: var(--text-main);
       min-height: 100vh;
       min-height: 100dvh;
@@ -170,10 +169,10 @@
     }
     .btn-primary {
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-      color: #06262a;
-      box-shadow: 0 10px 24px rgba(45, 212, 191, 0.28);
+      color: var(--btn-color, #06262a);
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 28%, transparent);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(45, 212, 191, 0.38); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px color-mix(in srgb, var(--primary) 38%, transparent); }
     .btn-ghost {
       background: transparent;
       color: var(--text-main);
@@ -195,7 +194,7 @@
     }
 
     .footer-bottom a {
-      color: #7dd3fc;
+      color: var(--primary, #7dd3fc);
       text-decoration: none;
     }
 
@@ -253,8 +252,8 @@
       <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#2dd4bf"/>
-            <stop offset="100%" stop-color="#14b8a6"/>
+            <stop offset="0%" stop-color="var(--primary, #2dd4bf)"/>
+            <stop offset="100%" stop-color="var(--primary-hover, #14b8a6)"/>
           </linearGradient>
           <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#fbbf24"/>
@@ -277,13 +276,13 @@
 
         <!-- Magnifying glass over a "page" -->
         <g transform="translate(150,55)">
-          <rect x="0" y="0" width="130" height="150" rx="14" fill="#1c4a55" stroke="rgba(190,239,255,0.25)" stroke-width="2"/>
+          <rect x="0" y="0" width="130" height="150" rx="14" fill="var(--bg3, #1c4a55)" stroke="var(--border-color, rgba(190,239,255,0.25))" stroke-width="2"/>
           <rect x="18" y="24" width="94" height="10" rx="5" fill="rgba(237,250,250,0.18)"/>
           <rect x="18" y="46" width="70" height="10" rx="5" fill="rgba(237,250,250,0.14)"/>
           <rect x="18" y="68" width="80" height="10" rx="5" fill="rgba(237,250,250,0.14)"/>
           <rect x="18" y="90" width="50" height="10" rx="5" fill="rgba(237,250,250,0.1)"/>
           <g>
-            <circle cx="146" cy="118" r="34" fill="rgba(45,212,191,0.08)" stroke="url(#g1)" stroke-width="6"/>
+            <circle cx="146" cy="118" r="34" fill="color-mix(in srgb, var(--primary) 8%, transparent)" stroke="url(#g1)" stroke-width="6"/>
             <line x1="170" y1="142" x2="196" y2="168" stroke="url(#g1)" stroke-width="8" stroke-linecap="round"/>
             <text x="128" y="127" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="26" fill="#e7fffb">?</text>
           </g>

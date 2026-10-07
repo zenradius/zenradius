@@ -92,16 +92,16 @@
       box-shadow: var(--btn-shadow, 0 8px 20px rgba(10,41,50,.24));
     }
     .btn-success {
-      background: linear-gradient(135deg, #0f9b7e 0%, #0d7a63 100%);
-      color: #ffffff;
-      box-shadow: 0 8px 20px rgba(13, 122, 99, 0.32);
+      background: linear-gradient(135deg, var(--success, #0f9b7e) 0%, color-mix(in srgb, var(--success, #0f9b7e) 80%, #000) 100%);
+      color: #04210f;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--success, #0f9b7e) 32%, transparent);
     }
     .btn-outline {
-      background: rgba(190,239,255,.06);
+      background: var(--pdim, rgba(190,239,255,.06));
       border: 1px solid var(--admin-border);
       color: var(--portal-text);
     }
-    .btn-outline:hover { background: rgba(190,239,255,.12); }
+    .btn-outline:hover { background: var(--pdim, rgba(190,239,255,.12)); }
     .info-box {
       margin-top: 22px;
       background: var(--admin-bg3);
@@ -156,7 +156,7 @@
 
       <% if (companyPhone) { %>
         <a href="https://wa.me/<%= companyPhone.replace(/[^0-9]/g, '') %>" target="_blank" class="btn btn-outline">
-          <i class="bi bi-whatsapp" style="color:#2dd4bf"></i> Hubungi Bantuan CS WhatsApp
+          <i class="bi bi-whatsapp" style="color:var(--portal-primary, #2dd4bf)"></i> Hubungi Bantuan CS WhatsApp
         </a>
       <% } %>
     </div>
@@ -167,7 +167,7 @@
         <div><strong>Waspada Petir:</strong> Cabut adaptor daya & kabel saat hujan lebat demi keselamatan modem Anda.</div>
       </div>
       <div class="info-item">
-        <i class="bi bi-arrow-repeat" style="color:#22D3EE"></i>
+        <i class="bi bi-arrow-repeat" style="color:var(--portal-primary, #22D3EE)"></i>
         <div><strong>Cara Reboot:</strong> Matikan tombol power modem 10 detik lalu nyalakan kembali jika koneksi melambat.</div>
       </div>
     </div>

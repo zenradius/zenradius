@@ -24,8 +24,8 @@
     }
 
     @keyframes softGlow {
-      0%, 100% { box-shadow: 0 0 0 rgba(35, 96, 96, 0.06), 0 8px 18px rgba(23, 57, 69, 0.14); }
-      50% { box-shadow: 0 0 0 2px rgba(35, 96, 96, 0.08), 0 12px 22px rgba(35, 96, 96, 0.10); }
+      0%, 100% { box-shadow: 0 0 0 color-mix(in srgb, var(--portal-primary) 6%, transparent), 0 8px 18px color-mix(in srgb, var(--portal-bg) 14%, transparent); }
+      50% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--portal-primary) 12%, transparent), 0 12px 22px color-mix(in srgb, var(--portal-primary) 10%, transparent); }
     }
 
     body{
@@ -42,7 +42,7 @@
     .body{padding:22px 20px}
     .form-control,.form-select{
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(190, 239, 255, 0.22);
+      border: 1px solid var(--portal-line, rgba(190, 239, 255, 0.22));
       color: var(--portal-text);
       border-radius: 10px;
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
@@ -52,8 +52,8 @@
     }
     .form-control:focus,.form-select:focus{
       background: rgba(255, 255, 255, 0.09);
-      border-color: rgba(45, 212, 191, 0.55);
-      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14);
+      border-color: color-mix(in srgb, var(--portal-primary) 55%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-primary) 14%, transparent);
       color: #fff;
     }
     .field { position: relative; width: 100%; }
@@ -68,7 +68,7 @@
     .btnx:hover{transform: translateY(-2px); filter: brightness(1.03);}
     .btn-primary{background:var(--btn-bg, linear-gradient(135deg, #236060 0%, #183f51 52%, #194251 100%));border:1px solid rgba(126,231,219,.48);color:#f4fffd;box-shadow:0 8px 20px rgba(10,41,50,.24);animation:softGlow 5s ease-in-out infinite}
     .btn-primary:hover{background:var(--btn-bg-hover, linear-gradient(135deg, #2d7774 0%, #1d5264 52%, #205b68 100%))!important;border-color:rgba(166,247,235,.72)!important;color:#fff!important;filter:brightness(1.04)}
-    a{color:#a5f4ed}
+    a{color:var(--portal-primary, #a5f4ed)}
     .payment-methods-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .pay-scroll{max-height:300px;overflow:auto;padding-right:4px}
     .pm-radio{position:absolute;opacity:0;pointer-events:none}
@@ -103,14 +103,14 @@
     <div class="cardx">
       <div class="head" style="text-align:center;padding-top:28px;padding-bottom:22px;">
         <img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="ZenRadius" style="height:42px;width:auto;max-width:220px;object-fit:contain;display:block;margin:0 auto 14px;" onerror="this.style.display='none'">
-        <p class="muted small mb-0 mx-auto" style="max-width:460px;line-height:1.7;">Akses rincian lembar tagihan Anda secara instan, transparan, dan akurat. Cukup masukkan <strong style="color:#d9fffb;">ID Pelanggan</strong> atau <strong style="color:#d9fffb;">Nomor WhatsApp</strong> untuk meninjau periode pembayaran.</p>
+        <p class="muted small mb-0 mx-auto" style="max-width:460px;line-height:1.7;">Akses rincian lembar tagihan Anda secara instan, transparan, dan akurat. Cukup masukkan <strong style="color:var(--portal-text, #d9fffb);">ID Pelanggan</strong> atau <strong style="color:var(--portal-text, #d9fffb);">Nomor WhatsApp</strong> untuk meninjau periode pembayaran.</p>
       </div>
       <div class="body">
         <form method="GET" action="/cek-tagihan" class="mb-3">
           <div class="row g-2 align-items-center">
             <div class="col-12 col-md-8">
               <div class="field">
-                <i class="bi bi-person-bounding-box" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(190,239,255,.65);font-size:15px;pointer-events:none;z-index:4;"></i>
+                <i class="bi bi-person-bounding-box" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--portal-muted, rgba(190,239,255,.65));font-size:15px;pointer-events:none;z-index:4;"></i>
                 <input class="form-control" name="q" value="<%= query || '' %>" placeholder="Masukkan ID Pelanggan atau No WhatsApp" style="padding-left: 38px; height: 46px;" required>
               </div>
             </div>
@@ -121,7 +121,7 @@
             </div>
           </div>
           <div class="muted small mt-2">
-            Contoh: <code style="color:#d9fffb;">CUST-001</code> atau <code style="color:#d9fffb;">08xxxxxxxxxx</code>
+            Contoh: <code style="color:var(--portal-text, #d9fffb);">CUST-001</code> atau <code style="color:var(--portal-text, #d9fffb);">08xxxxxxxxxx</code>
           </div>
         </form>
 
@@ -260,11 +260,11 @@
                 <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
                 
                 <!-- Integrated Syarat & Ketentuan (TOS) Checkbox -->
-                <div class="mb-3 p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(190, 239, 255, 0.12);">
+                <div class="mb-3 p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--portal-line, rgba(190, 239, 255, 0.2)); 255, 0.12);">
                   <div class="form-check d-flex align-items-start gap-2">
-                    <input class="form-check-input flex-shrink-0" type="checkbox" name="tos" id="billing_tos" value="1" style="width: 18px; height: 18px; border-color: rgba(45, 212, 191, 0.4); margin-top: 3px;" required checked>
+                    <input class="form-check-input flex-shrink-0" type="checkbox" name="tos" id="billing_tos" value="1" style="width: 18px; height: 18px; border-color: color-mix(in srgb, var(--portal-primary) 40%, transparent); margin-top: 3px;" required checked>
                     <label class="form-check-label small muted" for="billing_tos" style="user-select: none; line-height: 1.45;">
-                      Saya menyetujui seluruh <a href="/pelanggan/tos" target="_blank" class="fw-bold" style="color: #2dd4bf; text-decoration: underline;">Syarat & Ketentuan (TOS)</a> dan kebijakan transaksi yang berlaku di <%= settings.company_header || 'ZenRadius' %>.
+                      Saya menyetujui seluruh <a href="/pelanggan/tos" target="_blank" class="fw-bold" style="color: var(--portal-primary, #2dd4bf); text-decoration: underline;">Syarat & Ketentuan (TOS)</a> dan kebijakan transaksi yang berlaku di <%= settings.company_header || 'ZenRadius' %>.
                     </label>
                   </div>
                 </div>
@@ -472,7 +472,7 @@
         <% } %>
 
         <div class="text-center mt-4">
-          <a class="d-inline-flex align-items-center justify-content-center gap-1 text-decoration-none small" href="/" style="color:#a5f4ed;font-weight:700;">
+          <a class="d-inline-flex align-items-center justify-content-center gap-1 text-decoration-none small" href="/" style="color:var(--portal-primary, #a5f4ed);font-weight:700;">
             <i class="bi bi-arrow-left"></i> Kembali Halaman
           </a>
         </div>

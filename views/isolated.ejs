@@ -48,10 +48,9 @@
     body {
       font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
       background-color: var(--bg);
-      background-image:
-        radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
+      background-image: var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
         radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
-        linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%);
+        linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));
       color: var(--text-main);
       min-height: 100vh;
       min-height: 100dvh;
@@ -315,9 +314,9 @@
       gap: 10px;
       margin: 14px 0;
       padding: 10px 12px;
-      background-color: rgba(45, 212, 191, 0.05);
+      background-color: var(--pdim, rgba(45, 212, 191, 0.05));
       border-radius: 10px;
-      border: 1px solid rgba(45, 212, 191, 0.12);
+      border: 1px solid color-mix(in srgb, var(--primary, #45d2c1) 12%, transparent);
     }
     .checkbox-group input[type="checkbox"] {
       cursor: pointer;
@@ -416,7 +415,7 @@
       display: inline-block;
       width: 13px;
       height: 13px;
-      border: 2px solid rgba(45, 212, 191, 0.2);
+      border: 2px solid color-mix(in srgb, var(--primary) 20%, transparent);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
@@ -441,7 +440,7 @@
       padding: 24px 8px 8px;
     }
     .footer a {
-      color: #7dd3fc;
+      color: var(--primary, #7dd3fc);
       text-decoration: none;
     }
     .footer a:hover {
@@ -514,7 +513,7 @@
           <div>
             <div class="button-group" style="margin-bottom: 16px;">
               <a href="/cek-tagihan" class="btn primary"><i class="bi bi-search"></i> Cek Tagihan</a>
-              <button type="button" id="btn-install-pwa" class="btn wa" style="margin: 0; display: inline-flex; background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(126, 231, 219, 0.38); color: #d9fffb;">
+              <button type="button" id="btn-install-pwa" class="btn wa" style="margin: 0; display: inline-flex; background: var(--pdim, rgba(45, 212, 191, 0.08)); border: 1px solid color-mix(in srgb, var(--primary) 38%, transparent); color: var(--text, #d9fffb);">
                 <i class="bi bi-download"></i> Aplikasi Pelanggan
               </button>
             </div>
@@ -558,7 +557,7 @@
 
           <div>
             <form action="/pelanggan/reconnect" method="POST" style="margin-bottom: 12px;" onsubmit="handleReconnect(event, this)">
-              <button type="submit" class="btn primary" id="reconnectBtn" style="box-shadow: 0 4px 12px rgba(45, 212, 191, 0.15);">
+              <button type="submit" class="btn primary" id="reconnectBtn" style="box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 15%, transparent);">
                 <i class="bi bi-arrow-repeat"></i> Aktifkan Sekarang (Re-Connect)
               </button>
             </form>
