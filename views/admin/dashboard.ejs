@@ -8,34 +8,34 @@
   <link rel="stylesheet" href="/css/admin.css">
   <link rel="stylesheet" href="/css/theme-tokens.css">
   <style>
-    /* â”€â”€ ONU STATUS DOT â”€â”€ */
+    /* ── ONU STATUS DOT ── */
     .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
     .dot-on{background:var(--success);box-shadow:0 0 6px var(--success)}
     .dot-off{background:var(--danger)}
 
-    /* â”€â”€ PULSE ANIMATION (online) â”€â”€ */
+    /* ── PULSE ANIMATION (online) ── */
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
     .pulse{animation:pulse 2s infinite}
 
-    /* â”€â”€ MONITORING SECTION â”€â”€ */
+    /* ── MONITORING SECTION ── */
     #monitoring-section{display:none}
     #dashboard-section{display:block}
 
-    /* â”€â”€ NAV TABS â”€â”€ */
+    /* ── NAV TABS ── */
     .tab-bar{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:20px;width:fit-content}
     .tab-btn{padding:8px 20px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s}
     /* tab-btn active styling is now globally handled dynamically in admin.css to support multiple themes */
     .tab-btn i{margin-right:6px}
 
-    /* â”€â”€ DEVICE STATUS BADGE â”€â”€ */
+    /* ── DEVICE STATUS BADGE ── */
     .ds-on{background:rgba(63,185,80,.15);color:#3fb950;border:1px solid rgba(63,185,80,.3)}
     .ds-off{background:rgba(248,81,73,.15);color:#f85149;border:1px solid rgba(248,81,73,.3)}
 
-    /* â”€â”€ LIVE INDICATOR â”€â”€ */
+    /* ── LIVE INDICATOR ── */
     .live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 1.5s infinite}
     .realtime-bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
 
-    /* â”€â”€ CHART WRAPPER â”€â”€ */
+    /* ── CHART WRAPPER ── */
     #donut-wrap{position:relative;width:160px;height:160px;margin:0 auto}
     .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
     .donut-num{font-size:28px;font-weight:700;line-height:1}
@@ -84,9 +84,9 @@
       </button>
     </div>
 
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <!-- DASHBOARD SECTION                                       -->
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <div id="dashboard-section">
 
       <!-- Customers Stats (berada di atas) -->
@@ -265,9 +265,9 @@
       </div>
     </div>
 
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <!-- MONITORING ONU SECTION                                  -->
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <div id="monitoring-section" style="display:none">
 
       <!-- Stats mini -->
@@ -347,7 +347,7 @@
   </div>
 </div>
 
-<!-- â”€â”€ MODAL DETAIL DEVICE â”€â”€ -->
+<!-- ── MODAL DETAIL DEVICE ── -->
 <div class="mo" id="deviceModal">
   <div class="mb" style="max-width:920px">
     <div class="mh">
@@ -359,7 +359,7 @@
   </div>
 </div>
 
-<!-- â”€â”€ MODAL EDIT SSID â”€â”€ -->
+<!-- ── MODAL EDIT SSID ── -->
 <div class="mo" id="ssidModal">
   <div class="mb">
     <div class="mh"><span class="mt"><i class="bi bi-wifi"></i> <%= t('admin.dashboard.edit_ssid', 'Ubah SSID') %></span><button class="mc" onclick="closeModal('ssidModal')">&times;</button></div>
@@ -377,7 +377,7 @@
   </div>
 </div>
 
-<!-- â”€â”€ MODAL EDIT PASSWORD â”€â”€ -->
+<!-- ── MODAL EDIT PASSWORD ── -->
 <div class="mo" id="passwordModal">
   <div class="mb">
     <div class="mh"><span class="mt"><i class="bi bi-key"></i> <%= t('admin.dashboard.edit_wifi_password', 'Ubah Password WiFi') %></span><button class="mc" onclick="closeModal('passwordModal')">&times;</button></div>
@@ -395,7 +395,7 @@
   </div>
 </div>
 
-<!-- â”€â”€ MODAL GENIEACS SETTINGS â”€â”€ -->
+<!-- ── MODAL GENIEACS SETTINGS ── -->
 <div class="mo" id="genieacsModal">
   <div class="mb" style="max-width:600px">
     <div class="mh">
@@ -460,9 +460,9 @@
 
 <script>
 /*
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ * ═══════════════════════════════════════════════════════════════════════════
  * DASHBOARD ONU MONITORING - AUTO-REFRESH DISABLED
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ * ═══════════════════════════════════════════════════════════════════════════
  * 
  * AUTO-REFRESH INTENTIONALLY DISABLED TO PREVENT CONTINUOUS POLLING
  * 
@@ -476,10 +476,10 @@
  * - NOT refresh automatically during operations
  * 
  * If you need to update the data, click the "Refresh" button in the UI.
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
-// â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── STATE ──────────────────────────────────────────────────────
 let devicesData = [];
 let donutChart = null;
 let fastRefreshTimer = null;
@@ -537,7 +537,7 @@ const I18N = {
   syncRunning: "Sinkronisasi berjalan"
 };
 
-// â”€â”€ TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── TABS ───────────────────────────────────────────────────────
 function showTab(tab) {
   const isDash = tab === 'dashboard';
   document.getElementById('dashboard-section').style.display = isDash ? 'block' : 'none';
@@ -548,12 +548,12 @@ function showTab(tab) {
   if (!isDash) loadDevices();
 }
 
-// â”€â”€ MODAL HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MODAL HELPERS ──────────────────────────────────────────────
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
 
-// â”€â”€ LOAD STATS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── LOAD STATS ─────────────────────────────────────────────────
 async function loadStats() {
   try {
     const res = await fetch('/admin/api/stats');
@@ -589,7 +589,7 @@ async function loadStats() {
   } catch(e) { console.error('Stats error:', e); }
 }
 
-// â”€â”€ DONUT CHART â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DONUT CHART ────────────────────────────────────────────────
 function updateDonut(online, offline) {
   const ctx = document.getElementById('donutChart');
   if (donutChart) { donutChart.data.datasets[0].data = [online, offline]; donutChart.update(); return; }
@@ -611,7 +611,7 @@ function updateDonut(online, offline) {
   });
 }
 
-// â”€â”€ LOAD DEVICES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── LOAD DEVICES ───────────────────────────────────────────────
 async function loadDevices() {
   const tbody   = document.getElementById('devices-tbody');
   const loading = document.getElementById('loading-devices');
@@ -772,7 +772,7 @@ async function loadDevices() {
   }
 }
 
-// â”€â”€ OFFLINE LIST (dashboard) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── OFFLINE LIST (dashboard) ───────────────────────────────────
 function renderOfflineList(offlineDevices) {
   const el = document.getElementById('offline-list');
   if (!el) return;
@@ -803,7 +803,7 @@ function timeSince(date) {
   return Math.floor(sec/86400) + ' ' + I18N.daysAgo;
 }
 
-// â”€â”€ DEVICE ACTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DEVICE ACTIONS ─────────────────────────────────────────────
 async function showDetail(tag) {
   openModal('deviceModal');
   document.getElementById('device-detail').innerHTML = '<div class="text-muted text-center" style="padding:20px">' + I18N.loading + '</div>';
@@ -956,14 +956,14 @@ document.getElementById('btn-save-password').addEventListener('click', async fun
   }
 });
 
-// â”€â”€ SEARCH DEBOUNCE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SEARCH DEBOUNCE ────────────────────────────────────────────
 const searchEl = document.getElementById('search-device');
 if (searchEl) {
   let st;
   searchEl.addEventListener('input', () => { clearTimeout(st); st = setTimeout(loadDevices, 400); });
 }
 
-// â”€â”€ TOAST NOTIFICATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── TOAST NOTIFICATION ─────────────────────────────────────────
 function showToast(msg, type = 's') {
   const old = document.querySelector('.toast-notif');
   if (old) old.remove();
@@ -987,7 +987,7 @@ function showToast(msg, type = 's') {
   setTimeout(() => { if(t.parentElement) t.style.animation = 'slideOutRight .3s ease forwards'; setTimeout(() => t.remove(), 300); }, 5000);
 }
 
-// â”€â”€ REFRESH ALL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── REFRESH ALL ────────────────────────────────────────────────
 // DEPRECATED: This function is kept for backward compatibility but is disabled
 // Use manualRefreshAll() for user-initiated refreshes only
 function refreshAll() {
@@ -1023,14 +1023,14 @@ loadDevices();
 // NOTE: AUTO-REFRESH HAS BEEN COMPLETELY DISABLED
 // Users must manually click the "Refresh" button to update device list
 
-// â”€â”€ CHECK IF SHOULD GO TO MONITORING TAB (from sidebar link) â”€â”€
+// ── CHECK IF SHOULD GO TO MONITORING TAB (from sidebar link) ──
 if (window.location.hash === '#monitoring') showTab('monitoring');
 window.addEventListener('hashchange', () => {
   if (window.location.hash === '#monitoring') showTab('monitoring');
   else if (window.location.hash === '#dashboard' || !window.location.hash) showTab('dashboard');
 });
 
-// â”€â”€ GENIEACS SETTINGS FUNCTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── GENIEACS SETTINGS FUNCTIONS ────────────────────────────────
 function openGenieACSSettings() {
   openModal('genieacsModal');
 }

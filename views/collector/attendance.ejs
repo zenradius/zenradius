@@ -753,10 +753,10 @@
         const result = await response.json();
         
         if (result.success) {
-          alert('âœ“ ' + result.message);
+          alert('✓ ' + result.message);
           window.location.reload();
         } else {
-          alert('âœ— ' + result.message);
+          alert('✗ ' + result.message);
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Check-in Sekarang';
         }
@@ -788,10 +788,10 @@
         const result = await response.json();
         
         if (result.success) {
-          alert('âœ“ ' + result.message);
+          alert('✓ ' + result.message);
           window.location.reload();
         } else {
-          alert('âœ— ' + result.message);
+          alert('✗ ' + result.message);
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-box-arrow-right me-2"></i>Check-out Sekarang';
         }

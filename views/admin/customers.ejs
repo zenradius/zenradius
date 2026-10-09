@@ -81,7 +81,7 @@
               <td><%= registration.package_name || '-' %></td>
               <td>
                 <% if (registration.registration_status === 'pending_survey') { %><span class="badge bw">Menunggu Survey</span>
-                <% } else if (registration.registration_status === 'surveyed') { %><span class="badge bp">Layak â€” Menunggu Approval</span>
+                <% } else if (registration.registration_status === 'surveyed') { %><span class="badge bp">Layak — Menunggu Approval</span>
                 <% } else if (registration.registration_status === 'approved') { %><span class="badge bs">Disetujui</span>
                 <% } else if (registration.registration_status === 'rejected') { %><span class="badge bd">Ditolak</span>
                 <% } else { %><span class="badge bd">Tidak Layak</span><% } %>
@@ -210,9 +210,9 @@
           </select>
           <% if (typeof routers !== 'undefined' && routers && routers.length > 0) { %>
           <select class="fs" style="width:160px;" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
-            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>>ðŸ“¡ Semua Router</option>
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>>📡 Semua Router</option>
             <% routers.forEach(r => { %>
-              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>>ðŸ“¶ <%= r.name %></option>
+              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>>📶 <%= r.name %></option>
             <% }) %>
           </select>
           <% } %>
@@ -378,8 +378,8 @@
           <div class="form-row" style="margin-bottom:0;" id="add_radius_select_fg">
             <div class="fg" style="margin-bottom:0;">
               <select class="fs" name="is_radius" id="add_is_radius" style="font-weight:700; height:42px;" onchange="handleAuthModeChange('add', this.value)">
-                <option value="0" selected>ðŸŒ MikroTik API (Lokal /ppp secret - Utama & Default)</option>
-                <option value="1">ðŸ–§ RADIUS Server (Billing Database Only)</option>
+                <option value="0" selected>🌐 MikroTik API (Lokal /ppp secret - Utama & Default)</option>
+                <option value="1">🖧 RADIUS Server (Billing Database Only)</option>
               </select>
               <small class="text-muted" style="font-size:11px; display:block; margin-top:4px;">
                 Mode MikroTik API mengelola kredensial PPP langsung di menu /ppp secret RouterOS MikroTik.
@@ -438,7 +438,7 @@
               <select class="fs" name="package_id" required>
                 <option value="">-- Pilih Paket --</option>
                 <% packages.forEach(p => { %>
-                <option value="<%= p.id %>"><%= p.name %> â€” Rp <%= p.price.toLocaleString('id-ID') %></option>
+                <option value="<%= p.id %>"><%= p.name %> — Rp <%= p.price.toLocaleString('id-ID') %></option>
                 <% }) %>
               </select>
             </div>
@@ -682,8 +682,8 @@
           <div class="form-row" style="margin-bottom:0;" id="e_radius_select_fg">
             <div class="fg" style="margin-bottom:0;">
               <select class="fs" name="is_radius" id="e_is_radius" style="font-weight:700; height:42px;" onchange="handleAuthModeChange('edit', this.value)">
-                <option value="0">ðŸŒ MikroTik API (Lokal /ppp secret - Utama & Default)</option>
-                <option value="1">ðŸ–§ RADIUS Server (Billing Database Only)</option>
+                <option value="0">🌐 MikroTik API (Lokal /ppp secret - Utama & Default)</option>
+                <option value="1">🖧 RADIUS Server (Billing Database Only)</option>
               </select>
               <small class="text-muted" style="font-size:11px; display:block; margin-top:4px;">
                 Mode MikroTik API mengelola kredensial PPP langsung di menu /ppp secret RouterOS MikroTik.
@@ -742,7 +742,7 @@
               <select class="fs" name="package_id" id="e_package" required>
                 <option value="">-- Pilih Paket --</option>
                 <% packages.forEach(p => { %>
-                <option value="<%= p.id %>"><%= p.name %> â€” Rp <%= p.price.toLocaleString('id-ID') %></option>
+                <option value="<%= p.id %>"><%= p.name %> — Rp <%= p.price.toLocaleString('id-ID') %></option>
                 <% }) %>
               </select>
             </div>
@@ -1373,7 +1373,7 @@ function copyToClipboard(elementId, label) {
     return;
   }
     navigator.clipboard.writeText(text).then(() => {
-    alert('âœ… ' + label + ' berhasil disalin: ' + text);
+    alert('✅ ' + label + ' berhasil disalin: ' + text);
   }).catch(() => {
     const input = document.createElement('textarea');
     input.value = text;
@@ -1381,7 +1381,7 @@ function copyToClipboard(elementId, label) {
     input.select();
     document.execCommand('copy');
     document.body.removeChild(input);
-    alert('âœ… ' + label + ' berhasil disalin: ' + text);
+    alert('✅ ' + label + ' berhasil disalin: ' + text);
   });
 }
 
@@ -1773,7 +1773,7 @@ function monthsRangesText(months) {
     s = m; p = m;
   }
   ranges.push([s, p]);
-  return ranges.map(([a, b]) => (a === b ? PAY_MNS[a - 1] : (PAY_MNS[a - 1] + 'â€“' + PAY_MNS[b - 1]))).join(', ');
+  return ranges.map(([a, b]) => (a === b ? PAY_MNS[a - 1] : (PAY_MNS[a - 1] + '–' + PAY_MNS[b - 1]))).join(', ');
 }
 
 function updatePayTotal() {
@@ -1980,7 +1980,7 @@ document.querySelector('#editForm')?.addEventListener('submit', function(event) 
 
 setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),4000);
 
-// â”€â”€ Auto-buka modal edit setelah approve pendaftaran online (lengkapi PPPoE dll) â”€â”€
+// ── Auto-buka modal edit setelah approve pendaftaran online (lengkapi PPPoE dll) ──
 (function () {
   let targetId = '';
   try {

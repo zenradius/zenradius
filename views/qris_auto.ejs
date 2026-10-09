@@ -30,7 +30,7 @@
       --landing-bg: var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
             radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
             linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));
-      /* Admin panel palette â€” dipakai untuk menyelaraskan halaman QRIS dengan pop-up Detail Pesanan Voucher di admin */
+      /* Admin panel palette — dipakai untuk menyelaraskan halaman QRIS dengan pop-up Detail Pesanan Voucher di admin */
       --admin-bg2: var(--bg2, #173945);
       --admin-bg3: var(--bg3, #1b4656);
       --admin-border: var(--border, rgba(190,239,255,0.22));
@@ -164,7 +164,7 @@
             <div class="fw-bold" style="font-size:18px"><%= customerName || (isVoucher ? 'Pembeli Voucher' : 'Pelanggan') %></div>
             <div class="muted small">
               <%= refPrefix %>-<%= refId %>
-              <% if (periodText) { %> â€¢ <%= periodText %><% } %>
+              <% if (periodText) { %> • <%= periodText %><% } %>
             </div>
           </div>
 
@@ -222,7 +222,7 @@
             </div>
             <div class="muted small muted-note mt-3 text-center">
               Status pembayaran diperbarui otomatis setelah transaksi terverifikasi.
-              <br><i class="bi bi-check2-circle me-1"></i>Tidak perlu mengirim bukti pembayaran â€” transaksi diverifikasi otomatis oleh sistem.
+              <br><i class="bi bi-check2-circle me-1"></i>Tidak perlu mengirim bukti pembayaran — transaksi diverifikasi otomatis oleh sistem.
             </div>
           </div>
 

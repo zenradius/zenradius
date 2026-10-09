@@ -30,7 +30,7 @@
       --landing-bg: var(--body-bg-image, radial-gradient(circle at 8% 0%, #236060 0%, transparent 34%),
             radial-gradient(circle at 100% 100%, #173e4d 0%, transparent 42%),
             linear-gradient(135deg, #173740 0%, #183f51 52%, #194251 100%));
-      /* Admin panel palette â€” dipakai untuk menyelaraskan halaman QRIS dengan pop-up Detail Pesanan Voucher di admin */
+      /* Admin panel palette — dipakai untuk menyelaraskan halaman QRIS dengan pop-up Detail Pesanan Voucher di admin */
       --admin-bg2: var(--bg2, #173945);
       --admin-bg3: var(--bg3, #1b4656);
       --admin-border: var(--border, rgba(190,239,255,0.22));
@@ -147,7 +147,7 @@
             <div class="fw-bold" style="font-size:18px"><%= customerName || (isVoucher ? 'Pembeli Voucher' : 'Pelanggan') %></div>
             <div class="muted small">
               <%= refPrefix %>-<%= invoiceId %>
-              <% if (periodText) { %> â€¢ <%= periodText %><% } %>
+              <% if (periodText) { %> • <%= periodText %><% } %>
             </div>
           </div>
 
@@ -226,7 +226,7 @@
                 const adminWa = String(adminWaDigits || '').trim();
                 const msgLines = [
                   isVoucher ? 'Konfirmasi pembayaran Voucher (QRIS Statis)' : 'Konfirmasi pembayaran QRIS Statis',
-                  `${refPrefix}-${invoiceId}${periodText ? ' â€¢ ' + periodText : ''}`,
+                  `${refPrefix}-${invoiceId}${periodText ? ' • ' + periodText : ''}`,
                   `Nama: ${customerName || (isVoucher ? 'Pembeli Voucher' : 'Pelanggan')}`,
                   `Nominal: Rp ${Number(amountUnique || 0).toLocaleString('id-ID')} (kode ${String(uniqueCode || 0).padStart(3, '0')})`,
                   proofUrl ? `Bukti: ${proofUrl}` : 'Bukti: (sudah diupload / akan dikirim)',
