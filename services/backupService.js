@@ -467,19 +467,50 @@ function checkBackupCapacity(maxSizeMB = 500) {
 }
 
 /**
- * Jadwal backup otomatis
+ * Jadwal backup otomatis.
+ *
+ * Cron lama '0 2 7,14,21,28 * *' pada node-cron berarti "tanggal 7, 14, 21, 28
+ * tiap bulan" — interval antar backup TIDAK konsisten (3-9 hari tergantung
+ * panjang bulan). Karena node-cron tidak punya "setiap N hari" berurutan,
+ * dipakai pendekatan yang robust: cron HARIAN membuka pengecekan, lalu backup
+ * hanya dijalankan bila backup database terakhir sudah berumur >= interval
+ * (default 7 hari). Konsisten, tahan restart, dan tetap di jam yang sama.
  */
 function scheduleAutoBackup() {
   const nodeCron = require('node-cron');
   const enabled = getSetting('auto_backup_enabled', true);
-  const schedule = getSetting('auto_backup_schedule', '0 2 */7 * *');
+  const intervalDays = Math.max(1, parseInt(getSetting('auto_backup_interval_days', 7), 10) || 7);
+  const atHour = clampHour(getSetting('auto_backup_hour', 2));
+  const atMinute = clampMinute(getSetting('auto_backup_minute', 0));
 
   if (!enabled) {
     logger.info('[Backup] Auto backup disabled');
     return;
   }
 
-  nodeCron.schedule(schedule, async () => {
+  /** Umur (hari) backup database terakhir; Infinity bila belum pernah ada. */
+  const ageOfLastDatabaseBackup = () => {
+    try {
+      const result = listBackups();
+      if (!result.success || !result.backups.length) return Infinity;
+      const dbs = result.backups
+        .filter((b) => b.type === 'database' && b.createdDate instanceof Date && !Number.isNaN(b.createdDate.getTime()))
+        .sort((a, b) => b.createdDate.getTime() - a.createdDate.getTime());
+      if (!dbs.length) return Infinity;
+      return (Date.now() - dbs[0].createdDate.getTime()) / (24 * 60 * 60 * 1000);
+    } catch (e) {
+      logger.debug(`[Backup] Tidak dapat membaca backup terakhir: ${e.message}`);
+      return Infinity;
+    }
+  };
+
+  const expression = `${atMinute} ${atHour} * * *`;
+  nodeCron.schedule(expression, async () => {
+    const age = ageOfLastDatabaseBackup();
+    if (age < intervalDays) {
+      logger.debug(`[Backup] Backup terakhir ${age.toFixed(1)} hari lalu — belum waktunya (interval ${intervalDays} hari).`);
+      return;
+    }
     logger.info('[Backup] Starting scheduled backup...');
     try {
       const result = await backupAll();
@@ -493,7 +524,18 @@ function scheduleAutoBackup() {
     }
   });
 
-  logger.info(`[Backup] Auto backup scheduled: ${schedule}`);
+  logger.info(`[Backup] Auto backup scheduled: ${expression} (interval=${intervalDays} hari, cek harian)`);
+}
+
+/** Batasi jam 0-23. */
+function clampHour(v) {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) && n >= 0 && n <= 23 ? n : 2;
+}
+/** Batasi menit 0-59. */
+function clampMinute(v) {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) && n >= 0 && n <= 59 ? n : 0;
 }
 
 module.exports = {

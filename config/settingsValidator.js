@@ -322,6 +322,24 @@ const VALIDATION_RULES = {
     type: 'boolean',
     description: 'Enable auto backup'
   },
+  auto_backup_interval_days: {
+    type: 'number',
+    min: 1,
+    max: 365,
+    description: 'Interval backup otomatis dalam hari (default 7)'
+  },
+  auto_backup_hour: {
+    type: 'number',
+    min: 0,
+    max: 23,
+    description: 'Jam eksekusi backup otomatis (0-23)'
+  },
+  auto_backup_minute: {
+    type: 'number',
+    min: 0,
+    max: 59,
+    description: 'Menit eksekusi backup otomatis (0-59)'
+  },
   login_otp_enabled: {
     type: 'boolean',
     description: 'Enable OTP login'

@@ -48,6 +48,14 @@ function validateSettingsMiddleware(req, res, next) {
       }
     });
 
+    const intFields = ['auto_backup_interval_days', 'auto_backup_hour', 'auto_backup_minute'];
+    intFields.forEach(field => {
+      if (field in settings && settings[field] !== undefined && settings[field] !== '') {
+        const n = parseInt(settings[field], 10);
+        if (!Number.isNaN(n)) settings[field] = n;
+      }
+    });
+
     const stringTrimFields = ['office_lat', 'office_lng', 'company_phone', 'company_email'];
     stringTrimFields.forEach(field => {
       if (field in settings && typeof settings[field] === 'string') {

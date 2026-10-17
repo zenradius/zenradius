@@ -295,9 +295,13 @@ function ensureDefaultSettings() {
 // Tema Aplikasi global — 'space' (ZenRadius Space / DESIGN.md) atau 'current' (ZenRadius Ocean, tampilan asli)
       app_theme: 'space',
 
-      // Backup otomatis setiap 7 hari sekali (satu-satunya jalur backup terjadwal, lihat backupService.scheduleAutoBackup)
+      // Backup otomatis: interval dalam hari (default 7), dieksekusi harian
+      // oleh backupService.scheduleAutoBackup bila backup terakhir sudah
+      // berumur >= interval.
       auto_backup_enabled: true,
-      auto_backup_schedule: '0 2 */7 * *',
+      auto_backup_interval_days: 7,
+      auto_backup_hour: 2,
+      auto_backup_minute: 0,
       
       wa_gateway_type: 'baileys',
       // WhatsApp aktif secara default agar QR pairing langsung muncul
