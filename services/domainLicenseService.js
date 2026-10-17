@@ -20,7 +20,10 @@ const instanceIdentity = require('./instanceIdentityService');
 const tokenSvc = require('./licenseTokenService');
 
 // Secret HMAC legacy (v1/v2). Tidak dipakai untuk penerbitan baru.
-const MASTER_SECRET = '@Du4du4220215@';
+// Nilai default dipertahankan untuk kompatibilitas instalasi lama; operator
+// yang memakai serial HMAC sebaiknya menyetel ZENRADIUS_MASTER_SECRET di env
+// agar sama dengan LICENSE signing/registry (web & Worker).
+const MASTER_SECRET = process.env.ZENRADIUS_MASTER_SECRET || '@Du4du4220215@';
 const LOCAL_DOMAIN = 'local';
 
 let cache = { key: null, host: null, valid: false, at: 0 };

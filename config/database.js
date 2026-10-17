@@ -631,6 +631,20 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_mobile_sessions_refresh_hash ON mobile_sessions(refresh_token_hash);
   CREATE INDEX IF NOT EXISTS idx_mobile_sessions_access_fp ON mobile_sessions(access_token_fingerprint);
   CREATE INDEX IF NOT EXISTS idx_mobile_sessions_revoked ON mobile_sessions(revoked_at);
+
+    CREATE TABLE IF NOT EXISTS admin_qr_login_challenges (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      challenge_hash TEXT NOT NULL UNIQUE,
+      browser_session_hash TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      admin_user TEXT DEFAULT '',
+      approved_at INTEGER,
+      consumed_at INTEGER,
+      expires_at INTEGER NOT NULL,
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+    CREATE INDEX IF NOT EXISTS idx_admin_qr_login_expiry ON admin_qr_login_challenges(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_admin_qr_login_browser ON admin_qr_login_challenges(browser_session_hash, status);
 `);
 
 db.exec(`

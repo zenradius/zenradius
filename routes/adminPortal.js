@@ -620,9 +620,120 @@ try {
   }
 } catch (e) {}
 
+function hashAdminQrValue(value) {
+  return crypto.createHash('sha256').update(String(value || '')).digest('hex');
+}
+
+function adminQrServerUrl(req) {
+  const configured = String(getSetting('app_url', '') || '').trim().replace(/\/+$/, '');
+  if (configured) return /^https?:\/\//i.test(configured) ? configured : `https://${configured}`;
+  const protocol = String(req.headers['x-forwarded-proto'] || req.protocol).split(',')[0].trim();
+  return `${protocol}://${req.get('host')}`;
+}
+
+router.post('/login/qr-challenge', loginRateLimiter, (req, res) => {
+  if (req.session?.isAdmin || req.session?.isCashier) {
+    return res.status(409).json({ success: false, error: { code: 'ALREADY_AUTHENTICATED', message: 'Sesi web sudah masuk.' } });
+  }
+
+  req.session.regenerate((regenerateError) => {
+    if (regenerateError) {
+      return res.status(500).json({ success: false, error: { code: 'SESSION_ERROR', message: 'Sesi browser gagal dibuat.' } });
+    }
+    req.session.qrAdminBrowser = true;
+    req.session.save(async (saveError) => {
+      if (saveError) {
+        return res.status(500).json({ success: false, error: { code: 'SESSION_ERROR', message: 'Sesi browser gagal disimpan.' } });
+      }
+      try {
+        const challenge = crypto.randomBytes(32).toString('base64url');
+        const now = Math.floor(Date.now() / 1000);
+        const expiresAt = now + 120;
+        db.prepare('DELETE FROM admin_qr_login_challenges WHERE expires_at < ?').run(now - 86400);
+        db.prepare(`
+          INSERT INTO admin_qr_login_challenges (challenge_hash, browser_session_hash, status, expires_at)
+          VALUES (?, ?, 'pending', ?)
+        `).run(hashAdminQrValue(challenge), hashAdminQrValue(req.sessionID), expiresAt);
+
+        const payload = JSON.stringify({
+          type: 'zenradius-admin-login',
+          version: 1,
+          server: adminQrServerUrl(req),
+          challenge
+        });
+        const qrDataUrl = await QRCode.toDataURL(payload, { errorCorrectionLevel: 'M', margin: 2, width: 280 });
+        res.set('Cache-Control', 'no-store');
+        return res.status(200).json({ success: true, data: { qrDataUrl, challenge, expiresAt, expiresIn: 120 } });
+      } catch (err) {
+        logger.error(`[admin-qr-login] Challenge creation failed: ${err.message}`);
+        return res.status(500).json({ success: false, error: { code: 'QR_CREATE_FAILED', message: 'QR login gagal dibuat.' } });
+      }
+    });
+  });
+});
+
+router.post('/login/qr-challenge/status', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (req.session?.isAdmin) return res.status(200).json({ success: true, data: { status: 'authorized', redirect: '/admin' } });
+  if (!req.session?.qrAdminBrowser) {
+    return res.status(403).json({ success: false, error: { code: 'BROWSER_SESSION_MISMATCH', message: 'Sesi browser tidak cocok.' } });
+  }
+
+  const challenge = String((req.body || {}).challenge || '').trim();
+  if (!/^[A-Za-z0-9_-]{40,64}$/.test(challenge)) {
+    return res.status(422).json({ success: false, error: { code: 'INVALID_CHALLENGE', message: 'Challenge QR tidak valid.' } });
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const row = db.prepare(`
+    SELECT id, status, admin_user, expires_at
+    FROM admin_qr_login_challenges
+    WHERE challenge_hash = ? AND browser_session_hash = ?
+    LIMIT 1
+  `).get(hashAdminQrValue(challenge), hashAdminQrValue(req.sessionID));
+  if (!row) return res.status(404).json({ success: false, error: { code: 'CHALLENGE_NOT_FOUND', message: 'QR login tidak ditemukan.' } });
+  if (Number(row.expires_at) <= now) {
+    db.prepare("UPDATE admin_qr_login_challenges SET status='expired' WHERE id=? AND status='pending'").run(row.id);
+    return res.status(200).json({ success: true, data: { status: 'expired' } });
+  }
+  if (row.status === 'pending') return res.status(200).json({ success: true, data: { status: 'pending' } });
+  if (row.status !== 'approved') {
+    return res.status(409).json({ success: false, error: { code: 'CHALLENGE_USED', message: 'QR login sudah dipakai.' } });
+  }
+
+  const consumed = db.prepare(`
+    UPDATE admin_qr_login_challenges SET status='consumed', consumed_at=?
+    WHERE id=? AND status='approved' AND consumed_at IS NULL AND expires_at > ?
+  `).run(now, row.id, now);
+  if (!consumed.changes) return res.status(409).json({ success: false, error: { code: 'CHALLENGE_USED', message: 'QR login sudah dipakai.' } });
+
+  return req.session.regenerate((regenerateError) => {
+    if (regenerateError) {
+      return res.status(500).json({ success: false, error: { code: 'SESSION_ERROR', message: 'Sesi Admin gagal dibuat.' } });
+    }
+    const adminUser = String(row.admin_user || 'admin');
+    req.session.isAdmin = true;
+    req.session.userRole = 'admin';
+    req.session.role = 'admin';
+    req.session.adminUser = adminUser;
+    req.session.isMasterAdmin = true;
+    auditSvc.logAuditTrail({
+      action: 'LOGIN', entity_type: 'admin_session', entity_id: adminUser,
+      actor_type: 'admin', actor_id: adminUser, actor_name: adminUser,
+      details: { method: 'mobile_qr' }, ip_address: req.ip, user_agent: req.get('user-agent')
+    });
+    req.session.save((saveError) => {
+      if (saveError) {
+        logger.error(`[admin-qr-login] Session save failed: ${saveError.message}`);
+        return res.status(500).json({ success: false, error: { code: 'SESSION_ERROR', message: 'Sesi Admin gagal disimpan.' } });
+      }
+      return res.status(200).json({ success: true, data: { status: 'authorized', redirect: '/admin' } });
+    });
+  });
+});
+
 router.get('/login', (req, res) => {
   if (req.session?.isAdmin || req.session?.isCashier) return res.redirect('/admin');
-  res.render('admin/login', { title: 'Admin Login', company: company(), error: null, loginAction: '/admin/login' });
+  res.render('admin/login', { title: 'Admin Login', company: company(), error: null, loginAction: '/admin/login', qrLoginEnabled: true });
 });
 
 router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), (req, res) => {

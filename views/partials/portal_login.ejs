@@ -84,6 +84,12 @@
     .login-links a{color:var(--portal-primary, #3b82f6);font-weight:700;text-decoration:none;transition:color 0.2s;}
     .login-links a:hover{color:var(--portal-primary-strong, #7c5cff);text-decoration:underline}
     .alert-success{background:rgba(74,222,128,.1);color:#86efac;border:1px solid rgba(74,222,128,.22)}
+    .qr-login{width:100%;max-width:320px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)}
+    .qr-login-copy{color:rgba(255,255,255,.62);font-size:12px;line-height:1.5;margin:8px 0 12px}
+    .qr-login-panel{display:none;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
+    .qr-login-panel.is-visible{display:flex}
+    .qr-login-image{width:220px;height:220px;padding:10px;background:#fff;border-radius:12px}
+    .qr-login-status{min-height:20px;color:rgba(255,255,255,.72);font-size:12px;text-align:center}
   </style>
 </head>
 <body>
@@ -120,6 +126,20 @@
       </div>
       <button type="submit" class="btn btn-login" id="portal-login-btn"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang</button>
     </form>
+
+    <% if (typeof qrLoginEnabled !== 'undefined' && qrLoginEnabled) { %>
+      <div class="qr-login">
+        <button type="button" id="btn-admin-qr-login" class="btn btn-sm btn-pwa fw-bold w-100">
+          <i class="bi bi-qr-code-scan me-1"></i> Masuk dengan aplikasi Admin
+        </button>
+        <p class="qr-login-copy">Pindai QR ini dari aplikasi ZenRadius dengan akun Administrator, lalu setujui login web.</p>
+        <div id="admin-qr-panel" class="qr-login-panel" aria-live="polite">
+          <img id="admin-qr-image" class="qr-login-image" alt="QR login Admin">
+          <div id="admin-qr-status" class="qr-login-status">Membuat QR login...</div>
+          <button type="button" id="btn-admin-qr-cancel" class="btn btn-sm btn-pwa">Tutup QR</button>
+        </div>
+      </div>
+    <% } %>
 
     <% if (_links.length) { %>
       <div class="login-links">
@@ -159,6 +179,80 @@
         button.innerHTML = show ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
       });
     });
+
+    <% if (typeof qrLoginEnabled !== 'undefined' && qrLoginEnabled) { %>
+    (() => {
+      const startButton = document.getElementById('btn-admin-qr-login');
+      const cancelButton = document.getElementById('btn-admin-qr-cancel');
+      const panel = document.getElementById('admin-qr-panel');
+      const image = document.getElementById('admin-qr-image');
+      const status = document.getElementById('admin-qr-status');
+      let polling = false;
+      let challenge = '';
+
+      const stopPolling = () => { polling = false; };
+      const pollStatus = async () => {
+        if (!polling || !challenge) return;
+        try {
+          const response = await fetch('/admin/login/qr-challenge/status', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ challenge })
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success) throw new Error(result.error?.message || 'Status QR tidak dapat diperiksa.');
+          if (result.data.status === 'authorized') {
+            stopPolling();
+            status.textContent = 'Login berhasil. Membuka Admin...';
+            window.location.replace(result.data.redirect || '/admin');
+            return;
+          }
+          if (result.data.status === 'expired') {
+            stopPolling();
+            status.textContent = 'QR kedaluwarsa. Tutup dan buat QR baru.';
+            return;
+          }
+          status.textContent = 'Menunggu persetujuan Administrator dari aplikasi...';
+          window.setTimeout(pollStatus, 1500);
+        } catch (error) {
+          stopPolling();
+          status.textContent = error.message || 'Koneksi polling terputus. Coba buat QR baru.';
+        }
+      };
+
+      startButton?.addEventListener('click', async () => {
+        startButton.disabled = true;
+        panel?.classList.add('is-visible');
+        status.textContent = 'Membuat QR login...';
+        try {
+          const response = await fetch('/admin/login/qr-challenge', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success) throw new Error(result.error?.message || 'QR login gagal dibuat.');
+          challenge = result.data.challenge;
+          image.src = result.data.qrDataUrl;
+          polling = true;
+          status.textContent = 'Berlaku 2 menit. Pindai dari aplikasi Admin.';
+          pollStatus();
+        } catch (error) {
+          status.textContent = error.message || 'QR login gagal dibuat.';
+        } finally {
+          startButton.disabled = false;
+        }
+      });
+
+      cancelButton?.addEventListener('click', () => {
+        stopPolling();
+        challenge = '';
+        image.removeAttribute('src');
+        panel?.classList.remove('is-visible');
+      });
+    })();
+    <% } %>
 
     let deferredPwaPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPwaPrompt = e; });

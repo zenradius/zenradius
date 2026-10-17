@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { logger } = require('../config/logger');
-const { getSetting } = require('../config/settingsManager');
+const { getSetting, getCurrentDateInTimezone } = require('../config/settingsManager');
 const mobileAuthSvc = require('../services/mobileAuthService');
 const { getCanonicalRole, requireAuth, requireRole } = require('../middleware/authz');
 const { loginRateLimiter } = require('../middleware/rateLimiter');
@@ -12,9 +12,14 @@ const db = require('../config/database');
 const customerSvc = require('../services/customerService');
 const adminSvc = require('../services/adminService');
 const agentSvc = require('../services/agentService');
+const mikrotikService = require('../services/mikrotikService');
 const billingSvc = require('../services/billingService');
 const ticketSvc = require('../services/ticketService');
 const techSvc = require('../services/techService');
+const attendanceSvc = require('../services/attendanceService');
+const auditSvc = require('../services/auditTrailService');
+const { uploadAttendance, verifyAttendanceFileMagicBytes, removeAttendanceFile } = require('../middleware/attendanceUpload');
+const sidebarMenuSvc = require('../services/sidebarMenuService');
 const pushSvc = require('../services/pushNotificationService');
 const tokenUtil = require('../utils/tokenUtil');
 
@@ -151,6 +156,22 @@ router.post('/auth/login', loginRateLimiter, (req, res) => {
         userId: String(user.id)
       }));
     }
+
+    const collector = adminSvc.authenticateCollector(cleanIdentifier, password);
+    if (collector && collector.id) {
+      const session = mobileAuthSvc.createSession(collector.id, 'kolektor', deviceId || null, {
+        identifier: cleanIdentifier,
+        loginSource: 'mobile'
+      });
+
+      return res.status(200).json(successResponse({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        expiresIn: session.expiresIn,
+        role: 'kolektor',
+        userId: String(collector.id)
+      }));
+    }
     
     user = db.prepare('SELECT id, password FROM technicians WHERE username = ? AND is_active = 1 LIMIT 1').get(cleanIdentifier);
     if (user && adminSvc.verifyPassword(password, user.password)) {
@@ -257,6 +278,34 @@ router.post('/auth/logout', requireMobileAuth, (req, res) => {
   }
 });
 
+router.post('/auth/qr-login/approve', requireMobileRole('admin'), (req, res) => {
+  const challenge = String((req.body || {}).challenge || '').trim();
+  if (!/^[A-Za-z0-9_-]{40,64}$/.test(challenge)) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', 'QR login tidak valid.'));
+  }
+  const session = mobileAuthSvc.getSessionInfo(req.mobileUser.sessionId);
+  if (!session || session.role !== 'admin' || String(session.user_id) !== 'admin-master') {
+    return res.status(403).json(errorResponse('FORBIDDEN', 'Hanya akun Administrator yang dapat menyetujui QR login.'));
+  }
+
+  let deviceInfo = {};
+  try { deviceInfo = JSON.parse(session.device_info || '{}'); } catch (_) {}
+  const adminUser = String(deviceInfo.identifier || process.env.MASTER_ADMIN_USERNAME || getSetting('admin_username', '') || 'admin').trim();
+  const challengeHash = crypto.createHash('sha256').update(challenge).digest('hex');
+  const now = Math.floor(Date.now() / 1000);
+  const result = db.prepare(`
+    UPDATE admin_qr_login_challenges
+    SET status = 'approved', admin_user = ?, approved_at = ?
+    WHERE challenge_hash = ? AND status = 'pending' AND expires_at > ?
+  `).run(adminUser, now, challengeHash, now);
+
+  if (!result.changes) {
+    return res.status(409).json(errorResponse('QR_EXPIRED_OR_USED', 'QR sudah kedaluwarsa atau telah dipakai.'));
+  }
+  logger.info(`[admin-qr-login] Approved by mobile admin session=${req.mobileUser.sessionId}`);
+  return res.status(200).json(successResponse({ approved: true, expiresIn: 120 }));
+});
+
 /** GET /api/mobile/v1/me */
 router.get('/me', requireMobileAuth, (req, res) => {
   try {
@@ -275,6 +324,8 @@ router.get('/me', requireMobileAuth, (req, res) => {
           canChangePassword: false
         }));
       }
+    } else if (role === 'kolektor') {
+      user = db.prepare('SELECT id, username, name, phone, area FROM collectors WHERE id = ? AND is_active = 1').get(userId);
     } else if (role === 'teknisi') {
       user = db.prepare('SELECT id, username, name, phone FROM technicians WHERE id = ?').get(userId);
     } else if (role === 'reseller') {
@@ -303,6 +354,18 @@ router.get('/me', requireMobileAuth, (req, res) => {
           status: user.status || null,
           pppoeUsername: user.pppoe_username || null,
           packageName: pkg ? pkg.name : null,
+          canChangePassword: true
+        }));
+      }
+
+      if (role === 'kolektor') {
+        return res.status(200).json(successResponse({
+          userId: String(user.id),
+          role,
+          username: user.username || null,
+          name: user.name,
+          phone: user.phone || null,
+          area: user.area || null,
           canChangePassword: true
         }));
       }
@@ -365,6 +428,72 @@ function toInt(v, fallback = 0) {
 function clampLimit(v, def = 50, max = 200) {
   const n = toInt(v, def);
   return Math.min(Math.max(n, 1), max);
+}
+
+function mobileAttendanceIdentity(req) {
+  const isTechnician = req.mobileUser.role === 'teknisi';
+  const employeeType = isTechnician ? 'technician' : 'cashier';
+  const table = isTechnician ? 'technicians' : 'cashiers';
+  const employee = db.prepare(`SELECT id, name, username FROM ${table} WHERE id = ? AND is_active = 1`)
+    .get(toInt(req.mobileUser.userId));
+  return employee ? { employeeType, employee } : null;
+}
+
+function projectAttendance(record) {
+  if (!record) return null;
+  return {
+    id: record.id,
+    status: record.status,
+    checkInTime: record.check_in_time || null,
+    checkInLat: record.check_in_lat || null,
+    checkInLng: record.check_in_lng || null,
+    checkInNote: record.check_in_note || null,
+    checkInPhoto: record.check_in_photo || null,
+    checkOutTime: record.check_out_time || null,
+    checkOutLat: record.check_out_lat || null,
+    checkOutLng: record.check_out_lng || null,
+    checkOutNote: record.check_out_note || null,
+    checkOutPhoto: record.check_out_photo || null,
+    workDurationMinutes: Number(record.work_duration_minutes || 0)
+  };
+}
+
+function requireMobileAttendanceMenu(req, res, next) {
+  if (req.mobileUser.role === 'customer_service') {
+    const access = sidebarMenuSvc.evaluateMenuAccess('cashier_attendance', {
+      role: 'cashier',
+      isCashier: true,
+      cashierId: req.mobileUser.userId
+    });
+    if (!access.allowed) return res.status(403).json(errorResponse('FORBIDDEN', 'Menu absensi sedang dinonaktifkan.'));
+  }
+  if (req.mobileUser.role === 'teknisi') {
+    const access = sidebarMenuSvc.evaluateMenuAccess('tech_attendance', {
+      role: 'teknisi',
+      isTechnician: true,
+      techId: req.mobileUser.userId
+    });
+    if (!access.allowed) return res.status(403).json(errorResponse('FORBIDDEN', 'Menu absensi sedang dinonaktifkan.'));
+  }
+  next();
+}
+
+function mobileAttendanceUpload(req, res, next) {
+  uploadAttendance.single('photo')(req, res, (uploadError) => {
+    if (uploadError) {
+      return res.status(400).json(errorResponse('INVALID_UPLOAD', uploadError.message || 'Foto absensi tidak valid.'));
+    }
+    verifyAttendanceFileMagicBytes(req, res, next);
+  });
+}
+
+function readAttendanceCoordinates(body) {
+  const lat = Number(body.lat);
+  const lng = Number(body.lng);
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) {
+    throw new Error('Lokasi GPS tidak valid.');
+  }
+  return { lat: String(lat), lng: String(lng) };
 }
 
 /** Invoice projection safe for any role that is allowed to see the invoice. */
@@ -447,6 +576,33 @@ function ownsTicket(req, t) {
   return t && String(t.customer_id) === String(req.mobileUser.userId);
 }
 
+function getActiveCollector(userId) {
+  return db.prepare(`
+    SELECT id, username, name, phone, area, auto_approve
+    FROM collectors WHERE id = ? AND is_active = 1
+  `).get(userId);
+}
+
+function collectorCustomerScope(collector, alias = 'c') {
+  const area = String(collector.area || '').trim();
+  if (area) {
+    return {
+      sql: `(${alias}.collector_id = ? OR ((${alias}.collector_id IS NULL OR ${alias}.collector_id = 0) AND LOWER(TRIM(${alias}.area)) = LOWER(TRIM(?))))`,
+      params: [collector.id, area]
+    };
+  }
+  return {
+    sql: `(${alias}.collector_id = ? OR ${alias}.collector_id IS NULL)`,
+    params: [collector.id]
+  };
+}
+
+function collectorCanAccessCustomer(collector, customerId) {
+  if (!collector) return false;
+  const scope = collectorCustomerScope(collector);
+  return Boolean(db.prepare(`SELECT c.id FROM customers c WHERE c.id = ? AND ${scope.sql}`).get(toInt(customerId), ...scope.params));
+}
+
 /** GET /api/mobile/v1/push/config */
 router.get('/push/config', requireMobileAuth, (req, res) => {
   const projectId = String(getSetting('fcm_project_id', '') || '').trim();
@@ -517,6 +673,7 @@ router.get('/notifications', requireMobileAuth, (req, res) => {
 
 const PASSWORD_TABLES = Object.freeze({
   customer_service: 'cashiers',
+  kolektor: 'collectors',
   teknisi: 'technicians',
   reseller: 'agents'
 });
@@ -599,6 +756,41 @@ router.get('/dashboard', requireMobileAuth, (req, res) => {
       }));
     }
 
+    if (role === 'kolektor') {
+      const collector = getActiveCollector(userId);
+      if (!collector) return res.status(404).json(errorResponse('NOT_FOUND', 'Kolektor tidak ditemukan.'));
+      const scope = collectorCustomerScope(collector);
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      const summary = db.prepare(`
+        SELECT COUNT(DISTINCT c.id) AS assignedCustomers,
+               SUM(CASE WHEN i.status = 'unpaid' OR i.status IS NULL THEN 1 ELSE 0 END) AS unpaidCount,
+               SUM(CASE WHEN i.status = 'unpaid' OR i.status IS NULL THEN COALESCE(i.amount, p.price, 0) ELSE 0 END) AS unpaidTotal,
+               SUM(CASE WHEN i.status = 'paid' THEN COALESCE(i.amount, 0) ELSE 0 END) AS collectedThisMonth
+        FROM customers c
+        LEFT JOIN packages p ON c.package_id = p.id
+        LEFT JOIN invoices i ON i.customer_id = c.id AND i.period_month = ? AND i.period_year = ?
+        WHERE ${scope.sql}
+      `).get(month, year, ...scope.params) || {};
+      const recentCollections = db.prepare(`
+        SELECT i.*, c.name AS customer_name, p.name AS package_name
+        FROM collector_payment_requests r
+        JOIN invoices i ON i.id = r.invoice_id
+        JOIN customers c ON c.id = i.customer_id
+        LEFT JOIN packages p ON p.id = c.package_id
+        WHERE r.collector_id = ? AND r.status = 'approved'
+        ORDER BY COALESCE(r.decided_at, i.paid_at, r.created_at) DESC
+        LIMIT 5
+      `).all(collector.id).map(projectInvoice);
+      return res.status(200).json(successResponse({
+        role,
+        area: collector.area || null,
+        ...summary,
+        recentCollections
+      }));
+    }
+
     if (role === 'teknisi') {
       const stats = techSvc.getTechStats(userId);
       const assigned = techSvc.getAssignedTickets(userId).slice(0, 5).map(projectTicket);
@@ -646,6 +838,109 @@ router.get('/dashboard', requireMobileAuth, (req, res) => {
   }
 });
 
+const MOBILE_ATTENDANCE_ROLES = ['teknisi', 'customer_service'];
+
+router.get('/attendance', requireMobileRole(MOBILE_ATTENDANCE_ROLES), requireMobileAttendanceMenu, (req, res) => {
+  try {
+    const identity = mobileAttendanceIdentity(req);
+    if (!identity) return res.status(404).json(errorResponse('NOT_FOUND', 'Akun karyawan tidak ditemukan.'));
+    const { employeeType, employee } = identity;
+    const now = getCurrentDateInTimezone();
+    const today = attendanceSvc.getTodayAttendance(employeeType, employee.id);
+    const history = attendanceSvc.getAttendanceHistory(employeeType, employee.id, 10);
+    const summary = attendanceSvc.getMonthlyAttendanceSummary(employeeType, employee.id, now.getFullYear(), now.getMonth() + 1) || {};
+    const geofencing = attendanceSvc.getGeofencingSettings();
+    return res.status(200).json(successResponse({
+      employee: { id: employee.id, name: employee.name || employee.username },
+      employeeType,
+      todayAttendance: projectAttendance(today),
+      history: history.map(projectAttendance),
+      summary: {
+        totalDays: Number(summary.total_days || 0),
+        completedDays: Number(summary.completed_days || 0),
+        totalMinutes: Number(summary.total_minutes || 0),
+        averageMinutes: Number(summary.avg_minutes || 0)
+      },
+      geofencing: { enabled: Boolean(geofencing.enabled), radius: Number(geofencing.radius || 0) }
+    }));
+  } catch (err) {
+    logger.error(`[mobile-api] attendance read error: ${err.message}`);
+    return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Riwayat absensi gagal dimuat.'));
+  }
+});
+
+router.post('/attendance/check-in', requireMobileRole(MOBILE_ATTENDANCE_ROLES), requireMobileAttendanceMenu, mobileAttendanceUpload, (req, res) => {
+  if (!req.file) return res.status(422).json(errorResponse('PHOTO_REQUIRED', 'Foto check-in wajib diunggah.'));
+  try {
+    const identity = mobileAttendanceIdentity(req);
+    if (!identity) {
+      removeAttendanceFile(req.file);
+      return res.status(404).json(errorResponse('NOT_FOUND', 'Akun karyawan tidak ditemukan.'));
+    }
+    const { employeeType, employee } = identity;
+    const today = attendanceSvc.getTodayAttendance(employeeType, employee.id);
+    if (today) {
+      removeAttendanceFile(req.file);
+      return res.status(409).json(errorResponse('ALREADY_CHECKED_IN', 'Anda sudah melakukan check-in hari ini.'));
+    }
+    const { lat, lng } = readAttendanceCoordinates(req.body || {});
+    const result = attendanceSvc.checkIn({
+      employee_type: employeeType,
+      employee_id: employee.id,
+      employee_name: employee.name || employee.username,
+      lat,
+      lng,
+      note: String((req.body || {}).note || '').trim().slice(0, 500),
+      photo: `/uploads/attendance/${req.file.filename}`
+    });
+    const record = attendanceSvc.getTodayAttendance(employeeType, employee.id);
+    return res.status(201).json(successResponse({
+      attendance: projectAttendance(record),
+      id: Number(result.lastInsertRowid)
+    }));
+  } catch (err) {
+    removeAttendanceFile(req.file);
+    const message = String(err.message || 'Check-in gagal.');
+    const isLocationError = /location|gps|range|far|jarak|lokasi/i.test(message);
+    return res.status(isLocationError ? 422 : 500).json(errorResponse(isLocationError ? 'LOCATION_REJECTED' : 'INTERNAL_ERROR', message));
+  }
+});
+
+router.post('/attendance/check-out', requireMobileRole(MOBILE_ATTENDANCE_ROLES), requireMobileAttendanceMenu, mobileAttendanceUpload, (req, res) => {
+  if (!req.file) return res.status(422).json(errorResponse('PHOTO_REQUIRED', 'Foto check-out wajib diunggah.'));
+  try {
+    const identity = mobileAttendanceIdentity(req);
+    if (!identity) {
+      removeAttendanceFile(req.file);
+      return res.status(404).json(errorResponse('NOT_FOUND', 'Akun karyawan tidak ditemukan.'));
+    }
+    const { employeeType, employee } = identity;
+    const today = attendanceSvc.getTodayAttendance(employeeType, employee.id);
+    if (!today) {
+      removeAttendanceFile(req.file);
+      return res.status(409).json(errorResponse('NOT_CHECKED_IN', 'Anda belum check-in hari ini.'));
+    }
+    if (today.status === 'checked_out') {
+      removeAttendanceFile(req.file);
+      return res.status(409).json(errorResponse('ALREADY_CHECKED_OUT', 'Anda sudah check-out hari ini.'));
+    }
+    const { lat, lng } = readAttendanceCoordinates(req.body || {});
+    attendanceSvc.checkOut(today.id, {
+      lat,
+      lng,
+      note: String((req.body || {}).note || '').trim().slice(0, 500),
+      photo: `/uploads/attendance/${req.file.filename}`
+    });
+    const record = attendanceSvc.getTodayAttendance(employeeType, employee.id);
+    return res.status(200).json(successResponse({ attendance: projectAttendance(record) }));
+  } catch (err) {
+    removeAttendanceFile(req.file);
+    const message = String(err.message || 'Check-out gagal.');
+    const isLocationError = /location|gps|range|far|jarak|lokasi/i.test(message);
+    return res.status(isLocationError ? 422 : 500).json(errorResponse(isLocationError ? 'LOCATION_REJECTED' : 'INTERNAL_ERROR', message));
+  }
+});
+
 router.get('/customers', requireMobileRole(STAFF_ROLES), (req, res) => {
   try {
     const search = String(req.query.q || '').trim().slice(0, 100);
@@ -677,6 +972,320 @@ router.get('/customers/:id', requireMobileRole(STAFF_ROLES), (req, res) => {
   }
 });
 
+router.post('/customers/:id/profile', requireMobileRole(STAFF_ROLES), (req, res) => {
+  const id = toInt(req.params.id, 0);
+  if (id <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'ID pelanggan tidak valid.'));
+  const current = customerSvc.getCustomerById(id);
+  if (!current) return res.status(404).json(errorResponse('NOT_FOUND', 'Pelanggan tidak ditemukan.'));
+
+  const body = req.body || {};
+  const name = String(body.name || '').trim();
+  const phone = String(body.phone || '').trim();
+  const email = String(body.email || '').trim().toLowerCase();
+  const address = String(body.address || '').trim();
+  const area = String(body.area || '').trim();
+  if (!name || name.length > 120) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Nama wajib diisi (maksimal 120 karakter).'));
+  if (phone.length > 32 || address.length > 500 || area.length > 120) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Panjang telepon, alamat, atau area melebihi batas.'));
+  }
+  if (email && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Format email tidak valid.'));
+  }
+  if (email && db.prepare("SELECT id FROM customers WHERE LOWER(email)=? AND email != '' AND id != ? LIMIT 1").get(email, id)) {
+    return res.status(409).json(errorResponse('EMAIL_IN_USE', 'Email ini sudah terdaftar pada pelanggan lain.'));
+  }
+
+  try {
+    customerSvc.updateCustomer(id, { ...current, name, phone, email, address, area });
+    const updated = customerSvc.getCustomerById(id);
+    auditSvc.logAuditTrail({
+      action: 'UPDATE_CUSTOMER_PROFILE_MOBILE',
+      entity_type: 'customer',
+      entity_id: String(id),
+      ...actorFromReq(req),
+      details: { fields: ['name', 'phone', 'email', 'address', 'area'] }
+    });
+    return res.status(200).json(successResponse({ customer: projectCustomerForStaff(updated) }));
+  } catch (err) {
+    logger.error(`[mobile-api] customer profile update error id=${id}: ${err.message}`);
+    return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Profil pelanggan gagal diperbarui.'));
+  }
+});
+
+router.post('/customers/:id/service', requireMobileRole(STAFF_ROLES), async (req, res) => {
+  const id = toInt(req.params.id, 0);
+  if (id <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'ID pelanggan tidak valid.'));
+  const current = customerSvc.getCustomerById(id);
+  if (!current) return res.status(404).json(errorResponse('NOT_FOUND', 'Pelanggan tidak ditemukan.'));
+  const action = String((req.body || {}).action || '').trim();
+  try {
+    if (action === 'isolate') {
+      if (current.status === 'suspended') return res.status(409).json(errorResponse('CONFLICT', 'Pelanggan sudah diisolir.'));
+      await customerSvc.suspendCustomer(id);
+    } else if (action === 'unisolate') {
+      if (current.status === 'active') return res.status(409).json(errorResponse('CONFLICT', 'Pelanggan sudah aktif.'));
+      await customerSvc.activateCustomer(id);
+    } else if (action === 'setPackage') {
+      const packageId = toInt((req.body || {}).packageId, 0);
+      const pkg = customerSvc.getPackageById(packageId);
+      if (!pkg) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Paket tidak ditemukan.'));
+      const previousPackageId = current.package_id;
+      customerSvc.updateCustomer(id, { ...current, package_id: packageId });
+      const updated = customerSvc.getCustomerById(id);
+      try {
+        const effectiveRouterId = customerSvc.getEffectiveRouterId(updated.router_id || current.router_id);
+        if (effectiveRouterId) {
+          const targetProfile = updated.status === 'suspended' ? (updated.isolir_profile || 'isolir') : pkg.name;
+          if (updated.connection_type === 'pppoe' && updated.pppoe_username && targetProfile) {
+            await mikrotikService.setPppoeProfile(updated.pppoe_username, targetProfile, effectiveRouterId);
+            logger.info(`[mobile-api] Updated PPPoE profile for ${updated.pppoe_username} to ${targetProfile}`);
+          }
+          if (updated.connection_type === 'hotspot' && updated.hotspot_username) {
+            await mikrotikService.upsertHotspotUser({
+              username: updated.hotspot_username,
+              password: updated.hotspot_password || '',
+              profile: targetProfile,
+              macAddress: updated.mac_address || '',
+              disabled: updated.status !== 'active'
+            }, effectiveRouterId);
+          }
+        }
+      } catch (syncErr) {
+        logger.warn(`[mobile-api] MikroTik sync skipped/failed after package change id=${id}: ${syncErr.message}`);
+      }
+      auditSvc.logAuditTrail({
+        action: 'CHANGE_CUSTOMER_PACKAGE_MOBILE',
+        entity_type: 'customer',
+        entity_id: String(id),
+        ...actorFromReq(req),
+        details: { from: previousPackageId, to: packageId }
+      });
+    } else {
+      return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Aksi layanan tidak valid.'));
+    }
+    const updated = customerSvc.getCustomerById(id);
+    if (action === 'isolate' || action === 'unisolate') {
+      auditSvc.logAuditTrail({
+        action: action === 'isolate' ? 'ISOLATE_CUSTOMER_MOBILE' : 'UNISOLATE_CUSTOMER_MOBILE',
+        entity_type: 'customer',
+        entity_id: String(id),
+        ...actorFromReq(req)
+      });
+    }
+    return res.status(200).json(successResponse({ customer: projectCustomerForStaff(updated) }));
+  } catch (err) {
+    logger.error(`[mobile-api] customer service action ${action} error id=${id}: ${err.message}`);
+    return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Aksi layanan gagal diproses.'));
+  }
+});
+
+router.get('/admin/registrations', requireMobileRole('admin'), (req, res) => {
+  try {
+    const status = String(req.query.status || 'surveyed').trim();
+    const allowedStatuses = new Set(['pending_survey', 'surveyed', 'approved', 'rejected']);
+    if (!allowedStatuses.has(status)) return res.status(400).json(errorResponse('VALIDATION_ERROR', 'Status pendaftaran tidak valid.'));
+    const items = customerSvc.getOnlineRegistrations(status).map((registration) => ({
+      id: registration.id,
+      name: registration.name,
+      phone: registration.phone || null,
+      email: registration.email || null,
+      address: registration.address || null,
+      area: registration.area || null,
+      lat: registration.lat || null,
+      lng: registration.lng || null,
+      createdAt: registration.created_at || null,
+      registrationStatus: registration.registration_status || null,
+      registrationNumber: registration.registration_number || null,
+      surveyStatus: registration.survey_status || null,
+      surveyNotes: registration.survey_notes || null,
+      surveyedAt: registration.surveyed_at || null,
+      surveyedByTechName: registration.surveyed_by_tech_name || null,
+      approvedBy: registration.registration_approved_by || null,
+      approvedAt: registration.registration_approved_at || null,
+      rejectedBy: registration.registration_rejected_by || null,
+      rejectedAt: registration.registration_rejected_at || null,
+      rejectReason: registration.registration_reject_reason || null,
+      packageName: registration.package_name || null
+    }));
+    return res.status(200).json(successResponse({ items }));
+  } catch (err) {
+    logger.error(`[mobile-api] registrations error: ${err.message}`);
+    return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Pendaftaran gagal dimuat.'));
+  }
+});
+
+router.post('/admin/registrations/:id/approve', requireMobileRole('admin'), async (req, res) => {
+  const id = toInt(req.params.id, 0);
+  if (id <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'ID pendaftar tidak valid.'));
+  try {
+    const approver = String(actorFromReq(req).name || 'Admin (Mobile)');
+    const registration = customerSvc.approveOnlineRegistration(id, approver);
+    await customerSvc.activateCustomer(id);
+    auditSvc.logAuditTrail({
+      action: 'APPROVE_ONLINE_REGISTRATION_MOBILE',
+      entity_type: 'customer',
+      entity_id: String(id),
+      ...actorFromReq(req)
+    });
+    return res.status(200).json(successResponse({ registration: { id: registration.id, registrationStatus: registration.registration_status } }));
+  } catch (err) {
+    logger.warn(`[mobile-api] approve registration failed id=${id}: ${err.message}`);
+    return res.status(409).json(errorResponse('CONFLICT', String(err.message || 'Pendaftaran gagal disetujui.')));
+  }
+});
+
+router.post('/admin/registrations/:id/reject', requireMobileRole('admin'), (req, res) => {
+  const id = toInt(req.params.id, 0);
+  if (id <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'ID pendaftar tidak valid.'));
+  const reason = String((req.body || {}).reason || '').trim();
+  if (!reason) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Alasan penolakan wajib diisi.'));
+  if (reason.length > 1000) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Alasan penolakan terlalu panjang.'));
+  try {
+    const rejector = String(actorFromReq(req).name || 'Admin (Mobile)');
+    const registration = customerSvc.rejectOnlineRegistration(id, rejector, reason);
+    auditSvc.logAuditTrail({
+      action: 'REJECT_ONLINE_REGISTRATION_MOBILE',
+      entity_type: 'customer',
+      entity_id: String(id),
+      ...actorFromReq(req),
+      details: { reject_reason: reason }
+    });
+    return res.status(200).json(successResponse({ registration: { id: registration.id, registrationStatus: registration.registration_status } }));
+  } catch (err) {
+    logger.warn(`[mobile-api] reject registration failed id=${id}: ${err.message}`);
+    return res.status(409).json(errorResponse('CONFLICT', String(err.message || 'Pendaftaran gagal ditolak.')));
+  }
+});
+
+/** GET /invoices */
+router.get('/admin/accounts', requireMobileRole('admin'), (req, res) => {
+  try {
+    const roleFilter = String(req.query.role || '').trim();
+    const collect = (rows, accountRole, extra) => rows.map((r) => ({
+      id: r.id,
+      role: accountRole,
+      username: r.username,
+      name: r.name,
+      phone: r.phone || null,
+      area: r.area || null,
+      isActive: Number(r.is_active ?? 1) === 1,
+      ...(extra ? extra(r) : {})
+    }));
+    if (roleFilter && ['technician', 'cashier', 'collector', 'agent'].includes(roleFilter)) {
+      const rows = roleFilter === 'technician' ? adminSvc.getAllTechnicians()
+        : roleFilter === 'cashier' ? adminSvc.getAllCashiers()
+        : roleFilter === 'collector' ? adminSvc.getAllCollectors()
+        : agentSvc.getAllAgents();
+      const extra = roleFilter === 'collector' ? (r) => ({ autoApprove: Number(r.auto_approve ?? 0) === 1 })
+        : roleFilter === 'agent' ? (r) => ({ balance: Number(r.balance || 0), billingFee: Number(r.billing_fee || 0) })
+        : null;
+      return res.status(200).json(successResponse({ items: collect(rows, roleFilter, extra) }));
+    }
+    const items = [
+      ...collect(adminSvc.getAllTechnicians(), 'technician', null),
+      ...collect(adminSvc.getAllCashiers(), 'cashier', null),
+      ...collect(adminSvc.getAllCollectors(), 'collector', (r) => ({ autoApprove: Number(r.auto_approve ?? 0) === 1 })),
+      ...collect(agentSvc.getAllAgents(), 'agent', (r) => ({ balance: Number(r.balance || 0), billingFee: Number(r.billing_fee || 0) })),
+    ].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    return res.status(200).json(successResponse({ items }));
+  } catch (err) {
+    logger.error(`[mobile-api] accounts list error: ${err.message}`);
+    return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Daftar akun gagal dimuat.'));
+  }
+});
+
+router.post('/admin/accounts', requireMobileRole('admin'), (req, res) => {
+  const role = String((req.body || {}).role || '').trim();
+  const username = String((req.body || {}).username || '').trim();
+  const password = String((req.body || {}).password || '');
+  const name = String((req.body || {}).name || '').trim();
+  const phone = String((req.body || {}).phone || '').trim();
+  const area = String((req.body || {}).area || '').trim();
+  if (!role || !['technician', 'cashier', 'collector', 'agent'].includes(role)) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Role akun tidak valid.'));
+  }
+  if (!username || !name || !password || password.length < 6) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Username, nama, dan password (minimal 6 karakter) wajib diisi.'));
+  }
+  try {
+    const input = { username, password, name, phone };
+    let result;
+    if (role === 'technician') result = adminSvc.createTechnician(input);
+    else if (role === 'cashier') result = adminSvc.createCashier(input);
+    else if (role === 'collector') result = adminSvc.createCollector({ ...input, area, auto_approve: Number((req.body || {}).autoApprove ?? 0) === 1 ? 1 : 0 });
+    else result = agentSvc.createAgent({ ...input, balance: Number((req.body || {}).balance || 0), billing_fee: Number((req.body || {}).billingFee || 0) });
+    auditSvc.logAuditTrail({
+      action: 'CREATE_ACCOUNT_MOBILE',
+      entity_type: role,
+      entity_id: String(result.lastInsertRowid || result.insertId),
+      ...actorFromReq(req)
+    });
+    return res.status(201).json(successResponse({ id: result.lastInsertRowid || result.insertId }));
+  } catch (err) {
+    logger.warn(`[mobile-api] account create failed: ${err.message}`);
+    return res.status(409).json(errorResponse('CONFLICT', String(err.message || 'Akun gagal dibuat.')));
+  }
+});
+
+router.post('/admin/accounts/:id/update', requireMobileRole('admin'), (req, res) => {
+  const id = toInt(req.params.id, 0);
+  const role = String((req.body || {}).role || '').trim();
+  if (id <= 0 || !role || !['technician', 'cashier', 'collector', 'agent'].includes(role)) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Role atau ID akun tidak valid.'));
+  }
+  const body = req.body || {};
+  const data = {
+    username: String(body.username || '').trim() || undefined,
+    name: String(body.name || '').trim() || undefined,
+    phone: String(body.phone || '').trim() || '',
+    area: String(body.area || '').trim() || '',
+    is_active: body.isActive !== undefined ? (body.isActive ? '1' : '0') : undefined,
+  };
+  if (body.password && String(body.password).length >= 6) data.password = String(body.password);
+  try {
+    if (role === 'technician') adminSvc.updateTechnician(id, data);
+    else if (role === 'cashier') adminSvc.updateCashier(id, data);
+    else if (role === 'collector') adminSvc.updateCollector(id, data);
+    else agentSvc.updateAgent(id, { ...data, balance: Number(body.balance || 0), billing_fee: Number(body.billingFee || 0) });
+    auditSvc.logAuditTrail({
+      action: 'UPDATE_ACCOUNT_MOBILE',
+      entity_type: role,
+      entity_id: String(id),
+      ...actorFromReq(req)
+    });
+    return res.status(200).json(successResponse({ id }));
+  } catch (err) {
+    logger.warn(`[mobile-api] account update failed id=${id}: ${err.message}`);
+    return res.status(409).json(errorResponse('CONFLICT', String(err.message || 'Akun gagal diperbarui.')));
+  }
+});
+
+router.post('/admin/accounts/:id/topup', requireMobileRole('admin'), (req, res) => {
+  const id = toInt(req.params.id, 0);
+  const amount = Number((req.body || {}).amount || 0);
+  const note = String((req.body || {}).note || '').trim();
+  if (id <= 0 || !Number.isFinite(amount) || amount <= 0) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Nominal topup tidak valid.'));
+  }
+  try {
+    const agent = agentSvc.getAgentById(id);
+    if (!agent) return res.status(404).json(errorResponse('NOT_FOUND', 'Reseller tidak ditemukan.'));
+    const actorName = String(actorFromReq(req).name || 'Admin (Mobile)');
+    agentSvc.topupAgent(id, amount, note, actorName);
+    auditSvc.logAuditTrail({
+      action: 'TOPUP_AGENT_MOBILE',
+      entity_type: 'agent',
+      entity_id: String(id),
+      ...actorFromReq(req),
+      details: { amount, note }
+    });
+    return res.status(200).json(successResponse({ id, balance: Number(agentSvc.getAgentById(id).balance || 0) }));
+  } catch (err) {
+    logger.warn(`[mobile-api] agent topup failed id=${id}: ${err.message}`);
+    return res.status(409).json(errorResponse('CONFLICT', String(err.message || 'Topup saldo gagal.')));
+  }
+});
+
 /** GET /invoices */
 router.get('/invoices', requireMobileAuth, (req, res) => {
   const { userId, role } = req.mobileUser;
@@ -689,6 +1298,33 @@ router.get('/invoices', requireMobileAuth, (req, res) => {
         search: String(req.query.q || '').trim().slice(0, 100) || undefined,
         limit: clampLimit(req.query.limit, 100, 300)
       });
+      return res.status(200).json(successResponse({ items: rows.map(projectInvoice) }));
+    }
+    if (role === 'kolektor') {
+      const collector = getActiveCollector(userId);
+      if (!collector) return res.status(404).json(errorResponse('NOT_FOUND', 'Kolektor tidak ditemukan.'));
+      const scope = collectorCustomerScope(collector);
+      const conditions = [scope.sql];
+      const params = [...scope.params];
+      const status = String(req.query.status || '').trim();
+      const search = String(req.query.q || '').trim().slice(0, 100);
+      if (status === 'paid' || status === 'unpaid') {
+        conditions.push('i.status = ?');
+        params.push(status);
+      }
+      if (search) {
+        conditions.push('(c.name LIKE ? OR c.phone LIKE ?)');
+        params.push(`%${search}%`, `%${search}%`);
+      }
+      const rows = db.prepare(`
+        SELECT i.*, c.name AS customer_name, p.name AS package_name
+        FROM invoices i
+        JOIN customers c ON c.id = i.customer_id
+        LEFT JOIN packages p ON p.id = c.package_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY i.period_year DESC, i.period_month DESC, c.name ASC
+        LIMIT ?
+      `).all(...params, clampLimit(req.query.limit, 100, 300));
       return res.status(200).json(successResponse({ items: rows.map(projectInvoice) }));
     }
     if (role === 'pelanggan') {
@@ -717,7 +1353,13 @@ router.get('/invoices/:id', requireMobileAuth, (req, res) => {
       
       return res.status(404).json(errorResponse('NOT_FOUND', 'Tagihan tidak ditemukan.'));
     }
-    if (!STAFF_ROLES.includes(role) && role !== 'pelanggan') {
+    if (role === 'kolektor') {
+      const collector = getActiveCollector(req.mobileUser.userId);
+      if (!collectorCanAccessCustomer(collector, inv.customer_id)) {
+        return res.status(404).json(errorResponse('NOT_FOUND', 'Tagihan tidak ditemukan.'));
+      }
+    }
+    if (!STAFF_ROLES.includes(role) && role !== 'pelanggan' && role !== 'kolektor') {
       return res.status(403).json(errorResponse('FORBIDDEN', 'Anda tidak memiliki akses ke resource ini.'));
     }
     return res.status(200).json(successResponse({ invoice: projectInvoice(inv) }));
@@ -744,6 +1386,76 @@ router.post('/invoices/:id/pay', requireMobileRole(STAFF_ROLES), (req, res) => {
     return res.status(200).json(successResponse({ invoice: projectInvoice(updated) }));
   } catch (err) {
     logger.error(`[mobile-api] /invoices/:id/pay error: ${err.message}`);
+    return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Kesalahan server.'));
+  }
+});
+
+router.post('/collector/payment-request', requireMobileRole('kolektor'), async (req, res) => {
+  const invoiceId = toInt((req.body || {}).invoiceId, 0);
+  const note = String((req.body || {}).note || '').trim().slice(0, 500);
+  if (invoiceId <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Invoice tidak valid.'));
+
+  try {
+    const collector = getActiveCollector(req.mobileUser.userId);
+    if (!collector) return res.status(404).json(errorResponse('NOT_FOUND', 'Kolektor tidak ditemukan.'));
+    const inv = billingSvc.getInvoiceById(invoiceId);
+    if (!inv || !collectorCanAccessCustomer(collector, inv.customer_id)) {
+      return res.status(404).json(errorResponse('NOT_FOUND', 'Tagihan tidak ditemukan.'));
+    }
+    if (String(inv.status || '').toLowerCase() === 'paid') {
+      return res.status(409).json(errorResponse('ALREADY_PAID', 'Tagihan sudah lunas.'));
+    }
+    const existingPending = db.prepare(`
+      SELECT id FROM collector_payment_requests
+      WHERE invoice_id = ? AND status = 'pending'
+      ORDER BY id DESC LIMIT 1
+    `).get(invoiceId);
+    if (existingPending) {
+      return res.status(409).json(errorResponse('REQUEST_PENDING', 'Tagihan ini sedang menunggu approval.'));
+    }
+    const amount = Math.max(0, Number(inv.amount || 0));
+    if (amount <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'Nominal tagihan tidak valid.'));
+
+    if (Number(collector.auto_approve) === 1) {
+      const collectorLabel = `Kolektor ${String(collector.name || '').trim()}${collector.username ? ` (@${collector.username})` : ''}`;
+      const notes = ['Via Kolektor', collectorLabel, 'Auto-Approved (Kolektor Setting Aktif)', note]
+        .filter(Boolean)
+        .join(' | ');
+      billingSvc.markAsPaid(inv.id, collectorLabel, notes, actorFromReq(req));
+      db.prepare(`
+        INSERT INTO collector_payment_requests
+          (collector_id, invoice_id, customer_id, amount, note, status, decided_by_role, decided_by_name, decided_note, decided_at)
+        VALUES (?, ?, ?, ?, ?, 'approved', 'system', 'Auto-Approve', 'Otomatis disetujui (kolektor setting aktif)', CURRENT_TIMESTAMP)
+      `).run(collector.id, inv.id, Number(inv.customer_id || 0), amount, note);
+
+      const customer = customerSvc.getCustomerById(inv.customer_id);
+      if (customer && customer.status === 'suspended') {
+        try {
+          await customerSvc.activateCustomer(customer.id);
+        } catch (activateError) {
+          logger.error(`[mobile-collector] Failed to activate customer ${customer.id}:`, activateError);
+        }
+      }
+
+      const updated = billingSvc.getInvoiceById(inv.id);
+      return res.status(200).json(successResponse({
+        status: 'approved',
+        invoice: projectInvoice(updated),
+        message: 'Pembayaran berhasil diproses dan tagihan sudah lunas.'
+      }));
+    }
+
+    db.prepare(`
+      INSERT INTO collector_payment_requests (collector_id, invoice_id, customer_id, amount, note, status)
+      VALUES (?, ?, ?, ?, ?, 'pending')
+    `).run(collector.id, inv.id, Number(inv.customer_id || 0), amount, note);
+    return res.status(201).json(successResponse({
+      status: 'pending',
+      invoice: projectInvoice(inv),
+      message: 'Pengajuan pembayaran menunggu approval Admin/Kasir.'
+    }));
+  } catch (err) {
+    logger.error(`[mobile-collector] payment request error: ${err.message}`);
     return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Kesalahan server.'));
   }
 });
@@ -952,6 +1664,83 @@ router.get('/packages', requireMobileAuth, (req, res) => {
   }
 });
 
+function projectAdminPackage(pkg) {
+  return {
+    id: pkg.id,
+    name: pkg.name,
+    price: Number(pkg.price || 0),
+    speedDown: Number(pkg.speed_down || 0) / 1000,
+    speedUp: Number(pkg.speed_up || 0) / 1000,
+    billingType: pkg.billing_type || 'postpaid',
+    durationDays: Number(pkg.duration_days || 30),
+    description: pkg.description || '',
+    isActive: Number(pkg.is_active ?? 1) === 1,
+    customerCount: Number(pkg.customer_count || 0)
+  };
+}
+
+function parseAdminPackageInput(body, isUpdate = false) {
+  const name = String(body.name || '').trim();
+  const price = Number(body.price);
+  const speedDown = Number(body.speedDown);
+  const speedUp = Number(body.speedUp);
+  const durationDays = Number(body.durationDays || 30);
+  if (!name || name.length > 100) throw new Error('Nama paket wajib diisi (maksimal 100 karakter).');
+  if (!Number.isFinite(price) || price < 0) throw new Error('Harga paket tidak valid.');
+  if (!Number.isFinite(speedDown) || speedDown < 0 || !Number.isFinite(speedUp) || speedUp < 0) {
+    throw new Error('Kecepatan paket tidak valid.');
+  }
+  if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 3650) {
+    throw new Error('Durasi paket harus antara 1 dan 3650 hari.');
+  }
+  const billingType = String(body.billingType || 'postpaid');
+  if (!['prepaid', 'postpaid'].includes(billingType)) throw new Error('Tipe billing tidak valid.');
+  const input = {
+    name,
+    price,
+    speed_down: speedDown,
+    speed_up: speedUp,
+    billing_type: billingType,
+    duration_days: durationDays,
+    description: String(body.description || '').trim().slice(0, 500)
+  };
+  if (isUpdate) input.is_active = body.isActive === false || String(body.isActive) === '0' ? '0' : '1';
+  return input;
+}
+
+router.get('/admin/packages', requireMobileRole('admin'), (req, res) => {
+  try {
+    const items = customerSvc.getAllPackages().map(projectAdminPackage);
+    return res.status(200).json(successResponse({ items }));
+  } catch (err) {
+    logger.error(`[mobile-api] admin packages error: ${err.message}`);
+    return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Kesalahan server.'));
+  }
+});
+
+router.post('/admin/packages', requireMobileRole('admin'), (req, res) => {
+  try {
+    const input = parseAdminPackageInput(req.body || {});
+    const result = customerSvc.createPackage(input);
+    const pkg = customerSvc.getPackageById(result.lastInsertRowid);
+    return res.status(201).json(successResponse({ package: projectAdminPackage(pkg) }));
+  } catch (err) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', String(err.message || 'Paket tidak dapat dibuat.')));
+  }
+});
+
+router.post('/admin/packages/:id/update', requireMobileRole('admin'), (req, res) => {
+  const id = toInt(req.params.id, 0);
+  if (id <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'ID paket tidak valid.'));
+  try {
+    if (!customerSvc.getPackageById(id)) return res.status(404).json(errorResponse('NOT_FOUND', 'Paket tidak ditemukan.'));
+    customerSvc.updatePackage(id, parseAdminPackageInput(req.body || {}, true));
+    return res.status(200).json(successResponse({ package: projectAdminPackage(customerSvc.getPackageById(id)) }));
+  } catch (err) {
+    return res.status(422).json(errorResponse('VALIDATION_ERROR', String(err.message || 'Paket tidak dapat diperbarui.')));
+  }
+});
+
 router.get('/reseller/transactions', requireMobileRole('reseller'), (req, res) => {
   try {
     const rows = agentSvc.listAgentTransactions({
@@ -972,6 +1761,25 @@ router.get('/reseller/prices', requireMobileRole('reseller'), (req, res) => {
     }));
   } catch (err) {
     logger.error(`[mobile-api] reseller prices error: ${err.message}`);
+    return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Kesalahan server.'));
+  }
+});
+
+router.get('/reseller/voucher-prices', requireMobileRole('reseller'), (req, res) => {
+  try {
+    const items = agentSvc.getAgentPrices(toInt(req.mobileUser.userId))
+      .filter(price => Number(price.is_active) === 1)
+      .map(price => ({
+        id: price.id,
+        profileName: price.profile_name,
+        routerName: price.router_name || null,
+        validity: price.validity || null,
+        buyPrice: Number(price.buy_price || 0),
+        sellPrice: Number(price.sell_price || 0)
+      }));
+    return res.status(200).json(successResponse({ items }));
+  } catch (err) {
+    logger.error(`[mobile-api] reseller voucher prices error: ${err.message}`);
     return res.status(500).json(errorResponse('INTERNAL_ERROR', 'Kesalahan server.'));
   }
 });
@@ -1002,6 +1810,22 @@ router.post('/reseller/pay-invoice', requireMobileRole('reseller'), async (req, 
   } catch (err) {
     
     return res.status(409).json(errorResponse('CONFLICT', String(err.message || 'Transaksi gagal.')));
+  }
+});
+
+router.post('/reseller/sell-voucher', requireMobileRole('reseller'), async (req, res) => {
+  try {
+    const priceId = toInt((req.body || {}).priceId, 0);
+    if (priceId <= 0) return res.status(422).json(errorResponse('VALIDATION_ERROR', 'priceId tidak valid.'));
+    const result = await agentSvc.sellVoucherAsAgent(toInt(req.mobileUser.userId), priceId);
+    return res.status(201).json(successResponse({
+      receipt: result.receipt,
+      balance: Number(result.agent.balance || 0),
+      transactionId: Number(result.tx.id || 0)
+    }));
+  } catch (err) {
+    logger.warn(`[mobile-api] reseller sell voucher failed: ${err.message}`);
+    return res.status(409).json(errorResponse('CONFLICT', String(err.message || 'Penjualan voucher gagal.')));
   }
 });
 
