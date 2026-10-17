@@ -30,8 +30,8 @@ const VALIDATION_RULES = {
   },
   app_theme: {
     type: 'string',
-    enum: ['current', 'space'],
-    description: 'Tema aplikasi global (current = ZenRadius Ocean, space = ZenRadius Space / DESIGN.md)',
+    enum: ['current', 'space', 'orbit'],
+    description: 'Tema aplikasi global (current = ZenRadius Ocean, space = ZenRadius Space, orbit = ZenRadius Orbit / light)',
     default: 'space'
   },
   public_base_url: {

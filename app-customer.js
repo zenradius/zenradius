@@ -216,7 +216,7 @@ app.use((req, res, next) => {
 // ── GLOBAL APPLICATION THEME ──
 // Tema 1 (DESIGN.md/CasaOS) atau Tema 2 (Tampilan Saat Ini) — hanya nilai yang
 // terdaftar (whitelist) yang diterima; tidak ada nilai CSS/tema arbitrer dari client.
-const VALID_APP_THEMES = new Set(['current', 'space']);
+const VALID_APP_THEMES = new Set(['current', 'space', 'orbit']);
 app.use((req, res, next) => {
   const raw = String(getSetting('app_theme', 'space') || '').trim().toLowerCase();
   res.locals.appTheme = VALID_APP_THEMES.has(raw) ? raw : 'space';

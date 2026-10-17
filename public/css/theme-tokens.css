@@ -9,8 +9,9 @@
                       theme: values below are the pre-existing appearance
                       and must NOT be reinterpreted (DESIGN.md §7).
    Theme "space"   = ZenRadius Space — modern tech-oriented identity.
-                      NOT a full dark mode: light workspace + navy
-                      sidebar/nav accents (DESIGN.md §2, §5, §6).
+                      dark navy + electric blue, palet zenradius-web.
+   Theme "orbit"   = ZenRadius Orbit — CERAH (light): workspace putih,
+                      aksen biru orbit #2563EB + cyan #0EA5E9.
 
    HOW IT WORKS
    ------------
@@ -26,6 +27,7 @@
    The active theme is toggled purely via one HTML attribute:
        <html data-app-theme="current">   (ZenRadius Ocean — default)
        <html data-app-theme="space">     (ZenRadius Space — DESIGN.md)
+       <html data-app-theme="orbit">     (ZenRadius Orbit — light)
    set server-side from the global `app_theme` setting (settings.json).
    ========================================================================== */
 
@@ -160,9 +162,81 @@
   --z-font-family:'Inter',sans-serif;
 }
 
-/* ── ZENRADIUS SPACE — component-level overrides ──
-   Agar konsistensi visual di seluruh penjelajahan panel admin tetap terjaga,
-   elemen structural di-override secara spesifik untuk menggunakan variabel tema Space. */
+/* ── ZENRADIUS ORBIT ("orbit") — palet terang (light) ──
+   Identitas cerah & modern: workspace terang, aksen biru orbit + cyan.
+   Dirancang sebagai tema light untuk seluruh ekosistem (admin, portal,
+   voucher, autentikasi) dengan kontras AAA pada teks. */
+[data-app-theme="orbit"]{
+  /* admin.css tokens */
+  --bg:#F2F5FA; --bg2:#FFFFFF; --bg3:#E9EEF5;
+  --border:rgba(15,23,42,.12);
+  --text:#0F172A; --muted:#64748B;
+  --primary:#2563EB; --pdim:rgba(37,99,235,.12);
+  --accent:#0EA5E9;
+  --success:#16A34A; --sdim:rgba(22,163,74,.12);
+  --warning:#D97706; --wdim:rgba(217,119,6,.13);
+  --danger:#DC2626; --ddim:rgba(220,38,38,.12);
+  --info:#0284C7; --idim:rgba(2,132,199,.12);
+  --btn-bg:linear-gradient(100deg,#2563EB 0%,#3B82F6 55%,#22D3EE 100%);
+  --btn-color:#FFFFFF;
+  --btn-border:rgba(255,255,255,.28);
+  --btn-shadow:0 10px 24px rgba(37,99,235,.28);
+  --btn-bg-hover:linear-gradient(100deg,#1D4ED8 0%,#2563EB 55%,#0EA5E9 100%);
+  --btn-border-hover:rgba(14,165,233,.65);
+  --btn-color-hover:#FFFFFF;
+  --btn-g-bg:rgba(255,255,255,.6);
+  --btn-g-border:rgba(15,23,42,.14);
+  --sb-item-active-bg:linear-gradient(100deg,#2563EB 0%,#3B82F6 60%,#22D3EE 100%);
+  --sb-item-active-border:#2563EB;
+  --sb-item-active-color:#FFFFFF;
+
+  /* sidebar tokens — terang */
+  --sb-bg:#FFFFFF;
+  --sb-bg-secondary:#F2F5FA;
+  --sb-hover:#E9EEF5;
+  --sb-text:#475569;
+  --sb-border:rgba(15,23,42,.1);
+
+  /* navbar tokens */
+  --nav-bg:rgba(255,255,255,.92);
+  --nav-border:rgba(15,23,42,.1);
+  --nav-text:#0F172A;
+  --nav-text-secondary:#64748B;
+  --nav-hover:#E9EEF5;
+  --nav-active:#2563EB;
+
+  /* portal tokens */
+  --portal-bg:#F2F5FA;
+  --portal-surface:#FFFFFF;
+  --portal-surface-raised:#E9EEF5;
+  --portal-ink:#0F172A;
+  --portal-muted:#64748B;
+  --portal-primary:#2563EB;
+  --portal-primary-strong:#0EA5E9;
+  --portal-teal:#0EA5E9;
+  --portal-teal-strong:#0284C7;
+  --portal-accent:#D97706;
+  --portal-line:rgba(15,23,42,.12);
+  --card-bg:#FFFFFF;
+  --soft-primary:rgba(37,99,235,.12);
+  --soft-success:rgba(22,163,74,.12);
+  --soft-warning:rgba(217,119,6,.13);
+  --soft-danger:rgba(220,38,38,.12);
+  --btn-color:#ffffff;
+
+  /* page background — lembut, cerah */
+  --body-bg-solid:#F2F5FA;
+  --body-bg-image:radial-gradient(circle at 12% -8%,rgba(37,99,235,.10) 0%,transparent 46%),radial-gradient(circle at 92% 6%,rgba(14,165,233,.10) 0%,transparent 42%),linear-gradient(165deg,#F2F5FA 0%,#FFFFFF 52%,#E8EEF8 100%);
+
+  /* brand gradient — biru orbit */
+  --space-gradient:linear-gradient(100deg,#2563EB 0%,#3B82F6 55%,#22D3EE 100%);
+
+  /* shape / typography */
+  --z-radius-card:12px;
+  --z-radius-btn:10px;
+  --z-radius-icon:10px;
+  --z-font-family:'Inter',sans-serif;
+}
 [data-app-theme="space"] .sidebar{
   background:var(--sb-bg);
   border-right:1px solid var(--sb-border);
@@ -221,6 +295,70 @@
 [data-app-theme="space"] .filter-bar .fc,
 [data-app-theme="space"] .filter-bar .fs {
   background: var(--bg3) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── ZENRADIUS ORBIT — component-level overrides (light) ──
+   Elemen structural dengan asumsi dark di-override untuk konsistensi.
+   Sidebar terang dengan teks gelap; kontrol memakai latar putih. */
+[data-app-theme="orbit"] .sidebar{
+  background:var(--sb-bg);
+  border-right:1px solid var(--sb-border);
+}
+[data-app-theme="orbit"] .sb-brand{border-bottom-color:var(--sb-border)}
+[data-app-theme="orbit"] .sb-name{color:#0F172A}
+[data-app-theme="orbit"] .sb-sub,
+[data-app-theme="orbit"] .sb-section,
+[data-app-theme="orbit"] .sb-sec-chev{color:var(--sb-text)}
+[data-app-theme="orbit"] .sb-section:hover{color:#0F172A}
+[data-app-theme="orbit"] .sb-item{color:var(--sb-text)}
+[data-app-theme="orbit"] .sb-item:hover{color:#0F172A;background:var(--sb-hover)}
+[data-app-theme="orbit"] .sb-item.active {
+  background: var(--btn-bg) !important;
+  color: var(--btn-color) !important;
+  border-left-color: var(--primary) !important;
+  box-shadow: var(--btn-shadow) !important;
+}
+[data-app-theme="orbit"] .sb-item.is-locked{color:var(--sb-text)}
+[data-app-theme="orbit"] .sb-item.is-locked:hover{background:var(--sb-hover)}
+[data-app-theme="orbit"] .topbar{
+  background:var(--nav-bg);
+  border-bottom:1px solid var(--nav-border);
+  color:var(--nav-text);
+}
+[data-app-theme="orbit"] .tb-title{color:var(--nav-text)}
+[data-app-theme="orbit"] .hb-menu, [data-app-theme="orbit"] .hb-menu i{color:var(--nav-text)}
+[data-app-theme="orbit"] select, [data-app-theme="orbit"] input, [data-app-theme="orbit"] textarea{
+  background-color: #FFFFFF !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+[data-app-theme="orbit"] .dropdown-menu {
+  background-color: var(--bg2) !important;
+  border-color: var(--border) !important;
+}
+[data-app-theme="orbit"] .dropdown-item {
+  color: var(--text) !important;
+}
+[data-app-theme="orbit"] .dropdown-item:hover {
+  background-color: var(--bg3) !important;
+}
+[data-app-theme="orbit"] .bottom-nav {
+  background-color: var(--bg2) !important;
+  border-top-color: var(--border) !important;
+}
+[data-app-theme="orbit"] .bn-item.active {
+  background: var(--btn-bg) !important;
+  color: var(--btn-color) !important;
+}
+[data-app-theme="orbit"] .fs {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%232563EB' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+[data-app-theme="orbit"] .card form.d-flex .fc,
+[data-app-theme="orbit"] .card form.d-flex .fs,
+[data-app-theme="orbit"] .filter-bar .fc,
+[data-app-theme="orbit"] .filter-bar .fs {
+  background: #FFFFFF !important;
   border-color: var(--border) !important;
 }
 

@@ -118,6 +118,36 @@
               </div>
             </button>
           </form>
+        <!-- Theme: orbit (ZenRadius Orbit — light) -->
+          <form method="post" action="/admin/theme-settings">
+            <input type="hidden" name="app_theme" value="orbit">
+            <button type="submit" class="theme-card <%= currentTheme === 'orbit' ? 'active' : '' %>" style="width:100%;text-align:left;border:2px solid <%= currentTheme==='orbit' ? 'var(--primary)' : 'var(--border)' %>;background:none;padding:0;font:inherit;color:inherit">
+              <div class="preview" style="background:#F2F5FA">
+                <div class="mini-sidebar" style="background:#FFFFFF;border-right:1px solid rgba(15,23,42,.1)">
+                  <span style="background:#2563EB"></span><span style="background:#E9EEF5"></span><span style="background:#E9EEF5"></span>
+                </div>
+                <div class="mini-main">
+                  <div class="mini-header" style="background:#FFFFFF;border:1px solid rgba(15,23,42,.1)"></div>
+                  <div class="mini-card" style="background:#FFFFFF;border:1px solid rgba(15,23,42,.1)">
+                    <div class="mini-line" style="background:#E9EEF5;width:70%"></div>
+                    <div class="mini-line" style="background:#E9EEF5;width:45%"></div>
+                    <div class="mini-btn" style="background:linear-gradient(100deg,#2563EB,#3B82F6 55%,#22D3EE)"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="info">
+                <div>
+                  <h6><%= t('admin.theme.orbit_name', 'ZenRadius Orbit') %></h6>
+                  <p><%= t('admin.theme.orbit_desc', 'Tampilan terang yang segar dan modern — workspace putih dengan aksen biru orbit yang tegas.') %></p>
+                </div>
+                <% if (currentTheme === 'orbit') { %>
+                  <span class="active-badge"><i class="bi bi-check-circle-fill"></i> <%= t('admin.theme.active', 'Aktif') %></span>
+                <% } else { %>
+                  <span class="btn btn-sm btn-g"><%= t('admin.theme.use', 'Gunakan') %></span>
+                <% } %>
+              </div>
+            </button>
+          </form>
         </div>
       </div>
     </div>

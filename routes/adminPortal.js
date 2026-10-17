@@ -4009,7 +4009,7 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
 // "space" (ZenRadius Space / DESIGN.md) atau "current" (ZenRadius Ocean —
 // tampilan asli ZenRadius). Nilai disimpan secara global (settings.json), berlaku
 // untuk seluruh portal (Admin, Pelanggan, Reseller, Teknisi, Kolektor) + halaman login.
-const VALID_APP_THEMES = new Set(['current', 'space']);
+const VALID_APP_THEMES = new Set(['current', 'space', 'orbit']);
 router.get('/theme-settings', requireAdminSession, requireSidebarMenuAccess('theme_settings'), (req, res) => {
   const raw = String(getSetting('app_theme', 'space') || '').trim().toLowerCase();
   res.render('admin/theme-settings', {
