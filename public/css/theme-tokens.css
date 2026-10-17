@@ -84,74 +84,74 @@
   --z-font-family:'Inter',sans-serif;
 }
 
-/* ── ZENRADIUS SPACE ("space") — palet loginpage-5: Deep Navy + Electric Blue ──
-   Sumber: C:\Users\ZenRadius\Downloads\loginpage-5 (Mikrotik login theme by Erik Sanjaya).
-   Kunci: bg #0b1028→#020617, card #121b4a→#050a27, btn #2937ff→#1c5cff→#08d8ec,
-   blob ungu #8a5cff & biru #427aff, aksen elektrik #1c5cff / #60a5fa. */
+/* ── ZENRADIUS SPACE ("space") — palet zenradius-web ──
+   Mengadopsi identitas visual zenradius-web (situs penjualan lisensi):
+   bg #121418, surface #1c1f26/#22262f/#2a2f3a, aksen #168CFF + #27C5D9,
+   gradient tombol #087FE5 → #168CFF → #27C5D9. */
 [data-app-theme="space"]{
   /* admin.css tokens */
-  --bg:#0B1028; --bg2:#121B4A; --bg3:#1C2660;
-  --border:rgba(255,255,255,.14);
-  --text:#FFFFFF; --muted:#94A3B8;
-  --primary:#1C5CFF; --pdim:rgba(28,92,255,.16);
-  --accent:#08D8EC;
-  --success:#10B981; --sdim:rgba(16,185,129,.15);
-  --warning:#F59E0B; --wdim:rgba(245,158,11,.15);
-  --danger:#EF4444; --ddim:rgba(239,68,68,.15);
-  --info:#0EA5E9; --idim:rgba(14,165,233,.15);
-  --btn-bg:linear-gradient(100deg,#2937FF 0%,#1C5CFF 55%,#08D8EC 100%);
+  --bg:#121418; --bg2:#1C1F26; --bg3:#22262F;
+  --border:rgba(255,255,255,.09);
+  --text:#F7F8FA; --muted:#A0A5B5;
+  --primary:#168CFF; --pdim:rgba(22,140,255,.14);
+  --accent:#27C5D9;
+  --success:#28A745; --sdim:rgba(40,167,69,.14);
+  --warning:#F3A451; --wdim:rgba(243,164,81,.15);
+  --danger:#F07070; --ddim:rgba(240,112,112,.15);
+  --info:#27C5D9; --idim:rgba(39,197,217,.15);
+  --btn-bg:linear-gradient(100deg,#087FE5 0%,#168CFF 55%,#27C5D9 100%);
   --btn-color:#FFFFFF;
   --btn-border:rgba(255,255,255,.16);
-  --btn-shadow:0 10px 24px rgba(31,83,255,.35);
-  --btn-bg-hover:linear-gradient(100deg,#1C5CFF 0%,#08D8EC 100%);
-  --btn-border-hover:rgba(8,216,236,.6);
+  --btn-shadow:0 10px 24px rgba(22,140,255,.35);
+  --btn-bg-hover:linear-gradient(100deg,#168CFF 0%,#27C5D9 100%);
+  --btn-border-hover:rgba(39,197,217,.6);
   --btn-color-hover:#FFFFFF;
   --btn-g-bg:rgba(255,255,255,.06);
   --btn-g-border:rgba(255,255,255,.16);
-  --sb-item-active-bg:linear-gradient(100deg,#2937FF 0%,#1C5CFF 60%,#08D8EC 100%);
-  --sb-item-active-border:#1C5CFF;
+  --sb-item-active-bg:linear-gradient(100deg,#087FE5 0%,#168CFF 60%,#27C5D9 100%);
+  --sb-item-active-border:#168CFF;
   --sb-item-active-color:#FFFFFF;
 
-  /* sidebar tokens — deep navy */
-  --sb-bg:#0B1028;
-  --sb-bg-secondary:#121B4A;
-  --sb-hover:#1C2660;
-  --sb-text:#94A3B8;
-  --sb-border:rgba(255,255,255,.12);
+  /* sidebar tokens — gelap senada web */
+  --sb-bg:#121418;
+  --sb-bg-secondary:#1C1F26;
+  --sb-hover:#22262F;
+  --sb-text:#A0A5B5;
+  --sb-border:rgba(255,255,255,.08);
 
   /* navbar tokens */
-  --nav-bg:rgba(11,16,40,.92);
-  --nav-border:rgba(255,255,255,.12);
-  --nav-text:#FFFFFF;
-  --nav-text-secondary:#94A3B8;
-  --nav-hover:#1C2660;
-  --nav-active:#1C5CFF;
+  --nav-bg:rgba(18,20,24,.85);
+  --nav-border:rgba(255,255,255,.09);
+  --nav-text:#F7F8FA;
+  --nav-text-secondary:#A0A5B5;
+  --nav-hover:#22262F;
+  --nav-active:#168CFF;
 
   /* portal tokens */
-  --portal-bg:#0B1028;
-  --portal-surface:#121B4A;
-  --portal-surface-raised:#1C2660;
-  --portal-ink:#FFFFFF;
-  --portal-muted:#94A3B8;
-  --portal-primary:#1C5CFF;
-  --portal-primary-strong:#08D8EC;
-  --portal-teal:#08D8EC;
-  --portal-teal-strong:#06B6D4;
-  --portal-accent:#F59E0B;
-  --portal-line:rgba(255,255,255,.16);
-  --card-bg:#121B4A;
-  --soft-primary:rgba(28,92,255,.16);
-  --soft-success:rgba(16,185,129,.15);
-  --soft-warning:rgba(245,158,11,.15);
-  --soft-danger:rgba(239,68,68,.15);
+  --portal-bg:#121418;
+  --portal-surface:#1C1F26;
+  --portal-surface-raised:#22262F;
+  --portal-ink:#F7F8FA;
+  --portal-muted:#A0A5B5;
+  --portal-primary:#168CFF;
+  --portal-primary-strong:#27C5D9;
+  --portal-teal:#27C5D9;
+  --portal-teal-strong:#1FB8CA;
+  --portal-accent:#F3A451;
+  --portal-line:rgba(255,255,255,.1);
+  --card-bg:#1C1F26;
+  --soft-primary:rgba(22,140,255,.14);
+  --soft-success:rgba(40,167,69,.14);
+  --soft-warning:rgba(243,164,81,.15);
+  --soft-danger:rgba(240,112,112,.15);
   --btn-color:#ffffff;
 
-  /* page background — deep space navy (loginpage-5) */
-  --body-bg-solid:#0B1028;
-  --body-bg-image:radial-gradient(circle at 15% -10%,rgba(66,122,255,.50) 0%,transparent 45%),radial-gradient(circle at 88% 10%,rgba(138,92,255,.42) 0%,transparent 46%),linear-gradient(165deg,#0B1028 0%,#020617 55%,#0A0B22 100%);
+  /* page background — gelap senada web */
+  --body-bg-solid:#121418;
+  --body-bg-image:radial-gradient(circle at 15% -10%,rgba(22,140,255,.28) 0%,transparent 45%),radial-gradient(circle at 88% 10%,rgba(148,113,255,.16) 0%,transparent 46%),linear-gradient(165deg,#121418 0%,#0C0E12 55%,#14161C 100%);
 
-  /* brand gradient — electric blue */
-  --space-gradient:linear-gradient(100deg,#2937FF 0%,#1C5CFF 55%,#08D8EC 100%);
+  /* brand gradient — biru web */
+  --space-gradient:linear-gradient(100deg,#087FE5 0%,#168CFF 55%,#27C5D9 100%);
 
   /* shape / typography */
   --z-radius-card:12px;
@@ -214,7 +214,7 @@
   color: var(--btn-color) !important;
 }
 [data-app-theme="space"] .fs {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%233B82F6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23168CFF' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
 }
 [data-app-theme="space"] .card form.d-flex .fc,
 [data-app-theme="space"] .card form.d-flex .fs,
