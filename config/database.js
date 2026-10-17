@@ -915,12 +915,29 @@ try {
   `);
 } catch (e) {}
 
-// Pendaftar sebelum metadata alur registrasi ditambahkan tetap harus masuk antrean survei.
+// PERBAIKAN: pendaftar yang sebenarnya SUDAH sah (status aktif) tetapi pernah
+// ditandai 'online' + 'pending_survey' oleh backfill lama harus di-approve
+// otomatis — mereka pelanggan nyata, bukan calon yang menunggu survei.
+// Ini mencegah total pelanggan tampak menyusut saat server dinyalakan.
 try {
   db.exec(`
     UPDATE customers
-    SET registration_source='online', registration_status='pending_survey', survey_status='pending'
-    WHERE registration_source='' AND status='inactive' AND notes='Pendaftar Baru via Online'
+    SET registration_status = 'approved'
+    WHERE registration_source = 'online'
+      AND registration_status IN ('', 'pending_survey', 'surveyed')
+      AND status = 'active'
+  `);
+} catch (e) {}
+// Kebalikannya: pendaftar online yang masih menunggu survei/approval TIDAK
+// boleh berstatus 'active' (admin harus approve dulu via panel Pendaftaran
+// Online). Dengan begitu lisensi mereka tidak tercatat sebagai pelanggan aktif.
+try {
+  db.exec(`
+    UPDATE customers
+    SET status = 'inactive'
+    WHERE registration_source = 'online'
+      AND registration_status IN ('pending_survey', 'surveyed')
+      AND status = 'active'
   `);
 } catch (e) {}
 
