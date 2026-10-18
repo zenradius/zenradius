@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#173945">
+  <meta name="theme-color" content="<%= (typeof appTheme !== 'undefined' && appTheme === 'space') ? '#0B1028' : (typeof appTheme !== 'undefined' && appTheme === 'orbit') ? '#F2F5FA' : '#173945' %>">
   <title>Pendaftaran Pelanggan Baru | <%= settings.company_header || 'ZenRadius' %></title>
   <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
   <link rel="manifest" href="/manifest.webmanifest">
@@ -121,33 +121,21 @@
       padding-left: 40px;
     }
 
-    select.fc {
+    select.fc.fs {
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
       background-image: none !important;
-      background-color: rgba(255,255,255,.06) !important;
+      background-color: transparent !important;
       cursor: pointer;
+      color: var(--text);
     }
 
     select.fc option {
       background: var(--bg2, #0f2f3d);
-      color: var(--primary, #32b7db);
+      color: var(--text);
       padding: 10px 8px;
       font-weight: 500;
-      border-radius: 4px;
-      margin-bottom: 4px;
-    }
-
-    select.fc option:hover {
-      background: var(--bg3, #1a4d5c);
-      color: var(--primary, #32b7db);
-    }
-
-    select.fc option:checked {
-      background: linear-gradient(135deg, var(--bg3, #1a4d5c) 0%, var(--bg2, #0f3844) 100%);
-      color: var(--primary, #32b7db);
-      font-weight: 600;
     }
 
     .btn-p{
@@ -464,7 +452,7 @@
     <div class="card">
       <img class="logo" src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.src='/img/icon.png'">
       <p class="sub">Registrasi Anggota Baru</p>
-      <p class="copy">Daftarkan diri Anda untuk berlangganan layanan internet ZenRadius. Proses cepat, transparan, dan terhubung instan.</p>
+      <p class="copy">Daftarkan diri Anda untuk berlangganan layanan internet <%= settings.company_header || 'ZenRadius' %>. Proses cepat, transparan, dan terhubung instan.</p>
       
       <% if (error) { %><div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i><%= error %></div><% } %>
       <% if (success) { %>
@@ -531,7 +519,7 @@
             <label class="fl" for="reg-area">Wilayah / Area Tempat Tinggal *</label>
             <div class="field" style="position:relative">
               <i class="bi bi-geo" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);z-index:1;color:rgba(190,239,255,.7)"></i>
-              <select class="fc" id="reg-area" name="area" required style="padding-left:40px;cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:rgba(255,255,255,.06);padding-right:14px;font-weight:500">
+              <select class="fc fs" id="reg-area" name="area" required style="padding-left:40px;cursor:pointer;font-weight:500">
                 <option value="" disabled selected>-- Pilih Wilayah / Area --</option>
                 <% (typeof areas !== 'undefined' && areas && areas.length > 0 ? areas : []).forEach(function(ar) { %>
                   <option value="<%= ar.name %>"><%= ar.name %></option>
@@ -546,7 +534,7 @@
             <label class="fl" for="reg-package">Paket Internet *</label>
             <div class="field" style="position:relative">
               <i class="bi bi-box-seam" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);z-index:1;color:rgba(190,239,255,.7)"></i>
-              <select class="fc" id="reg-package" name="package_id" required style="padding-left:40px;cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:rgba(255,255,255,.06);padding-right:14px;font-weight:500">
+              <select class="fc fs" id="reg-package" name="package_id" required style="padding-left:40px;cursor:pointer;font-weight:500">
                 <option value="" disabled <%= !selectedPackageId ? 'selected' : '' %>>-- Pilih Paket --</option>
                 <% packages.forEach(function(pkg) { %>
                   <option value="<%= pkg.id %>" <%= typeof selectedPackageId !== 'undefined' && String(selectedPackageId) === String(pkg.id) ? 'selected' : '' %>>
@@ -1010,5 +998,6 @@
       });
     }
   </script>
+  <script src="/js/zen-select.js?v=3" defer></script>
 </body>
 </html>

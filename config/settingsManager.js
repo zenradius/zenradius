@@ -290,6 +290,7 @@ function ensureDefaultSettings() {
     const defaultSettings = {
       
       company_header: 'ZenRadius',
+      company_tagline: 'One Platform for Your Network',
       footer_info: 'ZenRadius - All Rights Reserved',
 
 // Tema Aplikasi global — 'space' (ZenRadius Space / DESIGN.md) atau 'current' (ZenRadius Ocean, tampilan asli)

@@ -195,6 +195,7 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   const brandName = String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
+  const brandTagline = String(getSetting('company_tagline', '') || '').trim() || 'One Platform for Your Network';
   const footerPoweredBy = String(getSetting('footer_info', '') || '').trim();
   const poweredBy = 'Powered by <a href="https://zenradius.net" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">ZenRadius</a>';
 
@@ -206,6 +207,7 @@ app.use((req, res, next) => {
   }
 
   res.locals.brandName = brandName;
+  res.locals.brandTagline = brandTagline;
   res.locals.brandVersion = brandAssets.getBrandVersion();
   res.locals.footerInfo = footerInfo;
   res.locals.footerPoweredBy = footerPoweredBy;

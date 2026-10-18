@@ -536,7 +536,7 @@
   <div class="wrap">
     <div class="cardx">
       <div class="head">
-        <img class="brand-logo" src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="ZenRadius" onerror="this.style.display='none'">
+        <img class="brand-logo" src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= settings.company_header || 'ZenRadius' %>" onerror="this.style.display='none'">
         <p class="muted small mb-0 mx-auto brand-desc" style="max-width:480px;line-height:1.7;text-align:center;">Dapatkan voucher internet harian dan mingguan secara instan — pilih paket, bayar, dan langsung terhubung.</p>
         <div class="hero-steps">
           <span class="hero-step"><span class="hs-num">1</span><i class="bi bi-ui-checks-grid hs-icon"></i> Pilih Paket</span>

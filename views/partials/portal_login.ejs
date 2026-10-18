@@ -8,7 +8,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#173945">
+  <meta name="theme-color" content="<%= (typeof appTheme !== 'undefined' && appTheme === 'space') ? '#0B1028' : (typeof appTheme !== 'undefined' && appTheme === 'orbit') ? '#F2F5FA' : '#173945' %>">
   <title><%= title %> - <%= company %></title>
   <% if (typeof manifest !== 'undefined' && manifest) { %><link rel="manifest" href="<%= manifest %>"><% } %>
   <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
@@ -132,7 +132,7 @@
         <button type="button" id="btn-admin-qr-login" class="btn btn-sm btn-pwa fw-bold w-100">
           <i class="bi bi-qr-code-scan me-1"></i> Masuk dengan aplikasi Admin
         </button>
-        <p class="qr-login-copy">Pindai QR ini dari aplikasi ZenRadius dengan akun Administrator, lalu setujui login web.</p>
+        <p class="qr-login-copy">Pindai QR ini dari aplikasi <%= company %> dengan akun Administrator, lalu setujui login web.</p>
         <div id="admin-qr-panel" class="qr-login-panel" aria-live="polite">
           <img id="admin-qr-image" class="qr-login-image" alt="QR login Admin">
           <div id="admin-qr-status" class="qr-login-status">Membuat QR login...</div>

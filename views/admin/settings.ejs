@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title><%= t('admin.settings.title', 'Pengaturan') %> | <%= company %></title>
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="<%= (typeof appTheme !== 'undefined' && appTheme === 'space') ? '#0B1028' : (typeof appTheme !== 'undefined' && appTheme === 'orbit') ? '#F2F5FA' : '#0f172a' %>">
   <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" type="image/png">
   <link rel="apple-touch-icon" href="/img/icon.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>">
   <link rel="manifest" href="/admin/manifest.webmanifest">
@@ -241,6 +241,11 @@
           <div class="fg">
             <label class="fl"><%= t('admin.settings.company_name', 'Nama Aplikasi / Perusahaan') %></label>
             <input class="fc" name="company_header" value="<%= settings.company_header || '' %>" placeholder="ZenRadius">
+          </div>
+          <div class="fg">
+            <label class="fl">Tagline / Slogan (tampil di judul halaman & beranda)</label>
+            <input class="fc" name="company_tagline" value="<%= settings.company_tagline || '' %>" placeholder="One Platform for Your Network">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Contoh: "One Platform for Your Network". Teks ini menggantikan tagline bawaan di seluruh halaman pelanggan.</div>
           </div>
           <div class="fg">
             <label class="fl">URL Publik Aplikasi (Public Base URL)</label>

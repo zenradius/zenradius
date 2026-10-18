@@ -169,7 +169,8 @@
 [data-app-theme="orbit"]{
   /* admin.css tokens */
   --bg:#F2F5FA; --bg2:#FFFFFF; --bg3:#E9EEF5;
-  --border:rgba(15,23,42,.12);
+  --border:rgba(15,23,42,.16);
+  --border-strong:rgba(15,23,42,.32);
   --text:#0F172A; --muted:#64748B;
   --primary:#2563EB; --pdim:rgba(37,99,235,.12);
   --accent:#0EA5E9;
@@ -184,8 +185,8 @@
   --btn-bg-hover:linear-gradient(100deg,#1D4ED8 0%,#2563EB 55%,#0EA5E9 100%);
   --btn-border-hover:rgba(14,165,233,.65);
   --btn-color-hover:#FFFFFF;
-  --btn-g-bg:rgba(255,255,255,.6);
-  --btn-g-border:rgba(15,23,42,.14);
+  --btn-g-bg:rgba(255,255,255,.72);
+  --btn-g-border:rgba(15,23,42,.16);
   --sb-item-active-bg:linear-gradient(100deg,#2563EB 0%,#3B82F6 60%,#22D3EE 100%);
   --sb-item-active-border:#2563EB;
   --sb-item-active-color:#FFFFFF;
@@ -194,12 +195,13 @@
   --sb-bg:#FFFFFF;
   --sb-bg-secondary:#F2F5FA;
   --sb-hover:#E9EEF5;
+  --sb-hover-strong:#DEE6F1;
   --sb-text:#475569;
-  --sb-border:rgba(15,23,42,.1);
+  --sb-border:rgba(15,23,42,.12);
 
   /* navbar tokens */
   --nav-bg:rgba(255,255,255,.92);
-  --nav-border:rgba(15,23,42,.1);
+  --nav-border:rgba(15,23,42,.12);
   --nav-text:#0F172A;
   --nav-text-secondary:#64748B;
   --nav-hover:#E9EEF5;
@@ -216,7 +218,7 @@
   --portal-teal:#0EA5E9;
   --portal-teal-strong:#0284C7;
   --portal-accent:#D97706;
-  --portal-line:rgba(15,23,42,.12);
+  --portal-line:rgba(15,23,42,.16);
   --card-bg:#FFFFFF;
   --soft-primary:rgba(37,99,235,.12);
   --soft-success:rgba(22,163,74,.12);
@@ -362,6 +364,304 @@
   border-color: var(--border) !important;
 }
 
+/* ── ZENRADIUS ORBIT — anti "color leak" ──
+   Banyak halaman (login, portal, dsb) meng-hardcode teks putih / latar
+   transparan gelap yang dirancang untuk tema Ocean/Space. Blok ini menimpa
+   selector tersebut agar tema terang Orbit tetap konsisten: teks gelap,
+   card putih dengan border jelas, dan kontrol berwarna terang. */
+[data-app-theme="orbit"] body,
+[data-app-theme="orbit"] html{
+  color: var(--text) !important;
+}
+[data-app-theme="orbit"] h1,
+[data-app-theme="orbit"] h2,
+[data-app-theme="orbit"] h3,
+[data-app-theme="orbit"] h4,
+[data-app-theme="orbit"] h5,
+[data-app-theme="orbit"] h6,
+[data-app-theme="orbit"] .page h1,
+[data-app-theme="orbit"] .page h2,
+[data-app-theme="orbit"] .page h3{color:var(--text)!important}
+[data-app-theme="orbit"] label,
+[data-app-theme="orbit"] .form-label,
+[data-app-theme="orbit"] .login-card .form-label,
+[data-app-theme="orbit"] .agent-footer,
+[data-app-theme="orbit"] .login-copy,
+[data-app-theme="orbit"] .back-link{color:var(--muted)!important}
+[data-app-theme="orbit"] .login-card,
+[data-app-theme="orbit"] .card,
+[data-app-theme="orbit"] .glass-card,
+[data-app-theme="orbit"] .stat-card,
+[data-app-theme="orbit"] .panel{
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--z-radius-card);
+  box-shadow: 0 4px 18px rgba(15,23,42,.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+[data-app-theme="orbit"] .login-card:hover{
+  background: var(--card-bg) !important;
+  border-color: var(--border-strong) !important;
+}
+[data-app-theme="orbit"] .card-hd,
+[data-app-theme="orbit"] .card .card-hd{border-bottom:1px solid var(--border)!important}
+[data-app-theme="orbit"] .card-hd h6,
+[data-app-theme="orbit"] .card h6{color:var(--text)!important}
+/* Kontrol input / select / textarea */
+[data-app-theme="orbit"] .form-control,
+[data-app-theme="orbit"] .fc,
+[data-app-theme="orbit"] .fs,
+[data-app-theme="orbit"] .filter-bar .fc,
+[data-app-theme="orbit"] .filter-bar .fs{
+  background:#FFFFFF!important;
+  border:1px solid var(--border-strong)!important;
+  color:var(--text)!important;
+  box-shadow:none!important;
+}
+[data-app-theme="orbit"] .form-control::placeholder,
+[data-app-theme="orbit"] .fc::placeholder{color:var(--muted)!important}
+[data-app-theme="orbit"] .form-control:focus,
+[data-app-theme="orbit"] .fc:focus{
+  border-color:var(--primary)!important;
+  box-shadow:0 0 0 3px var(--pdim)!important;
+  background:#FFFFFF!important;
+  color:var(--text)!important;
+}
+[data-app-theme="orbit"] select,
+[data-app-theme="orbit"] select option{color:var(--text)!important}
+/* Tabel — header jelas, border tegas */
+[data-app-theme="orbit"] .dtbl,
+[data-app-theme="orbit"] .table,
+[data-app-theme="orbit"] table{color:var(--text)!important}
+[data-app-theme="orbit"] .dtbl th,
+[data-app-theme="orbit"] .table th,
+[data-app-theme="orbit"] table th{
+  background:var(--bg3)!important;
+  color:var(--text)!important;
+  border-bottom:1px solid var(--border-strong)!important;
+}
+[data-app-theme="orbit"] .dtbl td,
+[data-app-theme="orbit"] .table td,
+[data-app-theme="orbit"] table td{border-bottom:1px solid var(--border)!important}
+[data-app-theme="orbit"] .dtbl tr:hover td,
+[data-app-theme="orbit"] .table tr:hover td{background:rgba(37,99,235,.05)!important}
+/* Teks kecil & keterangan */
+[data-app-theme="orbit"] .text-white{color:var(--text)!important}
+[data-app-theme="orbit"] .text-muted,
+[data-app-theme="orbit"] .muted{color:var(--muted)!important}
+[data-app-theme="orbit"] .badge{color:var(--text)!important}
+/* Tombol login (partial portal_login hardcode gradient #3b82f6 → #7c5cff) */
+[data-app-theme="orbit"] .btn-login{
+  background:var(--btn-bg)!important;
+  color:var(--btn-color)!important;
+  border:1px solid var(--btn-border)!important;
+  box-shadow:var(--btn-shadow)!important;
+}
+[data-app-theme="orbit"] .btn-login:hover{
+  background:var(--btn-bg-hover)!important;
+  border-color:var(--btn-border-hover)!important;
+  color:var(--btn-color-hover)!important;
+}
+/* Sidebar hover — ganti rgba(255,255,255,.04) yang tak terlihat di bg terang */
+[data-app-theme="orbit"] .sb-item:hover{
+  color:#0F172A!important;
+  background:var(--sb-hover)!important;
+}
+[data-app-theme="orbit"] .sb-item.is-locked:hover{background:var(--sb-hover)!important}
+/* Elemen kecil lain yang meng-hardcode putih/tekal */
+[data-app-theme="orbit"] .mtab,
+[data-app-theme="orbit"] .tab{cursor:pointer}
+[data-app-theme="orbit"] .mtab{background:transparent!important;color:var(--muted)!important}
+[data-app-theme="orbit"] .mtab:hover{background:var(--bg3)!important;color:var(--text)!important}
+[data-app-theme="orbit"] .mtab.active{
+  background:var(--btn-bg)!important;
+  color:var(--btn-color)!important;
+  border-color:var(--primary)!important;
+  box-shadow:var(--btn-shadow)!important;
+}
+/* Modal — jangan biarkan kebocoran gelap */
+[data-app-theme="orbit"] .modal-content,
+[data-app-theme="orbit"] .modal-body,
+[data-app-theme="orbit"] .modal-header,
+[data-app-theme="orbit"] .modal-footer{
+  background:var(--bg2)!important;
+  color:var(--text)!important;
+  border-color:var(--border)!important;
+}
+
+/* ── ZENRADIUS ORBIT — anti color-leak PORTAL (landing customer) ──
+   Halaman portal (login.ejs, register.ejs, dashboard.ejs) meng-hardcode
+   teks terang (#f8fbff / #d9fffb) dan latar gelap. Di tema Orbit semua
+   dibalik: teks gelap di atas card terang agar tetap jelas & konsisten. */
+[data-app-theme="orbit"] .hero-title,
+[data-app-theme="orbit"] .section-title,
+[data-app-theme="orbit"] .pkg-name,
+[data-app-theme="orbit"] .pkg-price,
+[data-app-theme="orbit"] .pkg-speed-tag,
+[data-app-theme="orbit"] .feature-title,
+[data-app-theme="orbit"] .holo-num,
+[data-app-theme="orbit"] .sim-title,
+[data-app-theme="orbit"] .sim-step-value,
+[data-app-theme="orbit"] .sim-rec-name,
+[data-app-theme="orbit"] .sim-estimate,
+[data-app-theme="orbit"] .stat-number,
+[data-app-theme="orbit"] .info-card h5,
+[data-app-theme="orbit"] .contact-info-card h5,
+[data-app-theme="orbit"] .company-info-card h5,
+[data-app-theme="orbit"] .company-info-card h6,
+[data-app-theme="orbit"] .customer-chat-panel h6,
+[data-app-theme="orbit"] .testimonial-meta strong,
+[data-app-theme="orbit"] #sim-rec-speed,
+[data-app-theme="orbit"] .faq-accordion .accordion-button strong,
+[data-app-theme="orbit"] .company-info-card .text-white,
+[data-app-theme="orbit"] .contact-info-card .text-white,
+[data-app-theme="orbit"] .company-info-card .fw-bold,
+[data-app-theme="orbit"] .contact-info-card .fw-bold{color:var(--text)!important}
+
+[data-app-theme="orbit"] .hero-subtitle,
+[data-app-theme="orbit"] .section-subtitle,
+[data-app-theme="orbit"] .feature-desc,
+[data-app-theme="orbit"] .pkg-period,
+[data-app-theme="orbit"] .pkg-features li,
+[data-app-theme="orbit"] .info-card p,
+[data-app-theme="orbit"] .info-card .card-text-desc,
+[data-app-theme="orbit"] .company-info-card p,
+[data-app-theme="orbit"] .company-info-card .small,
+[data-app-theme="orbit"] .contact-info-card p,
+[data-app-theme="orbit"] .contact-info-card .small,
+[data-app-theme="orbit"] .contact-info-card a,
+[data-app-theme="orbit"] .testimonial-card p,
+[data-app-theme="orbit"] .sim-label,
+[data-app-theme="orbit"] .sim-users-unit,
+[data-app-theme="orbit"] .sim-est-label,
+[data-app-theme="orbit"] .sim-eyebrow,
+[data-app-theme="orbit"] .sim-rec-meta,
+[data-app-theme="orbit"] .sim-copy,
+[data-app-theme="orbit"] .customer-chat-status,
+[data-app-theme="orbit"] .customer-chat-panel p,
+[data-app-theme="orbit"] .customer-chat-fallback,
+[data-app-theme="orbit"] .footer-legal a,
+[data-app-theme="orbit"] .footer-bottom,
+[data-app-theme="orbit"] .faq-accordion .faq-accordion-body,
+[data-app-theme="orbit"] .faq-accordion .accordion-body,
+[data-app-theme="orbit"] .testimonial-meta span{color:var(--muted)!important}
+
+/* Badge / pill kecil di portal */
+[data-app-theme="orbit"] .hero-badge,
+[data-app-theme="orbit"] .section-title-badge,
+[data-app-theme="orbit"] .sim-badge{color:var(--primary)!important}
+
+/* Kotak-kotak kecil & kartu di portal jadi latar terang dengan border jelas */
+[data-app-theme="orbit"] .feature-box,
+[data-app-theme="orbit"] .pkg-card,
+[data-app-theme="orbit"] .testimonial-card,
+[data-app-theme="orbit"] .info-card,
+[data-app-theme="orbit"] .contact-info-card,
+[data-app-theme="orbit"] .company-info-card,
+[data-app-theme="orbit"] .stat-item,
+[data-app-theme="orbit"] .pkg-simulator,
+[data-app-theme="orbit"] .sim-estimate-block,
+[data-app-theme="orbit"] .sim-recommend,
+[data-app-theme="orbit"] .holo-speed,
+[data-app-theme="orbit"] .faq-accordion .accordion-item,
+[data-app-theme="orbit"] .faq-accordion .accordion-button,
+[data-app-theme="orbit"] .faq-accordion .accordion-body,
+[data-app-theme="orbit"] .customer-chat-panel{
+  background:var(--card-bg)!important;
+  border:1px solid var(--border)!important;
+  box-shadow:0 4px 18px rgba(15,23,42,.06)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+[data-app-theme="orbit"] .feature-box:hover,
+[data-app-theme="orbit"] .pkg-card:hover,
+[data-app-theme="orbit"] .testimonial-card:hover,
+[data-app-theme="orbit"] .info-card:hover,
+[data-app-theme="orbit"] .contact-info-card:hover,
+[data-app-theme="orbit"] .company-info-card:hover,
+[data-app-theme="orbit"] .glass-card:hover{
+  border-color:var(--border-strong)!important;
+  box-shadow:0 8px 26px rgba(37,99,235,.12)!important;
+}
+/* Glass card (mode terang) */
+[data-app-theme="orbit"] .glass-card,
+[data-app-theme="orbit"] .login-card-container .glass-card{
+  background:var(--card-bg)!important;
+  border:1px solid var(--border)!important;
+}
+/* Tombol portal yang meng-hardcode warna gelap teks */
+[data-app-theme="orbit"] .hero-cta-grid .btn,
+[data-app-theme="orbit"] .btn-pkg-action,
+[data-app-theme="orbit"] .sim-cta,
+[data-app-theme="orbit"] .btn-submit-login,
+[data-app-theme="orbit"] .btn-quick-tool,
+[data-app-theme="orbit"] .btn-portal-access{
+  background:var(--btn-bg)!important;
+  border-color:var(--btn-border)!important;
+  color:var(--btn-color)!important;
+  box-shadow:var(--btn-shadow)!important;
+}
+[data-app-theme="orbit"] .hero-cta-grid .btn:hover,
+[data-app-theme="orbit"] .btn-pkg-action:hover,
+[data-app-theme="orbit"] .sim-cta:hover,
+[data-app-theme="orbit"] .btn-submit-login:hover,
+[data-app-theme="orbit"] .btn-quick-tool:hover,
+[data-app-theme="orbit"] .btn-portal-access:hover{
+  background:var(--btn-bg-hover)!important;
+  border-color:var(--btn-border-hover)!important;
+  color:var(--btn-color-hover)!important;
+}
+/* Tombol aksi "contact" tidak boleh jadi gelap */
+[data-app-theme="orbit"] .sim-cta.is-contact,
+[data-app-theme="orbit"] .cta-billing{
+  background:var(--btn-g-bg)!important;
+  border-color:var(--btn-g-border)!important;
+  color:var(--text)!important;
+}
+[data-app-theme="orbit"] .sim-step-btn,
+[data-app-theme="orbit"] .sim-need-btn{
+  background:var(--bg3)!important;
+  border-color:var(--border)!important;
+  color:var(--text)!important;
+}
+[data-app-theme="orbit"] .sim-need-btn.active,
+[data-app-theme="orbit"] .sim-step-btn:hover{
+  border-color:var(--primary)!important;
+  color:var(--primary)!important;
+}
+/* Input chat / suggest */
+[data-app-theme="orbit"] .customer-chat-input{
+  background:#FFFFFF!important;
+  border:1px solid var(--border-strong)!important;
+  color:var(--text)!important;
+}
+[data-app-theme="orbit"] .customer-chat-input:focus{
+  border-color:var(--primary)!important;
+  box-shadow:0 0 0 3px var(--pdim)!important;
+}
+[data-app-theme="orbit"] .customer-chat-suggest{
+  background:var(--bg3)!important;
+  border-color:var(--border)!important;
+  color:var(--text)!important;
+}
+[data-app-theme="orbit"] .customer-chat-message-bot{
+  background:var(--bg3)!important;
+  border-color:var(--border)!important;
+  color:var(--text)!important;
+}
+/* Navbar portal (login.ejs) */
+[data-app-theme="orbit"] .custom-navbar,
+[data-app-theme="orbit"] .custom-navbar .dropdown-menu{
+  background:var(--nav-bg)!important;
+  border-bottom:1px solid var(--nav-border)!important;
+  color:var(--nav-text)!important;
+}
+[data-app-theme="orbit"] .custom-navbar .nav-link,
+[data-app-theme="orbit"] .custom-navbar .navbar-brand,
+[data-app-theme="orbit"] .custom-navbar .header-actions a{color:var(--nav-text)!important}
+[data-app-theme="orbit"] .custom-navbar .nav-link:hover{color:var(--nav-active)!important}
+
 /* ==========================================================================
    BOOTSTRAP UTILITY REMAP — anti "color leak"
    --------------------------------------------------------------------------
@@ -454,4 +754,39 @@
 .btn-outline-warning:hover{background-color:var(--warning)!important;color:#241a02!important;border-color:var(--warning)!important}
 .btn-outline-info{color:var(--info,var(--accent))!important;border-color:var(--info,var(--accent))!important}
 .btn-outline-info:hover{background-color:var(--info,var(--accent))!important;color:#fff!important;border-color:var(--info,var(--accent))!important}
+
+/* ==========================================================================
+   ZEN SELECT — Custom Dropdown (gaya panel admin, dipakai global)
+   --------------------------------------------------------------------------
+   Komponen dropdown kustom yang sama persis dengan panel admin
+   (lih. public/css/admin.css + public/js/zen-select.js). Dipakai di halaman
+   pendaftaran (register), cek tagihan, voucher, dsb. agar selektor
+   (Wilayah/Area, Paket, dsb.) tampil konsisten di semua halaman.
+   ========================================================================== */
+.zs{position:relative;display:inline-flex;flex-direction:column;width:100%;min-width:0;vertical-align:middle}
+.zs .zs-native{position:absolute!important;opacity:0;pointer-events:none;width:1px;height:1px;margin:0;padding:0;border:0;inset:auto 0 0 auto}
+.zs-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px 9px 13px;color:var(--text);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;transition:border-color .22s ease,box-shadow .22s ease,background .22s ease;min-height:38px}
+.zs-btn:hover{border-color:color-mix(in srgb,var(--primary) 40%,var(--border));background:rgba(255,255,255,.04)}
+.zs.open .zs-btn,.zs-btn:focus-visible{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--pdim)}
+.zs-btn:disabled{opacity:.55;cursor:not-allowed}
+.zs-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zs-label.placeholder{color:var(--muted);font-weight:500}
+.zs-chev{font-size:11px;color:var(--primary);transition:transform .22s ease;flex-shrink:0}
+.zs.open .zs-chev{transform:rotate(180deg)}
+.zs-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:160px;max-height:280px;overflow-y:auto;background:var(--bg2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(3,14,20,.48),0 0 20px var(--pdim);padding:5px;z-index:300;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s ease,transform .2s ease;scrollbar-width:thin;scrollbar-color:var(--primary) transparent}
+.zs-menu-portal{position:fixed!important;right:auto!important;z-index:1500!important;display:block;visibility:hidden;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s ease,transform .2s ease}
+.zs-menu-portal.zs-menu-up{transform:translateY(8px)}
+.zs-menu-portal.zs-menu-open{visibility:visible;opacity:1;transform:translateY(0);pointer-events:auto}
+.zs.up .zs-menu{top:auto;bottom:calc(100% + 8px);transform:translateY(8px)}
+.zs.open .zs-menu{opacity:1;transform:translateY(0);pointer-events:auto}
+.zs-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:8px;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s ease;white-space:nowrap;overflow:hidden}
+.zs-item-text{overflow:hidden;text-overflow:ellipsis}
+.zs-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.zs-item.active{background:var(--pdim);color:var(--primary);font-weight:700;box-shadow:inset 3px 0 0 var(--primary)}
+.zs-item.disabled{opacity:.4;cursor:not-allowed}
+.zs-check{font-size:13px;opacity:0;transition:opacity .15s}
+.zs-item.active .zs-check{opacity:1}
+/* Saat select dipakai di dalam .field (register) — tepi kiri diisi ikon */
+.field > .zs .zs-btn{padding-left:38px}
+.field > .zs .zs-label{font-weight:500}
 

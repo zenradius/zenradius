@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= settings.company_header || 'ZenRadius' %> - One Platform for Your Network</title>
+  <title><%= settings.company_header || 'ZenRadius' %> - <%= settings.company_tagline || 'One Platform for Your Network' %></title>
 
   <!-- Preconnect to CDN for faster loading -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="<%= (typeof appTheme !== 'undefined' && appTheme === 'space') ? '#0B1028' : '#173945' %>">
+  <meta name="theme-color" content="<%= (typeof appTheme !== 'undefined' && appTheme === 'space') ? '#0B1028' : (typeof appTheme !== 'undefined' && appTheme === 'orbit') ? '#F2F5FA' : '#173945' %>">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

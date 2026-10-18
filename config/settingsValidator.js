@@ -28,6 +28,11 @@ const VALIDATION_RULES = {
     required: true,
     description: 'Nama perusahaan'
   },
+  company_tagline: {
+    type: 'string',
+    maxLength: 200,
+    description: 'Tagline / slogan perusahaan (mis. "One Platform for Your Network")'
+  },
   app_theme: {
     type: 'string',
     enum: ['current', 'space', 'orbit'],
