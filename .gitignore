@@ -14,18 +14,12 @@ Thumbs.db
 data/
 .wrangler/
 
-# Developer tooling (separate repos: zenradius/license, zenradius/license-api)
-licensi/
-license/
-license-api/
-
 !database/seed/
 !database/seed/zenradius-seed.db
 
 # Local-only documentation
 *.md
 !README.md
-tutorial/
 
 # Local-only development & test files
 nodemon.json

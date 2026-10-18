@@ -407,15 +407,15 @@ Jika belum, clone ulang dan pindahkan folder `database/`, `.env`, `public/upload
 
 ---
 
-## 📘 Tutorial Instalasi Lengkap
+## 📘 Dokumentasi & Tutorial Instalasi
 
-Panduan lengkap untuk pengguna yang ingin memasang ZenRadius di VPS dan menyiapkannya untuk production tersedia di:
+Panduan lengkap untuk memasang ZenRadius di VPS, mengonfigurasi seluruh modul (MikroTik, RADIUS, ACS TR-069, WhatsApp, payment gateway), dan mengoperasikannya sehari-hari tersedia di pusat dokumentasi resmi:
 
-### 👉 [tutorial.zenradius.net](https://tutorial.zenradius.net)
+### 👉 [Dokumentasi ZenRadius](https://zenradius.net/dokumentasi)
 
-Tutorial mencakup persiapan server, instalasi via `install.sh`, Docker Compose, konfigurasi domain dan HTTPS, Cloudflare Tunnel, MikroTik, RADIUS, ACS TR-069, WhatsApp, payment gateway, backup, keamanan, troubleshooting, dan checklist go-live.
+Dokumentasi mencakup persiapan server, instalasi via `install.sh`, Docker Compose, konfigurasi domain dan HTTPS, Cloudflare Tunnel, MikroTik, RADIUS, ACS TR-069, WhatsApp, payment gateway, backup, keamanan, troubleshooting, dan checklist go-live.
 
-> Disarankan mengikuti tutorial secara berurutan dari persiapan server hingga checklist go-live.
+> Disarankan mengikuti dokumentasi secara berurutan dari persiapan server hingga checklist go-live.
 
 ---
 
