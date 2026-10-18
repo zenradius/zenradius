@@ -212,6 +212,11 @@ const VALIDATION_RULES = {
     description: 'Telegram admin ID (numeric)'
   },
 
+  license_web_url: {
+    type: 'string',
+    description: 'URL server lisensi zenradius-web (portal order & aktivasi)'
+  },
+
   domain_license_key: {
     type: 'string',
     // Token lisensi v3 (ZRL1.<base64url>.<base64url>) atau kosong.

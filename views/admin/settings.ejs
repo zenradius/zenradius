@@ -226,6 +226,14 @@
                 <% } %>
               </small>
             </div>
+            <div class="fg" style="margin-top:10px">
+              <label class="fl">Server Lisensi Resmi (zenradius-web)</label>
+              <input class="fc" name="license_web_url" value="<%= settings.license_web_url || '' %>" placeholder="https://license.zenradius.net" style="font-family:monospace;font-size:12.5px">
+              <small class="text-muted">
+                URL portal lisensi resmi. Halaman "Aktivasi Lisensi Diperlukan" akan menautkan pelanggan langsung ke
+                portal ini (order &amp; aktivasi token ZRL1) — sinkron otomatis dengan server lisensi. Kosongkan untuk fallback WhatsApp.
+              </small>
+            </div>
           </div>
         </div>
 

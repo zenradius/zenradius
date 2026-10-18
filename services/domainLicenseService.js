@@ -254,6 +254,7 @@ function requireDomainLicense(options = {}) {
       reason: result.reason || null,
       reasonText: result.reason ? describeReason(result.reason, result.host) : '',
       licenseInfo,
+      licenseWebUrl: String(getSetting('license_web_url', '') || '').trim(),
       layout: false
     });
   };
