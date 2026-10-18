@@ -214,8 +214,9 @@ const VALIDATION_RULES = {
 
   domain_license_key: {
     type: 'string',
-      pattern: /^([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})?$/,
-      description: 'Lifetime domain license key (XXXX-XXXX-XXXX-XXXX format)'
+    // Token lisensi v3 (ZRL1.<base64url>.<base64url>) atau kosong.
+    pattern: /^(ZRL1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)?$/,
+    description: 'Token lisensi v3 (ZRL1.…) — diterbitkan server lisensi resmi'
   },
   tripay_enabled: {
     type: 'boolean',

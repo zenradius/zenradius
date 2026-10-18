@@ -3,27 +3,20 @@
  * Verifikasi lisensi seumur hidup berbasis domain + identitas instalasi.
  *
  * Skema v3 (production): token bertanda tangan Ed25519 `ZRL1.<payload>.<sig>`
- *   diterbitkan oleh registry (kunci privat hanya di Cloudflare Worker). Aplikasi
- *   hanya menyimpan kunci publik (config/licenseTrustAnchor.js) → tidak dapat
- *   dipalsukan meski seluruh source code diketahui. Mendukung revokasi (via
- *   heartbeat) dan kebijakan offline (LICENSE_OFFLINE_MAX_DAYS).
- * Skema v2 (legacy): HMAC(domain|installCode) — masih diterima untuk pelanggan lama.
- * Skema v1 (legacy): HMAC(domain) — hanya domain publik.
- *   Legacy dapat dimatikan dengan env LICENSE_ACCEPT_LEGACY=off.
- * Instalasi lokal tanpa domain: pakai subjek khusus 'local' (v2/v3 saja).
+ *   diterbitkan oleh server lisensi resmi (zenradius-web — kunci privat hanya
+ *   di server itu). Aplikasi hanya menyimpan kunci publik
+ *   (config/licenseTrustAnchor.js) → tidak dapat dipalsukan meski seluruh
+ *   source code diketahui. Mendukung revokasi (via heartbeat) dan kebijakan
+ *   offline (LICENSE_OFFLINE_MAX_DAYS).
+ * Skema legacy HMAC (v1/v2) TIDAK LAGI DITERIMA — semua lisensi wajib token v3.
+ * Instalasi lokal tanpa domain: pakai subjek khusus 'local' (token v3).
  */
-const crypto = require('crypto');
 const { getSetting, saveSettings } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 const licenseInfo = require('../config/licenseInfo');
 const instanceIdentity = require('./instanceIdentityService');
 const tokenSvc = require('./licenseTokenService');
 
-// Secret HMAC legacy (v1/v2). Tidak dipakai untuk penerbitan baru.
-// Nilai default dipertahankan untuk kompatibilitas instalasi lama; operator
-// yang memakai serial HMAC sebaiknya menyetel ZENRADIUS_MASTER_SECRET di env
-// agar sama dengan LICENSE signing/registry (web & Worker).
-const MASTER_SECRET = process.env.ZENRADIUS_MASTER_SECRET || '@Du4du4220215@';
 const LOCAL_DOMAIN = 'local';
 
 let cache = { key: null, host: null, valid: false, at: 0 };
@@ -35,7 +28,6 @@ const OFFLINE_MAX_MS = (Number(process.env.LICENSE_OFFLINE_MAX_DAYS) || licenseI
 const IS_PRODUCTION = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
 /** Bypass localhost hanya untuk pengembangan: NODE_ENV bukan production DAN flag eksplisit. */
 const DEV_BYPASS = !IS_PRODUCTION && ['1', 'true', 'on'].includes(String(process.env.ZENRADIUS_DEV_LICENSE || '').toLowerCase());
-const ACCEPT_LEGACY = String(process.env.LICENSE_ACCEPT_LEGACY || 'on').toLowerCase() !== 'off';
 
 /**
  * Masa tenggang GLOBAL per instalasi: dicatat sekali saat lisensi pertama kali
@@ -91,24 +83,6 @@ function licenseDomainForHost(host) {
   return h;
 }
 
-function formatKey(hex16) {
-  return `${hex16.substring(0, 4)}-${hex16.substring(4, 8)}-${hex16.substring(8, 12)}-${hex16.substring(12, 16)}`;
-}
-
-function hmac16(input) {
-  return crypto.createHmac('sha256', MASTER_SECRET).update(input).digest('hex').toUpperCase().substring(0, 16);
-}
-
-/** Kunci v1 (legacy): hanya domain. */
-function computeSignature(domain) {
-  return formatKey(hmac16(domain));
-}
-
-/** Kunci v2: domain + kode instalasi. */
-function computeSignatureV2(domain, installCode) {
-  return formatKey(hmac16(`${domain}|${String(installCode || '').toUpperCase()}`));
-}
-
 /** Status registry yang disimpan heartbeat: { lid, status: 'active'|'revoked', at } */
 function getRegistryState() {
   return {
@@ -152,22 +126,16 @@ function verifyLicense(domain, licenseKey) {
 
   if (tokenSvc.isToken(raw)) return verifyToken(clean, raw);
 
-  const key = raw.toUpperCase();
-  if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key)) return { valid: false, reason: 'format', domain: clean };
-  if (!ACCEPT_LEGACY) return { valid: false, reason: 'legacy_disabled', domain: clean };
-
-  const installCode = instanceIdentity.getInstallCode();
-  if (computeSignatureV2(clean, installCode) === key) return { valid: true, reason: null, domain: clean, scheme: 'v2' };
-  // Legacy v1: hanya untuk domain sungguhan (bukan 'local').
-  if (clean !== LOCAL_DOMAIN && computeSignature(clean) === key) return { valid: true, reason: null, domain: clean, scheme: 'v1' };
-  return { valid: false, reason: 'mismatch', domain: clean };
+  // Skema legacy HMAC (serial XXXX-XXXX-XXXX-XXXX) TIDAK LAGI diterima.
+  // Hanya token v3 (ZRL1…) yang ditandatangani server lisensi resmi.
+  return { valid: false, reason: 'legacy_not_supported', domain: clean };
 }
 
 /** Pesan manusiawi untuk alasan lisensi tidak valid. */
 function describeReason(reason, host) {
   const target = host === LOCAL_DOMAIN ? 'instalasi lokal ini' : `domain ${host}`;
   switch (reason) {
-    case 'format': return 'Format lisensi tidak valid. Gunakan token ZRL1… atau serial XXXX-XXXX-XXXX-XXXX.';
+    case 'format': return 'Format lisensi tidak valid. Gunakan token lisensi ZRL1… (tempel lengkap).';
     case 'signature': return 'Tanda tangan token lisensi tidak sah. Pastikan token disalin lengkap dari Developer.';
     case 'unknown_kid': return 'Token ditandatangani dengan kunci yang tidak dikenal versi aplikasi ini. Perbarui aplikasi.';
     case 'install_mismatch': return 'Token lisensi terikat ke Kode Instalasi lain. Minta penerbitan ulang dengan Kode Instalasi instalasi ini.';
@@ -175,8 +143,7 @@ function describeReason(reason, host) {
     case 'expired': return 'Token lisensi telah kedaluwarsa.';
     case 'revoked': return 'Lisensi ini telah dicabut oleh Developer.';
     case 'offline_too_long': return 'Instalasi terlalu lama tidak terhubung ke server lisensi. Pastikan server dapat mengakses internet lalu coba lagi.';
-    case 'legacy_disabled': return 'Serial HMAC lama tidak lagi diterima. Minta token lisensi baru.';
-    case 'mismatch': return `Kode lisensi tidak cocok untuk ${target}.`;
+    case 'legacy_not_supported': return 'Lisensi legacy (serial HMAC) tidak lagi didukung. Minta token lisensi ZRL1 baru dari Developer.';
     default: return 'Lisensi tidak valid.';
   }
 }
@@ -220,7 +187,7 @@ function getStoredLicenseInfo() {
     const p = tokenSvc.parseToken(raw);
     return { present: true, scheme: 'v3', lid: p.ok ? p.payload.lid : null, exp: p.ok ? p.payload.exp : null, plan: p.ok ? p.payload.plan || null : null, signatureOk: p.ok };
   }
-  return { present: true, scheme: 'hmac', lid: null };
+  return { present: true, scheme: 'legacy-disabled', lid: null };
 }
 
 /**

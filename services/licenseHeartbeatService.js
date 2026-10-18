@@ -62,7 +62,7 @@ async function sendHeartbeat({ force = false, host = '' } = {}) {
     const isToken = licenseRaw.startsWith('ZRL1.');
     const payload = {
       domain,
-      serial: (!isToken && licenseRaw) ? licenseRaw.toUpperCase() : undefined,
+      // Skema legacy dihapus: hanya token ZRL1 yang dikirim ke registry.
       token: isToken ? licenseRaw : undefined,
       install_code: instanceIdentity.getInstallCode(),
       instance_id: instanceIdentity.getInstanceId(),
