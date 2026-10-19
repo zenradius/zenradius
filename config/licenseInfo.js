@@ -9,7 +9,7 @@ const LICENSE_WA_NUMBER = '6285178008881'; // format internasional tanpa +
 const LICENSE_WA_DISPLAY = '+62 851-7800-8881';
 
 /** Masa tenggang (hari) sebelum akses dikunci penuh saat lisensi tidak valid. */
-const LICENSE_GRACE_DAYS = 7;
+const LICENSE_GRACE_DAYS = 30;
 /** Token v3: maksimal hari tanpa kontak registry sebelum lisensi dianggap perlu verifikasi ulang (lalu masuk masa tenggang). */
 const LICENSE_OFFLINE_MAX_DAYS = 45;
 

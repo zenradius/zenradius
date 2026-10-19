@@ -441,7 +441,7 @@ ZenRadius adalah produk berbayar berlisensi proprietari menggunakan model pembel
 1. **Satu Lisensi per Domain**: Pembelian lisensi diikat secara ketat pada satu host kustom / FQDN (misalnya: `billing.ispanda.net`).
 2. **Aktif Selamanya (Lifetime)**: Tidak ada biaya bulanan, tidak ada tarif berlangganan tahunan, dan tidak ada biaya tersembunyi. Sekali diaktifkan, lisensi valid selamanya.
 3. **Pembaruan Berkelanjutan Gratis**: Tetap mendapatkan akses pembaruan fitur (update via git), tambalan sistem keamanan, serta perbaikan bug tanpa perlu membayar ekstra.
-4. **Masa Tenggang Integratif (Grace Period)**: Instalasi baru ZenRadius tanpa kunci serial valid akan memasuki *masa tenggang selama 7 hari* dengan fungsionalitas penuh. Setelah masa tenggang berakhir, sistem akan mengunci akses ke panel admin secara otomatis sampai serial yang sah selesai diaktivasi.
+4. **Masa Tenggang Integratif (Grace Period)**: Instalasi baru ZenRadius tanpa kunci serial valid akan memasuki *masa tenggang selama 30 hari* dengan fungsionalitas penuh — cukup untuk mengevaluasi seluruh fitur selama sebulan. Setelah masa tenggang berakhir, sistem akan mengunci akses ke panel admin secara otomatis sampai serial yang sah selesai diaktivasi.
 
 ### 💰 Informasi Harga dan Pemesanan:
 *   **Investasi**: **Rp 300.000 / Domain** (Lisensi Premium Aktif Selamanya)
