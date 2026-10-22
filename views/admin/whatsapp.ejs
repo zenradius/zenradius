@@ -261,6 +261,21 @@
             <div style="font-size:10px; color:var(--muted); margin-top:4px">Dapatkan gratis dari <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--brand);font-weight:600">Google AI Studio</a>.</div>
           </div>
         </div>
+        <div class="form-row mb16">
+          <div class="fg">
+            <label class="fl">Model Gemini</label>
+            <input class="fc" name="gemini_model" value="<%= settings.gemini_model || 'gemini-3.5-flash' %>" placeholder="gemini-3.5-flash">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Model utama. Jika tidak tersedia, sistem otomatis mencoba model cadangan (3.5-flash-lite, 2.5-flash, 2.0-flash).</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Asisten AI Admin (WhatsApp)</label>
+            <select class="fs" name="whatsapp_ai_enabled">
+              <option value="true" <%= settings.whatsapp_ai_enabled !== false ? 'selected' : '' %>>Aktif</option>
+              <option value="false" <%= settings.whatsapp_ai_enabled === false ? 'selected' : '' %>>Nonaktif</option>
+            </select>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Izinkan admin chat bebas ke bot (mis. "isolir pelanggan Budi", "lunasi tagihan 1234") yang dieksekusi AI via function calling. Butuh API Key Gemini.</div>
+          </div>
+        </div>
         <div class="fg mb16">
           <label class="fl">JID Grup Teknisi WA (Opsional)</label>
           <input class="fc" name="whatsapp_tech_group_jid" value="<%= settings.whatsapp_tech_group_jid || '' %>" placeholder="1234567890@g.us">

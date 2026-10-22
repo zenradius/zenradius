@@ -9,7 +9,7 @@ import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaile
 
 const require = createRequire(import.meta.url);
 const { logger } = require('../config/logger.js');
-const { getSetting, getNowLocal, formatDateLocal, getCurrentDateInTimezone } = require('../config/settingsManager.js');
+const { getSetting, getNowLocal, formatDateLocal, getCurrentDateInTimezone, parseBooleanSetting } = require('../config/settingsManager.js');
 const db = require('../config/database.js');
 const customerDevice = require('./customerDeviceService.js');
 const { WaLidStore } = require('./waLidStore.js');
@@ -17,6 +17,7 @@ const billingSvc = require('./billingService.js');
 const mikrotikSvc = require('./mikrotikService.js');
 const customerSvc = require('./customerService.js');
 const agentSvc = require('./agentService.js');
+const aiAssistantService = require('./aiAssistantService.js');
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, '..');
@@ -822,6 +823,11 @@ function parseCommand(text, isAdmin) {
 
   if (isAdmin && ['admin', 'adminmenu', 'menuadmin'].includes(cmd)) return { cmd: 'adminmenu', rest: '' };
 
+  // Admin: tanya Asisten AI secara eksplisit (mis. "tanya berapa pelanggan isolir?")
+  if (isAdmin && ['tanya', 'ai', 'ask', 'konsultasi'].includes(cmd)) {
+    return { cmd: 'ai_ask', admin: true, question: rest || (parts.length >= 2 ? parts.slice(1).join(' ') : '') };
+  }
+
   if (isAdmin && ['listonu', 'listdevice', 'daftarperangkat'].includes(cmd)) {
     return { cmd: 'listonu', admin: true };
   }
@@ -1129,6 +1135,11 @@ ${sep}
 ⚡ *Digiflazz (Admin):*
 ⚡ \`pulsa\` _SKU TARGET_ — Transaksi pulsa/produk
 🔎 \`cekpulsa\` _TXID_ — Cek status transaksi
+
+🤖 *Asisten AI (Admin):*
+🧠 \`tanya\` _pertanyaan_ — Tanya AI (jawab bebas)
+👥 \`tambah pelanggan Budi 08123 paket GOLD\` — Perintah AI (tambah/isolir/lunas/dll)
+🗑️ _Hapus pelanggan: minta AI, lalu balas_ \`YA HAPUS <ID>\`
 
 ${sep}
 ${footerInfo ? footerInfo : '💡 _Tanpa TAG = perintah untuk device yang terikat ke WA Anda._'}`;
@@ -1870,6 +1881,57 @@ export async function startWhatsAppBot() {
           continue;
         }
 
+        // Admin: konfirmasi hapus pelanggan "YA HAPUS <id>"
+        if (!parsed && isAdmin) {
+          const delMatch = String(text || '').match(/^ya\s+hapus\s+(\d+)[.!]?$/i);
+          if (delMatch) {
+            const delId = Number(delMatch[1]);
+            try {
+              const cust = customerSvc.getCustomerById(delId);
+              if (!cust) {
+                await reply(`❌ Pelanggan dengan ID #${delId} tidak ditemukan.`);
+                continue;
+              }
+              await customerSvc.deleteCustomer(delId);
+              await reply(`🗑️ *PELANGGAN BERHASIL DIHAPUS*\n\nData pelanggan *${cust.name}* (ID: #${delId}, No HP: ${cust.phone || '-'}) telah dihapus dari sistem billing.`);
+            } catch (e) {
+              logger.error(`[WA Bot] Gagal menghapus pelanggan #${delId}: ${e.message}`);
+              await reply(`❌ Gagal menghapus pelanggan #${delId}: ${e.message}`);
+            }
+            continue;
+          }
+        }
+
+        // Admin: pesan bebas (bukan command) → Asisten AI Admin dengan function calling
+        if (!parsed && isAdmin) {
+          const aiOn = parseBooleanSetting(getSetting('whatsapp_ai_enabled', true), true) &&
+            String(getSetting('gemini_api_key', '') || '').trim();
+          if (aiOn) {
+            try {
+              try { await sock.sendPresenceUpdate('composing', m.key.remoteJid); } catch (_) { /* ignore */ }
+              const aiReply = await aiAssistantService.askAi({
+                question: text,
+                senderName: 'Admin',
+                customerContext: null,
+                isAdmin: true,
+                extraContext: { reply, sock, lidStore, phone }
+              });
+              if (aiReply) await reply(aiReply);
+            } catch (e) {
+              logger.error('[WA AI Admin] Error: ' + (e.message || e));
+              await reply('❌ Maaf, sedang terjadi kendala memproses permintaan AI. Silakan coba lagi.');
+            }
+            continue;
+          }
+
+          // AI admin nonaktif → arahkan ke menu
+          await reply(
+            'ℹ️ *Asisten AI Admin sedang dinonaktifkan.*\n\n' +
+            'Aktifkan di *Admin ➜ WhatsApp ➜ Asisten AI* (isi API Key Gemini), atau ketik `admin` untuk daftar perintah manual.'
+          );
+          continue;
+        }
+
         if (!parsed) continue;
 
         // Rate Limiting Check
@@ -1932,6 +1994,38 @@ export async function startWhatsAppBot() {
             continue;
           }
           await reply(getAdminMenuText());
+          continue;
+        }
+
+        if (parsed.cmd === 'ai_ask' && parsed.admin) {
+          if (!isAdmin) {
+            await reply('❌ Akses ditolak. Perintah ini khusus admin.');
+            continue;
+          }
+          const q = String(parsed.question || '').trim();
+          if (!q) {
+            await reply('💡 Silakan tulis pertanyaan setelah kata `tanya`.\nContoh: `tanya berapa pelanggan yang terisolir?`');
+            continue;
+          }
+          const aiOn = parseBooleanSetting(getSetting('whatsapp_ai_enabled', true), true) && String(getSetting('gemini_api_key', '') || '').trim();
+          if (!aiOn) {
+            await reply('ℹ️ *Asisten AI Admin belum aktif.* Aktifkan di *Admin ➜ WhatsApp ➜ Asisten AI* (isi API Key Gemini).');
+            continue;
+          }
+          try {
+            try { await sock.sendPresenceUpdate('composing', m.key.remoteJid); } catch (_) { /* ignore */ }
+            const aiReply = await aiAssistantService.askAi({
+              question: q,
+              senderName: 'Admin',
+              customerContext: null,
+              isAdmin: true,
+              extraContext: { reply, sock, lidStore, phone }
+            });
+            if (aiReply) await reply(aiReply);
+          } catch (e) {
+            logger.error('[WA AI Admin] Error: ' + (e.message || e));
+            await reply('❌ Maaf, sedang terjadi kendala memproses permintaan AI. Silakan coba lagi.');
+          }
           continue;
         }
 

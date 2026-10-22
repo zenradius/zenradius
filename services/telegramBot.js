@@ -1,15 +1,18 @@
 const ntba = require('node-telegram-bot-api');
 const TelegramBot = ntba.TelegramBot || ntba;
 const path = require('path');
-const { getSetting, getNowLocal } = require('../config/settingsManager');
+const { getSetting, getNowLocal, parseBooleanSetting } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 const customerSvc = require('./customerService');
 const billingSvc = require('./billingService');
 const mikrotikSvc = require('./mikrotikService');
 const agentSvc = require('./agentService');
 const customerDevice = require('./customerDeviceService');
+const aiAssistantService = require('./aiAssistantService');
 
 let bot = null;
+let botMe = null;
+let botUsername = '';
 
 function initTelegram() {
   const enabled = getSetting('telegram_enabled', false);
@@ -19,6 +22,8 @@ function initTelegram() {
     if (bot) {
       bot.stopPolling();
       bot = null;
+      botMe = null;
+      botUsername = '';
       logger.info('Telegram Bot: Dihentikan (Nonaktif)');
     }
     return;
@@ -27,6 +32,8 @@ function initTelegram() {
   if (bot && bot.token !== token) {
     bot.stopPolling();
     bot = null;
+    botMe = null;
+    botUsername = '';
     logger.info('Telegram Bot: Token berubah, me-restart bot...');
   }
 
@@ -39,6 +46,8 @@ function initTelegram() {
 
   bot.deleteWebHook().then(() => {
     bot.getMe().then(me => {
+      botMe = me;
+      botUsername = me && me.username ? String(me.username).toLowerCase() : '';
       logger.info(`Telegram Bot: Terhubung sebagai @${me.username}`);
     }).catch(e => logger.error('Telegram Bot Error (getMe):', e.message));
   }).catch(e => logger.error('Telegram Bot Error (deleteWebHook):', e.message));
@@ -321,6 +330,18 @@ function initTelegram() {
       text: `*💾 PERINTAH BACKUP*\n\n` +
         `\`/backup\`\n└ Buat & kirim backup database ZenRadius sekarang juga\n\n` +
         `_Backup otomatis juga berjalan setiap 7 hari sekali dan dikirim ke chat ini._`
+    },
+    ai: {
+      title: '🤖 Asisten AI',
+      text: `*🤖 ASISTEN AI (GEMINI)*\n\n` +
+        `\`/tanya [pertanyaan]\`\n└ Tanya AI seputar fitur aplikasi / operasional\n└ Contoh: \`/tanya berapa pelanggan yang terisolir?\`\n\n` +
+        `Mention bot di grup (\`@${botMe?.username || 'bot'} pertanyaan\`) atau reply pesan bot untuk bertanya langsung.\n\n` +
+        `*Admin (chat pribadi)*: cukup ketik pertanyaan bebas, mis.\n` +
+        `└ _"isolir pelanggan Budi"_\n└ _"lunasi tagihan 1234"_\n└ _"reboot ONU pelanggan Andi"_\n` +
+        `AI akan memanggil aksi otomatis (function calling).\n\n` +
+        `\`/dns [domain] [tipe]\`\n└ Cek record DNS (DoH Cloudflare)\n└ Contoh: \`/dns google.com A\`\n\n` +
+        `\`/ping [host]\`\n└ Cek konektivitas/latensi host\n└ Contoh: \`/ping 8.8.8.8\`\n\n` +
+        `\`/fitur\`\n└ Ringkasan fitur aplikasi (jawaban offline)`
     }
   };
 
@@ -331,6 +352,7 @@ function initTelegram() {
         [{ text: '💰 Tagihan', callback_data: 'help_tagihan' }, { text: '🎫 Voucher', callback_data: 'help_voucher' }],
         [{ text: '⚙️ MikroTik', callback_data: 'help_mikrotik' }, { text: '📡 GenieACS/ONU', callback_data: 'help_onu' }],
         [{ text: '💳 Agent', callback_data: 'help_agent' }, { text: '💾 Backup', callback_data: 'help_backup' }],
+        [{ text: '🤖 Asisten AI', callback_data: 'help_ai' }],
         [{ text: '⬅️ Menu Utama', callback_data: 'menu_main' }]
       ]
     }
@@ -367,9 +389,86 @@ function initTelegram() {
   });
 
   bot.on('message', async (msg) => {
-    if (!isAdmin(msg)) return;
     const text = msg.text;
+    if (!text) return;
     if (text === '/start' || text === '/menu') return;
+
+    // === Deteksi Pertanyaan / Trigger AI Asisten (grup: mention/reply/tanya; privat: admin) ===
+    const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+    const lowerText = text.toLowerCase();
+    const isMentioned = botUsername && lowerText.includes(`@${botUsername}`);
+    const isReplyToBot = !!(msg.reply_to_message && msg.reply_to_message.from && botMe && msg.reply_to_message.from.id === botMe.id);
+    const isAskCommand = /^\/(?:tanya|ask|ai|dns|ping|fitur)(?:@\w+)?(?:\s+|$)/i.test(text);
+    const isGroupTrigger = isGroup && (isMentioned || isReplyToBot || isAskCommand);
+    const isPrivateTrigger = !isGroup && (isAskCommand || (!text.startsWith('/') && isAdmin(msg)));
+
+    if (isGroupTrigger || isPrivateTrigger) {
+      const aiEnabled = parseBooleanSetting(getSetting('telegram_ai_enabled', true), true);
+      if (!aiEnabled) {
+        if (isAskCommand || isMentioned) {
+          bot.sendMessage(msg.chat.id, 'ℹ️ Fitur Asisten AI sedang dinonaktifkan di pengaturan.', { reply_to_message_id: msg.message_id }).catch(() => {});
+        }
+        return;
+      }
+
+      const chatId = msg.chat.id;
+      const replyOpts = { reply_to_message_id: msg.message_id };
+      const isPrivAdmin = !isGroup && isAdmin(msg);
+
+      // Diagnostik: /dns dan /ping
+      const dnsMatch = text.match(/^\/dns(?:@\w+)?\s+(\S+)(?:\s+(\S+))?/i);
+      if (dnsMatch) {
+        bot.sendChatAction(chatId, 'typing').catch(() => {});
+        const out = await aiAssistantService.checkDns(dnsMatch[1], dnsMatch[2] || 'A');
+        return bot.sendMessage(chatId, out, { parse_mode: 'Markdown', ...replyOpts })
+          .catch(() => bot.sendMessage(chatId, out, replyOpts).catch(() => {}));
+      }
+      const pingMatch = text.match(/^\/ping(?:@\w+)?\s+(\S+)/i);
+      if (pingMatch) {
+        bot.sendChatAction(chatId, 'typing').catch(() => {});
+        const out = await aiAssistantService.checkPing(pingMatch[1]);
+        return bot.sendMessage(chatId, out, { parse_mode: 'Markdown', ...replyOpts })
+          .catch(() => bot.sendMessage(chatId, out, replyOpts).catch(() => {}));
+      }
+      // /fitur → ringkasan fitur aplikasi
+      if (/^\/fitur(?:@\w+)?\s*$/i.test(text)) {
+        const out = aiAssistantService.getOfflineAnswer('daftar fitur aplikasi lengkap');
+        return bot.sendMessage(chatId, out, { parse_mode: 'Markdown', ...replyOpts })
+          .catch(() => bot.sendMessage(chatId, out, replyOpts).catch(() => {}));
+      }
+
+      const cleanQuestion = text
+        .replace(new RegExp(`@${botUsername}`, 'gi'), '')
+        .replace(/^\/(?:tanya|ask|ai)(?:@\w+)?\s*/i, '')
+        .trim();
+
+      if (!cleanQuestion) {
+        return bot.sendMessage(chatId, '💡 Silakan tulis pertanyaan setelah perintah. Contoh: `/tanya bagaimana cara isolir otomatis?`', {
+          parse_mode: 'Markdown',
+          ...replyOpts
+        });
+      }
+
+      bot.sendChatAction(chatId, 'typing').catch(() => {});
+      try {
+        const answer = await aiAssistantService.askAi({
+          question: cleanQuestion,
+          senderName: msg.from.first_name || 'Rekan',
+          isAdmin: Boolean(isPrivAdmin)
+        });
+        await bot.sendMessage(chatId, answer, { parse_mode: 'Markdown', ...replyOpts })
+          .catch(async () => {
+            // Fallback tanpa formatting bila ada karakter yang merusak Markdown parser
+            await bot.sendMessage(chatId, answer, replyOpts).catch(() => {});
+          });
+      } catch (err) {
+        logger.error(`[TelegramBot] Error AI response: ${err.message}`);
+        bot.sendMessage(chatId, '❌ Maaf, sedang terjadi kendala memproses jawaban. Silakan coba kembali.', replyOpts).catch(() => {});
+      }
+      return;
+    }
+
+    if (!isAdmin(msg)) return;
 
   });
 

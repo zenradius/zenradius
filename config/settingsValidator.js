@@ -161,6 +161,18 @@ const VALIDATION_RULES = {
     type: 'string',
     description: 'API Key Gemini (dapatkan dari Google AI Studio)'
   },
+  gemini_model: {
+    type: 'string',
+    description: 'Model Gemini yang dipakai (contoh: gemini-3.5-flash)'
+  },
+  whatsapp_ai_enabled: {
+    type: 'boolean',
+    description: 'Enable Asisten AI Admin di WhatsApp (function calling)'
+  },
+  telegram_ai_enabled: {
+    type: 'boolean',
+    description: 'Enable Asisten AI di Telegram (grup & privat admin)'
+  },
   whatsapp_due_reminder_enabled: {
     type: 'boolean',
     description: 'Enable pengingat tagihan H-3 jatuh tempo via WhatsApp'

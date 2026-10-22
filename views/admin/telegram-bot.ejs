@@ -48,6 +48,14 @@
             </div>
           </div>
           <div class="fg">
+            <label class="fl"><%= t('admin.settings.telegram.ai_enabled', 'Asisten AI Telegram') %></label>
+            <select class="fs" name="telegram_ai_enabled">
+              <option value="true" <%= settings.telegram_ai_enabled !== false ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+              <option value="false" <%= settings.telegram_ai_enabled === false ? 'selected' : '' %>><%= t('common.inactive', 'Nonaktif') %></option>
+            </select>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Aktifkan <span class="mono">/tanya</span>, mention bot di grup, serta chat bebas admin (function calling). Butuh API Key Gemini di menu WhatsApp.</div>
+          </div>
+          <div class="fg">
             <label class="fl"><%= t('admin.settings.telegram.bot_token', 'Telegram Bot Token') %></label>
             <div style="display:flex;gap:8px">
               <input class="fc" name="telegram_bot_token" value="<%= settings.telegram_bot_token || '' %>" placeholder="Dapatkan dari @BotFather">

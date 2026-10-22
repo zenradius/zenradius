@@ -4723,6 +4723,8 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
       newSettings.whatsapp_admin_numbers = newSettings.whatsapp_admin_numbers.split(',').map(n => n.trim()).filter(Boolean);
     }
     if (newSettings.gemini_enabled !== undefined) newSettings.gemini_enabled = (newSettings.gemini_enabled === 'true');
+    if (newSettings.whatsapp_ai_enabled !== undefined) newSettings.whatsapp_ai_enabled = (newSettings.whatsapp_ai_enabled === 'true');
+    if (newSettings.telegram_ai_enabled !== undefined) newSettings.telegram_ai_enabled = (newSettings.telegram_ai_enabled === 'true');
 
     if (newSettings.server_port) newSettings.server_port = parseInt(newSettings.server_port);
     if (newSettings.mikrotik_port) newSettings.mikrotik_port = parseInt(newSettings.mikrotik_port);

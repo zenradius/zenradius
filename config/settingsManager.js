@@ -317,6 +317,11 @@ function ensureDefaultSettings() {
       // AI Gemini untuk WhatsApp bot (nonaktif secara default; isi gemini_api_key untuk aktif)
       gemini_enabled: false,
       gemini_api_key: '',
+      // Model Gemini yang dipakai (bisa diganti, ada fallback otomatis)
+      gemini_model: 'gemini-3.5-flash',
+      // Asisten AI (admin) via WhatsApp & Telegram
+      whatsapp_ai_enabled: true,
+      telegram_ai_enabled: true,
       whatsapp_broadcast_delay: 5,
       whatsapp_auto_billing_enabled: false,
       whatsapp_billing_to_customer_enabled: true,
