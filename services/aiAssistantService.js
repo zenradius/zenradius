@@ -341,10 +341,14 @@ function getOfflineAnswer(question, customerContext = null, isAdmin = false, adm
       // 1. Tunggakan
       if (q.includes('tunggak') || q.includes('belum bayar') || q.includes('piutang') || q.includes('nunggak') || (q.includes('tagihan') && !q.includes('pelanggan saya'))) {
         const unpaidList = db.prepare(`
-          SELECT c.id, c.name, c.phone, COUNT(i.id) as count, SUM(i.amount) as total
+          SELECT c.id, c.name, c.phone, COUNT(i.id) as count, SUM(i.amount) as total,
+                 GROUP_CONCAT(i.period_month || '/' || i.period_year, ', ') as periods
           FROM customers c
           JOIN invoices i ON c.id = i.customer_id
           WHERE i.status != 'paid'
+            AND (COALESCE(c.registration_source, '') != 'online'
+              OR c.registration_status IN ('approved', 'rejected', '')
+              OR c.registration_status IS NULL)
           GROUP BY c.id
           ORDER BY total DESC
         `).all();
@@ -359,7 +363,7 @@ function getOfflineAnswer(question, customerContext = null, isAdmin = false, adm
         resp += `• Total Nominal: *Rp ${totalNominal.toLocaleString('id-ID')}*\n\n`;
         resp += `*Daftar Pelanggan Menunggak:*\n`;
         unpaidList.slice(0, 15).forEach((c, idx) => {
-          resp += `${idx + 1}. *${c.name}* (${c.phone || '-'}) - Rp ${Number(c.total).toLocaleString('id-ID')} [${c.count} tagihan]\n`;
+          resp += `${idx + 1}. *${c.name}* (${c.phone || '-'}) - Rp ${Number(c.total).toLocaleString('id-ID')} [${c.count} tagihan; periode ${c.periods || '-'}]\n`;
         });
         if (unpaidList.length > 15) resp += `\n_...dan ${unpaidList.length - 15} pelanggan lainnya._`;
         return resp;
@@ -371,6 +375,9 @@ function getOfflineAnswer(question, customerContext = null, isAdmin = false, adm
           SELECT id, name, phone, pppoe_username, area
           FROM customers
           WHERE LOWER(status) IN ('isolated', 'suspended', 'isolir')
+            AND (COALESCE(registration_source, '') != 'online'
+              OR registration_status IN ('approved', 'rejected', '')
+              OR registration_status IS NULL)
           ORDER BY id ASC
         `).all();
 
@@ -394,6 +401,9 @@ function getOfflineAnswer(question, customerContext = null, isAdmin = false, adm
             COUNT(CASE WHEN LOWER(status) IN ('isolated', 'suspended', 'isolir') THEN 1 END) as isolated,
             COUNT(CASE WHEN LOWER(status) IN ('inactive', 'terminated', 'nonaktif') THEN 1 END) as inactive
           FROM customers
+          WHERE (COALESCE(registration_source, '') != 'online'
+            OR registration_status IN ('approved', 'rejected', '')
+            OR registration_status IS NULL)
         `).get();
 
         return `📊 *RINGKASAN PELANGGAN (OFFLINE)*\n\n` +

@@ -74,6 +74,7 @@ const { MultiFormatReader, BarcodeFormat, DecodeHintType, BinaryBitmap, HybridBi
 const QRCode = require('qrcode');
 const acsPortal = require('./acsPortal');
 const { uploadAttendance, verifyAttendanceFileMagicBytes, removeAttendanceFile } = require('../middleware/attendanceUpload');
+const brandAssets = require('../utils/brandAssets');
 
 const DIGIFLAZZ_URL = 'https://api.digiflazz.com/v1';
 const digiflazzApi = axios.create({
@@ -2704,7 +2705,7 @@ router.get('/onu-stickers', requireAdminSession, async (req, res) => {
     res.render('admin/onu_stickers', {
       title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
       csPhone, mode, count, searchQuery, selectedRouterId, routers, stickers,
-      settings: getSettings()
+      settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo()
     });
   } catch (e) {
     logger.error(`[ONU Stickers] Error: ${e.message}`);
@@ -2733,7 +2734,7 @@ router.get('/customers/:id/sticker-onu', requireAdminSession, async (req, res) =
     res.render('admin/onu_stickers', {
       title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
       csPhone, mode: 'blank', count: 1, searchQuery: '', selectedRouterId: null, routers: [], stickers,
-      settings: getSettings()
+      settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo()
     });
   } catch (e) {
     logger.error(`[ONU Sticker Single] Error: ${e.message}`);

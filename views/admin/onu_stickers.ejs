@@ -19,40 +19,41 @@
       print-color-adjust: exact !important;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #0f172a;
-      background: #0b132b;
-      padding: 16px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #142d35;
+      background: #eaf0f1;
+      padding: 28px 18px 40px;
     }
 
     /* Screen UI Controls (Hidden when printed) */
     .screen-controls {
-      max-width: 1040px;
-      margin: 0 auto 20px auto;
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 16px 20px;
-      color: #f8fafc;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+      max-width: 1120px;
+      margin: 0 auto 24px;
+      background: #fff;
+      border: 1px solid #d4e0e2;
+      border-top: 4px solid #087e82;
+      border-radius: 8px;
+      padding: 22px 24px 18px;
+      color: #142d35;
+      box-shadow: 0 8px 24px rgba(20, 45, 53, .08);
     }
     .ctrl-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 12px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid #e1e9ea;
+      padding-bottom: 16px;
       flex-wrap: wrap;
       gap: 10px;
     }
     .ctrl-title {
-      font-size: 18px;
-      font-weight: 800;
+      font-size: 20px;
+      font-weight: 750;
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #38bdf8;
+      color: #14535b;
     }
     .ctrl-actions {
       display: flex;
@@ -73,19 +74,20 @@
       transition: all .15s ease;
     }
     .btn-primary {
-      background: #0284c7;
+      background: #087e82;
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+      box-shadow: 0 3px 8px rgba(8, 126, 130, .2);
     }
     .btn-primary:hover {
-      background: #0369a1;
+      background: #06696d;
     }
     .btn-secondary {
-      background: #334155;
-      color: #e2e8f0;
+      background: #f0f5f5;
+      color: #34535a;
+      border: 1px solid #d4e0e2;
     }
     .btn-secondary:hover {
-      background: #475569;
+      background: #e4eeee;
     }
     .filter-grid {
       display: grid;
@@ -101,24 +103,25 @@
     .fg label {
       font-size: 11px;
       font-weight: 700;
-      color: #94a3b8;
+      color: #637c81;
       text-transform: uppercase;
-      letter-spacing: .5px;
+      letter-spacing: 0;
     }
     .fg select, .fg input {
-      background: #0f172a;
-      border: 1px solid #334155;
-      color: #f8fafc;
-      padding: 8px 10px;
-      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #cbd9db;
+      color: #18363d;
+      padding: 10px 11px;
+      border-radius: 5px;
       font-size: 13px;
     }
+    .fg select:focus, .fg input:focus { outline: 2px solid rgba(8,126,130,.2); border-color: #087e82; }
 
     /* Print Page Container */
     .print-sheet {
       width: 210mm;
       min-height: 297mm;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 20px;
       background: #ffffff;
       padding: 4mm 4mm;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
@@ -138,9 +141,9 @@
     .sticker-card {
       width: 100%;
       height: 54mm;
-      border: 1px dashed #cbd5e1;
-      border-radius: 7px;
-      padding: 4.5mm 5mm;
+      border: 0.35mm dashed #aab9ba;
+      border-radius: 2mm;
+      padding: 4mm 4.5mm 3.5mm;
       background: #ffffff;
       position: relative;
       overflow: hidden;
@@ -158,8 +161,8 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #0284c7, #0ea5e9, #38bdf8);
+      height: 1.5mm;
+      background: linear-gradient(90deg, #087e82 0 68%, #d39a3b 68% 100%);
     }
 
     /* Header */
@@ -168,9 +171,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 3px;
-      margin-bottom: 2px;
+      border-bottom: 0.3mm solid #dce5e5;
+      padding-bottom: 2mm;
+      margin-bottom: 1mm;
     }
     .st-brand {
       display: flex;
@@ -179,17 +182,21 @@
       min-width: 0;
     }
     .st-logo {
-      height: 20px;
-      max-width: 60px;
+      height: 8mm;
+      max-width: 26mm;
       object-fit: contain;
+      object-position: left center;
     }
     .st-company {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 900;
       color: #0f172a;
-      letter-spacing: .2px;
       line-height: 1.1;
       text-transform: uppercase;
+      max-width: 70mm;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -197,21 +204,21 @@
     .st-badge {
       font-size: 8px;
       font-weight: 700;
-      color: #0369a1;
-      background: #e0f2fe;
-      padding: 1.5px 5px;
-      border-radius: 999px;
-      border: 0.5px solid #bae6fd;
+      color: #14535b;
+      background: #e8f3f1;
+      padding: 1.2mm 2mm;
+      border-radius: 2mm;
+      border: 0.25mm solid #c6dfdc;
       white-space: nowrap;
     }
 
     /* Body 2 Columns */
     .st-body {
       display: flex;
-      gap: 5px;
+      gap: 2.5mm;
       align-items: stretch;
       flex: 1;
-      margin: 2px 0;
+      margin: 1.5mm 0;
     }
 
     /* Left Side: Cust details & Guidance */
@@ -219,32 +226,32 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 1.5mm;
       min-width: 0;
     }
 
     .cust-info-box {
-      background: #f8fafc;
-      border: 0.5px solid #e2e8f0;
-      border-radius: 4px;
-      padding: 3px 5px;
-      line-height: 1.25;
+      background: #f5f8f7;
+      border: 0.25mm solid #e0e8e7;
+      border-radius: 1.5mm;
+      padding: 2mm 2.5mm;
+      line-height: 1.45;
     }
     .cust-row {
       display: flex;
       align-items: baseline;
-      font-size: 8.5px;
-      color: #334155;
+      font-size: 8.4px;
+      color: #3b5559;
     }
     .cust-row .label {
-      width: 48px;
-      color: #64748b;
+      width: 13mm;
+      color: #657b7e;
       font-weight: 700;
       flex-shrink: 0;
     }
     .cust-row .val {
       font-weight: 800;
-      color: #0f172a;
+      color: #17363c;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -252,22 +259,22 @@
 
     /* Important Warnings / Tips Box */
     .tips-box {
-      background: #fffbeb;
-      border: 0.8px solid #fde68a;
-      border-radius: 5px;
-      padding: 4px 6px;
+      background: #fbf7ed;
+      border: 0.25mm solid #eadbb8;
+      border-radius: 1.5mm;
+      padding: 2mm 2.5mm;
       display: flex;
       flex-direction: column;
       justify-content: space-evenly;
-      gap: 3px;
+      gap: 1.4mm;
       flex: 1;
     }
     .tip-item {
       display: flex;
       align-items: flex-start;
-      gap: 4.5px;
-      font-size: 8.6px;
-      color: #78350f;
+      gap: 1.5mm;
+      font-size: 8.1px;
+      color: #665633;
       line-height: 1.3;
     }
     .tip-item i {
@@ -276,36 +283,37 @@
       margin-top: 0.5px;
     }
     .tip-item strong {
-      color: #9a3412;
+      color: #74551c;
       font-weight: 800;
-      letter-spacing: .1px;
+      letter-spacing: 0;
     }
 
     /* Right Side: QR Code */
     .st-right {
-      width: 29mm;
+      width: 30mm;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      background: #f8fafc;
-      border: 0.5px solid #e2e8f0;
-      border-radius: 5px;
-      padding: 2px;
+      background: #f4f8f7;
+      border: 0.3mm solid #dce8e6;
+      border-radius: 2mm;
+      padding: 1.5mm;
+      flex-shrink: 0;
     }
     .qr-img {
-      width: 23.5mm;
-      height: 23.5mm;
+      width: 23mm;
+      height: 23mm;
       object-fit: contain;
       display: block;
     }
     .qr-label {
       font-size: 7.5px;
       font-weight: 900;
-      color: #0284c7;
+      color: #087e82;
       text-transform: uppercase;
-      letter-spacing: .2px;
+        letter-spacing: 0;
       margin-top: 1px;
       line-height: 1.1;
     }
@@ -318,8 +326,8 @@
 
     /* Footer */
     .st-footer {
-      border-top: 0.5px solid #e2e8f0;
-      padding-top: 2px;
+      border-top: 0.25mm solid #dce5e5;
+      padding-top: 1.5mm;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -331,14 +339,14 @@
       align-items: center;
       gap: 3px;
       font-weight: 800;
-      color: #047857;
+      color: #176b59;
     }
     .st-cs i {
-      color: #10b981;
+      color: #23876f;
       font-size: 8.5px;
     }
     .st-notice {
-      color: #94a3b8;
+      color: #788b8e;
       font-size: 6.8px;
     }
 
@@ -357,8 +365,25 @@
         border-radius: 0 !important;
       }
       .sticker-card {
-        border: 0.5px dashed #cbd5e1 !important;
+        border: 0.35mm dashed #aab9ba !important;
       }
+    }
+    @media (max-width: 700px) {
+      body { padding: 12px; }
+      .screen-controls { padding: 16px; }
+      .ctrl-header { align-items: flex-start; }
+      .ctrl-title { font-size: 17px; }
+      .ctrl-actions { width: 100%; }
+      .ctrl-actions .btn { flex: 1; justify-content: center; }
+      .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filter-grid .fg:last-child { grid-column: 1 / -1; }
+      .print-sheet { transform-origin: top left; }
+    }
+    @media (max-width: 460px) {
+      .filter-grid { grid-template-columns: 1fr; }
+      .filter-grid .fg:last-child { grid-column: auto; }
+      .ctrl-actions { flex-direction: column; }
+      .ctrl-actions .btn { width: 100%; }
     }
   </style>
 </head>
@@ -368,7 +393,7 @@
   <div class="screen-controls">
     <div class="ctrl-header">
       <div class="ctrl-title">
-        <i class="bi bi-qr-code-scan"></i> <%= t('admin.onu_stickers.heading', 'Cetak Stiker Modem / ONU (Name Tag Size)') %>
+        <i class="bi bi-qr-code-scan"></i><span><%= t('admin.onu_stickers.heading', 'Cetak Stiker Modem / ONU (Name Tag Size)') %></span>
       </div>
       <div class="ctrl-actions">
         <button type="button" class="btn btn-primary" onclick="window.print()">
@@ -394,9 +419,9 @@
           <div class="fg">
             <label><%= t('admin.onu_stickers.count', 'Jumlah Stiker') %></label>
             <select name="count" onchange="document.getElementById('filterForm').submit()">
-              <option value="10" <%= count === 10 ? 'selected' : '' %>>10 <%= t('admin.onu_stickers.sheet_suffix', 'Stiker (1 Lembar A4)') %></option>
-              <option value="20" <%= count === 20 ? 'selected' : '' %>>20 <%= t('admin.onu_stickers.sheet_suffix', 'Stiker (1 Lembar A4)') %></option>
-              <option value="30" <%= count === 30 ? 'selected' : '' %>>30 <%= t('admin.onu_stickers.sheet_suffix', 'Stiker (1 Lembar A4)') %></option>
+              <option value="10" <%= count === 10 ? 'selected' : '' %>>10 <%= t('admin.onu_stickers.stickers_one_sheet', 'Stiker (1 Lembar A4)') %></option>
+              <option value="20" <%= count === 20 ? 'selected' : '' %>>20 <%= t('admin.onu_stickers.stickers_two_sheets', 'Stiker (2 Lembar A4)') %></option>
+              <option value="30" <%= count === 30 ? 'selected' : '' %>>30 <%= t('admin.onu_stickers.stickers_three_sheets', 'Stiker (3 Lembar A4)') %></option>
               <option value="1" <%= count === 1 ? 'selected' : '' %>><%= t('admin.onu_stickers.count_single', '1 Stiker (Thermal / Satuan)') %></option>
             </select>
           </div>
@@ -449,8 +474,11 @@
             <!-- 1. Header -->
             <div class="st-header">
               <div class="st-brand">
-                <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" class="st-logo" alt="Logo" onerror="this.style.display='none'" />
-                <span class="st-company"><%= company %></span>
+                <% if (hasCustomLogo) { %>
+                  <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" class="st-logo" alt="Logo <%= company %>" />
+                <% } else { %>
+                  <span class="st-company"><%= company %></span>
+                <% } %>
               </div>
               <span class="st-badge"><i class="bi bi-router"></i> MODEM ONU</span>
             </div>
@@ -493,7 +521,7 @@
               <!-- Right: QR Code -->
               <div class="st-right">
                 <img src="<%= item.qrCodeDataUrl %>" class="qr-img" alt="QR Server" />
-                <div class="qr-label">📱 <%= t('admin.onu_stickers.qr_label', 'SCAN DI APLIKASI') %></div>
+                <div class="qr-label"><i class="bi bi-phone"></i> <%= t('admin.onu_stickers.qr_label', 'SCAN DI APLIKASI') %></div>
                 <div class="qr-sub"><%= t('admin.onu_stickers.qr_sub', 'Auto-koneksi Server') %></div>
               </div>
 
