@@ -253,9 +253,6 @@
           .lcp-note.warn i{ color:var(--lcp-warn); }
           .lcp-note.bad { background:rgba(248,113,113,.09); border-color:rgba(248,113,113,.28); color:var(--text); }
           .lcp-note.bad i { color:var(--lcp-bad); }
-          .lcp-sep { height:1px; background:var(--border); margin:16px 0; }
-          .lcp-soft { background:rgba(148,163,184,.07); border:1px solid var(--border); border-radius:10px; padding:13px 14px; }
-          .lcp-soft .lcp-field { margin-bottom:0; }
 
           @media (max-width:640px) {
             .lcp-bd { padding:14px; }
@@ -354,30 +351,6 @@
                   Format: 4 grup &times; 4 karakter dipisah tanda hubung. Belum punya kode?
                   <a href="#" onclick="openLicenseActivationModal();return false;" style="color:var(--primary)">Order lisensi</a>.
                 <% } %>
-              </div>
-            </div>
-
-            <div class="lcp-sep"></div>
-
-            <!-- Server lisensi resmi -->
-            <div class="lcp-soft">
-              <div class="lcp-field">
-                <label for="license_web_url">Server Lisensi Resmi</label>
-                <div class="lcp-entry">
-                  <div class="lcp-input-wrap">
-                    <i class="bi bi-cloud-arrow-down"></i>
-                    <input id="license_web_url" class="lcp-input" name="license_web_url"
-                           value="<%= settings.license_web_url || '' %>"
-                           placeholder="https://license.zenradius.net"
-                           style="font-size:13px;letter-spacing:.02em;text-align:left;text-transform:none;padding-left:38px;"
-                           autocomplete="off" spellcheck="false" inputmode="url">
-                  </div>
-                </div>
-                <div class="lcp-help">
-                  Kode lisensi diverifikasi <strong>online</strong> ke server ini (butuh koneksi internet).
-                  <% if (licOrigin) { %>Terisi otomatis dari server tempat kode lisensi diterbitkan: <code><%= licOrigin %></code>.<% } %>
-                  Kosongkan untuk memakai bawaan <code>https://license.zenradius.net</code>.
-                </div>
               </div>
             </div>
           </div>
