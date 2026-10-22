@@ -16,13 +16,27 @@ const { logger } = require('../config/logger');
 
 const TIMEOUT_MS = 8000;
 
+/** Host server lisensi resmi (satu-satunya sumber kebenaran default). */
+const DEFAULT_BASE_URL = 'https://zenradius.net';
+
+/**
+ * Default server lisensi LAMA yang sudah tidak dipakai lagi. Nilai ini pernah
+ * tertulis ke settings.json oleh versi sebelum V.1.7.3, jadi harus diabaikan
+ * agar instalasi lama otomatis pindah ke host baru.
+ */
+const LEGACY_BASE_URLS = new Set([
+  'https://license.zenradius.net',
+  'http://license.zenradius.net',
+  'https://api.license.zenradius.net',
+]);
+
 /** URL server lisensi: setting license_web_url → env → default resmi. */
 function baseUrl() {
   const candidates = [
     getSetting('license_web_url', ''),
     process.env.ZENRADIUS_LICENSE_URL,
     process.env.ZENRADIUS_REGISTRY_URL,
-    'https://zenradius.net',
+    DEFAULT_BASE_URL,
   ];
   for (const raw of candidates) {
     let s = String(raw || '').trim();
@@ -30,9 +44,11 @@ function baseUrl() {
     // Terima format apa pun: buang path /api/... bila ada.
     s = s.replace(/\/+$/, '').replace(/\/api\/(verify|heartbeat|registry\/lookup)$/, '');
     if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+    // Lewati default lama (warisan V.1.7.2 ke bawah) → pakai host baru.
+    if (LEGACY_BASE_URLS.has(s.toLowerCase())) continue;
     return s;
   }
-  return 'https://zenradius.net';
+  return DEFAULT_BASE_URL;
 }
 
 function endpoints() {

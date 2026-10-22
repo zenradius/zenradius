@@ -365,6 +365,24 @@ function ensureDefaultSettings() {
         logger.info(`[settings] Added missing setting: ${key} = ${defaultValue}`);
       }
     }
+
+    // ── Migrasi nilai lama ──────────────────────────────────────────────────
+    // Server lisensi resmi pindah dari license.zenradius.net → zenradius.net.
+    // Nilai default LAMA yang sudah tersimpan di settings.json harus ikut
+    // diperbarui — kalau tidak, instalasi lama akan terus memakai host lama
+    // walaupun kode baru sudah punya default baru.
+    const LEGACY_LICENSE_URLS = new Set([
+      'https://license.zenradius.net',
+      'http://license.zenradius.net',
+      'https://api.license.zenradius.net',
+      'https://api.license.zenradius.net/',
+    ]);
+    const licenseUrlNow = String(currentSettings.license_web_url || '').trim().replace(/\/+$/, '');
+    if (!licenseUrlNow || LEGACY_LICENSE_URLS.has(licenseUrlNow)) {
+      currentSettings.license_web_url = 'https://zenradius.net';
+      needsSave = true;
+      logger.info(`[settings] Migrasi license_web_url: ${licenseUrlNow || '(kosong)'} → https://zenradius.net`);
+    }
     
     if (needsSave) {
       fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2), 'utf-8');

@@ -118,24 +118,41 @@ function persistResult(res) {
 }
 
 /**
+ * Origin server lisensi LAMA (warisan ≤ V.1.7.2). Tidak boleh dipakai lagi —
+ * instalasi lama harus pindah ke host baru.
+ */
+const LEGACY_SERVER_ORIGINS = new Set([
+  'https://license.zenradius.net',
+  'http://license.zenradius.net',
+  'https://api.license.zenradius.net',
+]);
+
+/** True bila URL (setelah dinormalisasi) merupakan host lama. */
+function isLegacyServerUrl(url) {
+  const u = String(url || '').trim().replace(/\/+$/, '').toLowerCase();
+  return !u || LEGACY_SERVER_ORIGINS.has(u);
+}
+
+/**
  * Simpan origin server lisensi penerbit dari respons (setting `license_web_url`)
  * supaya terisi otomatis. HANYA diisi bila masih kosong — pilihan manual admin
- * tidak pernah ditimpa.
+ * tidak pernah ditimpa. Host lama diabaikan agar instalasi lama ikut pindah.
  */
 function storeServerOrigin(url) {
   const u = String(url || '').trim().replace(/\/+$/, '');
   if (!u || !/^https?:\/\//i.test(u)) return;
+  if (isLegacyServerUrl(u)) return; // host lama → jangan tulis
   const current = String(getSetting('license_web_url', '') || '').trim();
-  if (current) return; // sudah diisi manual → biarkan
+  if (current && !isLegacyServerUrl(current)) return; // sudah diisi manual → biarkan
   try { saveSettings({ license_web_url: u }); } catch (_) { /* abaikan */ }
 }
 
 /** Origin server lisensi penerbit (untuk ditampilkan). */
 function getServerOrigin() {
   const saved = String(getSetting('license_server_origin', '') || '').trim().replace(/\/+$/, '');
-  if (saved) return saved;
+  if (saved && !isLegacyServerUrl(saved)) return saved;
   const manual = String(getSetting('license_web_url', '') || '').trim().replace(/\/+$/, '');
-  if (manual) return manual;
+  if (manual && !isLegacyServerUrl(manual)) return manual;
   return licenseClient.baseUrl();
 }
 
