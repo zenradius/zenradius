@@ -296,7 +296,7 @@ function ensureDefaultSettings() {
 // URL server lisensi resmi zenradius-web — dipakai halaman "Aktivasi Lisensi
 // Diperlukan" untuk menautkan pelanggan langsung ke portal lisensi (order &
 // aktivasi). Kosongkan bila tidak tersedia (fallback ke kontak WhatsApp).
-      license_web_url: 'https://license.zenradius.net',
+      license_web_url: 'https://zenradius.net',
 
 // Tema Aplikasi global — 'space' (ZenRadius Space / DESIGN.md) atau 'current' (ZenRadius Ocean, tampilan asli)
       app_theme: 'space',

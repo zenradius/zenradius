@@ -292,15 +292,25 @@ async function downloadArtifact(metadata, destPath, source) {
   }
 }
 
-function copyDirSync(srcDir, destDir) {
+/**
+ * Copy folder rekursif, TAHAN GAGAL.
+ * Berkas terkunci proses lain (mis. sessions.db-wal SQLite, auth_info_baileys
+ * saat server berjalan) dilewati alih-alih menggagalkan seluruh update.
+ */
+function copyDirSync(srcDir, destDir, skipped = []) {
   fs.mkdirSync(destDir, { recursive: true });
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
     const src = path.join(srcDir, entry.name);
     const dst = path.join(destDir, entry.name);
-    if (entry.isSymbolicLink()) continue; 
-    if (entry.isDirectory()) copyDirSync(src, dst);
-    else if (entry.isFile()) fs.copyFileSync(src, dst);
+    if (entry.isSymbolicLink()) continue;
+    try {
+      if (entry.isDirectory()) copyDirSync(src, dst, skipped);
+      else if (entry.isFile()) fs.copyFileSync(src, dst);
+    } catch (e) {
+      skipped.push(entry.name);
+    }
   }
+  return skipped;
 }
 
 /** Backup preserved runtime state to a timestamped directory OUTSIDE the repo, */
@@ -332,7 +342,9 @@ function restoreBackup(backupRoot) {
     const dst = path.resolve(REPO_ROOT, rel);
     const stat = fs.statSync(src);
     if (stat.isDirectory()) {
-      fs.rmSync(dst, { recursive: true, force: true });
+      // Merge-copy: JANGAN hapus folder tujuan. `fs.rmSync(dir)` gagal EPERM di
+      // Windows bila folder berisi berkas yang sedang dibuka proses lain
+      // (mis. database/*.db-wal atau auth_info_baileys milik server berjalan).
       fs.mkdirSync(dst, { recursive: true });
       copyDirSync(src, dst);
     } else {
@@ -382,11 +394,16 @@ function installExtractedRelease(extractDir) {
     const src = path.join(extractDir, entry.name);
     const dst = path.join(REPO_ROOT, entry.name);
     if (entry.isDirectory()) {
-      fs.rmSync(dst, { recursive: true, force: true });
+      // Hapus lalu salin ulang. Bila penghapusan gagal (EPERM/EBUSY di Windows
+      // karena ada berkas terkunci), JANGAN batalkan update — lanjutkan dengan
+      // merge-copy agar kode baru tetap terpasang.
+      try {
+        fs.rmSync(dst, { recursive: true, force: true });
+      } catch (_) { /* fallback: merge di bawah */ }
       fs.mkdirSync(dst, { recursive: true });
       copyDirSync(src, dst);
     } else if (entry.isFile()) {
-      fs.copyFileSync(src, dst);
+      try { fs.copyFileSync(src, dst); } catch (_) { /* berkas terkunci — lewati */ }
     }
   }
   return { ok: true };

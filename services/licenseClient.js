@@ -22,7 +22,7 @@ function baseUrl() {
     getSetting('license_web_url', ''),
     process.env.ZENRADIUS_LICENSE_URL,
     process.env.ZENRADIUS_REGISTRY_URL,
-    'https://license.zenradius.net',
+    'https://zenradius.net',
   ];
   for (const raw of candidates) {
     let s = String(raw || '').trim();
@@ -32,7 +32,7 @@ function baseUrl() {
     if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
     return s;
   }
-  return 'https://license.zenradius.net';
+  return 'https://zenradius.net';
 }
 
 function endpoints() {

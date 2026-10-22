@@ -13,7 +13,7 @@ const { getSetting, saveSettings } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 const instanceIdentity = require('./instanceIdentityService');
 
-const ENDPOINT = process.env.ZENRADIUS_REGISTRY_URL || 'https://license.zenradius.net/api/heartbeat';
+const ENDPOINT = process.env.ZENRADIUS_REGISTRY_URL || 'https://zenradius.net/api/heartbeat';
 const MIN_INTERVAL_MS = 20 * 60 * 60 * 1000; // minimal 20 jam antar kirim
 const TIMEOUT_MS = 8000;
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '::1', '0.0.0.0', ''];

@@ -384,15 +384,26 @@ function runCmd(cmd, args, cwd) {
   }
 }
 
-function copyDirSync(srcDir, destDir) {
+/**
+ * Copy folder rekursif, TAHAN GAGAL.
+ * Berkas terkunci proses lain (mis. sessions.db-wal SQLite saat server berjalan)
+ * dilewati alih-alih menggagalkan seluruh update. Mengembalikan nama berkas yang
+ * dilewati agar bisa dicatat di log update.
+ */
+function copyDirSync(srcDir, destDir, skipped = []) {
   fs.mkdirSync(destDir, { recursive: true });
   const entries = fs.readdirSync(srcDir, { withFileTypes: true });
   for (const ent of entries) {
     const src = path.join(srcDir, ent.name);
     const dst = path.join(destDir, ent.name);
-    if (ent.isDirectory()) copyDirSync(src, dst);
-    else if (ent.isFile()) fs.copyFileSync(src, dst);
+    try {
+      if (ent.isDirectory()) copyDirSync(src, dst, skipped);
+      else if (ent.isFile()) fs.copyFileSync(src, dst);
+    } catch (e) {
+      skipped.push(ent.name);
+    }
   }
+  return skipped;
 }
 
 function getGitDefaultBranch(repoRoot) {
@@ -4478,7 +4489,9 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
       if (!fs.existsSync(backupPath)) continue;
       const stat = fs.statSync(backupPath);
       if (stat.isDirectory()) {
-        fs.rmSync(targetPath, { recursive: true, force: true });
+        // Merge-copy: JANGAN hapus folder tujuan. `fs.rmSync(dir)` gagal EPERM di
+        // Windows bila folder berisi berkas yang sedang dibuka proses lain
+        // (mis. sessions.db / auth_info_baileys milik server berjalan).
         fs.mkdirSync(targetPath, { recursive: true });
         copyDirSync(backupPath, targetPath);
       } else {
