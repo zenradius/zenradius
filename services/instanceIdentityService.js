@@ -6,9 +6,10 @@
  * - Instance ID dibuat sekali (UUID acak) dan disimpan di data/instance.json.
  * - Machine fingerprint (hash machine-id / hostname / MAC) dipakai agar file
  *   instance.json tidak bisa begitu saja disalin ke server lain.
- * - Kode instalasi (Install Code) = 12 hex huruf besar, format XXXX-XXXX-XXXX,
- *   diturunkan dari instance_id + fingerprint. Kode inilah yang diberikan
- *   pelanggan saat order lisensi dan ikut dihitung dalam kunci lisensi.
+ * Kode instalasi (Install Code) = 16 karakter (hex huruf besar), format
+ *   XXXX-XXXX-XXXX-XXXX (contoh 8474-SGT5-5687-GB44), diturunkan dari
+ *   instance_id + fingerprint. Kode inilah yang diberikan pelanggan saat
+ *   order lisensi dan menjadi pengikat utama kode lisensi.
  */
 const fs = require('fs');
 const os = require('os');
@@ -91,14 +92,15 @@ function getInstanceId() { return ensureLoaded().instance_id; }
 function getFingerprint() { return ensureLoaded().fingerprint; }
 
 /**
- * Kode Instalasi yang ditampilkan ke pelanggan (dan dipakai generator lisensi).
- * Format: XXXX-XXXX-XXXX (12 hex uppercase) — cukup pendek untuk diketik via WA.
+ * Kode Instalasi yang ditampilkan ke pelanggan (dan dipakai server lisensi).
+ * Format: XXXX-XXXX-XXXX-XXXX (16 hex uppercase) — cukup pendek untuk diketik
+ * via WhatsApp namun ruangnya besar sehingga tidak mudah ditiru.
  */
 function getInstallCode() {
   const d = ensureLoaded();
   const h = crypto.createHash('sha256').update(`${d.instance_id}|${d.fingerprint}`).digest('hex').toUpperCase();
-  const raw = h.slice(0, 12);
-  return `${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8, 12)}`;
+  const raw = h.slice(0, 16);
+  return `${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8, 12)}-${raw.slice(12, 16)}`;
 }
 
 module.exports = { getInstanceId, getFingerprint, getInstallCode, shortId };

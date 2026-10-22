@@ -1,10 +1,10 @@
 /**
  * License Heartbeat Service
- * Mengirim ping ringan sekali sehari ke registry lisensi ZenRadius
- * agar Developer mengetahui domain mana yang aktif memakai aplikasi.
+ * Mengirim ping ringan sekali sehari ke server lisensi ZenRadius
+ * agar Developer mengetahui instalasi mana yang aktif memakai aplikasi.
  *
- * Data yang dikirim: domain, serial (jika ada), versi aplikasi, versi Node.
- * Tidak mengirim data pelanggan/keuangan apa pun.
+ * Data yang dikirim: domain, kode lisensi, kode instalasi, versi aplikasi,
+ * versi Node. Tidak mengirim data pelanggan/keuangan apa pun.
  * Fail-silent: kegagalan jaringan tidak pernah mengganggu aplikasi.
  */
 const fs = require('fs');
@@ -13,7 +13,7 @@ const { getSetting, saveSettings } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 const instanceIdentity = require('./instanceIdentityService');
 
-const ENDPOINT = process.env.ZENRADIUS_REGISTRY_URL || 'https://api.license.zenradius.net/api/heartbeat';
+const ENDPOINT = process.env.ZENRADIUS_REGISTRY_URL || 'https://license.zenradius.net/api/heartbeat';
 const MIN_INTERVAL_MS = 20 * 60 * 60 * 1000; // minimal 20 jam antar kirim
 const TIMEOUT_MS = 8000;
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '::1', '0.0.0.0', ''];
@@ -59,11 +59,10 @@ async function sendHeartbeat({ force = false, host = '' } = {}) {
     if (!force && Date.now() - last < MIN_INTERVAL_MS) return { skipped: 'too_soon' };
 
     const licenseRaw = String(getSetting('domain_license_key', '') || '').trim();
-    const isToken = licenseRaw.startsWith('ZRL1.');
+    const code = licenseRaw; // kode lisensi sederhana (XXXX-XXXX-XXXX-XXXX)
     const payload = {
       domain,
-      // Skema legacy dihapus: hanya token ZRL1 yang dikirim ke registry.
-      token: isToken ? licenseRaw : undefined,
+      code: code || undefined,
       install_code: instanceIdentity.getInstallCode(),
       instance_id: instanceIdentity.getInstanceId(),
       app_version: readAppVersion(),
@@ -88,10 +87,10 @@ async function sendHeartbeat({ force = false, host = '' } = {}) {
     }
     try { saveSettings({ license_heartbeat_at: Date.now() }); } catch (_) {}
     let data = null; try { data = await res.json(); } catch (_) {}
-    // Registry mengembalikan status lisensi (active/revoked) untuk token v3 → simpan untuk kebijakan offline & revokasi.
-    if (data && isToken) {
+    // Server lisensi mengembalikan status lisensi (active/revoked) → simpan untuk kebijakan revokasi.
+    if (data && code) {
       try {
-        require('./domainLicenseService').recordRegistryResult({ lid: data.license_id || '', status: data.license_status || (data.valid ? 'active' : '') });
+        require('./domainLicenseService').recordRegistryResult({ status: data.license_status || (data.valid ? 'active' : '') });
       } catch (_) {}
     }
     logger.info(`[heartbeat] terkirim ke registry untuk ${domain}`);

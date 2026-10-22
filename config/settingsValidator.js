@@ -214,14 +214,14 @@ const VALIDATION_RULES = {
 
   license_web_url: {
     type: 'string',
-    description: 'URL server lisensi zenradius-web (portal order & aktivasi)'
+    description: 'URL server lisensi resmi (verifikasi kode lisensi berbasis online)'
   },
 
   domain_license_key: {
     type: 'string',
-    // Token lisensi v3 (ZRL1.<base64url>.<base64url>) atau kosong.
-    pattern: /^(ZRL1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)?$/,
-    description: 'Token lisensi v3 (ZRL1.…) — diterbitkan server lisensi resmi'
+    // Kode lisensi sederhana XXXX-XXXX-XXXX-XXXX (contoh BG23-SJH2-HDGT-5582) atau kosong.
+    pattern: /^([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})?$/,
+    description: 'Kode lisensi (contoh BG23-SJH2-HDGT-5582) — diterbitkan server lisensi resmi'
   },
   tripay_enabled: {
     type: 'boolean',

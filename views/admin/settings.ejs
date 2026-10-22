@@ -209,7 +209,7 @@
               <label class="fl">Kode Lisensi untuk <code><%= typeof currentHost !== 'undefined' && currentHost === 'local' ? 'instalasi lokal' : (typeof currentHost !== 'undefined' ? currentHost : '') %></code></label>
               <div style="display:flex;gap:8px;align-items:stretch">
                 <div style="position:relative;flex:1;min-width:0">
-                  <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="Tempel token lisensi (ZRL1.…)" autocomplete="off" spellcheck="false" style="font-family:monospace;letter-spacing:.5px;<%= licActive ? 'padding-right:38px;border-color:rgba(52,211,153,.45)' : '' %>" oninput="if(!this.value.trim().startsWith('ZRL1.'))this.value=this.value.toUpperCase()">
+                  <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="BG23-SJH2-HDGT-5582" autocomplete="off" spellcheck="false" style="font-family:ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;text-align:center;font-size:15px;<%= licActive ? 'padding-right:38px;border-color:rgba(52,211,153,.45)' : '' %>">
                   <% if (licActive) { %><i class="bi bi-patch-check-fill" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--success);font-size:16px;pointer-events:none"></i><% } %>
                 </div>
                 <% if (!licActive) { %>
@@ -218,20 +218,20 @@
               </div>
               <small class="text-muted">
                 <% if (licActive) { %>
-                  Status: <span style="color:#2dd4bf">● Valid</span> — Lisensi terverifikasi. Simpan kode ini dengan aman; kode hanya berlaku untuk <%= typeof currentHost !== 'undefined' && currentHost === 'local' ? 'instalasi ini' : 'domain di atas' %>.
+                  Status: <span style="color:#2dd4bf">● Valid</span> — Lisensi terverifikasi. Simpan kode ini dengan aman; kode hanya berlaku untuk <%= typeof currentHost !== 'undefined' && currentHost === 'local' ? 'instalasi ini' : 'instalasi di atas' %>.
                 <% } else if (typeof licenseValid !== 'undefined') { %>
-                  Status: <span style="color:#f87171">● Tidak valid / belum diisi</span> — Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Sudah memiliki kode? Masukkan di atas lalu klik <strong>Aktivasi Lisensi</strong>. Belum memiliki? Klik <strong>Order Lisensi</strong> untuk memesan.
+                  Status: <span style="color:#f87171">● Tidak valid / belum diisi</span> — Masukkan <strong>kode lisensi</strong> (contoh <code>BG23-SJH2-HDGT-5582</code>) lalu klik <strong>Aktivasi Lisensi</strong>. Belum memiliki? Klik <strong>Order Lisensi</strong> untuk memesan.
                 <% } else { %>
-                  Setiap lisensi resmi adalah bentuk apresiasi atas kerja keras dan dedikasi Developer dalam menghadirkan sistem yang andal. Sudah memiliki kode? Masukkan di atas lalu klik <strong>Aktivasi Lisensi</strong>. Belum memiliki? Klik <strong>Order Lisensi</strong> untuk memesan.
+                  Masukkan <strong>kode lisensi</strong> (contoh <code>BG23-SJH2-HDGT-5582</code>) lalu klik <strong>Aktivasi Lisensi</strong>.
                 <% } %>
               </small>
             </div>
             <div class="fg" style="margin-top:10px">
-              <label class="fl">Server Lisensi Resmi (zenradius-web)</label>
+              <label class="fl">Server Lisensi Resmi</label>
               <input class="fc" name="license_web_url" value="<%= settings.license_web_url || '' %>" placeholder="https://license.zenradius.net" style="font-family:monospace;font-size:12.5px">
               <small class="text-muted">
-                URL portal lisensi resmi. Halaman "Aktivasi Lisensi Diperlukan" akan menautkan pelanggan langsung ke
-                portal ini (order &amp; aktivasi token ZRL1) — sinkron otomatis dengan server lisensi. Kosongkan untuk fallback WhatsApp.
+                URL server lisensi resmi. Kode lisensi diverifikasi <strong>online</strong> ke server ini (butuh koneksi internet).
+                Kosongkan untuk memakai bawaan <code>https://license.zenradius.net</code>.
               </small>
             </div>
           </div>
@@ -1099,7 +1099,7 @@ modalDiv.innerHTML = `
       
       <div class="lic-price">
         <div>
-          <div class="lic-price-label">Lisensi Resmi &bull; 1 Domain</div>
+          <div class="lic-price-label">Lisensi Resmi &bull; 1 Instalasi</div>
           <div class="lic-price-value"><%= licInfo.LICENSE_PRICE_LABEL %> <span>/ selamanya</span></div>
           <div class="lic-price-note">Sekali bayar &bull; Pembaruan berkelanjutan &bull; Tanpa biaya tersembunyi</div>
         </div>
@@ -1108,21 +1108,13 @@ modalDiv.innerHTML = `
       
       <div class="lic-note">
         <i class="bi bi-info-circle-fill"></i>
-        <div>Lisensi dapat diikat ke <strong>domain, IP publik, atau instalasi lokal</strong>. Untuk instalasi lokal, sertakan kode instalasi yang tampil di bawah saat memesan lisensi.</div>
+        <div>Lisensi terikat pada <strong>Kode Instalasi</strong> server ini. Kirim Kode Instalasi yang tampil di bawah saat memesan lisensi — Anda akan menerima <strong>kode lisensi</strong> (contoh <code>BG23-SJH2-HDGT-5582</code>).</div>
       </div>
       <div class="fg" style="margin-bottom:0">
-        <label class="fl" for="lic_install_code">Kode Instalasi (untuk order)</label>
+        <label class="fl" for="lic_install_code">Kode Instalasi (kirimkan saat order)</label>
         <div class="lic-wrap">
           <i class="bi bi-fingerprint"></i>
           <input type="text" id="lic_install_code" class="fc" value="<%= typeof licenseInstallCode !== 'undefined' ? licenseInstallCode : '' %>" readonly>
-        </div>
-      </div>
-      
-      <div class="fg" style="margin-bottom:0">
-        <label class="fl" for="lic_domain_input">Domain yang Didaftarkan</label>
-        <div class="lic-wrap">
-          <i class="bi bi-globe2"></i>
-          <input type="text" id="lic_domain_input" class="fc" placeholder="domainanda.com" autocomplete="off" autocapitalize="none" inputmode="url" spellcheck="false">
         </div>
       </div>
     </div>
@@ -1139,17 +1131,9 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalDiv
 
 window.openLicenseActivationModal = function() {
   const modal = document.getElementById('licenseActivationModal');
-  const input = document.getElementById('lic_domain_input');
   if (modal) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    if (input) {
-      // Akses localhost dan IP privat diperlakukan sebagai satu instalasi lokal.
-      const currentLoc = window.location.hostname;
-      const isLocal = ['localhost', '127.0.0.1', '::1', '0.0.0.0'].includes(currentLoc) || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(currentLoc);
-      input.value = isLocal ? 'local' : currentLoc;
-      if (window.matchMedia('(min-width: 640px)').matches) input.focus();
-    }
   }
 };
 
@@ -1160,15 +1144,7 @@ window.closeLicenseActivationModal = function() {
 };
 
 window.submitLicenseActivationOrder = function() {
-  const input = document.getElementById('lic_domain_input');
-  if (!input || !input.value.trim()) {
-    input.focus();
-    return;
-  }
-  const domain = input.value.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-  const isLocal = domain === 'local';
-  
-  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Aktif Selamanya (Lifetime) ZenRadius untuk ${isLocal ? 'instalasi lokal berikut' : 'domain berikut'}:\n\n${isLocal ? '🖥️ INSTALASI LOKAL: local' : '🌐 DOMAIN: ' + domain}\n🔑 KODE INSTALASI: <%= typeof licenseInstallCode !== "undefined" ? licenseInstallCode : "" %>\n💰 HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 instalasi, selamanya)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap terbitkan Token Lisensi resmi untuk ${isLocal ? 'Kode Instalasi di atas' : 'domain dan Kode Instalasi di atas'}.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
+  const message = `Halo Developer ZenRadius,\n\nSaya ingin memesan Lisensi Premium Aktif Selamanya (Lifetime) ZenRadius.\n\n🔑 KODE INSTALASI: <%= typeof licenseInstallCode !== "undefined" ? licenseInstallCode : "" %>\n💰 HARGA: <%= licInfo.LICENSE_PRICE_LABEL %> (1 instalasi, selamanya)\n\nMohon informasikan metode pembayarannya. Setelah pembayaran, harap terbitkan Kode Lisensi resmi untuk instalasi ini.\n\nTerima kasih atas dedikasinya mengembangkan ZenRadius.`;
   
   const waUrl = `https://wa.me/<%= licInfo.LICENSE_WA_NUMBER %>?text=${encodeURIComponent(message)}`;
   window.open(waUrl, '_blank');

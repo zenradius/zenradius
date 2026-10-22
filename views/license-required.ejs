@@ -114,13 +114,13 @@
     <% if (hasKey) { %>
       <div class="alert-mismatch">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        <span><%= (typeof reasonText !== 'undefined' && reasonText) ? reasonText : 'Kode lisensi yang terpasang tidak cocok dengan instalasi atau alamat akses ini. Lisensi hanya berlaku untuk instalasi yang didaftarkan.' %></span>
+        <span><%= (typeof reasonText !== 'undefined' && reasonText) ? reasonText : 'Kode lisensi yang terpasang tidak cocok dengan instalasi ini. Lisensi hanya berlaku untuk instalasi yang didaftarkan.' %></span>
       </div>
     <% } %>
 
     <div class="price">
       <div>
-        <div class="price-label">Lisensi Resmi &bull; 1 Domain</div>
+        <div class="price-label">Lisensi Resmi &bull; 1 Instalasi</div>
         <div class="price-value"><%= priceLabel %> <span>/ seumur hidup</span></div>
         <div class="price-note">Sekali bayar &bull; Pembaruan berkelanjutan &bull; Tanpa biaya tersembunyi</div>
       </div>
@@ -129,9 +129,10 @@
 
     <div class="steps">
       <ol>
-        <li><strong>Order Lisensi</strong> via WhatsApp Developer resmi. Untuk instalasi lokal, sertakan Kode Instalasi di atas.</li>
-        <li>Login sebagai Super Admin, buka <strong>Pengaturan &rarr; Lisensi Domain</strong>.</li>
-        <li>Tempel token lisensi <code>ZRL1.…</code> (kirim lengkap) lalu klik <strong>Aktivasi Lisensi</strong>.</li>
+        <li><strong>Order Lisensi</strong> via WhatsApp Developer resmi. Sertakan <strong>Kode Instalasi</strong> di atas.</li>
+        <li>Anda akan menerima <strong>kode lisensi</strong> (contoh <code>BG23-SJH2-HDGT-5582</code>).</li>
+        <li>Login sebagai Super Admin, buka <strong>Pengaturan &rarr; Lisensi</strong>.</li>
+        <li>Masukkan kode lisensi di atas, lalu klik <strong>Aktivasi Lisensi</strong>.</li>
       </ol>
     </div>
 
@@ -140,7 +141,7 @@
     <div class="actions">
       <% const webUrl = (typeof licenseWebUrl !== 'undefined' && licenseWebUrl) ? String(licenseWebUrl).trim() : ''; %>
       <% if (webUrl) { %>
-        <a class="btn btn-web" href="<%= webUrl %>/activate?domain=<%= encodeURIComponent(domain === 'local' ? '' : domain) %>&install_code=<%= encodeURIComponent(installCode || '') %>&button=1" target="_blank" rel="noopener noreferrer">
+        <a class="btn btn-web" href="<%= webUrl %>/activate?install_code=<%= encodeURIComponent(installCode || '') %>" target="_blank" rel="noopener noreferrer">
           <i class="bi bi-cloud-arrow-up-fill"></i> Buka Portal Lisensi Resmi
         </a>
       <% } %>

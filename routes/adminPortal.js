@@ -4658,7 +4658,7 @@ router.post('/api/telegram/sync', requireAdminSession, async (req, res) => {
   }
 });
 
-router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
+router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), async (req, res) => {
   const redirectTo = (() => {
     const raw = String(req.body?._redirect || '').trim();
     
@@ -4714,8 +4714,8 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
 
     if (newSettings.login_otp_enabled !== undefined) newSettings.login_otp_enabled = (newSettings.login_otp_enabled === 'true');
     if (typeof newSettings.domain_license_key === 'string') {
-      const rawLic = newSettings.domain_license_key.trim();
-      newSettings.domain_license_key = rawLic.startsWith('ZRL1.') ? rawLic : rawLic.toUpperCase();
+      // Kode lisensi sederhana: normalisasi ke huruf besar & 4 grup.
+      newSettings.domain_license_key = domainLicense.normalizeCode(newSettings.domain_license_key);
     }
     if (newSettings.telegram_enabled !== undefined) newSettings.telegram_enabled = (newSettings.telegram_enabled === 'true');
     if (newSettings.auto_backup_enabled !== undefined) newSettings.auto_backup_enabled = (newSettings.auto_backup_enabled === 'true');
@@ -4777,20 +4777,24 @@ router.post('/settings', requireAdminSession, restrictToAdmin, express.urlencode
       }
       req.session._msg = { type: 'success', text: 'Pengaturan berhasil disimpan.' };
 
-      // Umpan balik khusus aktivasi lisensi domain
+      // Umpan balik khusus aktivasi lisensi domain (verifikasi ONLINE ke server lisensi)
       if (typeof newSettings.domain_license_key === 'string') {
         const host = domainLicense.normalizeDomain(req.hostname || req.headers.host);
         const licenseDomain = domainLicense.licenseDomainForHost(host);
-        const key = newSettings.domain_license_key;
-        if (!key) {
+        const code = domainLicense.normalizeCode(newSettings.domain_license_key);
+        if (!code) {
           req.session._msg = { type: 'success', text: 'Pengaturan disimpan. Kode lisensi dikosongkan.' };
+        } else if (!domainLicense.isValidCodeFormat(code)) {
+          req.session._msg = { type: 'error', text: 'Format kode lisensi tidak valid. Contoh yang benar: BG23-SJH2-HDGT-5582.' };
         } else {
-          const check = domainLicense.verifyLicense(host, key);
+          let check;
+          try { check = await domainLicense.verifyLicenseForHost(host, code); }
+          catch (e) { check = { valid: false, reason: 'offline' }; }
           if (check.valid) {
-            const targetLabel = licenseDomain === domainLicense.LOCAL_DOMAIN ? 'instalasi lokal' : `domain ${host}`;
+            const targetLabel = licenseDomain === domainLicense.LOCAL_DOMAIN ? 'instalasi lokal' : `instalasi di ${host}`;
             req.session._msg = { type: 'success', text: `Lisensi berhasil diaktifkan untuk ${targetLabel}. Terima kasih telah mendukung pengembangan ZenRadius.` };
-            // Simpan domain aktivasi agar heartbeat memakai identitas yang benar + reset status registry.
-            try { saveSettings({ domain_license_host: licenseDomain, license_activated_at: Date.now(), license_registry_status: '', license_registry_lid: check.payload ? check.payload.lid : '' }); } catch (_) {}
+            // Simpan identitas agar heartbeat memakai domain yang benar + reset status registry.
+            try { saveSettings({ domain_license_host: licenseDomain, license_activated_at: Date.now(), license_registry_status: '' }); } catch (_) {}
             try { require('../services/licenseHeartbeatService').sendHeartbeat({ force: true, host: licenseDomain }).catch(() => {}); } catch (_) {}
           } else {
             req.session._msg = { type: 'error', text: domainLicense.describeReason(check.reason, licenseDomain) };
