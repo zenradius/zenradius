@@ -107,13 +107,36 @@ function recordRegistryResult({ status }) {
 /** Simpan hasil verifikasi ke pengaturan agar bertahan setelah restart. */
 function persistResult(res) {
   try {
-    saveSettings({
+    const patch = {
       license_last_valid: res.valid ? 1 : 0,
       license_last_reason: res.reason || '',
       license_last_verified_at: res.verifiedAt || Date.now(),
       license_last_verify_ok: res.networkOk ? 1 : 0,
-    });
+    };
+    saveSettings(patch);
   } catch (_) { /* abaikan */ }
+}
+
+/**
+ * Simpan origin server lisensi penerbit dari respons (setting `license_web_url`)
+ * supaya terisi otomatis. HANYA diisi bila masih kosong — pilihan manual admin
+ * tidak pernah ditimpa.
+ */
+function storeServerOrigin(url) {
+  const u = String(url || '').trim().replace(/\/+$/, '');
+  if (!u || !/^https?:\/\//i.test(u)) return;
+  const current = String(getSetting('license_web_url', '') || '').trim();
+  if (current) return; // sudah diisi manual → biarkan
+  try { saveSettings({ license_web_url: u }); } catch (_) { /* abaikan */ }
+}
+
+/** Origin server lisensi penerbit (untuk ditampilkan). */
+function getServerOrigin() {
+  const saved = String(getSetting('license_server_origin', '') || '').trim().replace(/\/+$/, '');
+  if (saved) return saved;
+  const manual = String(getSetting('license_web_url', '') || '').trim().replace(/\/+$/, '');
+  if (manual) return manual;
+  return licenseClient.baseUrl();
 }
 
 /**
@@ -145,9 +168,15 @@ async function verifyOnline({ code, host, installCode } = {}) {
     grace_end: r.grace_end || null,
     expires_at: r.expires_at === undefined ? null : r.expires_at,
     days_left: r.days_left === undefined ? null : r.days_left,
+    server_url: r.server_url || null,
     verifiedAt: Date.now(),
     networkOk: true,
   };
+  // Origin server lisensi penerbit → simpan & isi otomatis di Pengaturan.
+  if (res.server_url) {
+    storeServerOrigin(res.server_url);
+    try { saveSettings({ license_server_origin: res.server_url }); } catch (_) { /* abaikan */ }
+  }
   persistResult(res);
   return res;
 }
@@ -324,6 +353,7 @@ module.exports = {
   verifyOnline, verifyLicenseForHost, checkRequestLicense, requireDomainLicense,
   getBackgroundLicenseState, isBackgroundAllowed, getStoredLicenseInfo,
   recordRegistryResult, getRegistryState, describeReason, scheduleRevalidate,
+  getServerOrigin,
   getInstallCode: () => instanceIdentity.getInstallCode(),
   LOCAL_DOMAIN, licenseInfo,
 };

@@ -66,7 +66,7 @@ async function postJson(url, payload) {
  * Verifikasi kode lisensi ke server (ONLINE).
  * @param {{code:string, installCode:string, domain?:string}} input
  * @returns {Promise<{ok:boolean, valid?:boolean, reason?:string, grace?:boolean,
- *                    expires_at?:string|null, days_left?:number|null,
+ *                    expires_at?:string|null, days_left?:number|null, server_url?:string|null,
  *                    httpStatus?:number, error?:string}>}
  */
 async function verifyLicense({ code, installCode, domain }) {
@@ -92,6 +92,7 @@ async function verifyLicense({ code, installCode, domain }) {
     grace_end: d.grace_end || null,
     expires_at: d.expires_at === undefined ? null : d.expires_at,
     days_left: d.days_left === undefined ? null : d.days_left,
+    server_url: d.server_url || null, // origin server lisensi penerbit → diisi otomatis di Pengaturan
   };
 }
 

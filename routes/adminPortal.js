@@ -4000,6 +4000,10 @@ router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'
     licenseValid: licenseCheck.valid,
     licenseInstallCode: licenseCheck.installCode,
     licenseInfo: domainLicense.licenseInfo,
+    licenseGrace: licenseCheck.grace || null,
+    licenseServerOrigin: String(getSetting('license_server_origin', '') || '').trim(),
+    licenseLastVerifiedAt: Number(getSetting('license_last_verified_at', 0)) || 0,
+    licenseLastReason: String(getSetting('license_last_reason', '') || ''),
     canManageSidebar: Boolean(req.session?.isAdmin),
     menuConfigs: sidebarMenuSvc.getConfigMenus()
   });

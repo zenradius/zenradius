@@ -217,6 +217,12 @@ const VALIDATION_RULES = {
     description: 'URL server lisensi resmi (verifikasi kode lisensi berbasis online)'
   },
 
+  // Origin server lisensi penerbit kode — diisi otomatis dari respons verifikasi.
+  license_server_origin: {
+    type: 'string',
+    description: 'Origin server lisensi penerbit (terisi otomatis)'
+  },
+
   domain_license_key: {
     type: 'string',
     // Kode lisensi sederhana XXXX-XXXX-XXXX-XXXX (contoh BG23-SJH2-HDGT-5582) atau kosong.

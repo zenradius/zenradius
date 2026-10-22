@@ -184,57 +184,204 @@
         </div>
         <% } %>
 
-        <!-- Lisensi Aktif Selamanya -->
+        <!-- ══ Lisensi Aktif Selamanya ══ -->
         <% const licActive = (typeof licenseValid !== 'undefined') && licenseValid; %>
-        <div class="card mb16" id="license" <% if (licActive) { %>style="border-color:rgba(52,211,153,.4)"<% } %>>
-          <div class="card-hd" style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-            <h6><i class="bi bi-shield-lock"></i> Lisensi Aktif Selamanya</h6>
+        <% const licGrace = (typeof licenseGrace !== 'undefined' && licenseGrace && licenseGrace.inGrace) ? licenseGrace : null; %>
+        <% const licCodeRaw = (typeof settings !== 'undefined' && settings.domain_license_key) ? String(settings.domain_license_key).trim() : ''; %>
+        <% const licIsLocal = (typeof currentHost !== 'undefined' && currentHost === 'local'); %>
+        <% const licTarget = licIsLocal ? 'Instalasi Lokal' : (typeof currentHost !== 'undefined' && currentHost ? currentHost : '-'); %>
+        <% const licOrigin = String((typeof licenseServerOrigin !== 'undefined' && licenseServerOrigin) ? licenseServerOrigin : (settings.license_web_url || '')).trim().replace(/\/+$/, ''); %>
+        <% const licStatusKey = licActive ? 'on' : (licCodeRaw ? 'bad' : 'off'); %>
+        <% const licVerifiedAt = Number((typeof licenseLastVerifiedAt !== 'undefined' ? licenseLastVerifiedAt : 0)) || 0; %>
+
+        <style>
+          .lcp { --lcp-ok:#34d399; --lcp-bad:#f87171; --lcp-warn:#fbbf24; }
+          .lcp-card { border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px; background:var(--card-bg, var(--bg)); }
+          .lcp-card.is-ok  { border-color:rgba(52,211,153,.45); }
+          .lcp-card.is-bad { border-color:rgba(248,113,113,.40); }
+          .lcp-hd { display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid var(--border); flex-wrap:wrap;
+                    background:linear-gradient(135deg, rgba(35,96,96,.10), transparent 70%); }
+          .lcp-hd-ico { width:32px; height:32px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center;
+                        background:var(--pdim, rgba(35,96,96,.14)); color:var(--primary); font-size:15px; flex-shrink:0; }
+          .lcp-hd-txt { display:flex; flex-direction:column; gap:1px; min-width:0; flex:1; }
+          .lcp-hd-txt strong { font-size:13.5px; font-weight:600; color:var(--text); }
+          .lcp-hd-txt small { font-size:11px; color:var(--muted); }
+          .lcp-pill { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:5px 11px; font-size:11px; font-weight:700;
+                      white-space:nowrap; border:1px solid transparent; }
+          .lcp-pill.on  { background:var(--sdim, rgba(52,211,153,.12)); color:var(--lcp-ok);  border-color:rgba(52,211,153,.38); }
+          .lcp-pill.bad { background:rgba(248,113,113,.12); color:var(--lcp-bad); border-color:rgba(248,113,113,.38); }
+          .lcp-pill.off { background:rgba(148,163,184,.12); color:var(--muted); border-color:var(--border); }
+
+          .lcp-bd { padding:16px; }
+          .lcp-ctx { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+          .lcp-chip { display:inline-flex; align-items:center; gap:6px; background:rgba(148,163,184,.10); border:1px solid var(--border);
+                      border-radius:8px; padding:6px 10px; font-size:11.5px; color:var(--muted); line-height:1.3; }
+          .lcp-chip i { color:var(--primary); font-size:12px; }
+          .lcp-chip b { color:var(--text); font-weight:600; }
+          .lcp-chip code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--text); font-size:12px;
+                           letter-spacing:.10em; font-weight:600; }
+
+          .lcp-field { margin-bottom:14px; }
+          .lcp-field > label { display:block; font-size:11.5px; font-weight:600; color:var(--muted); margin-bottom:6px;
+                               text-transform:uppercase; letter-spacing:.5px; }
+          .lcp-entry { display:flex; gap:8px; align-items:stretch; }
+          .lcp-input-wrap { position:relative; flex:1; min-width:0; }
+          .lcp-input-wrap > i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:14px; pointer-events:none; }
+          .lcp-input { width:100%; box-sizing:border-box; min-height:46px; padding:10px 14px 10px 38px; border-radius:10px;
+                       border:1.5px solid var(--border); background:var(--input-bg, rgba(0,0,0,.16)); color:var(--text);
+                       font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:15px; letter-spacing:.16em;
+                       text-transform:uppercase; text-align:center; transition:border-color .18s, box-shadow .18s; }
+          .lcp-input::placeholder { letter-spacing:normal; text-transform:none; font-size:12.5px; font-family:inherit; color:var(--muted); opacity:.75; }
+          .lcp-input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(35,96,96,.18); }
+          .lcp-card.is-ok .lcp-input { border-color:rgba(52,211,153,.45); }
+          .lcp-btn { min-height:46px; padding:0 18px; border-radius:10px; border:1px solid transparent; cursor:pointer;
+                     font-size:13px; font-weight:700; font-family:inherit; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;
+                     background:var(--btn-bg, linear-gradient(135deg,#236060,#183f51)); color:#f4fffd; }
+          .lcp-btn:hover { filter:brightness(1.08); }
+          .lcp-btn.ghost { background:transparent; border-color:var(--border); color:var(--text); }
+          .lcp-btn.ghost:hover { background:rgba(148,163,184,.12); }
+
+          .lcp-help { font-size:11.5px; color:var(--muted); line-height:1.65; margin-top:7px; }
+          .lcp-help code { font-family:ui-monospace,monospace; font-size:11.5px; color:var(--text); background:rgba(148,163,184,.12);
+                           padding:1px 5px; border-radius:4px; }
+          .lcp-note { display:flex; gap:9px; align-items:flex-start; border-radius:10px; padding:11px 13px; font-size:12px; line-height:1.6;
+                      border:1px solid var(--border); background:rgba(148,163,184,.08); color:var(--muted); margin-bottom:14px; }
+          .lcp-note i { flex-shrink:0; margin-top:1px; font-size:14px; }
+          .lcp-note.ok  { background:rgba(52,211,153,.10); border-color:rgba(52,211,153,.30); color:var(--text); }
+          .lcp-note.ok i  { color:var(--lcp-ok); }
+          .lcp-note.warn{ background:rgba(251,191,36,.10); border-color:rgba(251,191,36,.30); color:var(--text); }
+          .lcp-note.warn i{ color:var(--lcp-warn); }
+          .lcp-note.bad { background:rgba(248,113,113,.09); border-color:rgba(248,113,113,.28); color:var(--text); }
+          .lcp-note.bad i { color:var(--lcp-bad); }
+          .lcp-sep { height:1px; background:var(--border); margin:16px 0; }
+          .lcp-soft { background:rgba(148,163,184,.07); border:1px solid var(--border); border-radius:10px; padding:13px 14px; }
+          .lcp-soft .lcp-field { margin-bottom:0; }
+
+          @media (max-width:640px) {
+            .lcp-bd { padding:14px; }
+            .lcp-entry { flex-direction:column; }
+            .lcp-btn { width:100%; justify-content:center; }
+            .lcp-input { font-size:14px; }
+          }
+        </style>
+
+        <div class="lcp">
+        <div class="lcp-card <%= licActive ? 'is-ok' : (licCodeRaw ? 'is-bad' : '') %>" id="license">
+          <div class="lcp-hd">
+            <span class="lcp-hd-ico"><i class="bi bi-shield-lock-fill"></i></span>
+            <div class="lcp-hd-txt">
+              <strong>Lisensi ZenRadius</strong>
+              <small>Lisensi resmi seumur hidup &bull; 1 instalasi</small>
+            </div>
             <% if (licActive) { %>
-              <span style="display:inline-flex;align-items:center;gap:6px;background:var(--sdim);color:var(--success);border:1px solid rgba(52,211,153,.35);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap;"><i class="bi bi-patch-check-fill"></i> Lisensi Aktif</span>
+              <span class="lcp-pill on"><i class="bi bi-patch-check-fill"></i> Aktif</span>
+            <% } else if (licCodeRaw) { %>
+              <span class="lcp-pill bad"><i class="bi bi-exclamation-triangle-fill"></i> Tidak Valid</span>
             <% } else { %>
-              <button type="button" class="btn btn-g" onclick="openLicenseActivationModal()" style="font-size:11px; padding:4px 10px; height:auto; margin:0;"><i class="bi bi-cart-plus"></i> Order Lisensi</button>
+              <span class="lcp-pill off"><i class="bi bi-circle"></i> Belum Diisi</span>
+            <% } %>
+            <% if (!licActive) { %>
+              <button type="button" class="lcp-btn ghost" onclick="openLicenseActivationModal()" style="min-height:34px;padding:0 13px;font-size:12px;">
+                <i class="bi bi-cart-plus"></i> Order Lisensi
+              </button>
             <% } %>
           </div>
-          <div class="card-bd">
+
+          <div class="lcp-bd">
             <% if (licActive) { %>
-              <div style="display:flex;gap:10px;align-items:flex-start;background:var(--sdim);border:1px solid rgba(52,211,153,.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-                <i class="bi bi-check-circle-fill" style="color:var(--success);font-size:18px;flex-shrink:0;margin-top:1px"></i>
-                <div style="font-size:12.5px;line-height:1.6;color:var(--text)">
+              <div class="lcp-note ok">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>
                   <strong>Terima kasih telah mendukung pengembangan ZenRadius.</strong><br>
-                  Lisensi resmi untuk <code><%= (typeof licenseValid !== 'undefined' && licenseValid && typeof currentHost !== 'undefined') ? (currentHost === 'local' ? 'instalasi lokal' : currentHost) : (typeof currentHost !== 'undefined' ? currentHost : '') %></code> telah aktif dan berlaku <strong>selamanya</strong>. Dukungan Anda menjaga keberlanjutan pembaruan, keamanan, dan layanan teknis bagi seluruh pengguna.
+                  Lisensi aktif untuk <strong><%= licTarget %></strong> dan berlaku <strong>selamanya</strong>.
+                  <% if (licVerifiedAt) { %><br><span style="opacity:.75">Terverifikasi terakhir: <%= new Date(licVerifiedAt).toLocaleString('id-ID') %></span><% } %>
                 </div>
               </div>
+            <% } else if (licGrace) { %>
+              <div class="lcp-note warn">
+                <i class="bi bi-hourglass-split"></i>
+                <div>
+                  <strong>Masa tenggang aktif — sisa <%= licGrace.daysLeft %> hari.</strong><br>
+                  Masukkan kode lisensi sebelum masa tenggang berakhir untuk menghindari penguncian akses.
+                </div>
+              </div>
+            <% } else if (licCodeRaw) { %>
+              <div class="lcp-note bad">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>
+                  <strong>Kode lisensi tidak valid.</strong>
+                  <% if (typeof licenseLastReason !== 'undefined' && licenseLastReason) { %><br><%= licenseLastReason %><% } %>
+                  Periksa kembali penulisan kode, atau hubungi Developer.
+                </div>
+              </div>
+            <% } else { %>
+              <div class="lcp-note">
+                <i class="bi bi-info-circle-fill"></i>
+                <div>Instalasi ini belum memiliki lisensi. Masukkan <strong>kode lisensi</strong> yang Anda terima dari Developer, lalu klik <strong>Aktivasi</strong>.</div>
+              </div>
             <% } %>
-            <div class="fg" style="<%= licActive ? 'margin-bottom:0' : '' %>">
-              <label class="fl">Kode Lisensi untuk <code><%= typeof currentHost !== 'undefined' && currentHost === 'local' ? 'instalasi lokal' : (typeof currentHost !== 'undefined' ? currentHost : '') %></code></label>
-              <div style="display:flex;gap:8px;align-items:stretch">
-                <div style="position:relative;flex:1;min-width:0">
-                  <input class="fc" name="domain_license_key" value="<%= settings.domain_license_key || '' %>" placeholder="BG23-SJH2-HDGT-5582" autocomplete="off" spellcheck="false" style="font-family:ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;text-align:center;font-size:15px;<%= licActive ? 'padding-right:38px;border-color:rgba(52,211,153,.45)' : '' %>">
-                  <% if (licActive) { %><i class="bi bi-patch-check-fill" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--success);font-size:16px;pointer-events:none"></i><% } %>
+
+            <!-- Konteks instalasi -->
+            <div class="lcp-ctx">
+              <span class="lcp-chip"><i class="bi bi-fingerprint"></i> Kode Instalasi <code><%= typeof licenseInstallCode !== 'undefined' ? licenseInstallCode : '-' %></code></span>
+              <span class="lcp-chip"><i class="bi bi-globe2"></i> <b><%= licTarget %></b></span>
+              <% if (licOrigin) { %>
+                <span class="lcp-chip"><i class="bi bi-cloud-check"></i> Server Lisensi <b><%= licOrigin %></b></span>
+              <% } %>
+            </div>
+
+            <!-- Input kode lisensi -->
+            <div class="lcp-field">
+              <label for="domain_license_key">Kode Lisensi</label>
+              <div class="lcp-entry">
+                <div class="lcp-input-wrap">
+                  <i class="bi bi-key"></i>
+                  <input id="domain_license_key" class="lcp-input" name="domain_license_key"
+                         value="<%= settings.domain_license_key || '' %>"
+                         placeholder="Masukkan kode lisensi Anda"
+                         autocomplete="off" spellcheck="false" maxlength="19"
+                         inputmode="text" autocapitalize="characters"
+                         <%= licActive ? 'readonly' : '' %>>
                 </div>
                 <% if (!licActive) { %>
-                  <button type="submit" class="btn btn-s" style="white-space:nowrap;flex-shrink:0"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi</button>
+                  <button type="submit" class="lcp-btn"><i class="bi bi-patch-check-fill"></i> Aktivasi Lisensi</button>
                 <% } %>
               </div>
-              <small class="text-muted">
+              <div class="lcp-help">
                 <% if (licActive) { %>
-                  Status: <span style="color:#2dd4bf">● Valid</span> — Lisensi terverifikasi. Simpan kode ini dengan aman; kode hanya berlaku untuk <%= typeof currentHost !== 'undefined' && currentHost === 'local' ? 'instalasi ini' : 'instalasi di atas' %>.
-                <% } else if (typeof licenseValid !== 'undefined') { %>
-                  Status: <span style="color:#f87171">● Tidak valid / belum diisi</span> — Masukkan <strong>kode lisensi</strong> (contoh <code>BG23-SJH2-HDGT-5582</code>) lalu klik <strong>Aktivasi Lisensi</strong>. Belum memiliki? Klik <strong>Order Lisensi</strong> untuk memesan.
+                  Lisensi terverifikasi &amp; terkunci ke Kode Instalasi di atas. Simpan kode ini dengan aman.
                 <% } else { %>
-                  Masukkan <strong>kode lisensi</strong> (contoh <code>BG23-SJH2-HDGT-5582</code>) lalu klik <strong>Aktivasi Lisensi</strong>.
+                  Format: 4 grup &times; 4 karakter dipisah tanda hubung. Belum punya kode?
+                  <a href="#" onclick="openLicenseActivationModal();return false;" style="color:var(--primary)">Order lisensi</a>.
                 <% } %>
-              </small>
+              </div>
             </div>
-            <div class="fg" style="margin-top:10px">
-              <label class="fl">Server Lisensi Resmi</label>
-              <input class="fc" name="license_web_url" value="<%= settings.license_web_url || '' %>" placeholder="https://license.zenradius.net" style="font-family:monospace;font-size:12.5px">
-              <small class="text-muted">
-                URL server lisensi resmi. Kode lisensi diverifikasi <strong>online</strong> ke server ini (butuh koneksi internet).
-                Kosongkan untuk memakai bawaan <code>https://license.zenradius.net</code>.
-              </small>
+
+            <div class="lcp-sep"></div>
+
+            <!-- Server lisensi resmi -->
+            <div class="lcp-soft">
+              <div class="lcp-field">
+                <label for="license_web_url">Server Lisensi Resmi</label>
+                <div class="lcp-entry">
+                  <div class="lcp-input-wrap">
+                    <i class="bi bi-cloud-arrow-down"></i>
+                    <input id="license_web_url" class="lcp-input" name="license_web_url"
+                           value="<%= settings.license_web_url || '' %>"
+                           placeholder="https://license.zenradius.net"
+                           style="font-size:13px;letter-spacing:.02em;text-align:left;text-transform:none;padding-left:38px;"
+                           autocomplete="off" spellcheck="false" inputmode="url">
+                  </div>
+                </div>
+                <div class="lcp-help">
+                  Kode lisensi diverifikasi <strong>online</strong> ke server ini (butuh koneksi internet).
+                  <% if (licOrigin) { %>Terisi otomatis dari server tempat kode lisensi diterbitkan: <code><%= licOrigin %></code>.<% } %>
+                  Kosongkan untuk memakai bawaan <code>https://license.zenradius.net</code>.
+                </div>
+              </div>
             </div>
           </div>
+        </div>
         </div>
 
 

@@ -1,11 +1,13 @@
 {
   "name": "zenradius",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "ZenRadius",
   "main": "app-customer.js",
   "scripts": {
     "start": "node app-customer.js",
     "dev": "nodemon app-customer.js",
+    "version:bump": "node scripts/bump-version.js",
+    "version:check": "node scripts/bump-version.js --check",
     "postinstall": "echo 'Install complete. If you used sudo, run: sudo chown -R $USER:$USER .'",
     "fix-permissions": "sudo chown -R $USER:$USER ."
   },
