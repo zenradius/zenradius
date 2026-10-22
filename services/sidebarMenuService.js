@@ -34,6 +34,7 @@ const MENU_DEFINITIONS = [
   { key: 'tickets', section: 'service', href: '/admin/tickets', icon: 'bi bi-headset', labelKey: 'admin.nav.customer_tickets', labelDefault: 'Tiket Customer', roles: ['admin', 'cashier'], activePages: ['tickets'] },
   { key: 'collector_payments', section: 'service', href: '/admin/collector-payments', icon: 'bi bi-check2-square', labelKey: 'admin.nav.collector_payments', labelDefault: 'Approval Kolektor', roles: ['admin', 'cashier'], activePages: ['collector_payments'] },
   { key: 'inventory', section: 'service', href: '/admin/inventory', icon: 'bi bi-boxes', labelKey: 'admin.nav.inventory', labelDefault: 'Inventaris (Stok)', roles: ['admin', 'cashier'], activePages: ['inventory'] },
+  { key: 'onu_stickers', section: 'service', href: '/admin/onu-stickers', icon: 'bi bi-qr-code-scan', labelKey: 'admin.nav.onu_stickers', labelDefault: 'Cetak Stiker ONU', roles: ['admin', 'cashier'], activePages: ['onu_stickers'] },
   { key: 'digiflazz', section: 'service', href: '/admin/digiflazz', icon: 'bi bi-phone', labelKey: 'admin.nav.digiflazz', labelDefault: 'Digiflazz', roles: ['admin'], activePages: ['digiflazz'] },
 
   { key: 'reports', section: 'finance', href: '/admin/reports', icon: 'bi bi-bar-chart-line', labelKey: 'admin.nav.finance_report', labelDefault: 'Laporan Keuangan', roles: ['admin', 'cashier'], activePages: ['reports'] },
@@ -106,6 +107,7 @@ const DEFAULT_MENU_STATES = {
   collector_payments: STATE_VISIBLE,
   tickets: STATE_VISIBLE,
   inventory: STATE_VISIBLE,
+  onu_stickers: STATE_VISIBLE,
   attendance: STATE_VISIBLE,
   payroll: STATE_VISIBLE,
   cash_in: STATE_VISIBLE,

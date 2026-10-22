@@ -2651,6 +2651,96 @@ router.post('/customers/:id/unisolate', requireAdminSession, async (req, res) =>
   res.redirect('back');
 });
 
+// ─── CETAK STIKER MODEM / ONU (NAME TAG A4) ────────────────────────────────
+// Menyusun stiker name-tag ukuran ±8.5cm x 5.4cm (10 per lembar A4) berisi
+// identitas pelanggan + QR yang mengarah ke /app/connect agar pelanggan bisa
+// memasang portal PWA cukup dengan scan. Mode 'blank' untuk stok teknisi.
+function resolveStickerIdDisplay(c) {
+  const pppoe = String(c?.pppoe_username || '').trim();
+  const hotspot = String(c?.hotspot_username || '').trim();
+  const staticIp = String(c?.static_ip || '').trim();
+  return pppoe || hotspot || staticIp || `ID:${c?.id || ''}`;
+}
+
+function resolveStickerCsPhone(req) {
+  const s = getSettings();
+  return String(req.query.cs_phone || s.company_phone || '').trim() || '08xxxxxxxxxx';
+}
+
+router.get('/onu-stickers', requireAdminSession, async (req, res) => {
+  try {
+    const mode = req.query.mode === 'customers' ? 'customers' : 'blank';
+    const count = Math.max(1, Math.min(100, Number(req.query.count || 10) || 10));
+    const searchQuery = String(req.query.q || '').trim();
+    const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
+    const csPhone = resolveStickerCsPhone(req);
+    const serverBaseUrl = adminQrServerUrl(req);
+
+    const routers = mikrotikService.getAllRouters();
+    let stickers = [];
+
+    if (mode === 'blank') {
+      const qrPayload = `${serverBaseUrl}/app/connect`;
+      const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, { margin: 1, width: 250, errorCorrectionLevel: 'M' });
+      for (let i = 0; i < count; i++) {
+        stickers.push({ name: '', id_display: '', package_name: '', qrCodeDataUrl });
+      }
+    } else {
+      const customers = customerSvc.getAllCustomers(searchQuery, selectedRouterId, 'active');
+      const targetCusts = (customers || []).slice(0, 100);
+      for (const c of targetCusts) {
+        const ident = String(c.pppoe_username || c.hotspot_username || c.id || '').trim();
+        const qrPayload = `${serverBaseUrl}/app/connect?cid=${encodeURIComponent(ident)}`;
+        const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, { margin: 1, width: 250, errorCorrectionLevel: 'M' });
+        stickers.push({
+          name: c.name,
+          id_display: resolveStickerIdDisplay(c),
+          package_name: c.package_name || '',
+          qrCodeDataUrl
+        });
+      }
+    }
+
+    res.render('admin/onu_stickers', {
+      title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
+      csPhone, mode, count, searchQuery, selectedRouterId, routers, stickers,
+      settings: getSettings()
+    });
+  } catch (e) {
+    logger.error(`[ONU Stickers] Error: ${e.message}`);
+    res.status(500).send('Gagal memuat stiker: ' + e.message);
+  }
+});
+
+router.get('/customers/:id/sticker-onu', requireAdminSession, async (req, res) => {
+  try {
+    const customer = customerSvc.getCustomerById(req.params.id);
+    if (!customer) return res.status(404).send('Pelanggan tidak ditemukan');
+
+    const csPhone = resolveStickerCsPhone(req);
+    const serverBaseUrl = adminQrServerUrl(req);
+    const ident = String(customer.pppoe_username || customer.hotspot_username || customer.id || '').trim();
+    const qrPayload = `${serverBaseUrl}/app/connect?cid=${encodeURIComponent(ident)}`;
+    const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, { margin: 1, width: 250, errorCorrectionLevel: 'M' });
+
+    const stickers = [{
+      name: customer.name,
+      id_display: resolveStickerIdDisplay(customer),
+      package_name: customer.package_name || '',
+      qrCodeDataUrl
+    }];
+
+    res.render('admin/onu_stickers', {
+      title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
+      csPhone, mode: 'blank', count: 1, searchQuery: '', selectedRouterId: null, routers: [], stickers,
+      settings: getSettings()
+    });
+  } catch (e) {
+    logger.error(`[ONU Sticker Single] Error: ${e.message}`);
+    res.status(500).send('Gagal memuat stiker: ' + e.message);
+  }
+});
+
 router.post('/customers/:id/billing/generate', requireAdminSession, express.urlencoded({ extended: true }), (req, res) => {
   try {
     const { month, year } = req.body;

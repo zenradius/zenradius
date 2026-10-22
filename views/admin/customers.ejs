@@ -332,6 +332,7 @@
               </td>
               <td>
                 <button class="btn btn-g btn-icon btn-sm" title="Lihat Detail & Koneksi MikroTik" onclick="viewCustDetail(<%= i %>)"><i class="bi bi-eye"></i></button>
+                <a href="/admin/customers/<%= c.id %>/sticker-onu" target="_blank" rel="noopener" class="btn btn-g btn-icon btn-sm" title="<%= t('admin.customers.actions.sticker_onu', 'Cetak Stiker ONU') %>"><i class="bi bi-qr-code-scan"></i></a>
                 <button class="btn btn-s btn-icon btn-sm" title="<%= t('admin.customers.actions.generate_invoice', 'Generate Tagihan') %>" data-idx="<%= i %>" onclick="openGenInvoice(+this.dataset.idx)"><i class="bi bi-lightning-charge"></i></button>
                 <button class="btn btn-p btn-icon btn-sm" title="<%= t('admin.customers.actions.pay_invoice', 'Bayar Tagihan') %>" data-idx="<%= i %>" onclick="openPayInvoice(+this.dataset.idx)"><i class="bi bi-cash-coin"></i></button>
                 <% if (typeof session !== 'undefined' && session && !session.isCashier) { %>
