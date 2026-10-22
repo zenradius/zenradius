@@ -76,27 +76,32 @@
       transition: all .15s ease;
     }
     .btn-primary {
-      background: #087e82;
-      color: #ffffff;
-      box-shadow: 0 3px 8px rgba(8, 126, 130, .2);
+      background: var(--primary);
+      color: var(--bg);
+      box-shadow: none;
     }
     .btn-primary:hover {
-      background: #06696d;
+      background: var(--primary);
     }
     .btn-secondary {
-      background: #f0f5f5;
-      color: #34535a;
-      border: 1px solid #d4e0e2;
+      background: var(--bg2);
+      color: var(--text);
+      border: 1px solid var(--border);
     }
     .btn-secondary:hover {
-      background: #e4eeee;
+      background: var(--bg3);
     }
     .filter-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
       margin-bottom: 12px;
     }
+    .filter-submit { justify-content:flex-end; }
+    .sticker-empty { min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:24px; color:var(--muted); background:var(--panel); border:1px solid var(--border); border-radius:8px; text-align:center; }
+    .sticker-empty i { color:var(--primary); font-size:26px; }
+    .sticker-empty strong { color:var(--text); font-size:15px; }
+    .sticker-empty span { font-size:12px; }
     .fg {
       display: flex;
       flex-direction: column;
@@ -117,7 +122,7 @@
       border-radius: 5px;
       font-size: 13px;
     }
-    .fg select:focus, .fg input:focus { outline: 2px solid rgba(8,126,130,.2); border-color: #087e82; }
+    .fg select:focus, .fg input:focus { outline: 2px solid var(--pdim); border-color: var(--primary); }
 
     /* Print Page Container */
     .print-sheet {
@@ -400,59 +405,56 @@
     .onu-print-page .sheet-viewport { overflow-x:auto; padding: 0 0 14px; }
     .onu-print-page .print-sheet { box-shadow: 0 6px 24px rgba(8,35,62,.14); border:1px solid #d9e4eb; }
     .onu-print-page .sticker-grid { gap: 2.5mm; }
-    .onu-print-page .sticker-card { display:flex; padding:0; height:54mm; border:0; border-radius:2.2mm; background:#fff; box-shadow: inset 0 0 0 .25mm #b7c9d8; }
+    .onu-print-page .sticker-card { --label-accent:var(--primary); --label-surface:var(--bg2); --label-surface-alt:var(--bg3); --label-ink:var(--text); --label-muted:var(--muted); --label-border:var(--border); display:flex; padding:0; height:54mm; border:0; border-radius:2.2mm; color:var(--label-ink); background:var(--label-surface); box-shadow:inset 0 0 0 .25mm var(--label-border); }
     .onu-print-page .sticker-card::before { display:none; }
-    .label-header { height:9.5mm; flex:0 0 9.5mm; padding:1.2mm 3mm; display:flex; justify-content:space-between; align-items:center; gap:4mm; color:#fff; background:#073d78; border-radius:2.2mm 2.2mm 0 0; position:relative; overflow:hidden; }
-    .label-header::after { content:""; position:absolute; height:1.2mm; width:35mm; right:14mm; bottom:-.6mm; background:#24b7ec; transform:skewX(-35deg); }
+    .label-header { height:9.5mm; flex:0 0 9.5mm; padding:1.2mm 3mm; display:flex; justify-content:space-between; align-items:center; gap:4mm; color:var(--label-ink); background:var(--label-surface-alt); border-radius:2.2mm 2.2mm 0 0; position:relative; overflow:hidden; }
+    .label-header::after { content:""; position:absolute; height:1.2mm; width:35mm; right:14mm; bottom:-.6mm; background:var(--label-accent); transform:skewX(-35deg); }
     .label-brand { display:flex; align-items:center; min-width:0; }
     .label-logo { display:block; width:auto; max-width:44mm; height:7mm; object-fit:contain; object-position:left center; }
-    .label-company { max-width:65mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff; font-size:12px; font-weight:800; }
-    .label-tagline { max-width:52mm; color:#dceeff; font-size:8px; line-height:1.2; text-align:right; }
+    .label-company { max-width:65mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:12px; font-weight:800; }
+    .label-tagline { max-width:52mm; color:var(--label-muted); font-size:8px; line-height:1.2; text-align:right; }
     .label-content { flex:1; min-height:0; padding:1.2mm 2.5mm 1mm; display:flex; flex-direction:column; gap:1mm; }
     .label-top, .label-bottom { display:grid; gap:2mm; min-height:0; }
-    .label-top { grid-template-columns:1.08fr 1fr; height:13mm; }
+    .label-top { grid-template-columns:1.08fr 1fr; height:16mm; }
     .label-bottom { grid-template-columns:1.45fr 1fr; flex:1; }
-    .label-panel { min-width:0; border:.25mm solid #a9dfff; border-radius:2mm; background:#edf7ff; color:#123f73; overflow:hidden; }
-    .label-panel-title { height:4mm; margin:0; padding:0 2mm; display:flex; align-items:center; gap:1.2mm; color:#073d78; font-size:8px; font-weight:800; line-height:1; }
-    .label-panel-title i { font-size:11px; }
-    .wifi-panel { padding-bottom:1mm; }
-    .wifi-lines { padding:0 2mm; font-size:7.5px; line-height:1.55; }
-    .wifi-line { display:grid; grid-template-columns:15mm 2mm minmax(0,1fr); align-items:baseline; gap:.5mm; }
-    .wifi-line span:first-child { font-weight:700; }
-    .wifi-line strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#102f56; font-size:8px; }
-    .wifi-note { padding:0 2mm; color:#315d87; font-size:6px; }
-    .label-customer { padding:0 2mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#315d87; font-size:6.3px; }
+    .label-panel { min-width:0; border:.25mm solid var(--label-border); border-radius:2mm; background:var(--label-surface); color:var(--label-ink); overflow:hidden; }
+    .label-panel-title { height:4mm; margin:0; padding:0 2mm; display:flex; align-items:center; gap:1.2mm; color:var(--label-ink); font-size:8px; font-weight:800; line-height:1; }
+    .label-panel-title i { color:var(--label-accent); font-size:11px; }
+    .customer-lines { padding:0 2mm; display:grid; gap:.45mm; }
+    .customer-line { display:grid; grid-template-columns:13mm 2mm minmax(0,1fr); align-items:center; gap:.5mm; color:var(--label-muted); font-size:6.4px; line-height:1.15; }
+    .customer-line strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:6.8px; }
     .led-panel { padding-bottom:.7mm; }
     .led-rows { padding:0 2mm; display:grid; gap:.3mm; }
     .led-row { display:grid; grid-template-columns:2.5mm 15mm 1.5mm minmax(0,1fr); align-items:center; gap:.6mm; min-height:1.4mm; font-size:5.8px; line-height:1; }
     .led-row strong { font-size:6.5px; }
     .led-dot { width:2.2mm; height:2.2mm; border-radius:50%; box-shadow:0 0 0 .25mm rgba(0,0,0,.07); }
     .led-green { background:#20bf82; }.led-blue { background:#1599e5; }.led-yellow { background:#f3bd2f; }.led-red { background:#e7474b; }
-    .steps-panel { padding-bottom:1mm; background:#f3f9ff; }
-    .steps-title { height:5mm; padding:0 2mm; display:flex; align-items:center; gap:1.5mm; color:#fff; background:#0a4a8f; font-size:8px; font-weight:800; }
+    .steps-panel { padding-bottom:1mm; background:var(--label-surface); }
+    .steps-title { height:5mm; padding:0 2mm; display:flex; align-items:center; gap:1.5mm; color:var(--label-ink); background:var(--label-surface-alt); font-size:8px; font-weight:800; border-bottom:.25mm solid var(--label-border); }
     .steps-list { padding:1mm 1.6mm; display:grid; grid-template-columns:1fr 1fr; column-gap:1.5mm; row-gap:.8mm; }
-    .step { display:grid; grid-template-columns:4mm minmax(0,1fr); gap:1mm; align-items:start; min-width:0; color:#183b63; }
-    .step-num { width:3.5mm; height:3.5mm; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; background:#0b4d91; font-size:6px; font-weight:800; }
+    .step { display:grid; grid-template-columns:4mm minmax(0,1fr); gap:1mm; align-items:start; min-width:0; color:var(--label-muted); }
+    .step-num { width:3.5mm; height:3.5mm; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--bg); background:var(--label-accent); font-size:6px; font-weight:800; }
     .step-copy { font-size:5.8px; line-height:1.25; }
-    .step-copy strong { display:block; color:#123960; font-size:6.3px; }
-    .help-panel { display:flex; flex-direction:column; padding:1.4mm; background:#e9f5ff; }
-    .help-heading { height:3.3mm; margin:0; display:flex; align-items:center; gap:1mm; color:#073d78; font-size:8px; font-weight:800; flex:0 0 3.3mm; }
+    .step-copy strong { display:block; color:var(--label-ink); font-size:6.3px; }
+    .help-panel { display:flex; flex-direction:column; padding:1.4mm; background:var(--label-surface-alt); }
+    .help-heading { height:3.3mm; margin:0; display:flex; align-items:center; gap:1mm; color:var(--label-ink); font-size:8px; font-weight:800; flex:0 0 3.3mm; }
     .help-body { display:grid; grid-template-columns:16mm minmax(0,1fr); gap:1.2mm; align-items:center; flex:1; min-height:0; }
     .help-qr { width:15mm; height:15mm; display:block; background:#fff; padding:.5mm; border-radius:1mm; }
     .help-meta { display:grid; gap:1.3mm; min-width:0; }
-    .help-row { display:grid; grid-template-columns:3mm minmax(0,1fr); gap:1mm; align-items:center; color:#16436e; font-size:5.7px; line-height:1.2; overflow-wrap:anywhere; }
-    .help-row i { color:#0b568d; font-size:8px; }
+    .help-row { display:grid; grid-template-columns:3mm minmax(0,1fr); gap:1mm; align-items:center; color:var(--label-muted); font-size:5.7px; line-height:1.2; overflow-wrap:anywhere; }
+    .help-row i { color:var(--label-accent); font-size:8px; }
     .help-row strong { display:block; font-size:6px; }
-    .help-qr-label { margin-top:.3mm; color:#0b568d; text-align:center; font-size:4.5px; font-weight:700; line-height:1; }
-    .label-footer { min-height:5.5mm; padding:.8mm 3mm; display:flex; justify-content:space-between; align-items:center; gap:2mm; color:#fff; background:#073d78; border-radius:0 0 2.2mm 2.2mm; font-size:7px; }
-    .label-footer i { color:#22b9ee; font-size:10px; margin-right:1mm; }
-    .label-footer-note { color:#dceeff; font-size:6px; white-space:nowrap; }
+    .help-qr-label { margin-top:.3mm; color:var(--label-muted); text-align:center; font-size:4.5px; font-weight:700; line-height:1; }
+    .label-footer { min-height:5.5mm; padding:.8mm 3mm; display:flex; justify-content:space-between; align-items:center; gap:2mm; color:var(--label-ink); background:var(--label-surface-alt); border-radius:0 0 2.2mm 2.2mm; font-size:7px; }
+    .label-footer i { color:var(--label-accent); font-size:10px; margin-right:1mm; }
+    .label-footer-note { color:var(--label-muted); font-size:6px; white-space:nowrap; }
     @media print {
       html, body.onu-print-page { width:210mm; min-width:210mm; margin:0 !important; padding:0 !important; background:#fff !important; }
       .onu-print-page .sb, .onu-print-page .topbar, .onu-print-page .screen-controls, .onu-print-page .print-preview-head, .onu-print-page .license-grace-bar { display:none !important; }
       .onu-print-page .mw, .onu-print-page .page, .onu-print-page .sheet-viewport { width:auto !important; max-width:none !important; margin:0 !important; padding:0 !important; overflow:visible !important; }
       .onu-print-page .print-sheet { width:198mm; min-height:285mm; margin:0 auto !important; padding:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; }
       .onu-print-page .sticker-card { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+      .onu-print-page .sticker-empty { display:none !important; }
     }
   </style>
 </head>
@@ -485,10 +487,10 @@
         <i class="bi bi-qr-code-scan"></i><span><%= t('admin.onu_stickers.heading', 'Cetak Stiker Modem / ONU (Name Tag Size)') %></span>
       </div>
       <div class="ctrl-actions">
-        <button type="button" class="btn btn-primary" onclick="window.print()">
+        <button type="button" class="btn btn-p" onclick="window.print()" <%= stickers.length ? '' : 'disabled' %>>
           <i class="bi bi-printer-fill"></i> <%= t('admin.onu_stickers.print', 'Cetak Stiker (A4 / PDF)') %>
         </button>
-        <a href="/admin/customers" class="btn btn-secondary">
+        <a href="/admin/customers" class="btn btn-g">
           <i class="bi bi-arrow-left"></i> <%= t('admin.onu_stickers.back', 'Kembali') %>
         </a>
       </div>
@@ -498,49 +500,26 @@
     <form method="GET" action="/admin/onu-stickers" id="filterForm">
       <div class="filter-grid">
         <div class="fg">
-          <label><%= t('admin.onu_stickers.mode', 'Mode Cetak') %></label>
-          <select name="mode" onchange="document.getElementById('filterForm').submit()">
-            <option value="blank" <%= mode === 'blank' ? 'selected' : '' %>><%= t('admin.onu_stickers.mode_blank', 'Template Blank (Stok Teknisi Lapangan)') %></option>
-            <option value="customers" <%= mode === 'customers' ? 'selected' : '' %>><%= t('admin.onu_stickers.mode_customers', 'Data Pelanggan (Personalized)') %></option>
+          <label class="fl"><%= t('admin.onu_stickers.filter_router', 'Filter Router') %></label>
+          <select class="fc" name="router_id">
+            <option value=""><%= t('admin.onu_stickers.all_routers', 'Semua Router') %></option>
+            <% (routers || []).forEach(r => { %>
+              <option value="<%= r.id %>" <%= String(selectedRouterId || '') === String(r.id) ? 'selected' : '' %>><%= r.name %></option>
+            <% }) %>
           </select>
         </div>
-
-        <% if (mode === 'blank') { %>
-          <div class="fg">
-            <label><%= t('admin.onu_stickers.count', 'Jumlah Stiker') %></label>
-            <select name="count" onchange="document.getElementById('filterForm').submit()">
-              <option value="10" <%= count === 10 ? 'selected' : '' %>>10 <%= t('admin.onu_stickers.stickers_one_sheet', 'Stiker (1 Lembar A4)') %></option>
-              <option value="20" <%= count === 20 ? 'selected' : '' %>>20 <%= t('admin.onu_stickers.stickers_two_sheets', 'Stiker (2 Lembar A4)') %></option>
-              <option value="30" <%= count === 30 ? 'selected' : '' %>>30 <%= t('admin.onu_stickers.stickers_three_sheets', 'Stiker (3 Lembar A4)') %></option>
-              <option value="1" <%= count === 1 ? 'selected' : '' %>><%= t('admin.onu_stickers.count_single', '1 Stiker (Thermal / Satuan)') %></option>
-            </select>
-          </div>
-        <% } else { %>
-          <div class="fg">
-            <label><%= t('admin.onu_stickers.filter_router', 'Filter Router') %></label>
-            <select name="router_id" onchange="document.getElementById('filterForm').submit()">
-              <option value=""><%= t('admin.onu_stickers.all_routers', 'Semua Router') %></option>
-              <% (routers || []).forEach(r => { %>
-                <option value="<%= r.id %>" <%= String(selectedRouterId) === String(r.id) ? 'selected' : '' %>><%= r.name %></option>
-              <% }) %>
-            </select>
-          </div>
-          <div class="fg">
-            <label><%= t('admin.onu_stickers.search', 'Cari Pelanggan') %></label>
-            <input type="text" name="q" value="<%= searchQuery || '' %>" placeholder="<%= t('admin.onu_stickers.search_placeholder', 'Ketik nama / ID...') %>" />
-          </div>
-        <% } %>
-
         <div class="fg">
-          <label><%= t('admin.onu_stickers.cs_phone', 'No. CS / WA Bantuan (Tampil di Stiker)') %></label>
-          <input type="text" name="cs_phone" value="<%= csPhone %>" placeholder="08xxxxxxxxxx" onchange="document.getElementById('filterForm').submit()" />
+          <label class="fl"><%= t('admin.onu_stickers.search', 'Cari Pelanggan') %></label>
+          <input class="fc" type="search" name="q" value="<%= searchQuery || '' %>" placeholder="<%= t('admin.onu_stickers.search_placeholder', 'Ketik nama / ID...') %>" />
         </div>
-
-        <% if (mode === 'customers') { %>
-          <div class="fg" style="justify-content:flex-end">
-            <button type="submit" class="btn btn-primary" style="justify-content:center"><i class="bi bi-search"></i> <%= t('admin.onu_stickers.apply', 'Tampilkan') %></button>
-          </div>
-        <% } %>
+        <div class="fg">
+          <label class="fl"><%= t('admin.onu_stickers.cs_phone', 'No. CS / WA Bantuan (Tampil di Stiker)') %></label>
+          <input class="fc" type="text" name="cs_phone" value="<%= csPhone %>" placeholder="08xxxxxxxxxx" />
+        </div>
+        <div class="fg filter-submit">
+          <label class="fl" aria-hidden="true">&nbsp;</label>
+          <button type="submit" class="btn btn-g"><i class="bi bi-search"></i> <%= t('admin.onu_stickers.apply', 'Tampilkan') %></button>
+        </div>
       </div>
     </form>
     <div class="screen-hint" style="display:flex;align-items:center;gap:6px;">
@@ -556,10 +535,11 @@
   </div>
   <div class="sheet-viewport">
 
-  <!-- Printable Sheets (Auto breaks pages if items > 10) -->
+  <% if (stickers.length > 0) { %>
+  <!-- Personalized customer sheets (10 labels per A4) -->
   <% 
     const STICKERS_PER_PAGE = 10;
-    const totalPages = Math.max(1, Math.ceil(stickers.length / STICKERS_PER_PAGE));
+    const totalPages = Math.ceil(stickers.length / STICKERS_PER_PAGE);
     for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
       const pageItems = stickers.slice(pageIdx * STICKERS_PER_PAGE, (pageIdx + 1) * STICKERS_PER_PAGE);
   %>
@@ -580,14 +560,14 @@
 
             <div class="label-content">
               <div class="label-top">
-                <section class="label-panel wifi-panel">
-                  <h3 class="label-panel-title"><i class="bi bi-wifi"></i> <%= t('admin.onu_stickers.wifi_info', 'Informasi Wi-Fi') %></h3>
-                  <% if (item.name || item.id_display) { %><div class="label-customer"><%= [item.name, item.id_display].filter(Boolean).join(' · ') %></div><% } %>
-                  <div class="wifi-lines">
-                    <div class="wifi-line"><span><%= t('admin.onu_stickers.ssid', 'Nama (SSID)') %></span><span>:</span><strong><%= item.ssid || 'ZenRadius-XXXX' %></strong></div>
-                    <div class="wifi-line"><span><%= t('admin.onu_stickers.password', 'Password') %></span><span>:</span><strong><%= item.wifiPassword || 'XXXXXXXX' %></strong></div>
+                <section class="label-panel customer-panel">
+                  <h3 class="label-panel-title"><i class="bi bi-person-vcard"></i> <%= t('admin.onu_stickers.customer_info', 'Informasi Pelanggan') %></h3>
+                  <div class="customer-lines">
+                    <div class="customer-line"><span><%= t('admin.onu_stickers.name_label', 'Nama') %></span><span>:</span><strong><%= item.name || '-' %></strong></div>
+                    <div class="customer-line"><span><%= t('admin.onu_stickers.id_label', 'ID / Internet') %></span><span>:</span><strong><%= item.id_display || '-' %></strong></div>
+                    <div class="customer-line"><span><%= t('admin.onu_stickers.package_label', 'Paket') %></span><span>:</span><strong><%= item.package_name || '-' %></strong></div>
+                    <div class="customer-line"><span><%= t('admin.onu_stickers.area_label', 'Area') %></span><span>:</span><strong><%= [item.area, item.address].filter(Boolean).join(' / ') || '-' %></strong></div>
                   </div>
-                  <div class="wifi-note"><%= t('admin.onu_stickers.wifi_note', 'Sesuaikan dengan konfigurasi modem saat pemasangan') %></div>
                 </section>
 
                 <section class="label-panel led-panel">
@@ -637,6 +617,13 @@
           </div>
         <% }) %>
       </div>
+    </div>
+  <% } %>
+  <% } else { %>
+    <div class="sticker-empty screen-only">
+      <i class="bi bi-person-x"></i>
+      <strong><%= t('admin.onu_stickers.empty_title', 'Pelanggan tidak ditemukan') %></strong>
+      <span><%= t('admin.onu_stickers.empty_hint', 'Ubah pencarian atau filter router untuk menampilkan stiker.') %></span>
     </div>
   <% } %>
   </div>

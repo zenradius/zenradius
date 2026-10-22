@@ -2653,9 +2653,8 @@ router.post('/customers/:id/unisolate', requireAdminSession, async (req, res) =>
 });
 
 // ─── CETAK STIKER MODEM / ONU (NAME TAG A4) ────────────────────────────────
-// Menyusun stiker name-tag ukuran ±8.5cm x 5.4cm (10 per lembar A4) berisi
-// identitas pelanggan + QR yang mengarah ke /app/connect agar pelanggan bisa
-// memasang portal PWA cukup dengan scan. Mode 'blank' untuk stok teknisi.
+// Menyusun stiker name-tag personal (10 per lembar A4) dengan identitas
+// pelanggan aktif dan QR menuju /app/connect.
 function resolveStickerIdDisplay(c) {
   const pppoe = String(c?.pppoe_username || '').trim();
   const hotspot = String(c?.hotspot_username || '').trim();
@@ -2670,8 +2669,6 @@ function resolveStickerCsPhone(req) {
 
 router.get('/onu-stickers', requireAdminSession, async (req, res) => {
   try {
-    const mode = req.query.mode === 'customers' ? 'customers' : 'blank';
-    const count = Math.max(1, Math.min(100, Number(req.query.count || 10) || 10));
     const searchQuery = String(req.query.q || '').trim();
     const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
     const csPhone = resolveStickerCsPhone(req);
@@ -2679,32 +2676,25 @@ router.get('/onu-stickers', requireAdminSession, async (req, res) => {
 
     const routers = mikrotikService.getAllRouters();
     let stickers = [];
-
-    if (mode === 'blank') {
-      const qrPayload = `${serverBaseUrl}/app/connect`;
+    const customers = customerSvc.getAllCustomers(searchQuery, selectedRouterId, 'active');
+    const targetCusts = (customers || []).slice(0, 100);
+    for (const c of targetCusts) {
+      const ident = String(c.pppoe_username || c.hotspot_username || c.id || '').trim();
+      const qrPayload = `${serverBaseUrl}/app/connect?cid=${encodeURIComponent(ident)}`;
       const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, { margin: 1, width: 250, errorCorrectionLevel: 'M' });
-      for (let i = 0; i < count; i++) {
-        stickers.push({ name: '', id_display: '', package_name: '', qrCodeDataUrl });
-      }
-    } else {
-      const customers = customerSvc.getAllCustomers(searchQuery, selectedRouterId, 'active');
-      const targetCusts = (customers || []).slice(0, 100);
-      for (const c of targetCusts) {
-        const ident = String(c.pppoe_username || c.hotspot_username || c.id || '').trim();
-        const qrPayload = `${serverBaseUrl}/app/connect?cid=${encodeURIComponent(ident)}`;
-        const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, { margin: 1, width: 250, errorCorrectionLevel: 'M' });
-        stickers.push({
-          name: c.name,
-          id_display: resolveStickerIdDisplay(c),
-          package_name: c.package_name || '',
-          qrCodeDataUrl
-        });
-      }
+      stickers.push({
+        name: c.name,
+        id_display: resolveStickerIdDisplay(c),
+        package_name: c.package_name || '',
+        area: c.area || '',
+        address: c.address || '',
+        qrCodeDataUrl
+      });
     }
 
     res.render('admin/onu_stickers', {
       title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
-      csPhone, mode, count, searchQuery, selectedRouterId, routers, stickers,
+      csPhone, searchQuery, selectedRouterId, routers, stickers,
       settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo()
     });
   } catch (e) {
@@ -2728,12 +2718,14 @@ router.get('/customers/:id/sticker-onu', requireAdminSession, async (req, res) =
       name: customer.name,
       id_display: resolveStickerIdDisplay(customer),
       package_name: customer.package_name || '',
+      area: customer.area || '',
+      address: customer.address || '',
       qrCodeDataUrl
     }];
 
     res.render('admin/onu_stickers', {
       title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
-      csPhone, mode: 'blank', count: 1, searchQuery: '', selectedRouterId: null, routers: [], stickers,
+      csPhone, searchQuery: '', selectedRouterId: customer.router_id || null, routers: [], stickers,
       settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo()
     });
   } catch (e) {
