@@ -1117,7 +1117,8 @@
       "user_management": "Role Access",
       "update": "Update System",
       "settings": "Settings",
-      "theme_settings": "App Theme"
+      "theme_settings": "App Theme",
+      "gemini_bot": "Gemini Bot"
     },
     "update": {
       "title": "Update System",
@@ -1137,6 +1138,18 @@
     "radius": {
       "clear_stale": "Clear Stale Sessions",
       "confirm_clear_stale": "Close sessions with no update for more than 2 hours?"
+    },
+    "gemini": {
+      "status_title": "Gemini Bot Status",
+      "status_hint": "Gemini AI powers the WhatsApp and Telegram bots to understand natural language and run automated actions (function calling).",
+      "api_key_label": "API Key",
+      "model_label": "Model",
+      "key_set": "Configured",
+      "key_empty": "Not set",
+      "settings_title": "Gemini AI Settings",
+      "test_title": "Connection Test",
+      "test_hint": "Check whether the Gemini API key is valid and can reach the selected model.",
+      "save": "Save Settings"
     }
   },
   "tech": {

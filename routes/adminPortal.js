@@ -4177,6 +4177,13 @@ router.get('/telegram-bot', requireAdminSession, requireSidebarMenuAccess('teleg
   });
 });
 
+router.get('/gemini-bot', requireAdminSession, requireSidebarMenuAccess('gemini_bot'), (req, res) => {
+  res.render('admin/gemini-bot', {
+    title: 'Gemini Bot', company: company(), activePage: 'gemini_bot',
+    settings: getSettings(), msg: flashMsg(req)
+  });
+});
+
 router.get('/payment-gateway', requireAdminSession, requireSidebarMenuAccess('payment_gateway'), (req, res) => {
   const settings = getSettings();
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
@@ -7315,7 +7322,7 @@ router.post('/whatsapp/test-gemini', requireAdminSession, restrictToAdmin, expre
     logger.error(`[WA Test Gemini] Gagal: ${e.message || e}`);
     req.session._msg = { type: 'error', text: 'Test koneksi Gemini gagal: ' + (e.message || e) };
   }
-  res.redirect('/admin/whatsapp');
+  res.redirect('/admin/gemini-bot');
 });
 
 router.post('/whatsapp/reset', requireAdminSession, restrictToAdmin, (req, res) => {

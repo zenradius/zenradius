@@ -1117,7 +1117,8 @@
       "user_management": "Akses Role",
       "update": "Update System",
       "settings": "Pengaturan",
-      "theme_settings": "Tema Aplikasi"
+      "theme_settings": "Tema Aplikasi",
+      "gemini_bot": "Gemini Bot"
     },
     "update": {
       "title": "Update System",
@@ -1137,6 +1138,18 @@
     "radius": {
       "clear_stale": "Bersihkan Sesi Kadaluarsa",
       "confirm_clear_stale": "Tutup sesi yang tidak update lebih dari 2 jam?"
+    },
+    "gemini": {
+      "status_title": "Status Gemini Bot",
+      "status_hint": "Asisten AI Gemini dipakai oleh bot WhatsApp dan Telegram untuk memahami bahasa natural dan menjalankan perintah otomatis (function calling).",
+      "api_key_label": "API Key",
+      "model_label": "Model",
+      "key_set": "Sudah diisi",
+      "key_empty": "Belum diisi",
+      "settings_title": "Pengaturan Gemini AI",
+      "test_title": "Uji Koneksi",
+      "test_hint": "Uji apakah API Key Gemini valid dan bisa terhubung ke model yang dipilih.",
+      "save": "Simpan Pengaturan"
     }
   },
   "tech": {
