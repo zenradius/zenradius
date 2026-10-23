@@ -906,6 +906,37 @@ try {
   }
 } catch (e) {}
 
+// Normalisasi: nomor pelanggan lama (8 digit seperti 10000014) diganti nomor acak 6 digit.
+// Nomor 6 digit yang sudah benar dibiarkan, dan nomor antar pelanggan tetap unik.
+try {
+  const legacy = db.prepare(`
+    SELECT id, customer_no FROM customers
+    WHERE customer_no IS NOT NULL AND customer_no != '' AND LENGTH(customer_no) != 6
+  `).all();
+  if (legacy.length > 0) {
+    const usedNos = new Set(
+      db.prepare("SELECT customer_no FROM customers WHERE customer_no IS NOT NULL AND customer_no != '' AND LENGTH(customer_no) = 6")
+        .all()
+        .map(r => String(r.customer_no))
+    );
+    for (const row of legacy) {
+      let n = '';
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const candidate = String(Math.floor(100000 + Math.random() * 900000));
+        if (!usedNos.has(candidate)) { n = candidate; break; }
+      }
+      if (!n) {
+        for (let candidate = 100000; candidate <= 999999; candidate++) {
+          if (!usedNos.has(String(candidate))) { n = String(candidate); break; }
+        }
+      }
+      if (!n) break;
+      usedNos.add(n);
+      db.prepare("UPDATE customers SET customer_no = ? WHERE id = ?").run(n, row.id);
+    }
+  }
+} catch (e) {}
+
 // Backfill nomor registrasi untuk pendaftar online yang belum punya
 try {
   db.exec(`

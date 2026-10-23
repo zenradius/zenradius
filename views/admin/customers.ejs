@@ -251,7 +251,7 @@
             <tr>
               <td><input type="checkbox" class="cust-select" value="<%= c.id %>" onchange="updateBulkSelection()"></td>
               <td>
-                <span class="mono" style="font-weight:800;color:var(--primary);font-size:12px"><%= (c.customer_no || String(c.id).padStart(8, '0')).replace(/(\d{3})(\d{3})/, '$1 $2') %></span>
+                <span class="mono" style="font-weight:800;color:var(--primary);font-size:12px" title="No. Pelanggan"><%= c.customer_no || String(c.id).padStart(6, '0') %></span>
               </td>
               <td class="fw6">
                 <a href="javascript:void(0)" onclick="viewCustDetail(<%= i %>)" style="color:var(--primary);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;" title="Klik untuk lihat detail pelanggan & MikroTik">
@@ -1461,7 +1461,7 @@ function viewCustDetail(idx) {
     if (document.getElementById('v_cust_name')) document.getElementById('v_cust_name').textContent = c.name || '-';
     if (document.getElementById('v_cust_id')) document.getElementById('v_cust_id').textContent = c.id || '-';
     if (document.getElementById('v_cust_no')) {
-      const no = (c.customer_no || String(c.id || '').padStart(8, '0'));
+      const no = (c.customer_no || String(c.id || '').padStart(6, '0'));
       document.getElementById('v_cust_no').textContent = no.replace(/(\d{3})(\d{3})/, '$1 $2') || '-';
     }
 

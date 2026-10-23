@@ -114,8 +114,8 @@ function getAllCustomers(search = '', routerId = null, filterStatus = '', filter
 
   if (search) {
     const s = `%${search}%`;
-    whereClauses.push(`(c.name LIKE ? OR c.phone LIKE ? OR c.nik LIKE ? OR c.genieacs_tag LIKE ? OR c.address LIKE ? OR c.area LIKE ? OR c.pppoe_username LIKE ? OR c.static_ip LIKE ? OR c.hotspot_username LIKE ?)`);
-    params.push(s, s, s, s, s, s, s, s, s);
+    whereClauses.push(`(c.name LIKE ? OR c.phone LIKE ? OR c.nik LIKE ? OR c.customer_no LIKE ? OR c.genieacs_tag LIKE ? OR c.address LIKE ? OR c.area LIKE ? OR c.pppoe_username LIKE ? OR c.static_ip LIKE ? OR c.hotspot_username LIKE ?)`);
+    params.push(s, s, s, s, s, s, s, s, s, s);
   }
 
   const rId = routerId ? Number(routerId) : null;
@@ -233,15 +233,22 @@ function createCustomer(data) {
 
 /** Generate nomor pelanggan unik 6 digit acak (contoh: 657585, 838468). */
 function generateCustomerNo() {
-  // Coba beberapa kali sampai dapat nomor acak 6 digit yang belum dipakai
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const n = Math.floor(100000 + Math.random() * 900000); // 100000-999999
-    const exists = db.prepare('SELECT id FROM customers WHERE customer_no = ? LIMIT 1').get(String(n));
-    if (!exists) return String(n);
+  // Nomor 6 digit: 100000-999999. Coba ulang bila sudah terpakai.
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const n = String(Math.floor(100000 + Math.random() * 900000));
+    const exists = db.prepare('SELECT id FROM customers WHERE customer_no = ? LIMIT 1').get(n);
+    if (!exists) return n;
   }
-  // Fallback: angka 7 digit acak jika 20x percobaan gagal (sangat jarang)
-  const fallback = Math.floor(1000000 + Math.random() * 9000000);
-  return String(fallback);
+  // Cadangan: cari celah pertama pada rentang 6 digit.
+  const used = new Set(
+    db.prepare("SELECT customer_no FROM customers WHERE customer_no IS NOT NULL AND customer_no != ''").all()
+      .map(r => String(r.customer_no))
+  );
+  for (let n = 100000; n <= 999999; n++) {
+    const candidate = String(n);
+    if (!used.has(candidate)) return candidate;
+  }
+  throw new Error('Nomor pelanggan 6 digit sudah habis.');
 }
 
 /** Buat pendaftar online yang harus melewati survei dan approval sebelum aktif. */
@@ -719,6 +726,9 @@ function findCustomerByAny(val) {
 
   const byPppoe = db.prepare('SELECT id FROM customers WHERE pppoe_username = ?').get(cleanVal);
   if (byPppoe) return getCustomerById(byPppoe.id);
+
+  const byCustomerNo = db.prepare("SELECT id FROM customers WHERE customer_no = ? AND customer_no != ''").get(cleanVal);
+  if (byCustomerNo) return getCustomerById(byCustomerNo.id);
 
   const byMac = db.prepare('SELECT id FROM customers WHERE mac_address = ?').get(cleanVal);
   if (byMac) return getCustomerById(byMac.id);
