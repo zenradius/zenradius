@@ -359,11 +359,25 @@
                     <td>
                       <% if (req.status === 'pending' && req.payment_link) { %>
                         <a href="<%= req.payment_link %>" target="_blank" class="btn-pay">Bayar Sekarang</a>
+                      <% } else if (req.status === 'pending') { %>
+                        <a href="/customer/topup/pay/<%= req.id %>" class="btn-pay">Lihat Instruksi</a>
                       <% } else { %>
                         -
                       <% } %>
+                      <a href="/customer/topup/status/<%= req.id %>?format=json" target="_blank" rel="noopener" class="btn-pay" style="background:#334155;margin-left:6px">Cek Status</a>
                     </td>
                   </tr>
+                  <% if (req.status === 'pending') { %>
+                  <tr>
+                    <td colspan="5" style="padding-top:0">
+                      <form method="POST" action="/customer/topup/proof/<%= req.id %>" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <input type="file" name="proof" accept="image/png,image/jpeg,image/webp,application/pdf" required style="font-size:12px;color:#94a3b8">
+                        <button type="submit" class="btn-pay" style="background:#0f766e">Unggah Bukti Transfer</button>
+                        <span style="font-size:11px;color:#94a3b8">Untuk pembayaran manual / transfer bank.</span>
+                      </form>
+                    </td>
+                  </tr>
+                  <% } %>
                 <% }) %>
               </tbody>
             </table>

@@ -314,6 +314,42 @@ function deleteAgentHotspotPrice(agentId, priceId) {
     .run(priceId, agentId);
 }
 
+/** Hapus seluruh harga khusus reseller sehingga kembali ke harga default. */
+function resetAgentHotspotPrices(agentId) {
+  return db.prepare('DELETE FROM agent_hotspot_prices WHERE agent_id = ?').run(agentId);
+}
+
+/**
+ * Simpan banyak harga khusus sekaligus, opsional sekaligus memperbarui billing_fee.
+ * Item yang tidak valid dilewati agar satu kesalahan tidak membatalkan semuanya.
+ */
+function batchUpsertAgentHotspotPrices(agentId, { billing_fee, items } = {}) {
+  const agent = getAgentById(agentId);
+  if (!agent) throw new Error('Agent tidak ditemukan');
+
+  let feeUpdated = false;
+  if (billing_fee !== undefined && billing_fee !== null && String(billing_fee).trim() !== '') {
+    updateAgent(agentId, { billing_fee: Math.max(0, Number(billing_fee) || 0) });
+    feeUpdated = true;
+  }
+
+  let saved = 0;
+  const skipped = [];
+  if (Array.isArray(items)) {
+    for (const item of items) {
+      if (!item || !String(item.profile_name || '').trim()) { skipped.push(item); continue; }
+      try {
+        upsertAgentHotspotPrice(agentId, item);
+        saved += 1;
+      } catch (e) {
+        skipped.push({ profile_name: item.profile_name, error: e.message });
+      }
+    }
+  }
+
+  return { saved, skipped: skipped.length, feeUpdated, agent: getAgentById(agentId), prices: getAgentPrices(agentId) };
+}
+
 function listAgentTransactions({ agentId = null, limit = 300 } = {}) {
   const aId = agentId !== null && agentId !== undefined && String(agentId).trim() !== '' ? Number(agentId) : null;
   return db
@@ -879,6 +915,8 @@ module.exports = {
   getAgentPrices,
   upsertAgentHotspotPrice,
   deleteAgentHotspotPrice,
+  resetAgentHotspotPrices,
+  batchUpsertAgentHotspotPrices,
   listAgentTransactions,
   getAgentTransactionById,
   payInvoiceAsAgent,

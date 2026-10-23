@@ -1436,6 +1436,34 @@ export async function stopWhatsAppBot(reason = 'dinonaktifkan dari pengaturan') 
   whatsappStatus.lastUpdate = getCurrentDateInTimezone();
 }
 
+/**
+ * Bersihkan cache session/pre-key usang di folder auth Baileys.
+ * Hanya file `pre-key-*`, `session-*`, dan `app-state-sync-key-*` yang dihapus;
+ * `creds.json` dipertahankan agar tidak perlu scan QR ulang.
+ */
+export function cleanStaleSessionKeys() {
+  const authFolder = path.resolve(projectRoot, getSetting('whatsapp_auth_folder', 'auth_info_baileys'));
+  if (!fs.existsSync(authFolder)) return 0;
+
+  const stalePattern = /^(pre-key-\d+|session-\d+|app-state-sync-key-.*)\.json$/;
+  let removed = 0;
+  try {
+    for (const entry of fs.readdirSync(authFolder)) {
+      if (entry === 'creds.json' || !stalePattern.test(entry)) continue;
+      try {
+        fs.rmSync(path.join(authFolder, entry), { force: true });
+        removed += 1;
+      } catch (e) {
+        logger.warn(`WhatsApp: Gagal menghapus ${entry}: ${e.message}`);
+      }
+    }
+  } catch (e) {
+    logger.error(`WhatsApp: Gagal membaca folder auth ${authFolder}: ${e.message}`);
+  }
+  logger.info(`WhatsApp: ${removed} cache session/pre-key usang dibersihkan.`);
+  return removed;
+}
+
 export async function restartWhatsAppBot() {
   logger.info('WhatsApp: Memulai ulang bot...');
   if (reconnectTimer) {

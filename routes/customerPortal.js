@@ -4716,6 +4716,124 @@ router.post('/topup/create', express.urlencoded({ extended: true }), async (req,
   }
 });
 
+/** Tampilkan kembali instruksi pembayaran untuk sebuah pengajuan top-up. */
+router.get('/topup/pay/:id', async (req, res) => {
+  const settings = getSettingsWithCache();
+  if (!req.session.phone) return res.redirect('/customer/login?next=/customer/topup');
+  const customer = customerSvc.findCustomerByAny(req.session.phone);
+  if (!customer) return res.redirect('/customer/login');
+
+  const reqId = Number(req.params.id);
+  if (!Number.isFinite(reqId) || reqId <= 0) return res.redirect('/customer/topup?err=ID+top-up+tidak+valid');
+
+  const row = db.prepare('SELECT * FROM customer_topup_requests WHERE id = ? AND customer_id = ?').get(reqId, customer.id);
+  if (!row) return res.redirect('/customer/topup?err=Pengajuan+top-up+tidak+ditemukan');
+  if (row.status === 'paid') return res.redirect('/customer/topup?info=Top-up+sudah+lunas');
+  if (row.payment_link) return res.redirect(row.payment_link);
+
+  let payload = {};
+  try { payload = row.payment_payload ? JSON.parse(row.payment_payload) : {}; } catch (_) { payload = {}; }
+  const instructionData = buildPaymentInstructionData(
+    { payload, reference: row.payment_reference },
+    row.payment_gateway || '',
+    payload.channel || '',
+    row.amount
+  );
+
+  return renderPaymentInstructionPage(res, settings, {
+    backUrl: '/customer/topup',
+    info: 'Selesaikan pembayaran top-up berikut.',
+    helpText: 'Simpan referensi pembayaran sampai status top-up berubah menjadi lunas.',
+    mode: instructionData.mode,
+    qrImageUrl: instructionData.qrImageUrl,
+    details: instructionData.details,
+    kind: 'topup',
+    invoiceId: reqId,
+    customerName: customer?.name || 'Top-Up Saldo',
+    periodText: `Top-Up Rp ${Number(row.amount || 0).toLocaleString('id-ID')}`,
+    publicToken: '',
+    adminWaDigits: getFirstAdminWaDigits(settings),
+    gateway: row.payment_gateway || '',
+    reference: row.payment_reference || '',
+    amount: row.amount,
+    ...instructionData
+  });
+});
+
+/** Status singkat sebuah pengajuan top-up (dipakai untuk cek manual / polling). */
+router.get('/topup/status/:id', async (req, res) => {
+  const wantsJson = req.query.format === 'json' || (req.get('accept') || '').includes('application/json');
+  if (!req.session.phone) {
+    return wantsJson ? res.status(401).json({ success: false, error: 'Sesi tidak valid' }) : res.redirect('/customer/login');
+  }
+  const customer = customerSvc.findCustomerByAny(req.session.phone);
+  if (!customer) {
+    return wantsJson ? res.status(401).json({ success: false, error: 'Pelanggan tidak ditemukan' }) : res.redirect('/customer/login');
+  }
+
+  const reqId = Number(req.params.id);
+  const row = db.prepare('SELECT * FROM customer_topup_requests WHERE id = ? AND customer_id = ?').get(reqId, customer.id);
+  if (!row) {
+    return wantsJson ? res.status(404).json({ success: false, error: 'Pengajuan top-up tidak ditemukan' }) : res.redirect('/customer/topup?err=Pengajuan+top-up+tidak+ditemukan');
+  }
+
+  if (wantsJson) {
+    return res.json({
+      success: true,
+      data: {
+        id: row.id,
+        amount: row.amount,
+        status: row.status,
+        gateway: row.payment_gateway || '',
+        reference: row.payment_reference || '',
+        hasPaymentLink: Boolean(row.payment_link),
+        paidAt: row.paid_at || null,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }
+    });
+  }
+  res.redirect('/customer/topup?info=' + encodeURIComponent(`Status top-up: ${row.status.toUpperCase()}`));
+});
+
+/** Unggah bukti transfer untuk pengajuan top-up manual. */
+router.post('/topup/proof/:id', uploadProof.single('proof'), async (req, res) => {
+  const settings = getSettingsWithCache();
+  if (!req.session.phone) return res.redirect('/customer/login?next=/customer/topup');
+  const customer = customerSvc.findCustomerByAny(req.session.phone);
+  if (!customer) return res.redirect('/customer/login');
+
+  const reqId = Number(req.params.id);
+  const backTo = '/customer/topup?info=' + encodeURIComponent('Bukti transfer terkirim. Menunggu verifikasi admin.');
+  try {
+    const row = db.prepare('SELECT * FROM customer_topup_requests WHERE id = ? AND customer_id = ?').get(reqId, customer.id);
+    if (!row) throw new Error('Pengajuan top-up tidak ditemukan');
+    if (row.status === 'paid') throw new Error('Top-up ini sudah lunas');
+    if (!req.file) throw new Error('Bukti transfer belum dipilih');
+
+    const relPath = '/uploads/payment_proofs/' + String(req.file.filename || '');
+    const baseUrl = getBaseUrl(req, settings);
+    const proofUrl = `${baseUrl}${relPath}`;
+
+    let payload = {};
+    try { payload = row.payment_payload ? JSON.parse(row.payment_payload) : {}; } catch (_) { payload = {}; }
+    payload.proofUrl = proofUrl;
+    payload.proofUploadedAt = new Date().toISOString();
+    payload.proofUploadedBy = customer.id;
+
+    db.prepare(`
+      UPDATE customer_topup_requests
+      SET payment_payload = ?, payment_gateway = CASE WHEN payment_gateway = '' OR payment_gateway IS NULL THEN 'MANUAL' ELSE payment_gateway END,
+          updated_at = NOW_LOCAL()
+      WHERE id = ?
+    `).run(JSON.stringify(payload), reqId);
+
+    return res.redirect(backTo);
+  } catch (e) {
+    return res.redirect('/customer/topup?err=' + encodeURIComponent(String(e.message || 'Gagal unggah bukti')));
+  }
+});
+
 router.post('/agent-topup/create', express.urlencoded({ extended: true }), async (req, res) => {
   const settings = getSettingsWithCache();
   if (!req.session.isAgent) return res.redirect('/mitra/login');

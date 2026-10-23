@@ -424,7 +424,9 @@
       "desc_off": "WhatsApp bot is offline or reconnecting.",
       "device_fallback": "Device",
       "wait_qr_lib": "Waiting for QR Code library...",
-      "qr_fail": "Failed to render QR Code. Please check the browser console."
+      "qr_fail": "Failed to render QR Code. Please check the browser console.",
+      "repair_keys": "Repair Session",
+      "confirm_repair": "Clean stale session/pre-key cache and restart the bot? You will not need to scan the QR again."
     },
     "broadcast": {
       "title": "WhatsApp Broadcast",
@@ -1131,6 +1133,10 @@
       "keep_files": "Files not overwritten during update: settings.json and database folder. After update completes, restart the app to activate the new version.",
       "log_title": "Update Log",
       "confirm": "Run update from GitHub now? Make sure the internet connection is stable and the app will be restarted after completion."
+    },
+    "radius": {
+      "clear_stale": "Clear Stale Sessions",
+      "confirm_clear_stale": "Close sessions with no update for more than 2 hours?"
     }
   },
   "tech": {

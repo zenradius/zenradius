@@ -1892,6 +1892,37 @@ router.post('/api/agents/:id/prices/:priceId/delete', requireAdmin, restrictToAd
   }
 });
 
+router.post('/api/agents/:id/prices/batch', requireAdmin, restrictToAdmin, express.json(), (req, res) => {
+  try {
+    const agentId = Number(req.params.id);
+    if (!agentSvc.getAgentById(agentId)) {
+      return res.status(404).json({ success: false, error: 'Reseller tidak ditemukan.' });
+    }
+    const result = agentSvc.batchUpsertAgentHotspotPrices(agentId, req.body || {});
+    res.json({ success: true, message: 'Harga dan fee reseller berhasil disimpan.', ...result });
+  } catch (e) {
+    res.status(400).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/api/agents/:id/prices/reset', requireAdmin, restrictToAdmin, express.json(), (req, res) => {
+  try {
+    const agentId = Number(req.params.id);
+    if (!agentSvc.getAgentById(agentId)) {
+      return res.status(404).json({ success: false, error: 'Reseller tidak ditemukan.' });
+    }
+    const result = agentSvc.resetAgentHotspotPrices(agentId);
+    res.json({
+      success: true,
+      message: `${result.changes} harga khusus dihapus. Reseller kembali memakai harga default.`,
+      deleted: result.changes,
+      prices: agentSvc.getAgentPrices(agentId)
+    });
+  } catch (e) {
+    res.status(400).json({ success: false, error: e.message });
+  }
+});
+
 router.get('/', requireAdminSession, requireSidebarMenuAccess('dashboard'), async (req, res) => {
   try {
     const billing = billingSvc.getDashboardStats();
@@ -7169,6 +7200,40 @@ router.post('/whatsapp/test-notification', requireAdminSession, restrictToAdmin,
   res.redirect('/admin/whatsapp');
 });
 
+router.post('/whatsapp/test-fonnte', requireAdminSession, restrictToAdmin, express.json(), async (req, res) => {
+  try {
+    const phone = String(req.body?.phone || '').trim();
+    const message = String(req.body?.message || '').trim();
+    if (!phone) return res.status(400).json({ success: false, error: 'Nomor HP tujuan wajib diisi.' });
+
+    const token = String(getSetting('fonnte_token', '') || '').trim();
+    if (!token) return res.status(400).json({ success: false, error: 'Token Fonnte belum diisi di pengaturan.' });
+
+    const waSvc = require('../services/whatsappService');
+    const text = message || `🧪 Test Fonnte dari ZenRadius\n📅 ${getNowLocal()}`;
+    await waSvc.sendWhatsAppMessage(phone, text);
+    res.json({ success: true, message: `Pesan test berhasil dikirim ke ${phone} via Fonnte.` });
+  } catch (e) {
+    res.status(400).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/whatsapp/repair-keys', requireAdminSession, restrictToAdmin, async (req, res) => {
+  try {
+    const { cleanStaleSessionKeys, restartWhatsAppBot } = await import('../services/whatsappBot.mjs');
+    const cleaned = cleanStaleSessionKeys();
+    await restartWhatsAppBot();
+    req.session._msg = {
+      type: 'success',
+      text: `${cleaned} cache session/pre-key usang dibersihkan. Bot WhatsApp dimulai ulang tanpa scan QR ulang.`
+    };
+  } catch (e) {
+    logger.error(`[WA Repair] Gagal: ${e.message}`);
+    req.session._msg = { type: 'error', text: 'Gagal memperbaiki session key: ' + e.message };
+  }
+  res.redirect('/admin/whatsapp');
+});
+
 router.post('/whatsapp/test-gemini', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const apiKey = getSetting('gemini_api_key', '');
@@ -8348,6 +8413,25 @@ router.post('/radius/disconnect', requireAdminSession, restrictToAdmin, async (r
   } catch (e) {
     logger.error('Error disconnecting RADIUS session:', e);
     req.session._msg = { type: 'danger', text: 'Gagal memutus sesi RADIUS: ' + e.message };
+  }
+  res.redirect('/admin/radius-settings');
+});
+
+router.post('/radius/clear-stale', requireAdminSession, restrictToAdmin, async (req, res) => {
+  try {
+    const hours = Math.max(1, Number(req.body?.hours || 2) || 2);
+    const result = db.prepare(`
+      UPDATE radius_accounting
+      SET status_type = 2, terminate_cause = 10, updated_at = NOW_LOCAL()
+      WHERE status_type IN (1, 3) AND updated_at < datetime('now', ?)
+    `).run(`-${hours} hours`);
+    req.session._msg = {
+      type: 'success',
+      text: `${result.changes} sesi kadaluarsa / ghost dibersihkan (lebih dari ${hours} jam tanpa update).`
+    };
+  } catch (e) {
+    logger.error('Error clearing stale RADIUS sessions: ' + e.message);
+    req.session._msg = { type: 'danger', text: 'Gagal membersihkan sesi: ' + e.message };
   }
   res.redirect('/admin/radius-settings');
 });

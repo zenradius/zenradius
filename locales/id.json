@@ -424,7 +424,9 @@
       "desc_off": "Bot WhatsApp sedang offline atau sedang mencoba menghubungkan ulang.",
       "device_fallback": "Device",
       "wait_qr_lib": "Menunggu library QR Code...",
-      "qr_fail": "Gagal memproses QR Code. Silakan cek konsol browser."
+      "qr_fail": "Gagal memproses QR Code. Silakan cek konsol browser.",
+      "repair_keys": "Perbaiki Sesi",
+      "confirm_repair": "Bersihkan cache session/pre-key usang lalu mulai ulang bot? Anda tidak perlu scan QR ulang."
     },
     "broadcast": {
       "title": "Broadcast WhatsApp",
@@ -1131,6 +1133,10 @@
       "keep_files": "File yang tidak ditimpa saat update: settings.json dan folder database. Setelah update selesai, restart aplikasi agar versi baru aktif.",
       "log_title": "Log Update",
       "confirm": "Jalankan update dari GitHub sekarang? Pastikan koneksi internet aman dan aplikasi akan direstart setelah selesai."
+    },
+    "radius": {
+      "clear_stale": "Bersihkan Sesi Kadaluarsa",
+      "confirm_clear_stale": "Tutup sesi yang tidak update lebih dari 2 jam?"
     }
   },
   "tech": {

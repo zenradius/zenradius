@@ -477,6 +477,9 @@
       <div class="card mb16">
         <div class="card-hd">
           <h6><i class="bi bi-wifi"></i> Sesi Aktif RADIUS (Active Connections)</h6>
+          <form action="/admin/radius/clear-stale" method="POST" style="margin:0;" onsubmit="return confirm('<%= t('admin.radius.confirm_clear_stale', 'Tutup sesi yang tidak update lebih dari 2 jam?') %>')">
+            <button type="submit" class="btn btn-g btn-sm"><i class="bi bi-broom"></i> <%= t('admin.radius.clear_stale', 'Bersihkan Sesi Kadaluarsa') %></button>
+          </form>
         </div>
         <div class="card-bd" style="padding:0;">
           <div class="tbl-wrap">

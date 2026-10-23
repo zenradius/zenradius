@@ -328,6 +328,9 @@
           <form method="POST" action="/admin/whatsapp/test-notification" onsubmit="return confirm('<%= t('admin.whatsapp.confirm_test', 'Kirim test notifikasi WhatsApp ke admin sekarang?') %>');">
             <button class="btn btn-p"><i class="bi bi-send-check"></i> <%= t('admin.whatsapp.test_notification', 'Kirim Test Notif') %></button>
           </form>
+          <form method="POST" action="/admin/whatsapp/repair-keys" onsubmit="return confirm('<%= t('admin.whatsapp.confirm_repair', 'Bersihkan cache session/pre-key usang lalu mulai ulang bot? Anda tidak perlu scan QR ulang.') %>');">
+            <button class="btn btn-g"><i class="bi bi-wrench-adjustable"></i> <%= t('admin.whatsapp.repair_keys', 'Perbaiki Sesi') %></button>
+          </form>
           <form method="POST" action="/admin/whatsapp/reset" onsubmit="return confirm('<%= t('admin.whatsapp.confirm_reset', 'Apakah Anda yakin ingin menghapus sesi WhatsApp? Anda harus scan QR ulang setelah ini.') %>')">
             <button class="btn btn-d"><i class="bi bi-trash"></i> <%= t('admin.whatsapp.reset_session', 'Hapus Sesi / Reset') %></button>
           </form>
