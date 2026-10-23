@@ -2655,20 +2655,13 @@ router.post('/customers/:id/unisolate', requireAdminSession, async (req, res) =>
 // ─── CETAK STIKER MODEM / ONU (NAME TAG A4) ────────────────────────────────
 // Menyusun stiker name-tag personal (10 per lembar A4) dengan identitas
 // pelanggan aktif dan QR menuju /app/connect.
-function resolveStickerIdDisplay(c) {
-  const pppoe = String(c?.pppoe_username || '').trim();
-  const hotspot = String(c?.hotspot_username || '').trim();
-  const staticIp = String(c?.static_ip || '').trim();
-  return pppoe || hotspot || staticIp || `ID:${c?.id || ''}`;
-}
-
 function resolveStickerCsPhone(req) {
   const s = getSettings();
   return String(req.query.cs_phone || s.company_phone || s.company_whatsapp || '').trim() || '08xxxxxxxxxx';
 }
 
-const STICKER_FIELD_OPTIONS = ['customer_no', 'name', 'address', 'phone', 'package_name', 'id_display'];
-const DEFAULT_STICKER_FIELDS = ['customer_no', 'name', 'address', 'phone', 'package_name'];
+const STICKER_FIELD_OPTIONS = ['customer_no', 'name'];
+const DEFAULT_STICKER_FIELDS = ['customer_no', 'name'];
 
 function resolveStickerFields(query) {
   if (String(query.fields_configured || '') !== '1') return DEFAULT_STICKER_FIELDS;
@@ -2702,11 +2695,6 @@ router.get('/onu-stickers', requireAdminSession, requireSidebarMenuAccess('onu_s
       stickers.push({
         name: c.name,
         customer_no: c.customer_no || c.id,
-        id_display: resolveStickerIdDisplay(c),
-        package_name: c.package_name || '',
-        phone: c.phone || '',
-        area: c.area || '',
-        address: c.address || '',
         qrCodeDataUrl
       });
     }
@@ -2738,11 +2726,6 @@ router.get('/customers/:id/sticker-onu', requireAdminSession, async (req, res) =
     const stickers = [{
       name: customer.name,
       customer_no: customer.customer_no || customer.id,
-      id_display: resolveStickerIdDisplay(customer),
-      package_name: customer.package_name || '',
-      phone: customer.phone || '',
-      area: customer.area || '',
-      address: customer.address || '',
       qrCodeDataUrl
     }];
 
