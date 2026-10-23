@@ -587,7 +587,8 @@
       "actions": {
         "generate_invoice": "Generate Invoice",
         "pay_invoice": "Pay Invoice",
-        "sticker_onu": "Print ONU Sticker"
+        "sticker_onu": "Print ONU Sticker",
+        "manage_balance": "Manage Balance"
       },
       "generate_invoice_title": "Generate Invoice (Customer)",
       "generate_invoice_hint": "The invoice is created only for the selected customer. If it already exists, it will not be created again.",
@@ -602,7 +603,23 @@
       "paid_months_label": "Already paid:",
       "none_paid": "No paid months yet",
       "total_selected_label": "Selected total:",
-      "months_suffix": "months"
+      "months_suffix": "months",
+      "bulk_none": "No customers selected",
+      "bulk_delete": "Delete Selected",
+      "bulk_confirm": "Delete %d selected customers? PPPoE accounts on MikroTik will not be removed.",
+      "select_all": "Select all",
+      "balance_title": "Manage Customer Balance",
+      "balance_hint": "Balance can be used for invoice payments and PPOB purchases from the customer portal.",
+      "balance_current": "Current Balance",
+      "balance_action": "Action",
+      "balance_add": "Add Balance",
+      "balance_deduct": "Deduct Balance",
+      "balance_amount": "Amount (IDR)",
+      "balance_note": "Note (optional)",
+      "balance_note_ph": "Example: cash deposit at the office",
+      "balance_notify": "Send WhatsApp notification to customer",
+      "balance_save": "Save Balance",
+      "manage_balance": "Manage Balance"
     },
     "onu_stickers": {
       "title": "Print Modem / ONU Stickers",
@@ -917,12 +934,18 @@
         "try_again": "Try Again",
         "rename_prompt": "Enter a new name for ONU:",
         "rename": "Rename",
-        "reboot": "Reboot ONU"
+        "reboot": "Reboot ONU",
+        "test_connection": "Test Connection"
       },
       "errors": {
         "server_connect_failed": "Failed to reach server"
       },
-      "empty_no_onu": "No ONU data found."
+      "empty_no_onu": "No ONU data found.",
+      "test": {
+        "testing": "Testing connection...",
+        "ok": "Connection test succeeded",
+        "host_required": "IP Address / Host is required."
+      }
     },
     "map": {
       "add_odp": "Add ODP",

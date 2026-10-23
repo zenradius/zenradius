@@ -389,6 +389,101 @@ function deleteOlt(id) {
 }
 
 /**
+ * Uji koneksi OLT (draft dari form atau OLT tersimpan) tanpa menyimpan data.
+ * Memeriksa SNMP sysUptime, mendeteksi profil brand yang cocok, dan jumlah ONU.
+ * Bila kredensial telnet diisi, sekaligus mencoba login telnet.
+ */
+async function testOltConnection(data = {}) {
+  const host = String(data.host || '').trim();
+  const snmpPort = parseInt(data.snmp_port, 10) || 161;
+  const snmpCommunity = String(data.snmp_community || 'public').trim() || 'public';
+  const brandKey = String(data.brand || 'hioso').toLowerCase();
+  const telnetPort = parseInt(data.telnet_port, 10) || 23;
+  const user = String(data.web_user || '').trim();
+  const pass = String(data.web_password || '').trim();
+
+  if (!host) return { success: false, message: 'Host/IP OLT harus diisi.' };
+
+  const result = {
+    success: false,
+    host,
+    brand: brandKey,
+    snmp: { ok: false, error: null, uptime: null, profile: null, onus: 0 },
+    telnet: { ok: false, error: null, tested: false },
+    messages: []
+  };
+
+  const session = snmp.createSession(host, snmpCommunity, {
+    port: snmpPort,
+    timeout: 5000,
+    retries: 1,
+    version: snmp.Version2c
+  });
+  session.on('error', (err) => logger.warn(`[OLT Test] SNMP ${host}: ${err.message}`));
+
+  try {
+    const uptimeVbs = await new Promise((resolve) => {
+      session.get(['1.3.6.1.2.1.1.3.0'], (err, vbs) => {
+        if (err) { result.snmp.error = err.message; return resolve(null); }
+        resolve(vbs);
+      });
+    });
+
+    if (uptimeVbs && uptimeVbs[0] && !snmp.isVarbindError(uptimeVbs[0])) {
+      result.snmp.ok = true;
+      result.snmp.uptime = decodeUptime(uptimeVbs[0].value);
+
+      // Coba profil brand yang dipilih lebih dulu, lalu profil brand lain sebagai cadangan.
+      const selected = (BRAND_PROFILES[brandKey] || []).map(p => ({ ...p, __brandKey: brandKey }));
+      const others = Object.keys(BRAND_PROFILES)
+        .filter(k => k !== brandKey)
+        .reduce((acc, k) => acc.concat((BRAND_PROFILES[k] || []).map(p => ({ ...p, __brandKey: k }))), []);
+
+      for (const profile of [...selected, ...others]) {
+        const matched = await probeOid(session, profile.probe_oid);
+        if (matched) {
+          result.snmp.profile = profile.name;
+          if (profile.__brandKey !== brandKey) result.snmp.profileBrand = profile.__brandKey;
+          try {
+            const statusMap = await slowWalk(session, profile.status_table, 500);
+            result.snmp.onus = Object.keys(statusMap).length;
+          } catch (_) { /* jumlah ONU opsional */ }
+          break;
+        }
+      }
+
+      result.messages.push(
+        `SNMP OK — uptime ${result.snmp.uptime}, profil ${result.snmp.profile || 'standar'}, ${result.snmp.onus} ONU terbaca.`
+      );
+    } else if (!result.snmp.error) {
+      result.snmp.error = 'Tidak ada respons SNMP (cek IP, community, dan port).';
+    }
+  } catch (e) {
+    result.snmp.error = e.message;
+  } finally {
+    try { session.close(); } catch (_) {}
+  }
+
+  // Telnet bersifat opsional: hanya diuji bila user/password diisi.
+  if (user || pass) {
+    result.telnet.tested = true;
+    try {
+      await telnetLoginAndRun(host, user, pass, ['exit'], { port: telnetPort, timeout: 8000 });
+      result.telnet.ok = true;
+      result.messages.push('Login Telnet berhasil.');
+    } catch (e) {
+      result.telnet.error = e.message;
+    }
+  }
+
+  result.success = result.snmp.ok || result.telnet.ok;
+  if (!result.success && result.messages.length === 0) {
+    result.message = result.snmp.error || 'Koneksi gagal: SNMP dan Telnet tidak merespons.';
+  }
+  return result;
+}
+
+/**
  * Normalisasi OID: hapus prefix 'iso.' atau awalan '1.' yang ganda
  */
 const normalizeOid = (oid) => {
@@ -2366,5 +2461,5 @@ async function configureWanViaAcs(sn, data) {
 
  module.exports = {
   getAllOlts, getActiveOlts, getOltById, createOlt, updateOlt, deleteOlt, getOltStats, getAllOltsStats, rebootOnu, renameOnu, authorizeOnu,
-  configureOnuWan, configureZteWanViaGoApi, configureWanViaAcs
+  configureOnuWan, configureZteWanViaGoApi, configureWanViaAcs, testOltConnection
 };

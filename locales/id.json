@@ -587,7 +587,8 @@
       "actions": {
         "generate_invoice": "Generate Tagihan",
         "pay_invoice": "Bayar Tagihan",
-        "sticker_onu": "Cetak Stiker ONU"
+        "sticker_onu": "Cetak Stiker ONU",
+        "manage_balance": "Kelola Saldo"
       },
       "generate_invoice_title": "Generate Tagihan (Pelanggan)",
       "generate_invoice_hint": "Tagihan hanya dibuat untuk pelanggan yang dipilih. Jika sudah ada, tidak akan dibuat ulang.",
@@ -602,7 +603,23 @@
       "paid_months_label": "Sudah lunas:",
       "none_paid": "Belum ada yang lunas",
       "total_selected_label": "Total dipilih:",
-      "months_suffix": "bulan"
+      "months_suffix": "bulan",
+      "bulk_none": "Belum ada pelanggan dipilih",
+      "bulk_delete": "Hapus Terpilih",
+      "bulk_confirm": "Hapus %d pelanggan terpilih? Akun PPPoE di MikroTik tidak akan dihapus.",
+      "select_all": "Pilih semua",
+      "balance_title": "Kelola Saldo Pelanggan",
+      "balance_hint": "Saldo dapat dipakai untuk pembayaran tagihan dan pembelian PPOB dari portal pelanggan.",
+      "balance_current": "Saldo Saat Ini",
+      "balance_action": "Tindakan",
+      "balance_add": "Tambah Saldo",
+      "balance_deduct": "Potong Saldo",
+      "balance_amount": "Nominal (Rp)",
+      "balance_note": "Catatan (opsional)",
+      "balance_note_ph": "Contoh: deposit tunai di kantor",
+      "balance_notify": "Kirim notifikasi WhatsApp ke pelanggan",
+      "balance_save": "Simpan Saldo",
+      "manage_balance": "Kelola Saldo"
     },
     "onu_stickers": {
       "title": "Cetak Stiker Modem / ONU",
@@ -917,12 +934,18 @@
         "try_again": "Coba Lagi",
         "rename_prompt": "Masukkan nama baru untuk ONU:",
         "rename": "Ubah Nama",
-        "reboot": "Reboot ONU"
+        "reboot": "Reboot ONU",
+        "test_connection": "Test Koneksi"
       },
       "errors": {
         "server_connect_failed": "Gagal menghubungi server"
       },
-      "empty_no_onu": "Tidak ada data ONU ditemukan."
+      "empty_no_onu": "Tidak ada data ONU ditemukan.",
+      "test": {
+        "testing": "Menguji koneksi...",
+        "ok": "Test koneksi berhasil",
+        "host_required": "IP Address / Host wajib diisi."
+      }
     },
     "map": {
       "add_odp": "Tambah ODP",

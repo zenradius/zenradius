@@ -187,6 +187,13 @@
           <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.customers.add', 'Tambah Pelanggan') %></button>
         </div>
       </div>
+      <div class="card-bd" style="padding-bottom:0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span id="bulkSelectionInfo" style="font-size:12px;color:var(--muted)"><%= t('admin.customers.bulk_none', 'Belum ada pelanggan dipilih') %></span>
+        <form method="POST" action="/admin/customers/delete-bulk" id="bulkDeleteForm" style="margin:0" onsubmit="return confirmBulkDelete(event)">
+          <div id="bulkIdsContainer"></div>
+          <button type="submit" class="btn btn-d btn-sm" id="bulkDeleteBtn" disabled><i class="bi bi-trash3"></i> <%= t('admin.customers.bulk_delete', 'Hapus Terpilih') %></button>
+        </form>
+      </div>
       <div class="card-bd" style="padding-bottom:0">
         <div class="filter-title"><i class="bi bi-funnel-fill"></i> <%= t('admin.common.search_filter', 'Pencarian & Filter') %></div>
         <form method="GET" action="/admin/customers" class="srow">
@@ -224,6 +231,7 @@
         <table class="dtbl">
           <thead>
             <tr>
+              <th style="width:32px"><input type="checkbox" id="selectAllCustomers" title="<%= t('admin.customers.select_all', 'Pilih semua') %>" onchange="toggleAllCustomers(this)"></th>
               <th><%= t('admin.customers.table.no', 'No. Pelanggan') %></th>
               <th><%= t('admin.customers.table.name', 'Nama') %></th>
               <th><%= t('admin.customers.table.phone_tag', 'Telepon / Tag ONU') %></th>
@@ -241,6 +249,7 @@
           <% } %>
           <% customers.forEach((c, i) => { %>
             <tr>
+              <td><input type="checkbox" class="cust-select" value="<%= c.id %>" onchange="updateBulkSelection()"></td>
               <td>
                 <span class="mono" style="font-weight:800;color:var(--primary);font-size:12px"><%= (c.customer_no || String(c.id).padStart(8, '0')).replace(/(\d{3})(\d{3})/, '$1 $2') %></span>
               </td>
@@ -333,6 +342,7 @@
               <td>
                 <button class="btn btn-g btn-icon btn-sm" title="Lihat Detail & Koneksi MikroTik" onclick="viewCustDetail(<%= i %>)"><i class="bi bi-eye"></i></button>
                 <a href="/admin/customers/<%= c.id %>/sticker-onu" target="_blank" rel="noopener" class="btn btn-g btn-icon btn-sm" title="<%= t('admin.customers.actions.sticker_onu', 'Cetak Stiker ONU') %>"><i class="bi bi-qr-code-scan"></i></a>
+                <button class="btn btn-g btn-icon btn-sm" title="<%= t('admin.customers.actions.manage_balance', 'Kelola Saldo') %>" data-idx="<%= i %>" onclick="openBalance(+this.dataset.idx)"><i class="bi bi-wallet2"></i></button>
                 <button class="btn btn-s btn-icon btn-sm" title="<%= t('admin.customers.actions.generate_invoice', 'Generate Tagihan') %>" data-idx="<%= i %>" onclick="openGenInvoice(+this.dataset.idx)"><i class="bi bi-lightning-charge"></i></button>
                 <button class="btn btn-p btn-icon btn-sm" title="<%= t('admin.customers.actions.pay_invoice', 'Bayar Tagihan') %>" data-idx="<%= i %>" onclick="openPayInvoice(+this.dataset.idx)"><i class="bi bi-cash-coin"></i></button>
                 <% if (typeof session !== 'undefined' && session && !session.isCashier) { %>
@@ -975,6 +985,51 @@
   </div>
 </div>
 
+<!-- Modal Kelola Saldo Pelanggan -->
+<div class="mo" id="balanceModal">
+  <div class="mb" style="max-width:520px">
+    <div class="mh"><span class="mt"><i class="bi bi-wallet2"></i> <%= t('admin.customers.balance_title', 'Kelola Saldo Pelanggan') %></span><button class="mc" onclick="closeModal('balanceModal')">&times;</button></div>
+    <form method="POST" id="balanceForm">
+      <div class="mbody">
+        <div class="alert alert-i"><i class="bi bi-info-circle"></i> <%= t('admin.customers.balance_hint', 'Saldo dapat dipakai untuk pembayaran tagihan dan pembelian PPOB dari portal pelanggan.') %></div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.customers.pay_invoice_customer', 'Pelanggan') %></label>
+          <input class="fc" id="balanceCustomer" readonly>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.customers.balance_current', 'Saldo Saat Ini') %></label>
+          <input class="fc" id="balanceCurrent" readonly>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl"><%= t('admin.customers.balance_action', 'Tindakan') %></label>
+            <select class="fs" name="action_type" id="balanceAction">
+              <option value="add"><%= t('admin.customers.balance_add', 'Tambah Saldo') %></option>
+              <option value="deduct"><%= t('admin.customers.balance_deduct', 'Potong Saldo') %></option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.customers.balance_amount', 'Nominal (Rp)') %></label>
+            <input type="number" class="fc" name="amount" id="balanceAmount" min="1" step="1" placeholder="50000" required>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.customers.balance_note', 'Catatan (opsional)') %></label>
+          <input type="text" class="fc" name="note" id="balanceNote" maxlength="200" placeholder="<%= t('admin.customers.balance_note_ph', 'Contoh: deposit tunai di kantor') %>">
+        </div>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+          <input type="checkbox" name="send_wa" value="on" style="width:16px;height:16px">
+          <span><%= t('admin.customers.balance_notify', 'Kirim notifikasi WhatsApp ke pelanggan') %></span>
+        </label>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('balanceModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check2-circle"></i> <%= t('admin.customers.balance_save', 'Simpan Saldo') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal Bayar Tagihan (Per Pelanggan) -->
 <div class="mo" id="payInvoiceModal">
   <div class="mb" style="max-width:560px">
@@ -1356,6 +1411,11 @@ const appSettings = safeParseJSON('settings-data', {});
 let pickerMap, pickerMarker, activePickerType;
 let payCustomerId = null;
 let payBillingMeta = null;
+
+const I18N_CUST = {
+  bulkNone: <%- JSON.stringify(t('admin.customers.bulk_none', 'Belum ada pelanggan dipilih')) %>,
+  bulkConfirm: <%- JSON.stringify(t('admin.customers.bulk_confirm', 'Hapus %d pelanggan terpilih? Akun PPPoE di MikroTik tidak akan dihapus.')) %>
+};
 
 function formatBytesVal(b) {
   const num = Number(b) || 0;
@@ -1754,6 +1814,54 @@ function openPayInvoice(idx) {
   Array.from(document.querySelectorAll('#payInvoiceModal .pay-month')).forEach(cb => { cb.checked = parseInt(cb.value) === currentMonth; });
   openModal('payInvoiceModal');
   loadBillingYear();
+}
+
+function openBalance(idx) {
+  const c = customersData[idx];
+  if (!c) return;
+  document.getElementById('balanceForm').action = '/admin/customers/' + c.id + '/topup';
+  document.getElementById('balanceCustomer').value = (c.name || '-') + (c.phone ? (' (' + c.phone + ')') : '');
+  document.getElementById('balanceCurrent').value = 'Rp ' + Number(c.balance || 0).toLocaleString('id-ID');
+  document.getElementById('balanceAction').value = 'add';
+  document.getElementById('balanceAmount').value = '';
+  document.getElementById('balanceNote').value = '';
+  openModal('balanceModal');
+}
+
+function getSelectedCustomerIds() {
+  return Array.from(document.querySelectorAll('.cust-select:checked')).map(cb => cb.value);
+}
+
+function updateBulkSelection() {
+  const ids = getSelectedCustomerIds();
+  const info = document.getElementById('bulkSelectionInfo');
+  const btn = document.getElementById('bulkDeleteBtn');
+  const container = document.getElementById('bulkIdsContainer');
+  if (btn) btn.disabled = ids.length === 0;
+  if (info) info.textContent = ids.length
+    ? ids.length + ' pelanggan dipilih'
+    : (I18N_CUST.bulkNone || 'Belum ada pelanggan dipilih');
+  if (container) {
+    container.innerHTML = ids.map(id => '<input type="hidden" name="customer_ids" value="' + id + '">').join('');
+  }
+  const all = document.querySelectorAll('.cust-select');
+  const master = document.getElementById('selectAllCustomers');
+  if (master) master.checked = all.length > 0 && ids.length === all.length;
+}
+
+function toggleAllCustomers(master) {
+  document.querySelectorAll('.cust-select').forEach(cb => { cb.checked = master.checked; });
+  updateBulkSelection();
+}
+
+function confirmBulkDelete(event) {
+  const ids = getSelectedCustomerIds();
+  if (!ids.length) {
+    event.preventDefault();
+    return false;
+  }
+  const msg = (I18N_CUST.bulkConfirm || 'Hapus %d pelanggan terpilih? Akun PPPoE di MikroTik tidak akan dihapus.').replace('%d', ids.length);
+  return confirm(msg);
 }
 
 function toRupiah(n) {

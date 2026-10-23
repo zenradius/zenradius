@@ -456,6 +456,7 @@
               <td><span class="badge <%= olt.is_active ? 'bs' : 'bd' %>"><%= olt.is_active ? t('common.active', 'Aktif') : t('common.inactive', 'Nonaktif') %></span></td>
               <td>
                 <div class="d-flex gap-2">
+                  <button class="btn btn-g btn-icon btn-sm" onclick="testOltSaved('<%= olt.id %>')" title="<%= t('admin.olts.actions.test_connection', 'Test Koneksi') %>"><i class="bi bi-plug"></i></button>
                   <button class="btn btn-g btn-icon btn-sm" onclick="editOlt('<%= olt.id %>')"><i class="bi bi-pencil"></i></button>
                   <form action="/admin/olts/<%= olt.id %>/delete" method="POST" onsubmit="return confirm(I18N.confirmDeleteOlt)">
                     <button type="submit" class="btn btn-d btn-icon btn-sm"><i class="bi bi-trash"></i></button>
@@ -477,7 +478,7 @@
 <!-- Modal Tambah -->
 <div class="mo" id="addOltModal">
   <div class="mb">
-    <form action="/admin/olts" method="POST">
+    <form action="/admin/olts" method="POST" id="addOltForm">
       <div class="mh"><span class="mt"><%= t('admin.olts.add_modal.title', 'Tambah OLT Baru') %></span><button type="button" class="mc" onclick="closeModal('addOltModal')">&times;</button></div>
       <div class="mbody">
         <div class="fg"><label class="fl"><%= t('admin.olts.form.name', 'Nama OLT') %></label><input type="text" name="name" class="fc" placeholder="<%= t('admin.olts.form.name_placeholder', 'Contoh: OLT Pusat') %>" required></div>
@@ -512,6 +513,7 @@
       </div>
       <div class="mf">
         <button type="button" class="btn btn-g" onclick="closeModal('addOltModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="button" class="btn btn-s" onclick="testOltDraft()"><i class="bi bi-plug"></i> <%= t('admin.olts.actions.test_connection', 'Test Koneksi') %></button>
         <button type="submit" class="btn btn-p"><%= t('admin.olts.add_modal.save', 'Simpan Perangkat') %></button>
       </div>
     </form>
@@ -682,11 +684,51 @@ const I18N = {
   failedPrefix: "<%= t('admin.olts.failed_prefix', 'Gagal') %>: ",
   errorPrefix: "<%= t('admin.olts.error_prefix', 'Error') %>: ",
   statusOnline: "<%= t('admin.olts.status.online', 'Online') %>",
-  statusOffline: "<%= t('admin.olts.status.offline', 'Offline') %>"
+  statusOffline: "<%= t('admin.olts.status.offline', 'Offline') %>",
+  testing: "<%= t('admin.olts.test.testing', 'Menguji koneksi...') %>",
+  testOk: "<%= t('admin.olts.test.ok', 'Test koneksi berhasil') %>",
+  hostRequired: "<%= t('admin.olts.test.host_required', 'IP Address / Host wajib diisi.') %>"
 };
 
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function formatTestResult(data) {
+  if (!data) return 'Tidak ada respons.';
+  const lines = [];
+  if (data.messages && data.messages.length) lines.push(...data.messages);
+  if (!data.snmp?.ok && data.snmp?.error) lines.push('SNMP: ' + data.snmp.error);
+  if (data.telnet?.tested && !data.telnet?.ok && data.telnet?.error) lines.push('Telnet: ' + data.telnet.error);
+  if (!lines.length) lines.push(data.message || 'Koneksi gagal.');
+  return lines.join('\n');
+}
+
+async function runOltTest(url, payload) {
+  const btnText = I18N.testing || 'Menguji koneksi...';
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {})
+    });
+    const data = await res.json().catch(() => ({}));
+    alert((data.success ? (I18N.testOk || 'Test koneksi berhasil') : (I18N.failedPrefix || 'Gagal')) + ':\n\n' + formatTestResult(data));
+  } catch (e) {
+    alert((I18N.errorPrefix || 'Error') + ': ' + e.message + ' (' + btnText + ')');
+  }
+}
+
+function testOltSaved(id) {
+  runOltTest('/admin/olts/' + id + '/test-connection', {});
+}
+
+function testOltDraft() {
+  const form = document.getElementById('addOltForm');
+  if (!form) return;
+  const data = Object.fromEntries(new FormData(form).entries());
+  if (!String(data.host || '').trim()) { alert(I18N.hostRequired || 'IP Address / Host wajib diisi.'); return; }
+  runOltTest('/admin/olts/test-connection', data);
+}
 
 const oltsData = JSON.parse(document.getElementById('olt-data-store').dataset.olts);
 

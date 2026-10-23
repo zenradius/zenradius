@@ -925,6 +925,26 @@ router.post('/olts', requireAdminSession, restrictToAdmin, express.urlencoded({ 
   res.redirect('/admin/olts');
 });
 
+router.post('/olts/test-connection', requireAdminSession, restrictToAdmin, express.json(), async (req, res) => {
+  try {
+    const result = await oltSvc.testOltConnection(req.body || {});
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.post('/olts/:id/test-connection', requireAdminSession, restrictToAdmin, async (req, res) => {
+  try {
+    const olt = oltSvc.getOltById(req.params.id);
+    if (!olt) return res.status(404).json({ success: false, message: 'OLT tidak ditemukan.' });
+    const result = await oltSvc.testOltConnection(olt);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 router.post('/olts/:id/update', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
   try {
     oltSvc.updateOlt(req.params.id, req.body);
@@ -2471,6 +2491,60 @@ router.post('/customers/:id/delete', requireAdminSession, async (req, res) => {
     req.session._msg = { type: 'success', text: 'Pelanggan berhasil dihapus.' };
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
+  }
+  res.redirect('/admin/customers');
+});
+
+router.post('/customers/:id/topup', requireAdminSession, async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    const amount = Number(req.body.amount);
+    const actionType = req.body.action_type === 'deduct' ? 'deduct' : 'add';
+    const note = String(req.body.note || '').trim();
+    const sendWhatsApp = req.body.send_wa === 'on' || req.body.send_wa === 'true' || req.body.send_wa === true;
+    const actorName = req.session?.isCashier
+      ? (req.session.cashierName || 'Kasir')
+      : (req.session.adminUser || 'Admin');
+
+    if (!custId || !Number.isFinite(amount) || amount <= 0) {
+      throw new Error('Nominal saldo harus lebih dari 0.');
+    }
+
+    const result = await customerSvc.topupCustomerBalance(custId, amount, note, actorName, actionType, sendWhatsApp);
+    const actionText = actionType === 'deduct' ? 'dipotong' : 'ditambahkan';
+    req.session._msg = {
+      type: 'success',
+      text: `Saldo ${result.customer?.name || ''} berhasil ${actionText} Rp ${amount.toLocaleString('id-ID')}. Sisa saldo: Rp ${result.after.toLocaleString('id-ID')}`
+    };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal kelola saldo: ' + e.message };
+  }
+  res.redirect('/admin/customers');
+});
+
+router.post('/customers/delete-bulk', requireAdminSession, express.urlencoded({ extended: true }), async (req, res) => {
+  try {
+    const raw = req.body.customer_ids;
+    const ids = (Array.isArray(raw) ? raw : [raw])
+      .map(v => Number(v))
+      .filter(n => Number.isFinite(n) && n > 0);
+    if (!ids.length) throw new Error('Tidak ada pelanggan yang dipilih.');
+
+    let deleted = 0;
+    for (const id of ids) {
+      try {
+        await customerSvc.deleteCustomer(id);
+        deleted += 1;
+      } catch (e) {
+        logger.warn(`[Customer Bulk Delete] Gagal hapus pelanggan ${id}: ${e.message}`);
+      }
+    }
+    req.session._msg = {
+      type: deleted ? 'success' : 'error',
+      text: `${deleted} dari ${ids.length} pelanggan berhasil dihapus. Akun PPPoE di MikroTik tetap aman.`
+    };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal hapus massal: ' + e.message };
   }
   res.redirect('/admin/customers');
 });

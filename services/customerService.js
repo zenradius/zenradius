@@ -905,6 +905,71 @@ async function activateCustomer(id) {
   return true;
 }
 
+/** Ambil saldo pelanggan saat ini. */
+function getCustomerBalance(customerId) {
+  const row = db.prepare('SELECT balance FROM customers WHERE id = ?').get(Number(customerId));
+  return row ? Number(row.balance || 0) : 0;
+}
+
+/**
+ * Tambah atau potong saldo pelanggan dari panel admin.
+ * Mencatat mutasi ke customer_topup_requests agar riwayat tetap rapi.
+ */
+async function topupCustomerBalance(customerId, amount, note = '', actorName = 'Admin', actionType = 'add', sendWhatsApp = false) {
+  const cid = Number(customerId);
+  const amt = Math.abs(Number(amount) || 0);
+  if (!cid || amt <= 0) throw new Error('ID pelanggan dan nominal valid wajib diisi.');
+
+  const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(cid);
+  if (!customer) throw new Error('Pelanggan tidak ditemukan.');
+
+  const isDeduct = actionType === 'deduct';
+  const delta = isDeduct ? -amt : amt;
+  const before = Number(customer.balance || 0);
+  const after = Math.max(0, before + delta);
+
+  db.transaction(() => {
+    db.prepare('UPDATE customers SET balance = ? WHERE id = ?').run(after, cid);
+    const desc = String(note || '').trim() || (isDeduct
+      ? `Pemotongan saldo oleh ${actorName}`
+      : `Deposit manual oleh ${actorName}`);
+    try {
+      db.prepare(`
+        INSERT INTO customer_topup_requests
+          (customer_id, amount, payment_gateway, payment_order_id, payment_reference, payment_payload, status, paid_at, created_at, updated_at)
+        VALUES (?, ?, 'MANUAL_ADMIN', ?, ?, ?, 'paid', NOW_LOCAL(), NOW_LOCAL(), NOW_LOCAL())
+      `).run(
+        cid,
+        delta,
+        `MANUAL-${Date.now()}`,
+        desc,
+        JSON.stringify({ actorName, actionType, note: desc, before, after, timestamp: new Date().toISOString() })
+      );
+    } catch (e) {
+      logger.warn('[topupCustomerBalance] gagal mencatat mutasi saldo: ' + e.message);
+    }
+  })();
+
+  if (sendWhatsApp && customer.phone) {
+    try {
+      const { sendWA, whatsappStatus } = await import('./whatsappBot.mjs');
+      if (whatsappStatus && whatsappStatus.connection === 'open') {
+        const actionText = isDeduct ? 'dipotong' : 'ditambahkan';
+        await sendWA(customer.phone,
+          `💰 *SALDO ANDA ${isDeduct ? 'BERKURANG' : 'BERTAMBAH'}*\n\n` +
+          `Nominal: Rp ${amt.toLocaleString('id-ID')}\n` +
+          `Sisa saldo: Rp ${after.toLocaleString('id-ID')}\n` +
+          `Catatan: ${String(note || '').trim() || '-'}\n\nTerima kasih.`
+        );
+      }
+    } catch (e) {
+      logger.warn('[topupCustomerBalance] gagal kirim WhatsApp: ' + e.message);
+    }
+  }
+
+  return { customer, before, after, delta };
+}
+
 module.exports = {
   getAllCustomers, getAllCustomerAreas, getCustomerById, createCustomer, createOnlineRegistration, updateCustomer, deleteCustomer, getCustomerStats,
   getAllPackages, getPackageById, createPackage, updatePackage, deletePackage,
@@ -912,5 +977,5 @@ module.exports = {
   resetPromoCyclesUsed, getEffectiveRouterId, verifyCustomerPortalPassword,
   getRegistrationById, getOnlineRegistrations, getRegistrationByNumber, getRegistrationByPhone,
   submitRegistrationSurvey, approveOnlineRegistration, rejectOnlineRegistration,
-  generateRegistrationNumber, generateCustomerNo
+  generateRegistrationNumber, generateCustomerNo, getCustomerBalance, topupCustomerBalance
 };
