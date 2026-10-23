@@ -130,27 +130,26 @@
 
     /* Print Page Container */
     .print-sheet {
-      width: 210mm;
-      min-height: 297mm;
+      width: 198mm;
+      min-height: 285mm;
       margin: 0 auto 20px;
       background: #ffffff;
-      padding: 4mm 4mm;
+      padding: 0;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
       border-radius: 4px;
       page-break-after: always;
       break-after: page;
     }
 
-    /* Sticker Grid: 2 Columns x 5 Rows = 10 stickers per A4 */
     .sticker-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 3.5mm 3.5mm;
+      display:grid;
+      grid-template-columns:repeat(2, 94mm);
+      justify-content:center;
+      gap:3mm;
     }
 
-    /* Individual Sticker: Name Tag Size (~96mm x 53mm) */
     .sticker-card {
-      width: 100%;
+      width:94mm;
       height: 54mm;
       border: 0.35mm dashed #aab9ba;
       border-radius: 2mm;
@@ -408,12 +407,8 @@
     .onu-print-page .screen-hint { padding: 0 18px 16px; color: var(--muted); font-size: 12px; }
     .onu-print-page .print-preview-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin: 0 0 10px; color: var(--muted); font-size:12px; }
     .onu-print-page .sheet-viewport { overflow-x:auto; padding: 0 0 14px; }
-    .onu-print-page .print-sheet { box-shadow: 0 6px 24px rgba(8,35,62,.14); border:1px solid #d9e4eb; }
-    .onu-print-page .sticker-grid { gap: 2.5mm; }
-    .onu-print-page .sticker-card { --label-accent:var(--primary); --label-surface:var(--bg2); --label-surface-alt:var(--bg3); --label-ink:var(--text); --label-muted:var(--muted); --label-border:var(--border); display:flex; padding:0; height:54mm; border:0; border-radius:2.2mm; color:var(--label-ink); background:var(--label-surface); box-shadow:inset 0 0 0 .25mm var(--label-border); }
-    .onu-print-page .page-size-8 .sticker-card { height:68mm; }
-    .onu-print-page .page-size-6 .sticker-card { height:92mm; }
-    .onu-print-page .page-size-4 .sticker-card { height:141mm; }
+    .onu-print-page .print-sheet { width:198mm; min-height:285mm; box-shadow: 0 6px 24px rgba(8,35,62,.14); border:1px solid #d9e4eb; }
+    .onu-print-page .sticker-card { --label-accent:var(--primary); --label-surface:var(--bg2); --label-surface-alt:var(--bg3); --label-ink:var(--text); --label-muted:var(--muted); --label-border:var(--border); display:flex; width:94mm; padding:0; height:54mm; border:0; border-radius:2.2mm; color:var(--label-ink); background:var(--label-surface); box-shadow:inset 0 0 0 .25mm var(--label-border); }
     .onu-print-page .sticker-card::before { display:none; }
     .label-header { height:9.5mm; flex:0 0 9.5mm; padding:1.2mm 3mm; display:flex; justify-content:space-between; align-items:center; gap:4mm; color:var(--label-ink); background:var(--label-surface-alt); border-radius:2.2mm 2.2mm 0 0; position:relative; overflow:hidden; }
     .label-header::after { content:""; position:absolute; height:1.2mm; width:35mm; right:14mm; bottom:-.6mm; background:var(--label-accent); transform:skewX(-35deg); }
@@ -523,10 +518,10 @@
         <div class="fg">
           <label class="fl"><%= t('admin.onu_stickers.sheet_size', 'Stiker per lembar A4') %></label>
           <select class="fc" name="page_size">
-            <option value="10" <%= stickersPerPage === 10 ? 'selected' : '' %>>10 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
-            <option value="8" <%= stickersPerPage === 8 ? 'selected' : '' %>>8 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
-            <option value="6" <%= stickersPerPage === 6 ? 'selected' : '' %>>6 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
-            <option value="4" <%= stickersPerPage === 4 ? 'selected' : '' %>>4 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
+            <option value="10" <%= stickersPerPage === 10 ? 'selected' : '' %>>94 × 54 mm · 10 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
+            <option value="8" <%= stickersPerPage === 8 ? 'selected' : '' %>>94 × 54 mm · 8 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
+            <option value="6" <%= stickersPerPage === 6 ? 'selected' : '' %>>94 × 54 mm · 6 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
+            <option value="4" <%= stickersPerPage === 4 ? 'selected' : '' %>>94 × 54 mm · 4 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
           </select>
         </div>
         <div class="fg">
@@ -551,19 +546,19 @@
     </form>
     <div class="screen-hint" style="display:flex;align-items:center;gap:6px;">
       <i class="bi bi-info-circle"></i>
-      <%= t('admin.onu_stickers.hint', 'Ukuran stiker diatur presisi standar Name Tag / Kartu ID (~8.5cm x 5.4cm). Format A4 memuat 10 stiker per lembar. Gunakan kertas stiker HVS atau Glossy.') %>
+      <%= t('admin.onu_stickers.hint', 'Ukuran setiap stiker 94 × 54 mm. Ukuran bodi ONU ZTE/Huawei berbeda tiap model; ukur area datar sebelum menempel. Saat mencetak A4, pilih skala 100% / Actual size.') %>
     </div>
   </div>
   </div>
 
   <div class="print-preview-head screen-only">
     <span><i class="bi bi-printer"></i> <%= t('admin.onu_stickers.preview', 'Pratinjau hasil cetak') %></span>
-    <span><%= stickers.length %> <%= t('admin.onu_stickers.sticker_count', 'stiker') %></span>
+    <span><%= stickers.length %> <%= t('admin.onu_stickers.sticker_count', 'stiker') %> · 94 × 54 mm</span>
   </div>
   <div class="sheet-viewport">
 
   <% if (stickers.length > 0) { %>
-  <!-- Personalized customer sheets (10 labels per A4) -->
+  <!-- Personalized customer stickers sized for A4 -->
   <% 
     const STICKERS_PER_PAGE = stickersPerPage;
     const totalPages = Math.ceil(stickers.length / STICKERS_PER_PAGE);

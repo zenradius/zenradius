@@ -622,7 +622,7 @@
       "connection_label": "Internet Account",
       "cs_phone": "CS / Help WA Number (Shown on Sticker)",
       "apply": "Show",
-      "hint": "Active customer records are printed as personalized labels. One A4 sheet holds up to 10 stickers.",
+      "hint": "Each sticker is 94 x 54 mm. ZTE/Huawei ONU body sizes vary by model; measure the flat area before applying. Print on A4 at 100% / Actual size.",
       "preview": "Print preview",
       "sticker_count": "stickers",
       "tagline": "Reliable Internet, Made Easy",
