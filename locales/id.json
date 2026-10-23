@@ -607,6 +607,7 @@
     "onu_stickers": {
       "title": "Cetak Stiker Modem / ONU",
       "heading": "Cetak Stiker Modem / ONU (Name Tag Size)",
+      "heading_hint": "Kelola data dan ukuran cetak dalam satu panel",
       "print": "Cetak Stiker (A4 / PDF)",
       "back": "Kembali",
       "filter_router": "Filter Router",
@@ -615,7 +616,8 @@
       "search_placeholder": "Ketik nama / ID...",
       "sheet_size": "Stiker per lembar A4",
       "per_sheet": "per lembar",
-      "fields_title": "Pilih data pelanggan pada stiker",
+      "fields_title": "Data yang dicetak",
+      "fields_hint": "Pilih informasi pelanggan yang ingin ditampilkan pada setiap stiker.",
       "field_no": "No ID",
       "address_label": "Alamat",
       "whatsapp_label": "WhatsApp",

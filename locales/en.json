@@ -607,6 +607,7 @@
     "onu_stickers": {
       "title": "Print Modem / ONU Stickers",
       "heading": "Print Modem / ONU Stickers (Name Tag Size)",
+      "heading_hint": "Manage customer details and print options in one place",
       "print": "Print Stickers (A4 / PDF)",
       "back": "Back",
       "filter_router": "Filter Router",
@@ -615,7 +616,8 @@
       "search_placeholder": "Type name / ID...",
       "sheet_size": "Stickers per A4 sheet",
       "per_sheet": "per sheet",
-      "fields_title": "Choose customer data to print",
+      "fields_title": "Printed customer details",
+      "fields_hint": "Choose which customer information to show on each sticker.",
       "field_no": "Customer ID",
       "address_label": "Address",
       "whatsapp_label": "WhatsApp",

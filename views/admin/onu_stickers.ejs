@@ -57,6 +57,9 @@
       gap: 8px;
       color: #14535b;
     }
+    .ctrl-title-copy { display:grid; gap:3px; }
+    .ctrl-title-copy strong { color:var(--text); font-size:15px; font-weight:700; }
+    .ctrl-title-copy small { color:var(--muted); font-size:11px; font-weight:400; line-height:1.4; }
     .ctrl-actions {
       display: flex;
       gap: 8px;
@@ -91,17 +94,19 @@
     .btn-secondary:hover {
       background: var(--bg3);
     }
-    .filter-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .filter-submit { justify-content:flex-end; }
-    .sticker-fields { display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; padding:12px 18px 16px; border-top:1px solid var(--border); }
-    .sticker-fields-title { width:100%; color:var(--muted); font-size:11px; font-weight:700; }
-    .sticker-field { display:inline-flex; align-items:center; gap:6px; color:var(--text); font-size:12px; cursor:pointer; }
-    .sticker-field input { accent-color:var(--primary); width:15px; height:15px; margin:0; }
+    .filter-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; align-items:end; padding:18px; }
+    .fg { min-width:0; margin:0; display:flex; flex-direction:column; gap:6px; }
+    .fg .fl { margin:0; color:var(--muted); font-size:10px; font-weight:700; }
+    .fg .fc { min-width:0; height:42px; padding:9px 12px; border-radius:7px; }
+    .sticker-fields { padding:0 18px 16px; }
+    .fields-toolbar { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:14px 0; border-top:1px solid var(--border); }
+    .fields-title { display:block; color:var(--text); font-size:13px; font-weight:700; }
+    .fields-subtitle { display:block; margin-top:3px; color:var(--muted); font-size:11px; line-height:1.4; }
+    .fields-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .sticker-field { min-height:40px; display:flex; align-items:center; gap:9px; padding:9px 11px; color:var(--text); background:var(--bg2); border:1px solid var(--border); border-radius:7px; font-size:12px; cursor:pointer; transition:border-color .16s ease,background .16s ease; }
+    .sticker-field:hover { border-color:var(--primary); background:var(--pdim); }
+    .sticker-field input { flex:0 0 16px; width:16px; height:16px; margin:0; accent-color:var(--primary); }
+    .fields-submit { flex:0 0 auto; min-height:38px; }
     .sticker-empty { min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:24px; color:var(--muted); background:var(--panel); border:1px solid var(--border); border-radius:8px; text-align:center; }
     .sticker-empty i { color:var(--primary); font-size:26px; }
     .sticker-empty strong { color:var(--text); font-size:15px; }
@@ -378,6 +383,10 @@
         border: 0.35mm dashed #aab9ba !important;
       }
     }
+    @media (max-width: 900px) {
+      .filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .fields-options { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
     @media (max-width: 700px) {
       body { padding: 12px; }
       .screen-controls { padding: 16px; }
@@ -385,23 +394,23 @@
       .ctrl-title { font-size: 17px; }
       .ctrl-actions { width: 100%; }
       .ctrl-actions .btn { flex: 1; justify-content: center; }
-      .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .filter-grid .fg:last-child { grid-column: 1 / -1; }
       .print-sheet { transform-origin: top left; }
     }
     @media (max-width: 460px) {
       .filter-grid { grid-template-columns: 1fr; }
-      .filter-grid .fg:last-child { grid-column: auto; }
       .ctrl-actions { flex-direction: column; }
       .ctrl-actions .btn { width: 100%; }
+      .fields-toolbar { align-items:flex-start; flex-direction:column; gap:10px; }
+      .fields-submit { width:100%; justify-content:center; }
+      .fields-options { grid-template-columns:1fr; }
     }
     .onu-print-page { background: var(--bg); color: var(--text); padding: 0; }
     .onu-print-page .screen-controls { max-width: none; margin: 0 0 18px; padding: 0; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-top: 0; border-radius: 8px; box-shadow: none; }
     .onu-print-page .ctrl-header { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--border); }
     .onu-print-page .ctrl-title { color: var(--text); font-size: 16px; }
     .onu-print-page .ctrl-actions .btn { min-height: 38px; }
-    .onu-print-page .filter-grid { padding: 16px 18px 0; }
-    .onu-print-page .sticker-fields { padding-left:18px; padding-right:18px; }
+    .onu-print-page .filter-grid { padding:18px; }
+    .onu-print-page .sticker-fields { padding:0 18px 16px; }
     .onu-print-page .fg label { color: var(--muted); }
     .onu-print-page .fg select, .onu-print-page .fg input { background: var(--bg2); color: var(--text); border-color: var(--border); }
     .onu-print-page .screen-hint { padding: 0 18px 16px; color: var(--muted); font-size: 12px; }
@@ -487,7 +496,7 @@
   <div class="screen-controls card">
     <div class="ctrl-header card-hd">
       <div class="ctrl-title">
-        <i class="bi bi-qr-code-scan"></i><span><%= t('admin.onu_stickers.heading', 'Cetak Stiker Modem / ONU (Name Tag Size)') %></span>
+        <i class="bi bi-qr-code-scan"></i><span class="ctrl-title-copy"><strong><%= t('admin.onu_stickers.heading', 'Cetak Stiker Modem / ONU') %></strong><small><%= t('admin.onu_stickers.heading_hint', 'Kelola data dan ukuran cetak dalam satu panel') %></small></span>
       </div>
       <div class="ctrl-actions">
         <button type="button" class="btn btn-p" onclick="window.print()" <%= stickers.length ? '' : 'disabled' %>>
@@ -528,20 +537,21 @@
           <label class="fl"><%= t('admin.onu_stickers.cs_phone', 'No. CS / WA Bantuan (Tampil di Stiker)') %></label>
           <input class="fc" type="text" name="cs_phone" value="<%= csPhone %>" placeholder="08xxxxxxxxxx" />
         </div>
-        <div class="fg filter-submit">
-          <label class="fl" aria-hidden="true">&nbsp;</label>
-          <button type="submit" class="btn btn-g"><i class="bi bi-search"></i> <%= t('admin.onu_stickers.apply', 'Tampilkan') %></button>
-        </div>
       </div>
       <input type="hidden" name="fields_configured" value="1">
       <div class="sticker-fields">
-        <span class="sticker-fields-title"><%= t('admin.onu_stickers.fields_title', 'Pilih data pelanggan pada stiker') %></span>
-        <label class="sticker-field"><input type="checkbox" name="fields" value="customer_no" <%= stickerFields.includes('customer_no') ? 'checked' : '' %>><%= t('admin.onu_stickers.field_no', 'No ID') %></label>
-        <label class="sticker-field"><input type="checkbox" name="fields" value="name" <%= stickerFields.includes('name') ? 'checked' : '' %>><%= t('admin.onu_stickers.name_label', 'Nama') %></label>
-        <label class="sticker-field"><input type="checkbox" name="fields" value="address" <%= stickerFields.includes('address') ? 'checked' : '' %>><%= t('admin.onu_stickers.address_label', 'Alamat') %></label>
-        <label class="sticker-field"><input type="checkbox" name="fields" value="phone" <%= stickerFields.includes('phone') ? 'checked' : '' %>><%= t('admin.onu_stickers.whatsapp_label', 'WhatsApp') %></label>
-        <label class="sticker-field"><input type="checkbox" name="fields" value="package_name" <%= stickerFields.includes('package_name') ? 'checked' : '' %>><%= t('admin.onu_stickers.package_label', 'Paket') %></label>
-        <label class="sticker-field"><input type="checkbox" name="fields" value="id_display" <%= stickerFields.includes('id_display') ? 'checked' : '' %>><%= t('admin.onu_stickers.connection_label', 'Akun Internet') %></label>
+        <div class="fields-toolbar">
+          <div><span class="fields-title"><%= t('admin.onu_stickers.fields_title', 'Data yang dicetak') %></span><small class="fields-subtitle"><%= t('admin.onu_stickers.fields_hint', 'Pilih informasi pelanggan yang ingin ditampilkan pada setiap stiker.') %></small></div>
+          <button type="submit" class="btn btn-p fields-submit"><i class="bi bi-funnel"></i> <%= t('admin.onu_stickers.apply', 'Tampilkan') %></button>
+        </div>
+        <div class="fields-options">
+          <label class="sticker-field"><input type="checkbox" name="fields" value="customer_no" <%= stickerFields.includes('customer_no') ? 'checked' : '' %>><span><%= t('admin.onu_stickers.field_no', 'No ID') %></span></label>
+          <label class="sticker-field"><input type="checkbox" name="fields" value="name" <%= stickerFields.includes('name') ? 'checked' : '' %>><span><%= t('admin.onu_stickers.name_label', 'Nama') %></span></label>
+          <label class="sticker-field"><input type="checkbox" name="fields" value="address" <%= stickerFields.includes('address') ? 'checked' : '' %>><span><%= t('admin.onu_stickers.address_label', 'Alamat') %></span></label>
+          <label class="sticker-field"><input type="checkbox" name="fields" value="phone" <%= stickerFields.includes('phone') ? 'checked' : '' %>><span><%= t('admin.onu_stickers.whatsapp_label', 'WhatsApp') %></span></label>
+          <label class="sticker-field"><input type="checkbox" name="fields" value="package_name" <%= stickerFields.includes('package_name') ? 'checked' : '' %>><span><%= t('admin.onu_stickers.package_label', 'Paket') %></span></label>
+          <label class="sticker-field"><input type="checkbox" name="fields" value="id_display" <%= stickerFields.includes('id_display') ? 'checked' : '' %>><span><%= t('admin.onu_stickers.connection_label', 'Akun Internet') %></span></label>
+        </div>
       </div>
     </form>
     <div class="screen-hint" style="display:flex;align-items:center;gap:6px;">
