@@ -10,6 +10,7 @@ const { getSetting } = require('../config/settingsManager');
 const db = require('../config/database');
 const qrisUtil = require('../utils/qrisUtil');
 const domainLicense = require('./domainLicenseService');
+const { parseAcsParams } = require('./acsDataProtection');
 
 function getRandomDelay(baseDelayMs, varianceMs = 3000) {
   const minDelay = Math.max(baseDelayMs - varianceMs, 2000);
@@ -800,8 +801,7 @@ function startCronJobs() {
       let ipUpdatedCount = 0;
 
       for (const dev of acsDevices) {
-        let params = {};
-        try { params = JSON.parse(dev.params || '{}'); } catch (_) {}
+        const params = parseAcsParams(dev.params);
 
         let pppoeUser = '';
         const pppoeUserKeys = [

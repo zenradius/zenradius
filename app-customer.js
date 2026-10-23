@@ -38,12 +38,14 @@ process.on('uncaughtException', (err) => {
 const session = require('express-session');
 const { getSetting, getSettingsWithCache, ensureDefaultSettings, parseBooleanSetting } = require('./config/settingsManager');
 const { SUPPORTED_LANGS, FALLBACK_LANG, normalizeLang, t } = require('./config/i18n');
+const { createBuiltinAcsAuth } = require('./middleware/builtinAcsAuth');
 
 ensureDefaultSettings();
 
 const app = express();
 
 const isProduction = process.env.NODE_ENV === 'production';
+const builtinAcsAuth = createBuiltinAcsAuth({ getSetting, parseBooleanSetting, isProduction });
 const cookieSecure = parseBooleanSetting(getSetting('cookie_secure', isProduction), isProduction);
 const trustProxySetting = parseBooleanSetting(getSetting('trust_proxy', true), true);
 app.set('trust proxy', trustProxySetting ? 1 : true);
@@ -63,6 +65,7 @@ app.use(express.urlencoded({
 }));
 app.use(express.text({
   type: (req) => {
+    if (req.path.startsWith('/acs')) return false;
     const contentType = req.headers['content-type'] || '';
     if (contentType.includes('multipart/form-data')) return false;
     if (contentType.includes('application/x-www-form-urlencoded')) return false;
@@ -1764,20 +1767,33 @@ app.post(['/donasi/confirm', '/api/donasi/confirm'], async (req, res) => {
 const acsServerService = require('./services/acsServerService');
 // GET /acs hanya untuk pengecekan manusia/monitoring. Perangkat TR-069 memakai POST.
 app.get('/acs', (req, res) => {
-  const enabled = !!getSetting('use_builtin_acs', false);
+  const enabled = parseBooleanSetting(getSetting('use_builtin_acs', false), false);
+  const acsCredentialsConfigured = Boolean(
+    process.env.BUILTIN_ACS_USERNAME && process.env.BUILTIN_ACS_PASSWORD &&
+    !String(process.env.BUILTIN_ACS_USERNAME).includes(':')
+  );
+  const encryptionKeyConfigured = !isProduction || Boolean(process.env.SETTINGS_MASTER_KEY);
+  const authConfigured = acsCredentialsConfigured && encryptionKeyConfigured;
   const proto = req.headers['x-forwarded-proto'] || req.protocol;
-  res.status(enabled ? 200 : 503).type('text/plain; charset=utf-8').send(
+  res.status(enabled && authConfigured ? 200 : 503).type('text/plain; charset=utf-8').send(
     [
-      `ZenRadius Built-in ACS (TR-069/CWMP): ${enabled ? 'AKTIF' : 'NONAKTIF'}`,
+      `ZenRadius Built-in ACS (TR-069/CWMP): ${enabled ? (authConfigured ? 'AKTIF' : 'KREDENSIAL BELUM DIATUR') : 'NONAKTIF'}`,
       `Endpoint CWMP : POST ${proto}://${req.get('host')}/acs`,
       '',
       'Endpoint ini menerima SOAP XML dari ONT/ONU (POST), bukan untuk dibuka di browser.',
       'Isi URL di atas pada menu TR-069 / ACS URL perangkat, Periodic Inform = Enable (300 detik).',
-      enabled ? '' : 'Aktifkan dulu di Admin > GenieACS Pro > "Gunakan Built-in ACS Server (TR-069)".'
+      !enabled ? 'Aktifkan dulu di Admin > GenieACS Pro > "Gunakan Built-in ACS Server (TR-069)".' : '',
+      enabled && !acsCredentialsConfigured ? 'Atur BUILTIN_ACS_USERNAME dan BUILTIN_ACS_PASSWORD di .env, lalu restart ZenRadius.' : '',
+      enabled && !encryptionKeyConfigured ? 'Atur SETTINGS_MASTER_KEY di .env, lalu restart ZenRadius.' : ''
     ].filter(Boolean).join('\n')
   );
 });
-app.post('/acs', express.raw({ type: ['text/xml', 'application/soap+xml', 'application/xml', 'text/plain'], limit: '2mb' }), acsServerService.handleCwmpRequest);
+app.post('/acs', (req, res, next) => {
+  if (!req.is(['text/xml', 'application/soap+xml', 'application/xml', 'text/plain'])) {
+    return res.status(415).type('text/plain').send('SOAP/XML Content-Type required');
+  }
+  next();
+}, express.raw({ type: ['text/xml', 'application/soap+xml', 'application/xml', 'text/plain'], limit: '2mb' }), builtinAcsAuth, acsServerService.handleCwmpRequest);
 
 // Lisensi domain seumur hidup — blokir portal jika kode lisensi tidak cocok dengan domain.
 // Secret master sudah tertanam di domainLicenseService; pengecekan selalu aktif.

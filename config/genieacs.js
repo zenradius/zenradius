@@ -3,6 +3,7 @@ require('dotenv').config();
 const { logger } = require('./logger');
 const db = require('./database');
 const { getSetting } = require('./settingsManager');
+const { parseAcsParams, serializeAcsTaskPayload } = require('../services/acsDataProtection');
 
 /** Check if built-in ACS mode is active */
 function isBuiltinAcsEnabled() {
@@ -33,8 +34,7 @@ function inflateParams(flatObj) {
 /** Convert a builtin acs_devices row into GenieACS-compatible device object */
 function builtinRowToDevice(row) {
   if (!row) return null;
-  let params = {};
-  try { params = JSON.parse(row.params || '{}'); } catch (e) {  }
+    const params = parseAcsParams(row.params);
   let tags = [];
   try { tags = JSON.parse(row.tags || '[]'); } catch (e) {  }
   tags = tags.filter(t => t !== 'bootstrapped');
@@ -173,7 +173,7 @@ function createBuiltinAxiosProxy() {
       if (taskMatch) {
         const deviceId = decodeURIComponent(taskMatch[1]);
         const taskName = data.name || 'unknown';
-        const payload = JSON.stringify(data);
+        const payload = serializeAcsTaskPayload(data);
         const now = new Date().toISOString();
 
         try {

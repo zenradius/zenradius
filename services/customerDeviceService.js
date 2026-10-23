@@ -4,6 +4,7 @@ const db = require('../config/database');
 const { getSettingsWithCache } = require('../config/settingsManager');
 const auditTrail = require('./auditTrailService');
 const { logger } = require('../config/logger');
+const { parseAcsParams } = require('./acsDataProtection');
 const genieacsApi = require('../config/genieacs');
 const mikrotikService = require('./mikrotikService');
 
@@ -834,7 +835,7 @@ async function updateSSID(tag, newSSID, actor = null) {
 
     const db = require('../config/database');
     const row = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(device._id);
-    const flatParams = row && row.params ? JSON.parse(row.params) : null;
+    const flatParams = row && row.params ? parseAcsParams(row.params) : null;
 
     if (flatParams) {
 
@@ -944,7 +945,7 @@ async function updatePassword(tag, newPassword, actor = null) {
 
     const db = require('../config/database');
     const row = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(device._id);
-    const flatParams = row && row.params ? JSON.parse(row.params) : null;
+    const flatParams = row && row.params ? parseAcsParams(row.params) : null;
 
     if (flatParams) {
 

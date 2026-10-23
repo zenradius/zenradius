@@ -469,16 +469,16 @@
                   <div style="display:grid;grid-template-columns:1fr;gap:12px">
                     <div class="fg" style="margin:0">
                       <label class="fl">ACS URL <span style="color:#ef4444">*</span></label>
-                      <input type="text" class="fc" name="tr069AcsUrl" placeholder="http://acs.zenradius.net:7547">
-                      <div class="hint" style="font-size:11px;margin-top:4px">Format: http://host:port atau https://host:port</div>
+                      <input type="text" class="fc" name="tr069AcsUrl" placeholder="https://billing.domainanda.id/acs">
+                      <div class="hint" style="font-size:11px;margin-top:4px">Built-in ACS: gunakan URL publik ZenRadius berakhiran /acs melalui HTTPS.</div>
                     </div>
                     <div class="form-row2">
                       <div class="fg" style="margin:0">
-                        <label class="fl">ACS Username (Optional)</label>
+                        <label class="fl">ACS Username (wajib untuk Built-in ACS)</label>
                         <input type="text" class="fc" name="tr069AcsUsername" placeholder="acs_user">
                       </div>
                       <div class="fg" style="margin:0">
-                        <label class="fl">ACS Password (Optional)</label>
+                        <label class="fl">ACS Password (wajib untuk Built-in ACS)</label>
                         <input type="password" class="fc" name="tr069AcsPassword" placeholder="••••••••">
                       </div>
                     </div>

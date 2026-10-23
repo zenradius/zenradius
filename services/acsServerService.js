@@ -7,6 +7,15 @@ const crypto = require('crypto');
 const db = require('../config/database');
 const { logger } = require('../config/logger');
 const { getSetting, getNowLocal } = require('../config/settingsManager');
+const { recoverStaleTasks: recoverStaleAcsTasks } = require('./acsTaskRecovery');
+const {
+  parseAcsParams,
+  serializeAcsParams,
+  parseAcsTaskPayload,
+  serializeAcsTaskPayload,
+  protectAcsSecret,
+  revealAcsSecret,
+} = require('./acsDataProtection');
 
 try {
   const BOOTSTRAP_VERSION = 4;
@@ -55,7 +64,6 @@ const SOAP_ENC_NS = 'http://schemas.xmlsoap.org/soap/encoding/';
 const SESSION_TIMEOUT_MS = 120_000;
 
 const sessions = new Map();
-const lastDeviceByIp = new Map();
 const recentFaultLogs = new Map();
 
 /** Periodically clean expired sessions (every 60 s) */
@@ -101,7 +109,7 @@ function getOrCreateSession(req, res) {
   sid = generateSessionId();
   const session = { deviceId: null, step: null, currentTaskId: null, lastActivity: Date.now() };
   sessions.set(sid, session);
-  res.setHeader('Set-Cookie', `acs_session=${sid}; Path=/acs; HttpOnly`);
+  res.setHeader('Set-Cookie', `acs_session=${sid}; Path=/acs; HttpOnly${req.secure ? '; Secure' : ''}`);
   return { sid, session, isNew: true };
 }
 
@@ -360,6 +368,7 @@ function upsertDevice(deviceId, deviceInfo, params, ipAddress) {
   const connReqPass = params['InternetGatewayDevice.ManagementServer.ConnectionRequestPassword']
     || params['Device.ManagementServer.ConnectionRequestPassword']
     || '';
+  const storedConnReqPass = protectAcsSecret(connReqPass);
 
   let ipToSave = ipAddress;
   if (connReqUrl) {
@@ -387,8 +396,7 @@ function upsertDevice(deviceId, deviceInfo, params, ipAddress) {
 
   if (existing) {
 
-    let mergedParams = {};
-    try { mergedParams = JSON.parse(existing.params || '{}'); } catch (_) {  }
+    let mergedParams = parseAcsParams(existing.params);
     Object.assign(mergedParams, params);
 
     db.prepare(`
@@ -417,8 +425,8 @@ function upsertDevice(deviceId, deviceInfo, params, ipAddress) {
       ipToSave,
       connReqUrl, connReqUrl,
       connReqUser, connReqUser,
-      connReqPass, connReqPass,
-      JSON.stringify(mergedParams),
+      storedConnReqPass, storedConnReqPass,
+      serializeAcsParams(mergedParams),
       now,
       now,
       deviceId
@@ -442,14 +450,63 @@ function upsertDevice(deviceId, deviceInfo, params, ipAddress) {
       ipToSave,
       connReqUrl,
       connReqUser,
-      connReqPass,
-      JSON.stringify(params),
+      storedConnReqPass,
+      serializeAcsParams(params),
       now,
       now,
       now
     );
   }
 }
+
+function migrateStoredAcsSecrets() {
+  const migration = db.prepare("SELECT value FROM app_settings WHERE key = 'acs_secret_encryption_version'").get();
+  if (migration && Number(migration.value) >= 1) return;
+
+  const rows = db.prepare('SELECT id, params, connection_request_pass FROM acs_devices').all();
+  const taskRows = db.prepare('SELECT id, payload, result FROM acs_tasks').all();
+  const update = db.prepare(
+    'UPDATE acs_devices SET params = ?, connection_request_pass = ? WHERE id = ?'
+  );
+  const updateTask = db.prepare('UPDATE acs_tasks SET payload = ?, result = ? WHERE id = ?');
+  const migrate = db.transaction(() => {
+    let changed = 0;
+    for (const row of rows) {
+      let rawParams;
+      try { rawParams = JSON.parse(row.params || '{}'); } catch (_) { continue; }
+      const protectedParams = serializeAcsParams(rawParams);
+      const protectedPassword = protectAcsSecret(row.connection_request_pass);
+      if (protectedParams !== row.params || protectedPassword !== (row.connection_request_pass || '')) {
+        update.run(protectedParams, protectedPassword, row.id);
+        changed += 1;
+      }
+    }
+    for (const row of taskRows) {
+      let rawPayload;
+      try { rawPayload = JSON.parse(row.payload || '{}'); } catch (_) { continue; }
+      const protectedPayload = serializeAcsTaskPayload(rawPayload);
+      let protectedResult = row.result;
+      if (row.result) {
+        try { protectedResult = serializeAcsTaskPayload(JSON.parse(row.result)); } catch (_) { protectedResult = row.result; }
+      }
+      if (protectedPayload !== row.payload || protectedResult !== row.result) {
+        updateTask.run(protectedPayload, protectedResult, row.id);
+        changed += 1;
+      }
+    }
+    db.prepare("INSERT OR REPLACE INTO app_settings (key, value) VALUES ('acs_secret_encryption_version', '1')").run();
+    return changed;
+  });
+
+  try {
+    const changed = migrate();
+    if (changed) logger.info(`[ACS] Encrypted stored device secrets for ${changed} device(s)`);
+  } catch (err) {
+    logger.error(`[ACS] Stored-secret migration failed: ${err.message}`);
+  }
+}
+
+migrateStoredAcsSecrets();
 
 /**
  * Merge GetParameterValuesResponse data into a device's params.
@@ -459,12 +516,11 @@ function mergeDeviceParams(deviceId, newParams) {
   const existing = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(deviceId);
   if (!existing) return;
 
-  let merged = {};
-  try { merged = JSON.parse(existing.params || '{}'); } catch (_) {  }
+  const merged = parseAcsParams(existing.params);
   Object.assign(merged, newParams);
 
   db.prepare('UPDATE acs_devices SET params = ?, updated_at = ? WHERE id = ?')
-    .run(JSON.stringify(merged), now, deviceId);
+    .run(serializeAcsParams(merged), now, deviceId);
 }
 
 /** Check if the device is missing WLAN, WAN, or RX optical power parameters, */
@@ -568,7 +624,7 @@ function queueBootstrapTasksIfNeeded(deviceId, currentParams) {
 
       const now = nowLocal();
       for (const group of groups) {
-        const payloadStr = JSON.stringify({ parameterNames: group });
+        const payloadStr = serializeAcsTaskPayload({ parameterNames: group });
         db.prepare(
           `INSERT INTO acs_tasks (device_id, name, payload, status, created_at, updated_at)
            VALUES (?, 'getParameterValues', ?, 'pending', ?, ?)`
@@ -588,7 +644,7 @@ function queueBootstrapTasksIfNeeded(deviceId, currentParams) {
         db.prepare(
           `INSERT INTO acs_tasks (device_id, name, payload, status, created_at, updated_at)
            VALUES (?, 'refreshObject', ?, 'pending', ?, ?)`
-        ).run(deviceId, JSON.stringify({ objectName }), now, now);
+        ).run(deviceId, serializeAcsTaskPayload({ objectName }), now, now);
       }
 
       const informPvs = [];
@@ -602,7 +658,7 @@ function queueBootstrapTasksIfNeeded(deviceId, currentParams) {
       db.prepare(
         `INSERT INTO acs_tasks (device_id, name, payload, status, created_at, updated_at)
          VALUES (?, 'setParameterValues', ?, 'pending', ?, ?)`
-      ).run(deviceId, JSON.stringify({ parameterValues: informPvs }), now, now);
+      ).run(deviceId, serializeAcsTaskPayload({ parameterValues: informPvs }), now, now);
     }
   } catch (err) {
     logger.error(`[ACS] Error in queueBootstrapTasksIfNeeded for ${deviceId}: ${err.message}`);
@@ -645,7 +701,7 @@ function queueRealtimeMonitoringTasks(deviceId, currentParams) {
       db.prepare(
         `INSERT INTO acs_tasks (device_id, name, payload, status, created_at, updated_at)
          VALUES (?, 'refreshObject', ?, 'pending', ?, ?)`
-      ).run(deviceId, JSON.stringify({ objectName }), now, now);
+      ).run(deviceId, serializeAcsTaskPayload({ objectName }), now, now);
     }
   } catch (err) {
     logger.error(`[ACS] Error in queueRealtimeMonitoringTasks for ${deviceId}: ${err.message}`);
@@ -718,7 +774,7 @@ function enqueueFollowupTasks(deviceId, followupTasks, templateVars) {
       };
     }
 
-    insertTask.run(deviceId, taskName, JSON.stringify(hydratedPayload), now, now);
+    insertTask.run(deviceId, taskName, serializeAcsTaskPayload(hydratedPayload), now, now);
     created += 1;
   }
 
@@ -732,7 +788,7 @@ function completeTask(taskId, result) {
   const now = nowLocal();
   db.prepare(
     `UPDATE acs_tasks SET status = 'completed', result = ?, updated_at = ? WHERE id = ?`
-  ).run(result ? JSON.stringify(result) : null, now, taskId);
+  ).run(result ? serializeAcsTaskPayload(result) : null, now, taskId);
 }
 
 /**
@@ -742,8 +798,22 @@ function failTask(taskId, error) {
   const now = nowLocal();
   db.prepare(
     `UPDATE acs_tasks SET status = 'failed', result = ?, retry_count = retry_count + 1, updated_at = ? WHERE id = ?`
-  ).run(error ? JSON.stringify(error) : null, now, taskId);
+  ).run(error ? serializeAcsTaskPayload(error) : null, now, taskId);
 }
+
+function runStaleTaskRecovery() {
+  try {
+    const result = recoverStaleAcsTasks(db);
+    if (result.retried || result.failed) {
+      logger.warn(`[ACS] Recovered stale tasks: read=${result.retried}, failed=${result.failed}`);
+    }
+  } catch (err) {
+    logger.error(`[ACS] Failed to recover stale tasks: ${err.message}`);
+  }
+}
+
+runStaleTaskRecovery();
+setInterval(runStaleTaskRecovery, 60_000);
 
 function shouldThrottleFaultLog(deviceId, fault, taskName, payload) {
   const normalizedPayload = String(payload || '')
@@ -765,7 +835,7 @@ function shouldThrottleFaultLog(deviceId, fault, taskName, payload) {
 /** Build the SOAP request for a given task. */
 function buildTaskSoap(cwmpId, task) {
   let payload = {};
-  try { payload = JSON.parse(task.payload || '{}'); } catch (_) {  }
+  payload = parseAcsTaskPayload(task.payload);
 
   switch (task.name) {
     case 'reboot':
@@ -841,7 +911,7 @@ const handleCwmpRequest = async (req, res) => {
     const { sid, session } = getOrCreateSession(req, res);
 
     if (!body || body.trim().length === 0) {
-      return handleEmptyPost(session, sid, res, cpeIp);
+      return handleEmptyPost(session, sid, res);
     }
 
     if (hasCwmpMethod(body, 'Inform')) {
@@ -873,7 +943,7 @@ const handleCwmpRequest = async (req, res) => {
     }
 
     logger.debug(`[ACS] Unrecognized SOAP body from session ${sid.substring(0, 8)}, treating as empty`);
-    return handleEmptyPost(session, sid, res, cpeIp);
+    return handleEmptyPost(session, sid, res);
 
   } catch (err) {
     logger.error(`[ACS] Error handling CWMP request: ${err.message}`);
@@ -899,25 +969,13 @@ function handleInform(body, session, sid, cpeIp, res) {
   try {
     upsertDevice(deviceId, deviceInfo, params, cpeIp);
     const existing = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(deviceId);
-    if (existing) {
-      mergedParams = JSON.parse(existing.params || '{}');
-    }
+    if (existing) mergedParams = parseAcsParams(existing.params);
   } catch (err) {
     logger.error(`[ACS] Failed to upsert device ${deviceId}: ${err.message}`);
   }
 
   queueBootstrapTasksIfNeeded(deviceId, mergedParams);
   queueRealtimeMonitoringTasks(deviceId, mergedParams);
-
-  if (cpeIp) {
-    lastDeviceByIp.set(String(cpeIp), { deviceId, ts: Date.now() });
-    if (lastDeviceByIp.size > 5000) {
-      const now = Date.now();
-      for (const [k, v] of lastDeviceByIp.entries()) {
-        if (!v || (now - (v.ts || 0)) > 10 * 60 * 1000) lastDeviceByIp.delete(k);
-      }
-    }
-  }
 
   session.deviceId = deviceId;
   session.step = 'informed';
@@ -927,18 +985,9 @@ function handleInform(body, session, sid, cpeIp, res) {
   return sendSoapResponse(res, buildInformResponse(cwmpId));
 }
 
-function handleEmptyPost(session, sid, res, cpeIp = '') {
+function handleEmptyPost(session, sid, res) {
   if (!session.deviceId) {
-    const ipKey = String(cpeIp || '').trim();
-    if (ipKey) {
-      const rec = lastDeviceByIp.get(ipKey);
-      if (rec && rec.deviceId && (Date.now() - (rec.ts || 0)) < SESSION_TIMEOUT_MS) {
-        session.deviceId = rec.deviceId;
-        session.step = 'inferred';
-        logger.info(`[ACS] Inferred session deviceId=${rec.deviceId} from IP=${ipKey}`);
-      }
-    }
-    if (!session.deviceId) return res.status(204).set('Content-Type', 'text/xml; charset=utf-8').send('');
+    return res.status(204).set('Content-Type', 'text/xml; charset=utf-8').send('');
   }
 
   const task = getNextPendingTask(session.deviceId);
@@ -955,7 +1004,7 @@ function handleEmptyPost(session, sid, res, cpeIp = '') {
 
     logger.warn(`[ACS] Could not build SOAP for task ${task.id} (${task.name}), marking failed`);
     failTask(task.id, { error: 'Could not build SOAP request for task' });
-    return handleEmptyPost(session, sid, res, cpeIp);
+    return handleEmptyPost(session, sid, res);
   }
 
   session.currentTaskId = task.id;
@@ -983,7 +1032,7 @@ function handleTaskResponse(body, session, sid, taskType, res) {
         try {
           const task = db.prepare('SELECT payload FROM acs_tasks WHERE id = ?').get(taskId);
           if (task) {
-            const payload = JSON.parse(task.payload || '{}');
+            const payload = parseAcsTaskPayload(task.payload);
             const pvs = payload.parameterValues || payload.values || [];
             if (Array.isArray(pvs) && pvs.length > 0) {
               const newParams = {};
@@ -1054,7 +1103,7 @@ function handleGetParameterNamesResponse(body, session, sid, res) {
       let objectName = '';
       if (taskRow && taskRow.payload) {
         try {
-          const pl = JSON.parse(taskRow.payload || '{}');
+          const pl = parseAcsTaskPayload(taskRow.payload);
           objectName = String(pl.objectName || pl.object || '');
         } catch {}
       }
@@ -1088,7 +1137,7 @@ function handleGetParameterNamesResponse(body, session, sid, res) {
 
       if (filtered.length > 0) {
         const now = nowLocal();
-        const payloadStr = JSON.stringify({ parameterNames: filtered });
+        const payloadStr = serializeAcsTaskPayload({ parameterNames: filtered });
         db.prepare(
           `INSERT INTO acs_tasks (device_id, name, payload, status, created_at, updated_at)
            VALUES (?, 'getParameterValues', ?, 'pending', ?, ?)`
@@ -1111,7 +1160,7 @@ function handleAddObjectResponse(body, session, sid, res) {
   const result = parseAddObjectResponse(body);
   const taskRow = taskId ? getTaskById(taskId) : null;
   let taskPayload = {};
-  try { taskPayload = JSON.parse(taskRow?.payload || '{}'); } catch (_) { taskPayload = {}; }
+  taskPayload = parseAcsTaskPayload(taskRow?.payload);
 
   if (taskId) {
     logger.info(`[ACS] Task ${taskId} (addObject) completed – instance=${result.instanceNumber}`);
@@ -1153,7 +1202,7 @@ function handleFault(fault, session, sid, res) {
       if (row) {
         taskName = String(row.name || '');
         taskPayload = String(row.payload || '');
-        taskInfo = ` task=${taskName} payload=${taskPayload.substring(0, 500)}`;
+        taskInfo = ` task=${taskName}`;
       }
     }
     const det = fault.detail ? String(fault.detail).replace(/\s+/g, ' ').trim().slice(0, 500) : '';
@@ -1291,7 +1340,7 @@ async function performConnectionRequest(deviceId) {
     };
 
     const crUser = device.connection_request_user || '';
-    const crPass = device.connection_request_pass || '';
+    const crPass = revealAcsSecret(device.connection_request_pass || '');
 
     if (crUser) {
       options.auth = `${crUser}:${crPass}`;
@@ -1395,7 +1444,8 @@ function getBuiltinDevices(query, projection) {
 
     return rows.map(row => {
       try { row.tags = JSON.parse(row.tags || '[]'); } catch (_) { row.tags = []; }
-      try { row.params = JSON.parse(row.params || '{}'); } catch (_) { row.params = {}; }
+      row.params = parseAcsParams(row.params);
+      delete row.connection_request_pass;
       return row;
     });
   } catch (err) {
@@ -1410,7 +1460,8 @@ function getBuiltinDevice(deviceId) {
     const row = db.prepare('SELECT * FROM acs_devices WHERE id = ?').get(deviceId);
     if (!row) return null;
     try { row.tags = JSON.parse(row.tags || '[]'); } catch (_) { row.tags = []; }
-    try { row.params = JSON.parse(row.params || '{}'); } catch (_) { row.params = {}; }
+    row.params = parseAcsParams(row.params);
+    delete row.connection_request_pass;
     return row;
   } catch (err) {
     logger.error(`[ACS] getBuiltinDevice error: ${err.message}`);
@@ -1422,7 +1473,7 @@ function getBuiltinDevice(deviceId) {
 function createBuiltinTask(deviceId, taskName, payload) {
   try {
     const now = nowLocal();
-    const payloadStr = JSON.stringify(payload || {});
+    const payloadStr = serializeAcsTaskPayload(payload || {});
 
     const info = db.prepare(
       `INSERT INTO acs_tasks (device_id, name, payload, status, created_at, updated_at)

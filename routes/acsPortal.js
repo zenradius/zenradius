@@ -9,6 +9,7 @@ const mikrotikSvc = require('../services/mikrotikService');
 const fs = require('fs');
 const path = require('path');
 const { createAxiosInstance, isBuiltinAcsEnabled } = require('../config/genieacs');
+const { parseAcsTaskPayload } = require('../services/acsDataProtection');
 
 const axios = {
     get: async (url, config = {}) => {
@@ -1494,7 +1495,7 @@ router.get('/api/add-wan-status/:deviceId', requireAdmin, async (req, res) => {
 
         const tasks = rows.map(row => {
             let payload = {};
-            try { payload = JSON.parse(row.payload || '{}'); } catch (_) { payload = {}; }
+            payload = parseAcsTaskPayload(row.payload);
             return {
                 id: Number(row.id),
                 name: String(row.name || ''),
