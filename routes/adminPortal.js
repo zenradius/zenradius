@@ -2664,10 +2664,10 @@ function resolveStickerIdDisplay(c) {
 
 function resolveStickerCsPhone(req) {
   const s = getSettings();
-  return String(req.query.cs_phone || s.company_phone || '').trim() || '08xxxxxxxxxx';
+  return String(req.query.cs_phone || s.company_phone || s.company_whatsapp || '').trim() || '08xxxxxxxxxx';
 }
 
-router.get('/onu-stickers', requireAdminSession, async (req, res) => {
+router.get('/onu-stickers', requireAdminSession, requireSidebarMenuAccess('onu_stickers'), async (req, res) => {
   try {
     const searchQuery = String(req.query.q || '').trim();
     const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
