@@ -93,8 +93,8 @@ function clearConversationState(phone) {
 }
 
 // AI LLM (Gemini) integration
-const GEMINI_MODEL = 'gemini-3.5-flash';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+const geminiUrl = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
 /**
  * Definisi function calling untuk Gemini.
@@ -239,64 +239,61 @@ async function callGeminiAI(systemPrompt, userMessage, ctx, sock, lidStore) {
   const apiKey = getSetting('gemini_api_key', '');
   if (!apiKey) return null;
 
-  const url = `${GEMINI_API_URL}?key=${encodeURIComponent(apiKey)}`;
   const contents = [{ role: 'user', parts: [{ text: userMessage }] }];
 
-  try {
-    let payload = {
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents,
-      tools: GEMINI_TOOLS,
-      generationConfig: {
-        thinkingConfig: { thinkingLevel: 'low' },
-        maxOutputTokens: 512
+  // Coba model utama dulu, lalu model cadangan bila gagal (mis. 404/503/limit).
+  for (const model of GEMINI_MODELS) {
+    const url = `${geminiUrl(model)}?key=${encodeURIComponent(apiKey)}`;
+    try {
+      const payload = {
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [...contents],
+        tools: GEMINI_TOOLS,
+        generationConfig: {
+          thinkingConfig: { thinkingLevel: 'low' },
+          maxOutputTokens: 512
+        }
+      };
+
+      const { data } = await axios.post(url, payload, { timeout: 20000 });
+      const candidate = data?.candidates?.[0];
+      if (!candidate) continue;
+
+      // Jika ada function call, eksekusi lalu kirim hasilnya kembali ke model
+      const parts = candidate.content?.parts || [];
+      const functionCallPart = parts.find(p => p.functionCall);
+
+      if (functionCallPart) {
+        const fc = functionCallPart.functionCall;
+        logger.info(`[WA AI] Function call: ${fc.name} args=${JSON.stringify(fc.args || {})}`);
+
+        // Eksekusi fungsi
+        const result = await executeGeminiFunction(ctx, fc.name, fc.args || {});
+
+        // Bangun riwayat percakapan dengan function response
+        payload.contents = [
+          ...contents,
+          { role: 'model', parts: [{ functionCall: { name: fc.name, args: fc.args || {} } }] },
+          { role: 'function', parts: [{ functionResponse: { name: fc.name, response: { output: result } } }] }
+        ];
+
+        // Panggil lagi untuk mendapatkan respons teks akhir
+        const { data: secondData } = await axios.post(url, payload, { timeout: 20000 });
+        const finalText = secondData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (finalText) return finalText;
+        continue;
       }
-    };
 
-    const { data } = await axios.post(url, payload, { timeout: 20000 });
-    const candidate = data?.candidates?.[0];
-    if (!candidate) return null;
-
-    // Jika ada function call, eksekusi lalu kirim hasilnya kembali ke model
-    const parts = candidate.content?.parts || [];
-    const functionCallPart = parts.find(p => p.functionCall);
-
-    if (functionCallPart) {
-      const fc = functionCallPart.functionCall;
-      logger.info(`[WA AI] Function call: ${fc.name} args=${JSON.stringify(fc.args || {})}`);
-
-      // Eksekusi fungsi
-      const result = await executeGeminiFunction(ctx, fc.name, fc.args || {});
-
-      // Bangun riwayat percakapan dengan function response
-      contents.push({
-        role: 'model',
-        parts: [{ functionCall: { name: fc.name, args: fc.args || {} } }]
-      });
-      contents.push({
-        role: 'function',
-        parts: [{
-          functionResponse: {
-            name: fc.name,
-            response: { output: result }
-          }
-        }]
-      });
-
-      // Panggil lagi untuk mendapatkan respons teks akhir
-      payload.contents = contents;
-      const { data: secondData } = await axios.post(url, payload, { timeout: 20000 });
-      const secondCandidate = secondData?.candidates?.[0];
-      const finalText = secondCandidate?.content?.parts?.[0]?.text || '';
-      return finalText || null;
+      // Tidak ada function call, kembalikan teks langsung
+      const text = candidate.content?.parts?.[0]?.text || '';
+      if (text) return text;
+    } catch (e) {
+      logger.warn(`[WA AI] Gemini ${model} gagal: ` + (e.message || e));
     }
-
-    // Tidak ada function call, kembalikan teks langsung
-    return candidate.content?.parts?.[0]?.text || null;
-  } catch (e) {
-    logger.error('[WA AI] Gemini call failed: ' + (e.message || e));
-    return null;
   }
+
+  logger.error('[WA AI] Semua model Gemini gagal diakses');
+  return null;
 }
 
 function buildGeminiSystemPrompt(ctx, isAdmin) {

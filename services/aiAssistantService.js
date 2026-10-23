@@ -12,8 +12,12 @@ const { getSetting } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
 const { adminToolDeclarations, executeAdminTool } = require('./aiAdminTools');
 
-/** Daftar model fallback bila model utama tidak tersedia / kena limit. */
-const DEFAULT_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+/**
+ * Daftar model fallback bila model utama tidak tersedia / kena limit.
+ * Catatan: gemini-2.5-flash dan gemini-2.0-flash sudah dinonaktifkan Google
+ * (404 "no longer available"), sehingga cadangan memakai model 3.x yang aktif.
+ */
+const DEFAULT_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest'];
 
 /** Ringkasan fitur aplikasi ZenRadius sebagai knowledge base (cache 1 jam). */
 let cachedKnowledge = null;
