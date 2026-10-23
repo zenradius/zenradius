@@ -1955,7 +1955,7 @@ export async function startWhatsAppBot() {
           // AI admin nonaktif → arahkan ke menu
           await reply(
             'ℹ️ *Asisten AI Admin sedang dinonaktifkan.*\n\n' +
-            'Aktifkan di *Admin ➜ WhatsApp ➜ Asisten AI* (isi API Key Gemini), atau ketik `admin` untuk daftar perintah manual.'
+            'Aktifkan di *Admin ➜ Gemini Bot* (isi API Key Gemini & aktifkan AI), atau ketik `admin` untuk daftar perintah manual.'
           );
           continue;
         }
@@ -2037,7 +2037,7 @@ export async function startWhatsAppBot() {
           }
           const aiOn = parseBooleanSetting(getSetting('whatsapp_ai_enabled', true), true) && String(getSetting('gemini_api_key', '') || '').trim();
           if (!aiOn) {
-            await reply('ℹ️ *Asisten AI Admin belum aktif.* Aktifkan di *Admin ➜ WhatsApp ➜ Asisten AI* (isi API Key Gemini).');
+            await reply('ℹ️ *Asisten AI Admin belum aktif.* Aktifkan di *Admin ➜ Gemini Bot* (isi API Key Gemini & aktifkan AI).');
             continue;
           }
           try {
