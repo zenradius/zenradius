@@ -170,201 +170,6 @@
       box-sizing: border-box;
     }
 
-    .sticker-card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1.5mm;
-      background: linear-gradient(90deg, #087e82 0 68%, #d39a3b 68% 100%);
-    }
-
-    /* Header */
-    .st-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      border-bottom: 0.3mm solid #dce5e5;
-      padding-bottom: 2mm;
-      margin-bottom: 1mm;
-    }
-    .st-brand {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      min-width: 0;
-    }
-    .st-logo {
-      height: 8mm;
-      max-width: 26mm;
-      object-fit: contain;
-      object-position: left center;
-    }
-    .st-company {
-      font-size: 10px;
-      font-weight: 900;
-      color: #0f172a;
-      line-height: 1.1;
-      text-transform: uppercase;
-      max-width: 70mm;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .st-badge {
-      font-size: 8px;
-      font-weight: 700;
-      color: #14535b;
-      background: #e8f3f1;
-      padding: 1.2mm 2mm;
-      border-radius: 2mm;
-      border: 0.25mm solid #c6dfdc;
-      white-space: nowrap;
-    }
-
-    /* Body 2 Columns */
-    .st-body {
-      display: flex;
-      gap: 2.5mm;
-      align-items: stretch;
-      flex: 1;
-      margin: 1.5mm 0;
-    }
-
-    /* Left Side: Cust details & Guidance */
-    .st-left {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5mm;
-      min-width: 0;
-    }
-
-    .cust-info-box {
-      background: #f5f8f7;
-      border: 0.25mm solid #e0e8e7;
-      border-radius: 1.5mm;
-      padding: 2mm 2.5mm;
-      line-height: 1.45;
-    }
-    .cust-row {
-      display: flex;
-      align-items: baseline;
-      font-size: 8.4px;
-      color: #3b5559;
-    }
-    .cust-row .label {
-      width: 13mm;
-      color: #657b7e;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-    .cust-row .val {
-      font-weight: 800;
-      color: #17363c;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    /* Important Warnings / Tips Box */
-    .tips-box {
-      background: #fbf7ed;
-      border: 0.25mm solid #eadbb8;
-      border-radius: 1.5mm;
-      padding: 2mm 2.5mm;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-evenly;
-      gap: 1.4mm;
-      flex: 1;
-    }
-    .tip-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 1.5mm;
-      font-size: 8.1px;
-      color: #665633;
-      line-height: 1.3;
-    }
-    .tip-item i {
-      font-size: 10px;
-      flex-shrink: 0;
-      margin-top: 0.5px;
-    }
-    .tip-item strong {
-      color: #74551c;
-      font-weight: 800;
-      letter-spacing: 0;
-    }
-
-    /* Right Side: QR Code */
-    .st-right {
-      width: 30mm;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      background: #f4f8f7;
-      border: 0.3mm solid #dce8e6;
-      border-radius: 2mm;
-      padding: 1.5mm;
-      flex-shrink: 0;
-    }
-    .qr-img {
-      width: 23mm;
-      height: 23mm;
-      object-fit: contain;
-      display: block;
-    }
-    .qr-label {
-      font-size: 7.5px;
-      font-weight: 900;
-      color: #087e82;
-      text-transform: uppercase;
-        letter-spacing: 0;
-      margin-top: 1px;
-      line-height: 1.1;
-    }
-    .qr-sub {
-      font-size: 6.5px;
-      color: #64748b;
-      line-height: 1;
-      margin-top: 0.5px;
-    }
-
-    /* Footer */
-    .st-footer {
-      border-top: 0.25mm solid #dce5e5;
-      padding-top: 1.5mm;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 7.5px;
-      color: #475569;
-    }
-    .st-cs {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      font-weight: 800;
-      color: #176b59;
-    }
-    .st-cs i {
-      color: #23876f;
-      font-size: 8.5px;
-    }
-    .st-notice {
-      color: #788b8e;
-      font-size: 6.8px;
-    }
-
     @media print {
       body {
         background: #ffffff !important;
@@ -418,43 +223,34 @@
     .onu-print-page .sheet-viewport { overflow-x:auto; padding: 0 0 14px; }
     .onu-print-page .print-sheet { width:198mm; min-height:285mm; box-shadow: 0 6px 24px rgba(8,35,62,.14); border:1px solid #d9e4eb; }
     .onu-print-page .sticker-card { --label-accent:var(--primary); --label-surface:var(--bg2); --label-surface-alt:var(--bg3); --label-ink:var(--text); --label-muted:var(--muted); --label-border:var(--border); display:flex; width:94mm; padding:0; height:54mm; border:0; border-radius:2.2mm; color:var(--label-ink); background:var(--label-surface); box-shadow:inset 0 0 0 .25mm var(--label-border); }
-    .onu-print-page .sticker-card::before { display:none; }
-    .label-header { height:9.5mm; flex:0 0 9.5mm; padding:1.2mm 3mm; display:flex; justify-content:space-between; align-items:center; gap:4mm; color:var(--label-ink); background:var(--label-surface-alt); border-radius:2.2mm 2.2mm 0 0; position:relative; overflow:hidden; }
-    .label-header::after { content:""; position:absolute; height:1.2mm; width:35mm; right:14mm; bottom:-.6mm; background:var(--label-accent); transform:skewX(-35deg); }
-    .label-brand { display:flex; align-items:center; min-width:0; }
-    .label-logo { display:block; width:auto; max-width:44mm; height:7mm; object-fit:contain; object-position:left center; }
-    .label-company { max-width:65mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:12px; font-weight:800; }
-    .label-tagline { max-width:52mm; color:var(--label-muted); font-size:8px; line-height:1.2; text-align:right; }
-    .label-content { flex:1; min-height:0; padding:1.2mm 2.5mm 1mm; display:flex; flex-direction:column; gap:1mm; }
-    .label-top { display:grid; grid-template-columns:1.1fr 1fr; gap:2mm; height:25mm; min-height:0; }
-    .label-bottom { display:flex; flex-direction:column; gap:1mm; flex:1; min-height:0; }
-    .label-panel { min-width:0; border:.25mm solid var(--label-border); border-radius:2mm; background:var(--label-surface); color:var(--label-ink); overflow:hidden; }
-    .label-panel-title { min-height:5mm; margin:0; padding:0 2.2mm; display:flex; align-items:center; gap:1.4mm; color:var(--label-ink); font-size:8.5px; font-weight:800; line-height:1.15; }
-    .label-panel-title i { flex:0 0 auto; color:var(--label-accent); font-size:12px; }
-    .customer-lines { padding:0 2.2mm 1mm; display:grid; gap:1.8mm; }
-    .customer-line { display:grid; grid-template-columns:15mm 2mm minmax(0,1fr); align-items:baseline; gap:.7mm; color:var(--label-muted); font-size:8.8px; line-height:1.3; }
-    .customer-line strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:9.3px; font-weight:700; }
-    .help-panel { display:flex; flex-direction:column; padding:1mm 1.4mm; background:var(--label-surface-alt); }
-    .help-heading { min-height:4.5mm; margin:0; display:flex; align-items:center; gap:1.3mm; color:var(--label-ink); font-size:8.5px; font-weight:800; }
-    .help-heading i { color:var(--label-accent); font-size:12px; }
-    .help-body { display:grid; grid-template-columns:18mm minmax(0,1fr); gap:1.4mm; align-items:center; flex:1; min-height:0; }
-    .help-qr { width:17mm; height:17mm; display:block; background:#fff; padding:.6mm; border-radius:1mm; }
-    .help-meta { display:grid; gap:1.5mm; min-width:0; }
-    .help-row { display:grid; grid-template-columns:3.4mm minmax(0,1fr); gap:1mm; align-items:center; color:var(--label-muted); font-size:6.8px; line-height:1.2; overflow-wrap:anywhere; }
-    .help-row i { color:var(--label-accent); font-size:9px; }
-    .help-row strong { display:block; color:var(--label-ink); font-size:7px; }
-    .help-qr-label { margin-top:.5mm; color:var(--label-ink); text-align:center; font-size:5.8px; font-weight:700; line-height:1.15; }
-    .led-strip { min-height:10mm; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); align-items:center; gap:1mm; padding:1mm 2mm; background:var(--label-surface-alt); border:.25mm solid var(--label-border); border-radius:1.5mm; }
-    .led-chip { min-width:0; display:grid; grid-template-columns:2.2mm minmax(0,1fr); align-items:start; gap:1mm; color:var(--label-ink); font-size:7px; line-height:1.1; }
-    .led-chip-copy { display:grid; gap:.5mm; }
-    .led-chip-copy strong { font-size:7px; font-weight:800; }
-    .led-chip-copy small { color:var(--label-muted); font-size:6.2px; line-height:1.15; }
-    .led-dot { width:2.2mm; height:2.2mm; flex:0 0 2.2mm; border-radius:50%; box-shadow:0 0 0 .25mm rgba(0,0,0,.07); }
-    .led-green { background:#20bf82; }.led-blue { background:#1599e5; }.led-red { background:#e7474b; }
-    .quick-tip { min-height:7mm; display:flex; align-items:flex-start; gap:1.5mm; padding:1mm 2mm; color:var(--label-muted); font-size:7.2px; line-height:1.25; }
-    .quick-tip i { flex:0 0 auto; color:var(--label-accent); font-size:10px; }
-    .quick-tip-copy { display:grid; gap:.4mm; }
-    .quick-tip-copy strong { color:var(--label-ink); font-size:7.4px; }
+    .onu-print-page .sticker-card::before { content:""; position:absolute; top:0; left:0; right:0; height:1.3mm; background:linear-gradient(90deg, var(--label-accent) 0 62%, color-mix(in srgb, var(--label-accent) 40%, #d39a3b) 62% 100%); }
+    .label-header { flex:0 0 auto; margin-top:1.3mm; padding:1.5mm 3mm 1.3mm; display:flex; justify-content:space-between; align-items:center; gap:3mm; color:var(--label-ink); background:var(--label-surface-alt); border-bottom:.25mm solid var(--label-border); }
+    .label-brand { display:flex; align-items:center; gap:2mm; min-width:0; }
+    .label-logo { display:block; width:auto; max-width:18mm; height:6.6mm; object-fit:contain; object-position:left center; }
+    .label-brand-text { display:grid; gap:.35mm; min-width:0; }
+    .label-company { max-width:46mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:10.5px; font-weight:800; line-height:1.1; }
+    .label-tagline { max-width:46mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-muted); font-size:6.3px; line-height:1.1; }
+    .label-badge { flex:0 0 auto; display:inline-flex; align-items:center; gap:1mm; padding:.7mm 2mm; color:#fff; background:var(--label-accent); border-radius:99mm; font-size:6.4px; font-weight:800; white-space:nowrap; }
+    .label-body { flex:1; min-height:0; display:flex; flex-direction:column; gap:1.1mm; padding:1.4mm 3mm; }
+    .label-identity { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:2mm; padding:1.2mm 2.2mm; background:color-mix(in srgb, var(--label-accent) 12%, var(--label-surface)); border:.25mm solid var(--label-border); border-radius:2mm; }
+    .identity-rows { display:grid; gap:1.1mm; min-width:0; }
+    .identity-row { display:grid; grid-template-columns:14mm 2mm minmax(0,1fr); align-items:baseline; gap:.6mm; color:var(--label-muted); font-size:7.6px; line-height:1.25; }
+    .identity-row strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:8.6px; font-weight:800; }
+    .identity-qr { width:13mm; height:13mm; display:block; background:#fff; padding:.5mm; border-radius:1mm; }
+    .label-steps { display:grid; grid-template-columns:1fr 1fr; gap:1.2mm 2mm; }
+    .step-item { display:grid; grid-template-columns:4.4mm minmax(0,1fr); gap:1.2mm; align-items:start; min-width:0; }
+    .step-num { width:4.4mm; height:4.4mm; display:flex; align-items:center; justify-content:center; color:#fff; background:var(--label-accent); border-radius:50%; font-size:6.4px; font-weight:800; }
+    .step-copy { display:grid; gap:.3mm; min-width:0; }
+    .step-copy strong { color:var(--label-ink); font-size:7px; font-weight:800; line-height:1.15; }
+    .step-copy small { color:var(--label-muted); font-size:6.2px; line-height:1.18; }
+    .label-benefit { display:flex; align-items:center; gap:1.6mm; padding:1mm 2.2mm; color:var(--label-ink); background:var(--label-surface-alt); border-radius:1.5mm; font-size:6.4px; line-height:1.2; }
+    .label-benefit i { flex:0 0 auto; color:var(--label-accent); font-size:9px; }
+    .label-benefit b { font-weight:800; }
+    .label-footer { margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:2mm; padding:1.3mm 3mm; color:#fff; background:color-mix(in srgb, var(--label-accent) 62%, #06232f); border-radius:0 0 2.2mm 2.2mm; }
+    .footer-contact { display:flex; flex-wrap:wrap; align-items:center; gap:.6mm 2.4mm; min-width:0; }
+    .footer-item { display:inline-flex; align-items:center; gap:.9mm; font-size:6.2px; line-height:1.1; white-space:nowrap; }
+    .footer-item i { font-size:8px; opacity:.92; }
+    .footer-warn { display:inline-flex; align-items:center; gap:.9mm; font-size:5.8px; font-weight:700; white-space:nowrap; color:#ffe08a; }
     @media print {
       html, body.onu-print-page { width:210mm; min-width:210mm; margin:0 !important; padding:0 !important; background:#fff !important; }
       .onu-print-page .sb, .onu-print-page .topbar, .onu-print-page .screen-controls, .onu-print-page .print-preview-head, .onu-print-page .license-grace-bar { display:none !important; }
@@ -572,51 +368,43 @@
           <div class="sticker-card">
             <header class="label-header">
               <div class="label-brand">
-                <% if (hasCustomLogo) { %>
-                  <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" class="label-logo" alt="Logo <%= company %>">
-                <% } else { %>
-                  <span class="label-company"><%= company %></span>
-                <% } %>
+                <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" class="label-logo" alt="Logo <%= stickerBranding.name %>" onerror="this.onerror=null;this.src='/img/icon.png'">
+                <span class="label-brand-text">
+                  <span class="label-company"><%= stickerBranding.name %></span>
+                  <% if (stickerBranding.tagline) { %><span class="label-tagline"><%= stickerBranding.tagline %></span><% } %>
+                </span>
               </div>
-              <div class="label-tagline"><%= typeof brandTagline !== 'undefined' && brandTagline ? brandTagline : t('admin.onu_stickers.tagline', 'Internet Lancar, Hidup Makin Mudah') %></div>
+              <span class="label-badge"><i class="bi bi-router-fill"></i> <%= t('admin.onu_stickers.badge', 'MODEM / ONU') %></span>
             </header>
 
-            <div class="label-content">
-              <div class="label-top">
-                <section class="label-panel customer-panel">
-                  <h3 class="label-panel-title"><i class="bi bi-person-vcard"></i> <%= t('admin.onu_stickers.customer_info', 'Informasi Pelanggan') %></h3>
-                  <div class="customer-lines">
-                    <% if (stickerFields.includes('customer_no')) { %><div class="customer-line"><span><%= t('admin.onu_stickers.field_no', 'No ID') %></span><span>:</span><strong><%= item.customer_no || '-' %></strong></div><% } %>
-                    <% if (stickerFields.includes('name')) { %><div class="customer-line"><span><%= t('admin.onu_stickers.name_label', 'Nama') %></span><span>:</span><strong><%= item.name || '-' %></strong></div><% } %>
-                  </div>
-                </section>
-
-                <section class="label-panel help-panel">
-                  <h3 class="help-heading"><i class="bi bi-qr-code-scan"></i> <%= t('admin.onu_stickers.help_title', 'Scan / Bantuan') %></h3>
-                  <div class="help-body">
-                    <div>
-                      <img src="<%= item.qrCodeDataUrl %>" class="help-qr" alt="QR Portal Pelanggan">
-                      <div class="help-qr-label"><%= t('admin.onu_stickers.qr_label', 'Portal Pelanggan') %></div>
-                    </div>
-                    <div class="help-meta">
-                      <div class="help-row"><i class="bi bi-whatsapp"></i><span><strong>WhatsApp</strong><%= csPhone %></span></div>
-                      <div class="help-row"><i class="bi bi-clock"></i><span><strong><%= t('admin.onu_stickers.hours_label', 'Jam Operasional') %></strong><%= settings.operational_hours || '08.00 - 22.00 WIB' %></span></div>
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-              <div class="label-bottom">
-                <div class="led-strip" aria-label="<%= t('admin.onu_stickers.led_title', 'Indikator LED') %>">
-                  <span class="led-chip"><i class="led-dot led-green"></i><span class="led-chip-copy"><strong>Power</strong><small><%= t('admin.onu_stickers.led_power_copy', 'Hijau: modem menyala') %></small></span></span>
-                  <span class="led-chip"><i class="led-dot led-blue"></i><span class="led-chip-copy"><strong>Internet</strong><small><%= t('admin.onu_stickers.led_internet_copy', 'Biru: internet terhubung') %></small></span></span>
-                  <span class="led-chip"><i class="led-dot led-green"></i><span class="led-chip-copy"><strong>Wi-Fi</strong><small><%= t('admin.onu_stickers.led_wifi_copy', 'Hijau: Wi-Fi aktif') %></small></span></span>
-                  <span class="led-chip"><i class="led-dot led-red"></i><span class="led-chip-copy"><strong>LOS</strong><small><%= t('admin.onu_stickers.led_los_copy', 'Merah: sinyal optik terganggu') %></small></span></span>
+            <div class="label-body">
+              <div class="label-identity">
+                <div class="identity-rows">
+                  <% if (stickerFields.includes('customer_no')) { %><div class="identity-row"><span><%= t('admin.onu_stickers.field_no', 'No ID') %></span><span>:</span><strong><%= item.customer_no || '-' %></strong></div><% } %>
+                  <% if (stickerFields.includes('name')) { %><div class="identity-row"><span><%= t('admin.onu_stickers.name_label', 'Nama') %></span><span>:</span><strong><%= item.name || '-' %></strong></div><% } %>
                 </div>
-                <div class="quick-tip"><i class="bi bi-info-circle-fill"></i><span class="quick-tip-copy"><strong><%= t('admin.onu_stickers.quick_tip_title', 'Koneksi bermasalah?') %></strong><span><%= t('admin.onu_stickers.quick_tip', 'Matikan modem 30 detik lalu nyalakan kembali. Jika LOS merah tetap menyala, hubungi CS.') %></span></span></div>
+                <img src="<%= item.qrCodeDataUrl %>" class="identity-qr" alt="<%= t('admin.onu_stickers.qr_label', 'Portal Pelanggan') %>">
               </div>
+
+              <div class="label-steps">
+                <div class="step-item"><span class="step-num">1</span><span class="step-copy"><strong><%= t('admin.onu_stickers.step_restart', 'Restart Modem') %></strong><small><%= t('admin.onu_stickers.step_restart_text', 'Matikan 30 detik lalu nyalakan kembali.') %></small></span></div>
+                <div class="step-item"><span class="step-num">2</span><span class="step-copy"><strong><%= t('admin.onu_stickers.step_los', 'Cek Lampu LOS') %></strong><small><%= t('admin.onu_stickers.step_los_text', 'Jika merah menyala, hubungi CS.') %></small></span></div>
+                <div class="step-item"><span class="step-num">3</span><span class="step-copy"><strong><%= t('admin.onu_stickers.step_devices', 'Cek Perangkat') %></strong><small><%= t('admin.onu_stickers.step_devices_text', 'Kurangi perangkat yang terhubung.') %></small></span></div>
+                <div class="step-item"><span class="step-num">4</span><span class="step-copy"><strong><%= t('admin.onu_stickers.step_scan', 'Scan QR Bantuan') %></strong><small><%= t('admin.onu_stickers.step_scan_text', 'Akses portal pelanggan kapan saja.') %></small></span></div>
+              </div>
+
+              <div class="label-benefit"><i class="bi bi-wifi"></i><span><b><%= t('admin.onu_stickers.benefit_title', 'Internet stabil untuk keluarga Anda.') %></b> <%= t('admin.onu_stickers.benefit_text', 'Butuh bantuan? Hubungi layanan kami.') %></span></div>
             </div>
 
+            <footer class="label-footer">
+              <span class="footer-contact">
+                <% if (stickerBranding.phone) { %><span class="footer-item"><i class="bi bi-telephone-fill"></i><%= stickerBranding.phone %></span><% } %>
+                <% if (stickerBranding.email) { %><span class="footer-item"><i class="bi bi-envelope-fill"></i><%= stickerBranding.email %></span><% } %>
+                <% if (stickerBranding.website) { %><span class="footer-item"><i class="bi bi-globe2"></i><%= stickerBranding.website %></span><% } %>
+                <% (stickerBranding.socials || []).forEach(social => { %><span class="footer-item"><i class="bi <%= social.icon %>"></i><%= social.value %></span><% }) %>
+              </span>
+              <span class="footer-warn"><i class="bi bi-lightning-charge-fill"></i><%= t('admin.onu_stickers.footer_warn', 'Cabut saat hujan/petir') %></span>
+            </footer>
           </div>
         <% }) %>
       </div>
