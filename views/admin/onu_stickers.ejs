@@ -426,40 +426,30 @@
     .label-company { max-width:65mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:12px; font-weight:800; }
     .label-tagline { max-width:52mm; color:var(--label-muted); font-size:8px; line-height:1.2; text-align:right; }
     .label-content { flex:1; min-height:0; padding:1.2mm 2.5mm 1mm; display:flex; flex-direction:column; gap:1mm; }
-    .label-top, .label-bottom { display:grid; gap:2mm; min-height:0; }
-    .label-top { grid-template-columns:1.08fr 1fr; height:18mm; }
-    .label-bottom { grid-template-columns:1.45fr 1fr; flex:1; }
+    .label-top { display:grid; grid-template-columns:1.1fr 1fr; gap:2mm; height:25mm; min-height:0; }
+    .label-bottom { display:flex; flex-direction:column; gap:1mm; flex:1; min-height:0; }
     .label-panel { min-width:0; border:.25mm solid var(--label-border); border-radius:2mm; background:var(--label-surface); color:var(--label-ink); overflow:hidden; }
-    .label-panel-title { height:4mm; margin:0; padding:0 2mm; display:flex; align-items:center; gap:1.2mm; color:var(--label-ink); font-size:8px; font-weight:800; line-height:1; }
-    .label-panel-title i { color:var(--label-accent); font-size:11px; }
-    .customer-lines { padding:0 2mm; display:grid; gap:.45mm; }
-    .customer-line { display:grid; grid-template-columns:13mm 2mm minmax(0,1fr); align-items:center; gap:.5mm; color:var(--label-muted); font-size:6.4px; line-height:1.15; }
-    .customer-line strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:6.8px; }
-    .led-panel { padding-bottom:.7mm; }
-    .led-rows { padding:0 2mm; display:grid; gap:.3mm; }
-    .led-row { display:grid; grid-template-columns:2.5mm 15mm 1.5mm minmax(0,1fr); align-items:center; gap:.6mm; min-height:1.4mm; font-size:5.8px; line-height:1; }
-    .led-row strong { font-size:6.5px; }
-    .led-dot { width:2.2mm; height:2.2mm; border-radius:50%; box-shadow:0 0 0 .25mm rgba(0,0,0,.07); }
-    .led-green { background:#20bf82; }.led-blue { background:#1599e5; }.led-yellow { background:#f3bd2f; }.led-red { background:#e7474b; }
-    .steps-panel { padding-bottom:1mm; background:var(--label-surface); }
-    .steps-title { height:5mm; padding:0 2mm; display:flex; align-items:center; gap:1.5mm; color:var(--label-ink); background:var(--label-surface-alt); font-size:8px; font-weight:800; border-bottom:.25mm solid var(--label-border); }
-    .steps-list { padding:1mm 1.6mm; display:grid; grid-template-columns:1fr 1fr; column-gap:1.5mm; row-gap:.8mm; }
-    .step { display:grid; grid-template-columns:4mm minmax(0,1fr); gap:1mm; align-items:start; min-width:0; color:var(--label-muted); }
-    .step-num { width:3.5mm; height:3.5mm; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--bg); background:var(--label-accent); font-size:6px; font-weight:800; }
-    .step-copy { font-size:5.8px; line-height:1.25; }
-    .step-copy strong { display:block; color:var(--label-ink); font-size:6.3px; }
-    .help-panel { display:flex; flex-direction:column; padding:1.4mm; background:var(--label-surface-alt); }
-    .help-heading { height:3.3mm; margin:0; display:flex; align-items:center; gap:1mm; color:var(--label-ink); font-size:8px; font-weight:800; flex:0 0 3.3mm; }
-    .help-body { display:grid; grid-template-columns:16mm minmax(0,1fr); gap:1.2mm; align-items:center; flex:1; min-height:0; }
-    .help-qr { width:15mm; height:15mm; display:block; background:#fff; padding:.5mm; border-radius:1mm; }
-    .help-meta { display:grid; gap:1.3mm; min-width:0; }
-    .help-row { display:grid; grid-template-columns:3mm minmax(0,1fr); gap:1mm; align-items:center; color:var(--label-muted); font-size:5.7px; line-height:1.2; overflow-wrap:anywhere; }
-    .help-row i { color:var(--label-accent); font-size:8px; }
-    .help-row strong { display:block; font-size:6px; }
-    .help-qr-label { margin-top:.3mm; color:var(--label-muted); text-align:center; font-size:4.5px; font-weight:700; line-height:1; }
-    .label-footer { min-height:5.5mm; padding:.8mm 3mm; display:flex; justify-content:space-between; align-items:center; gap:2mm; color:var(--label-ink); background:var(--label-surface-alt); border-radius:0 0 2.2mm 2.2mm; font-size:7px; }
-    .label-footer i { color:var(--label-accent); font-size:10px; margin-right:1mm; }
-    .label-footer-note { color:var(--label-muted); font-size:6px; white-space:nowrap; }
+    .label-panel-title { min-height:5mm; margin:0; padding:0 2.2mm; display:flex; align-items:center; gap:1.4mm; color:var(--label-ink); font-size:8.5px; font-weight:800; line-height:1.15; }
+    .label-panel-title i { flex:0 0 auto; color:var(--label-accent); font-size:12px; }
+    .customer-lines { padding:0 2.2mm 1mm; display:grid; gap:.65mm; }
+    .customer-line { display:grid; grid-template-columns:13mm 2mm minmax(0,1fr); align-items:baseline; gap:.5mm; color:var(--label-muted); font-size:7.3px; line-height:1.2; }
+    .customer-line strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--label-ink); font-size:7.6px; font-weight:700; }
+    .help-panel { display:flex; flex-direction:column; padding:1mm 1.4mm; background:var(--label-surface-alt); }
+    .help-heading { min-height:4.5mm; margin:0; display:flex; align-items:center; gap:1.3mm; color:var(--label-ink); font-size:8.5px; font-weight:800; }
+    .help-heading i { color:var(--label-accent); font-size:12px; }
+    .help-body { display:grid; grid-template-columns:18mm minmax(0,1fr); gap:1.4mm; align-items:center; flex:1; min-height:0; }
+    .help-qr { width:17mm; height:17mm; display:block; background:#fff; padding:.6mm; border-radius:1mm; }
+    .help-meta { display:grid; gap:1.5mm; min-width:0; }
+    .help-row { display:grid; grid-template-columns:3.4mm minmax(0,1fr); gap:1mm; align-items:center; color:var(--label-muted); font-size:6.8px; line-height:1.2; overflow-wrap:anywhere; }
+    .help-row i { color:var(--label-accent); font-size:9px; }
+    .help-row strong { display:block; color:var(--label-ink); font-size:7px; }
+    .help-qr-label { margin-top:.5mm; color:var(--label-ink); text-align:center; font-size:5.8px; font-weight:700; line-height:1.15; }
+    .led-strip { min-height:5mm; display:flex; align-items:center; justify-content:space-around; gap:2mm; padding:.5mm 2mm; background:var(--label-surface-alt); border:.25mm solid var(--label-border); border-radius:1.5mm; }
+    .led-chip { display:inline-flex; align-items:center; gap:1mm; color:var(--label-ink); font-size:7px; font-weight:700; white-space:nowrap; }
+    .led-dot { width:2.2mm; height:2.2mm; flex:0 0 2.2mm; border-radius:50%; box-shadow:0 0 0 .25mm rgba(0,0,0,.07); }
+    .led-green { background:#20bf82; }.led-blue { background:#1599e5; }.led-red { background:#e7474b; }
+    .quick-tip { min-height:5mm; display:flex; align-items:center; gap:1.4mm; padding:.5mm 2mm; color:var(--label-muted); font-size:6.8px; line-height:1.2; }
+    .quick-tip i { flex:0 0 auto; color:var(--label-accent); font-size:10px; }
     @media print {
       html, body.onu-print-page { width:210mm; min-width:210mm; margin:0 !important; padding:0 !important; background:#fff !important; }
       .onu-print-page .sb, .onu-print-page .topbar, .onu-print-page .screen-controls, .onu-print-page .print-preview-head, .onu-print-page .license-grace-bar { display:none !important; }
@@ -604,50 +594,32 @@
                   </div>
                 </section>
 
-                <section class="label-panel led-panel">
-                  <h3 class="label-panel-title"><i class="bi bi-lightbulb"></i> <%= t('admin.onu_stickers.led_title', 'Indikator LED') %></h3>
-                  <div class="led-rows">
-                    <div class="led-row"><span class="led-dot led-green"></span><strong>Power</strong><span>:</span><span><%= t('admin.onu_stickers.led_power', 'Menyala = modem hidup') %></span></div>
-                    <div class="led-row"><span class="led-dot led-blue"></span><strong>Internet</strong><span>:</span><span><%= t('admin.onu_stickers.led_internet', 'Menyala = terhubung') %></span></div>
-                    <div class="led-row"><span class="led-dot led-green"></span><strong>Wi-Fi</strong><span>:</span><span><%= t('admin.onu_stickers.led_wifi', 'Menyala = Wi-Fi aktif') %></span></div>
-                    <div class="led-row"><span class="led-dot led-yellow"></span><strong>LAN</strong><span>:</span><span><%= t('admin.onu_stickers.led_lan', 'Menyala = perangkat terhubung') %></span></div>
-                    <div class="led-row"><span class="led-dot led-red"></span><strong>LOS / Alarm</strong><span>:</span><span><%= t('admin.onu_stickers.led_los', 'Merah = gangguan jaringan') %></span></div>
-                  </div>
-                </section>
-              </div>
-
-              <div class="label-bottom">
-                <section class="label-panel steps-panel">
-                  <div class="steps-title"><i class="bi bi-gear-fill"></i> <%= t('admin.onu_stickers.trouble_title', 'Jika Internet Lemot / Tidak Stabil') %></div>
-                  <div class="steps-list">
-                    <div class="step"><span class="step-num">1</span><div class="step-copy"><strong><%= t('admin.onu_stickers.step_devices', 'Cek Perangkat Anda') %></strong><%= t('admin.onu_stickers.step_devices_text', 'Pastikan tidak terlalu banyak perangkat terhubung.') %></div></div>
-                    <div class="step"><span class="step-num">2</span><div class="step-copy"><strong><%= t('admin.onu_stickers.step_restart', 'Restart Modem') %></strong><%= t('admin.onu_stickers.step_restart_text', 'Cabut listrik 30 detik, lalu nyalakan kembali.') %></div></div>
-                    <div class="step"><span class="step-num">3</span><div class="step-copy"><strong><%= t('admin.onu_stickers.step_location', 'Cek Lokasi Modem') %></strong><%= t('admin.onu_stickers.step_location_text', 'Letakkan di tempat terbuka dan tidak terhalang.') %></div></div>
-                    <div class="step"><span class="step-num">4</span><div class="step-copy"><strong><%= t('admin.onu_stickers.step_contact', 'Hubungi CS') %></strong><%= t('admin.onu_stickers.step_contact_text', 'Jika masih bermasalah, hubungi layanan pelanggan.') %></div></div>
-                  </div>
-                </section>
-
                 <section class="label-panel help-panel">
-                  <h3 class="help-heading"><i class="bi bi-headset"></i> <%= t('admin.onu_stickers.help_title', 'Butuh Bantuan?') %></h3>
+                  <h3 class="help-heading"><i class="bi bi-qr-code-scan"></i> <%= t('admin.onu_stickers.help_title', 'Scan / Bantuan') %></h3>
                   <div class="help-body">
                     <div>
                       <img src="<%= item.qrCodeDataUrl %>" class="help-qr" alt="QR Portal Pelanggan">
-                      <div class="help-qr-label"><%= t('admin.onu_stickers.qr_label', 'Scan untuk portal pelanggan') %></div>
+                      <div class="help-qr-label"><%= t('admin.onu_stickers.qr_label', 'Portal Pelanggan') %></div>
                     </div>
                     <div class="help-meta">
                       <div class="help-row"><i class="bi bi-whatsapp"></i><span><strong>WhatsApp</strong><%= csPhone %></span></div>
-                      <div class="help-row"><i class="bi bi-telephone"></i><span><strong><%= t('admin.onu_stickers.phone_label', 'Telepon') %></strong><%= csPhone %></span></div>
                       <div class="help-row"><i class="bi bi-clock"></i><span><strong><%= t('admin.onu_stickers.hours_label', 'Jam Operasional') %></strong><%= settings.operational_hours || '08.00 - 22.00 WIB' %></span></div>
                     </div>
                   </div>
                 </section>
               </div>
+
+              <div class="label-bottom">
+                <div class="led-strip" aria-label="<%= t('admin.onu_stickers.led_title', 'Indikator LED') %>">
+                  <span class="led-chip"><i class="led-dot led-green"></i>Power</span>
+                  <span class="led-chip"><i class="led-dot led-blue"></i>Internet</span>
+                  <span class="led-chip"><i class="led-dot led-green"></i>Wi-Fi</span>
+                  <span class="led-chip"><i class="led-dot led-red"></i>LOS</span>
+                </div>
+                <div class="quick-tip"><i class="bi bi-info-circle-fill"></i><span><%= t('admin.onu_stickers.quick_tip', 'Internet lambat? Restart modem 30 detik. LOS merah? Hubungi CS.') %></span></div>
+              </div>
             </div>
 
-            <footer class="label-footer">
-              <span><i class="bi bi-wifi"></i><%= t('admin.onu_stickers.thank_you', 'Terima kasih telah menggunakan layanan kami') %></span>
-              <span class="label-footer-note"><%= t('admin.onu_stickers.notice', 'Tempel pada modem pelanggan') %></span>
-            </footer>
           </div>
         <% }) %>
       </div>

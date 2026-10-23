@@ -650,11 +650,12 @@
       "step_location_text": "Place it in an open area without obstructions.",
       "step_contact": "Contact Support",
       "step_contact_text": "Contact customer support if the issue continues.",
-      "help_title": "Need Help?",
+      "help_title": "Scan / Support",
+      "quick_tip": "Slow internet? Restart the modem for 30 seconds. Red LOS? Contact support.",
       "phone_label": "Phone",
       "hours_label": "Service Hours",
       "thank_you": "Thank you for choosing our service",
-      "qr_label": "Scan for customer portal",
+      "qr_label": "Customer Portal",
       "notice": "Attach to Customer Modem"
     },
     "agents": {

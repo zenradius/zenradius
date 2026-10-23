@@ -650,11 +650,12 @@
       "step_location_text": "Letakkan di tempat terbuka dan tidak terhalang.",
       "step_contact": "Hubungi CS",
       "step_contact_text": "Jika masih bermasalah, hubungi layanan pelanggan.",
-      "help_title": "Butuh Bantuan?",
+      "help_title": "Scan / Bantuan",
+      "quick_tip": "Internet lambat? Restart modem 30 detik. LOS merah? Hubungi CS.",
       "phone_label": "Telepon",
       "hours_label": "Jam Operasional",
       "thank_you": "Terima kasih telah menggunakan layanan kami",
-      "qr_label": "Scan untuk portal pelanggan",
+      "qr_label": "Portal Pelanggan",
       "notice": "Tempel pada Modem Pelanggan"
     },
     "agents": {
