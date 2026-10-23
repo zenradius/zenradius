@@ -616,6 +616,7 @@
       "search_placeholder": "Type name / ID...",
       "sheet_size": "Stickers per A4 sheet",
       "per_sheet": "per sheet",
+      "filter_section": "Filter & Print Size",
       "fields_title": "Printed customer details",
       "fields_hint": "Choose which customer information to show on each sticker.",
       "field_no": "Customer ID",

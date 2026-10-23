@@ -616,6 +616,7 @@
       "search_placeholder": "Ketik nama / ID...",
       "sheet_size": "Stiker per lembar A4",
       "per_sheet": "per lembar",
+      "filter_section": "Filter & Ukuran Cetak",
       "fields_title": "Data yang dicetak",
       "fields_hint": "Pilih informasi pelanggan yang ingin ditampilkan pada setiap stiker.",
       "field_no": "No ID",

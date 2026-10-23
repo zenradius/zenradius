@@ -291,6 +291,10 @@ function ensureDefaultSettings() {
       
       company_header: 'ZenRadius',
       company_tagline: 'One Platform for Your Network',
+      company_instagram: '',
+      company_facebook: '',
+      company_tiktok: '',
+      company_youtube: '',
       footer_info: 'ZenRadius - All Rights Reserved',
 
 // URL server lisensi resmi zenradius-web — dipakai halaman "Aktivasi Lisensi

@@ -2660,6 +2660,36 @@ function resolveStickerCsPhone(req) {
   return String(req.query.cs_phone || s.company_phone || s.company_whatsapp || '').trim() || '08xxxxxxxxxx';
 }
 
+function resolveStickerBranding(req) {
+  const settings = getSettings();
+  const configuredUrl = String(settings.public_base_url || '').trim();
+  const activeUrl = configuredUrl || adminQrServerUrl(req);
+  let website = '';
+  try {
+    const normalizedUrl = /^https?:\/\//i.test(activeUrl) ? activeUrl : `https://${activeUrl}`;
+    website = new URL(normalizedUrl).host;
+  } catch {
+    website = String(req.get('host') || '').trim();
+  }
+
+  const socials = [
+    { key: 'company_instagram', label: 'Instagram', icon: 'bi-instagram' },
+    { key: 'company_facebook', label: 'Facebook', icon: 'bi-facebook' },
+    { key: 'company_tiktok', label: 'TikTok', icon: 'bi-tiktok' },
+    { key: 'company_youtube', label: 'YouTube', icon: 'bi-youtube' }
+  ].map(item => ({ ...item, value: String(settings[item.key] || '').trim() })).filter(item => item.value);
+
+  return {
+    name: String(settings.company_header || company()).trim(),
+    tagline: String(settings.company_tagline || '').trim(),
+    phone: String(settings.company_phone || settings.company_whatsapp || '').trim(),
+    email: String(settings.company_email || '').trim(),
+    address: String(settings.company_address || '').trim(),
+    website,
+    socials
+  };
+}
+
 const STICKER_FIELD_OPTIONS = ['customer_no', 'name'];
 const DEFAULT_STICKER_FIELDS = ['customer_no', 'name'];
 
@@ -2702,7 +2732,7 @@ router.get('/onu-stickers', requireAdminSession, requireSidebarMenuAccess('onu_s
     res.render('admin/onu_stickers', {
       title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
       csPhone, searchQuery, selectedRouterId, routers, stickers, stickerFields, stickersPerPage,
-      settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo()
+      settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo(), stickerBranding: resolveStickerBranding(req)
     });
   } catch (e) {
     logger.error(`[ONU Stickers] Error: ${e.message}`);
@@ -2732,7 +2762,7 @@ router.get('/customers/:id/sticker-onu', requireAdminSession, async (req, res) =
     res.render('admin/onu_stickers', {
       title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
       csPhone, searchQuery: '', selectedRouterId: customer.router_id || null, routers: [], stickers, stickerFields, stickersPerPage,
-      settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo()
+      settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo(), stickerBranding: resolveStickerBranding(req)
     });
   } catch (e) {
     logger.error(`[ONU Sticker Single] Error: ${e.message}`);

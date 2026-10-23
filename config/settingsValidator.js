@@ -59,6 +59,10 @@ const VALIDATION_RULES = {
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     description: 'Email perusahaan'
   },
+  company_instagram: { type: 'string', maxLength: 200, description: 'Akun Instagram perusahaan' },
+  company_facebook: { type: 'string', maxLength: 200, description: 'Akun Facebook perusahaan' },
+  company_tiktok: { type: 'string', maxLength: 200, description: 'Akun TikTok perusahaan' },
+  company_youtube: { type: 'string', maxLength: 200, description: 'Akun YouTube perusahaan' },
   company_address: {
     type: 'string',
     maxLength: 500,

@@ -398,6 +398,26 @@
             <label class="fl"><%= t('admin.settings.company_email', 'Email Perusahaan') %></label>
             <input class="fc" name="company_email" value="<%= settings.company_email || '' %>" placeholder="support@zenradius.net">
           </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Instagram</label>
+              <input class="fc" name="company_instagram" value="<%= settings.company_instagram || '' %>" placeholder="@akun atau URL profil">
+            </div>
+            <div class="fg">
+              <label class="fl">Facebook</label>
+              <input class="fc" name="company_facebook" value="<%= settings.company_facebook || '' %>" placeholder="Nama halaman atau URL">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">TikTok</label>
+              <input class="fc" name="company_tiktok" value="<%= settings.company_tiktok || '' %>" placeholder="@akun atau URL profil">
+            </div>
+            <div class="fg">
+              <label class="fl">YouTube</label>
+              <input class="fc" name="company_youtube" value="<%= settings.company_youtube || '' %>" placeholder="Nama channel atau URL">
+            </div>
+          </div>
           <div class="fg">
             <label class="fl"><%= t('admin.settings.office_address', 'Alamat Kantor') %></label>
             <input class="fc" name="company_address" value="<%= settings.company_address || '' %>" placeholder="Jl. Utama No. 123">

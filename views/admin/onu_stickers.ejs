@@ -94,7 +94,12 @@
     .btn-secondary:hover {
       background: var(--bg3);
     }
-    .filter-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; align-items:end; padding:18px; }
+    .filter-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; align-items:end; padding:0 18px 18px; }
+    .panel-summary { display:flex; flex-wrap:wrap; gap:8px; padding:0 18px 16px; }
+    .summary-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; background:var(--bg2); border:1px solid var(--border); border-radius:99px; color:var(--muted); font-size:11.5px; font-weight:600; }
+    .summary-chip i { color:var(--primary); font-size:13px; }
+    .summary-chip strong { color:var(--text); font-weight:700; }
+    .panel-section-label { display:block; padding:16px 18px 10px; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; }
     .fg { min-width:0; margin:0; display:flex; flex-direction:column; gap:6px; }
     .fg .fl { margin:0; color:var(--muted); font-size:10px; font-weight:700; }
     .fg .fc { min-width:0; height:42px; padding:9px 12px; border-radius:7px; }
@@ -214,7 +219,9 @@
     .onu-print-page .ctrl-header { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--border); }
     .onu-print-page .ctrl-title { color: var(--text); font-size: 16px; }
     .onu-print-page .ctrl-actions .btn { min-height: 38px; }
-    .onu-print-page .filter-grid { padding:18px; }
+    .onu-print-page .filter-grid { padding:0 18px 18px; }
+    .onu-print-page .panel-summary { padding:0 18px 16px; }
+    .onu-print-page .panel-section-label { padding:16px 18px 10px; }
     .onu-print-page .sticker-fields { padding:0 18px 16px; }
     .onu-print-page .fg label { color: var(--muted); }
     .onu-print-page .fg select, .onu-print-page .fg input { background: var(--bg2); color: var(--text); border-color: var(--border); }
@@ -301,6 +308,7 @@
     <div class="card-bd">
 
     <form method="GET" action="/admin/onu-stickers" id="filterForm">
+      <span class="panel-section-label"><%= t('admin.onu_stickers.filter_section', 'Filter & Ukuran Cetak') %></span>
       <div class="filter-grid">
         <div class="fg">
           <label class="fl"><%= t('admin.onu_stickers.filter_router', 'Filter Router') %></label>
@@ -341,6 +349,11 @@
         </div>
       </div>
     </form>
+    <div class="panel-summary screen-only">
+      <span class="summary-chip"><i class="bi bi-people-fill"></i> <strong><%= stickers.length %></strong> <%= t('admin.onu_stickers.sticker_count', 'stiker') %></span>
+      <span class="summary-chip"><i class="bi bi-aspect-ratio"></i> 94 × 54 mm</span>
+      <span class="summary-chip"><i class="bi bi-file-earmark-break"></i> <strong><%= stickersPerPage %></strong> <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></span>
+    </div>
     <div class="screen-hint" style="display:flex;align-items:center;gap:6px;">
       <i class="bi bi-info-circle"></i>
       <%= t('admin.onu_stickers.hint', 'Ukuran setiap stiker 94 × 54 mm. Ukuran bodi ONU ZTE/Huawei berbeda tiap model; ukur area datar sebelum menempel. Saat mencetak A4, pilih skala 100% / Actual size.') %>
