@@ -247,21 +247,11 @@
           <div style="font-size:10px; color:var(--muted); margin-top:4px">Nomor admin akan menerima notifikasi monitoring sistem. Nomor teknisi diambil otomatis dari <a href="/admin/technicians" style="color:var(--brand);font-weight:600">Data Teknisi</a>.</div>
         </div>
         <div class="fg mb16">
-          <div class="alert alert-i" style="margin:0">
-            <i class="bi bi-robot"></i> Pengaturan AI Gemini (API Key, model, dan asisten AI) kini ada di menu
-            <a href="/admin/gemini-bot" style="color:var(--brand);font-weight:700">Gemini Bot</a>.
-          </div>
-        </div>
-        <div class="fg mb16">
           <label class="fl">JID Grup Teknisi WA (Opsional)</label>
           <input class="fc" name="whatsapp_tech_group_jid" value="<%= settings.whatsapp_tech_group_jid || '' %>" placeholder="1234567890@g.us">
           <div style="font-size:10px; color:var(--muted); margin-top:4px">Isi untuk otomatis mengirim eskalasi gangguan ke grup teknisi. Contoh: 1234567890@g.us</div>
         </div>
         <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Integrasi WhatsApp</button>
-      </form>
-      <form method="POST" action="/admin/whatsapp/test-gemini" style="margin-top:10px;">
-        <button type="submit" class="btn btn-p"><i class="bi bi-robot"></i> Test Koneksi Gemini</button>
-        <div style="font-size:10px; color:var(--muted); margin-top:4px">Uji apakah API Key Gemini valid. Pengaturan API Key ada di menu <a href="/admin/gemini-bot" style="color:var(--brand);font-weight:600">Gemini Bot</a>.</div>
       </form>
     </div>
 
