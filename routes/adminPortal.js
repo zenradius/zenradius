@@ -2667,11 +2667,28 @@ function resolveStickerCsPhone(req) {
   return String(req.query.cs_phone || s.company_phone || s.company_whatsapp || '').trim() || '08xxxxxxxxxx';
 }
 
+const STICKER_FIELD_OPTIONS = ['customer_no', 'name', 'address', 'phone', 'package_name', 'id_display'];
+const DEFAULT_STICKER_FIELDS = ['customer_no', 'name', 'address', 'phone', 'package_name'];
+
+function resolveStickerFields(query) {
+  if (String(query.fields_configured || '') !== '1') return DEFAULT_STICKER_FIELDS;
+  const requested = Array.isArray(query.fields) ? query.fields : (query.fields ? [query.fields] : []);
+  return [...new Set(requested.map(value => String(value || '').trim()))]
+    .filter(field => STICKER_FIELD_OPTIONS.includes(field));
+}
+
+function resolveStickerPageSize(query) {
+  const requested = Number(query.page_size || 10);
+  return [10, 8, 6, 4].includes(requested) ? requested : 10;
+}
+
 router.get('/onu-stickers', requireAdminSession, requireSidebarMenuAccess('onu_stickers'), async (req, res) => {
   try {
     const searchQuery = String(req.query.q || '').trim();
     const selectedRouterId = req.selectedRouterId || (req.query.router_id ? Number(req.query.router_id) : null);
     const csPhone = resolveStickerCsPhone(req);
+    const stickerFields = resolveStickerFields(req.query);
+    const stickersPerPage = resolveStickerPageSize(req.query);
     const serverBaseUrl = adminQrServerUrl(req);
 
     const routers = mikrotikService.getAllRouters();
@@ -2684,8 +2701,10 @@ router.get('/onu-stickers', requireAdminSession, requireSidebarMenuAccess('onu_s
       const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, { margin: 1, width: 250, errorCorrectionLevel: 'M' });
       stickers.push({
         name: c.name,
+        customer_no: c.customer_no || c.id,
         id_display: resolveStickerIdDisplay(c),
         package_name: c.package_name || '',
+        phone: c.phone || '',
         area: c.area || '',
         address: c.address || '',
         qrCodeDataUrl
@@ -2694,7 +2713,7 @@ router.get('/onu-stickers', requireAdminSession, requireSidebarMenuAccess('onu_s
 
     res.render('admin/onu_stickers', {
       title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
-      csPhone, searchQuery, selectedRouterId, routers, stickers,
+      csPhone, searchQuery, selectedRouterId, routers, stickers, stickerFields, stickersPerPage,
       settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo()
     });
   } catch (e) {
@@ -2709,6 +2728,8 @@ router.get('/customers/:id/sticker-onu', requireAdminSession, async (req, res) =
     if (!customer) return res.status(404).send('Pelanggan tidak ditemukan');
 
     const csPhone = resolveStickerCsPhone(req);
+    const stickerFields = resolveStickerFields(req.query);
+    const stickersPerPage = resolveStickerPageSize(req.query);
     const serverBaseUrl = adminQrServerUrl(req);
     const ident = String(customer.pppoe_username || customer.hotspot_username || customer.id || '').trim();
     const qrPayload = `${serverBaseUrl}/app/connect?cid=${encodeURIComponent(ident)}`;
@@ -2716,8 +2737,10 @@ router.get('/customers/:id/sticker-onu', requireAdminSession, async (req, res) =
 
     const stickers = [{
       name: customer.name,
+      customer_no: customer.customer_no || customer.id,
       id_display: resolveStickerIdDisplay(customer),
       package_name: customer.package_name || '',
+      phone: customer.phone || '',
       area: customer.area || '',
       address: customer.address || '',
       qrCodeDataUrl
@@ -2725,7 +2748,7 @@ router.get('/customers/:id/sticker-onu', requireAdminSession, async (req, res) =
 
     res.render('admin/onu_stickers', {
       title: 'Cetak Stiker Modem / ONU', company: company(), activePage: 'onu_stickers',
-      csPhone, searchQuery: '', selectedRouterId: customer.router_id || null, routers: [], stickers,
+      csPhone, searchQuery: '', selectedRouterId: customer.router_id || null, routers: [], stickers, stickerFields, stickersPerPage,
       settings: getSettings(), hasCustomLogo: brandAssets.hasCustomLogo()
     });
   } catch (e) {

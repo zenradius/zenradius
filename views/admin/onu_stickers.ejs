@@ -98,6 +98,10 @@
       margin-bottom: 12px;
     }
     .filter-submit { justify-content:flex-end; }
+    .sticker-fields { display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; padding:12px 18px 16px; border-top:1px solid var(--border); }
+    .sticker-fields-title { width:100%; color:var(--muted); font-size:11px; font-weight:700; }
+    .sticker-field { display:inline-flex; align-items:center; gap:6px; color:var(--text); font-size:12px; cursor:pointer; }
+    .sticker-field input { accent-color:var(--primary); width:15px; height:15px; margin:0; }
     .sticker-empty { min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:24px; color:var(--muted); background:var(--panel); border:1px solid var(--border); border-radius:8px; text-align:center; }
     .sticker-empty i { color:var(--primary); font-size:26px; }
     .sticker-empty strong { color:var(--text); font-size:15px; }
@@ -398,6 +402,7 @@
     .onu-print-page .ctrl-title { color: var(--text); font-size: 16px; }
     .onu-print-page .ctrl-actions .btn { min-height: 38px; }
     .onu-print-page .filter-grid { padding: 16px 18px 0; }
+    .onu-print-page .sticker-fields { padding-left:18px; padding-right:18px; }
     .onu-print-page .fg label { color: var(--muted); }
     .onu-print-page .fg select, .onu-print-page .fg input { background: var(--bg2); color: var(--text); border-color: var(--border); }
     .onu-print-page .screen-hint { padding: 0 18px 16px; color: var(--muted); font-size: 12px; }
@@ -406,6 +411,9 @@
     .onu-print-page .print-sheet { box-shadow: 0 6px 24px rgba(8,35,62,.14); border:1px solid #d9e4eb; }
     .onu-print-page .sticker-grid { gap: 2.5mm; }
     .onu-print-page .sticker-card { --label-accent:var(--primary); --label-surface:var(--bg2); --label-surface-alt:var(--bg3); --label-ink:var(--text); --label-muted:var(--muted); --label-border:var(--border); display:flex; padding:0; height:54mm; border:0; border-radius:2.2mm; color:var(--label-ink); background:var(--label-surface); box-shadow:inset 0 0 0 .25mm var(--label-border); }
+    .onu-print-page .page-size-8 .sticker-card { height:68mm; }
+    .onu-print-page .page-size-6 .sticker-card { height:92mm; }
+    .onu-print-page .page-size-4 .sticker-card { height:141mm; }
     .onu-print-page .sticker-card::before { display:none; }
     .label-header { height:9.5mm; flex:0 0 9.5mm; padding:1.2mm 3mm; display:flex; justify-content:space-between; align-items:center; gap:4mm; color:var(--label-ink); background:var(--label-surface-alt); border-radius:2.2mm 2.2mm 0 0; position:relative; overflow:hidden; }
     .label-header::after { content:""; position:absolute; height:1.2mm; width:35mm; right:14mm; bottom:-.6mm; background:var(--label-accent); transform:skewX(-35deg); }
@@ -415,7 +423,7 @@
     .label-tagline { max-width:52mm; color:var(--label-muted); font-size:8px; line-height:1.2; text-align:right; }
     .label-content { flex:1; min-height:0; padding:1.2mm 2.5mm 1mm; display:flex; flex-direction:column; gap:1mm; }
     .label-top, .label-bottom { display:grid; gap:2mm; min-height:0; }
-    .label-top { grid-template-columns:1.08fr 1fr; height:16mm; }
+    .label-top { grid-template-columns:1.08fr 1fr; height:18mm; }
     .label-bottom { grid-template-columns:1.45fr 1fr; flex:1; }
     .label-panel { min-width:0; border:.25mm solid var(--label-border); border-radius:2mm; background:var(--label-surface); color:var(--label-ink); overflow:hidden; }
     .label-panel-title { height:4mm; margin:0; padding:0 2mm; display:flex; align-items:center; gap:1.2mm; color:var(--label-ink); font-size:8px; font-weight:800; line-height:1; }
@@ -513,6 +521,15 @@
           <input class="fc" type="search" name="q" value="<%= searchQuery || '' %>" placeholder="<%= t('admin.onu_stickers.search_placeholder', 'Ketik nama / ID...') %>" />
         </div>
         <div class="fg">
+          <label class="fl"><%= t('admin.onu_stickers.sheet_size', 'Stiker per lembar A4') %></label>
+          <select class="fc" name="page_size">
+            <option value="10" <%= stickersPerPage === 10 ? 'selected' : '' %>>10 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
+            <option value="8" <%= stickersPerPage === 8 ? 'selected' : '' %>>8 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
+            <option value="6" <%= stickersPerPage === 6 ? 'selected' : '' %>>6 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
+            <option value="4" <%= stickersPerPage === 4 ? 'selected' : '' %>>4 <%= t('admin.onu_stickers.per_sheet', 'per lembar') %></option>
+          </select>
+        </div>
+        <div class="fg">
           <label class="fl"><%= t('admin.onu_stickers.cs_phone', 'No. CS / WA Bantuan (Tampil di Stiker)') %></label>
           <input class="fc" type="text" name="cs_phone" value="<%= csPhone %>" placeholder="08xxxxxxxxxx" />
         </div>
@@ -520,6 +537,16 @@
           <label class="fl" aria-hidden="true">&nbsp;</label>
           <button type="submit" class="btn btn-g"><i class="bi bi-search"></i> <%= t('admin.onu_stickers.apply', 'Tampilkan') %></button>
         </div>
+      </div>
+      <input type="hidden" name="fields_configured" value="1">
+      <div class="sticker-fields">
+        <span class="sticker-fields-title"><%= t('admin.onu_stickers.fields_title', 'Pilih data pelanggan pada stiker') %></span>
+        <label class="sticker-field"><input type="checkbox" name="fields" value="customer_no" <%= stickerFields.includes('customer_no') ? 'checked' : '' %>><%= t('admin.onu_stickers.field_no', 'No ID') %></label>
+        <label class="sticker-field"><input type="checkbox" name="fields" value="name" <%= stickerFields.includes('name') ? 'checked' : '' %>><%= t('admin.onu_stickers.name_label', 'Nama') %></label>
+        <label class="sticker-field"><input type="checkbox" name="fields" value="address" <%= stickerFields.includes('address') ? 'checked' : '' %>><%= t('admin.onu_stickers.address_label', 'Alamat') %></label>
+        <label class="sticker-field"><input type="checkbox" name="fields" value="phone" <%= stickerFields.includes('phone') ? 'checked' : '' %>><%= t('admin.onu_stickers.whatsapp_label', 'WhatsApp') %></label>
+        <label class="sticker-field"><input type="checkbox" name="fields" value="package_name" <%= stickerFields.includes('package_name') ? 'checked' : '' %>><%= t('admin.onu_stickers.package_label', 'Paket') %></label>
+        <label class="sticker-field"><input type="checkbox" name="fields" value="id_display" <%= stickerFields.includes('id_display') ? 'checked' : '' %>><%= t('admin.onu_stickers.connection_label', 'Akun Internet') %></label>
       </div>
     </form>
     <div class="screen-hint" style="display:flex;align-items:center;gap:6px;">
@@ -538,12 +565,12 @@
   <% if (stickers.length > 0) { %>
   <!-- Personalized customer sheets (10 labels per A4) -->
   <% 
-    const STICKERS_PER_PAGE = 10;
+    const STICKERS_PER_PAGE = stickersPerPage;
     const totalPages = Math.ceil(stickers.length / STICKERS_PER_PAGE);
     for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
       const pageItems = stickers.slice(pageIdx * STICKERS_PER_PAGE, (pageIdx + 1) * STICKERS_PER_PAGE);
   %>
-    <div class="print-sheet">
+    <div class="print-sheet page-size-<%= stickersPerPage %>">
       <div class="sticker-grid">
         <% pageItems.forEach(item => { %>
           <div class="sticker-card">
@@ -563,10 +590,12 @@
                 <section class="label-panel customer-panel">
                   <h3 class="label-panel-title"><i class="bi bi-person-vcard"></i> <%= t('admin.onu_stickers.customer_info', 'Informasi Pelanggan') %></h3>
                   <div class="customer-lines">
-                    <div class="customer-line"><span><%= t('admin.onu_stickers.name_label', 'Nama') %></span><span>:</span><strong><%= item.name || '-' %></strong></div>
-                    <div class="customer-line"><span><%= t('admin.onu_stickers.id_label', 'ID / Internet') %></span><span>:</span><strong><%= item.id_display || '-' %></strong></div>
-                    <div class="customer-line"><span><%= t('admin.onu_stickers.package_label', 'Paket') %></span><span>:</span><strong><%= item.package_name || '-' %></strong></div>
-                    <div class="customer-line"><span><%= t('admin.onu_stickers.area_label', 'Area') %></span><span>:</span><strong><%= [item.area, item.address].filter(Boolean).join(' / ') || '-' %></strong></div>
+                    <% if (stickerFields.includes('customer_no')) { %><div class="customer-line"><span><%= t('admin.onu_stickers.field_no', 'No ID') %></span><span>:</span><strong><%= item.customer_no || '-' %></strong></div><% } %>
+                    <% if (stickerFields.includes('name')) { %><div class="customer-line"><span><%= t('admin.onu_stickers.name_label', 'Nama') %></span><span>:</span><strong><%= item.name || '-' %></strong></div><% } %>
+                    <% if (stickerFields.includes('address')) { %><div class="customer-line"><span><%= t('admin.onu_stickers.address_label', 'Alamat') %></span><span>:</span><strong><%= [item.area, item.address].filter(Boolean).join(' / ') || '-' %></strong></div><% } %>
+                    <% if (stickerFields.includes('phone')) { %><div class="customer-line"><span><%= t('admin.onu_stickers.whatsapp_label', 'WhatsApp') %></span><span>:</span><strong><%= item.phone || '-' %></strong></div><% } %>
+                    <% if (stickerFields.includes('package_name')) { %><div class="customer-line"><span><%= t('admin.onu_stickers.package_label', 'Paket') %></span><span>:</span><strong><%= item.package_name || '-' %></strong></div><% } %>
+                    <% if (stickerFields.includes('id_display')) { %><div class="customer-line"><span><%= t('admin.onu_stickers.connection_label', 'Akun Internet') %></span><span>:</span><strong><%= item.id_display || '-' %></strong></div><% } %>
                   </div>
                 </section>
 
