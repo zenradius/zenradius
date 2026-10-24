@@ -69,6 +69,10 @@ if (!arg) {
   console.error('Penggunaan: node scripts/bump-version.js <versi|patch|minor|major|--check>');
   process.exit(2);
 }
+if (!/^\d+\.\d+\.\d+$/.test(arg) && !['patch', 'minor', 'major'].includes(arg)) {
+  console.error(`✘ Argumen tidak dikenal: "${arg}". Gunakan patch | minor | major | x.y.z | --check`);
+  process.exit(2);
+}
 const target = /^\d+\.\d+\.\d+$/.test(arg) ? arg : nextSemver(current, arg);
 if (!target) {
   console.error(`✘ Versi saat ini tidak valid ("${current}") atau argumen salah: "${arg}"`);
