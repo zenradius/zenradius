@@ -1881,6 +1881,10 @@ app.use((req, res, next) => {
 });
 app.use('/penagih', collectorPortal);
 
+// Point of Sale (Toko) — modul penjualan barang, diakses di /toko
+const posPortal = require('./routes/posPortal');
+app.use('/toko', posPortal);
+
 app.use('/kasir', (req, res) => res.redirect(301, '/admin' + (req.url || '')));
 
 function startServer(portToUse) {

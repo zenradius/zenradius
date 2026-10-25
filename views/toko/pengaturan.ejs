@@ -1,0 +1,107 @@
+<%- include('partials/head', { title: 'Pengaturan Toko' }) %>
+<%- include('partials/nav', { activeTab: 'pengaturan' }) %>
+
+<form method="POST" action="/toko/pengaturan/simpan">
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-shop"></i> Identitas Toko</h6></div>
+    <div class="card-bd">
+      <div class="alert alert-i">
+        <i class="bi bi-info-circle"></i>
+        Kosongkan nama toko untuk memakai nama perusahaan dari Pengaturan utama
+        (<strong><%= company %></strong>). Brand utama aplikasi tetap mengikuti pengaturan ZenRadius.
+      </div>
+      <div class="form-row">
+        <div class="fg">
+          <label class="fl">Nama Toko</label>
+          <input type="text" class="fc" name="store_name" value="<%= posSettings.store_name || '' %>" placeholder="<%= company %>">
+          <div class="pos-hint">Tampil pada struk dan header modul POS.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Telepon Toko</label>
+          <input type="text" class="fc" name="store_phone" value="<%= posSettings.store_phone || '' %>" placeholder="08xxxxxxxxxx">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Alamat Toko</label>
+        <textarea class="fc" name="store_address" placeholder="Alamat lengkap"><%= posSettings.store_address || '' %></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-receipt"></i> Struk</h6></div>
+    <div class="card-bd">
+      <div class="fg">
+        <label class="fl">Catatan Kaki Struk</label>
+        <textarea class="fc" name="receipt_footer" placeholder="Terima kasih atas kunjungan Anda"><%= posSettings.receipt_footer || '' %></textarea>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)">
+        <input type="checkbox" name="receipt_show_logo" value="1" <%= posSettings.receipt_show_logo ? 'checked' : '' %>>
+        Cetak logo pada struk (memakai logo dari Pengaturan ZenRadius)
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-star"></i> Program Poin Loyalitas</h6></div>
+    <div class="card-bd">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);margin-bottom:14px">
+        <input type="checkbox" name="loyalty_enabled" value="1" <%= posSettings.loyalty_enabled ? 'checked' : '' %>>
+        Aktifkan poin loyalitas untuk pelanggan toko
+      </label>
+      <div class="form-row">
+        <div class="fg">
+          <label class="fl">Belanja per 1 Poin (Rp)</label>
+          <input type="number" class="fc" name="loyalty_spend_per_point" min="100" step="100" value="<%= posSettings.loyalty_spend_per_point %>">
+          <div class="pos-hint">Contoh: 10.000 artinya setiap Rp 10.000 belanja mendapat 1 poin.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Nilai Tukar 1 Poin (Rp)</label>
+          <input type="number" class="fc" name="loyalty_point_value" min="1" step="1" value="<%= posSettings.loyalty_point_value %>">
+          <div class="pos-hint">Potongan harga saat poin ditukar.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-qr-code"></i> QRIS Statis</h6></div>
+    <div class="card-bd">
+      <div class="fg">
+        <label class="fl">Payload QRIS Statis Merchant</label>
+        <textarea class="fc" name="qris_static_payload" placeholder="00020101021126..."><%= posSettings.qris_static_payload || '' %></textarea>
+        <div class="pos-hint">
+          Salin payload QRIS statis dari merchant Anda. Dipakai sebagai rujukan nominal saat menerima pembayaran QRIS.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-sliders"></i> Operasional</h6></div>
+    <div class="card-bd">
+      <div class="form-row">
+        <div class="fg">
+          <label class="fl">Stok Minimum Default</label>
+          <input type="number" class="fc" name="default_min_stock" min="0" step="1" value="<%= posSettings.default_min_stock %>">
+          <div class="pos-hint">Dipakai sebagai saran saat menambah produk baru.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Pajak (%)</label>
+          <input type="number" class="fc" name="tax_percent" min="0" max="100" step="0.1" value="<%= posSettings.tax_percent %>">
+          <div class="pos-hint">Isi 0 bila tidak memakai pajak.</div>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)">
+        <input type="checkbox" name="low_stock_alert" value="1" <%= posSettings.low_stock_alert ? 'checked' : '' %>>
+        Tampilkan peringatan stok menipis di ringkasan POS
+      </label>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan Toko</button>
+</form>
+
+</div></div><!-- /.page /.mw -->
+</body>
+</html>

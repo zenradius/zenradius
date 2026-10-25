@@ -27,6 +27,7 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 ## 📖 Daftar Isi
 
 - [Fitur Utama](#-fitur-utama)
+- [Point of Sale / Toko](#-point-of-sale--toko)
 - [Integrasi Payment Gateway](#-integrasi-payment-gateway)
 - [Tumpukan Teknologi](#-tumpukan-teknologi)
 - [Persyaratan Sistem](#-persyaratan-sistem)
@@ -69,6 +70,59 @@ Mendukung instalasi mandiri (*standalone mode*) ke layar beranda perangkat mobil
 | Kolektor Keuangan | **ZenRadius Kolektor** |
 
 Aset statis di-cache menggunakan strategi **Stale-While-Revalidate** untuk pengalaman akses yang instan tanpa jeda pembersihan berkas oleh pengguna akhir.
+
+---
+
+## 🛒 Point of Sale / Toko
+
+Modul **Point of Sale (POS)** adalah kasir penjualan barang ritel yang menyatu di dalam ZenRadius — cocok untuk ISP yang juga menjual perangkat (router, kabel, adaptor), aksesoris, pulsa/token, atau kebutuhan toko lainnya. Modul ini muncul pada sidebar panel admin tepat **di bawah menu DigiFlazz**.
+
+| Item | Keterangan |
+|---|---|
+| **Nama Menu** | Point of Sale |
+| **Posisi Menu** | Sidebar admin → section **LAYANAN**, tepat di bawah **DigiFlazz** |
+| **Alamat Akses** | `https://domainanda.com/toko` |
+| **Hak Akses** | Administrator & Kasir (`cashier`) |
+| **Branding** | Mengikuti nama perusahaan (`company_header`); bisa ditimpa per toko lewat **Nama Toko** di menu Pengaturan POS |
+
+### Fitur Utama POS
+
+| Fitur | Deskripsi |
+|---|---|
+| **Kasir (POS)** | Antarmuka kasir satu layar: cari/scan produk, keranjang, diskon, tukar poin, hitung kembalian, dan cetak struk 80 mm. |
+| **Scan Barcode / SKU** | Kolom pencarian menerima input scanner barcode; menekan **Enter** langsung menambahkan produk yang paling cocok ke keranjang. |
+| **Satuan Bertingkat** | Satu produk dapat memiliki beberapa satuan (mis. Pcs, Pak, Dus) beserta faktor konversi dan harga jual per satuan. |
+| **Harga Grosir** | Harga khusus otomatis berlaku jika jumlah beli mencapai minimum grosir yang ditentukan per satuan. |
+| **Tipe Pembayaran** | **Tunai (CASH)**, **QRIS**, dan **Tempo/Kredit (CREDIT)** dengan jatuh tempo, saldo hutang, serta pembayaran cicilan. |
+| **Program Loyalti** | Poin otomatis diperoleh dari nominal belanja; poin dapat ditukar menjadi potongan harga saat checkout. |
+| **Manajemen Produk** | Kategori, SKU, harga pokok, harga jual, stok minimum, tanggal kedaluwarsa, dan penyesuaian stok dengan kartu stok (*stock log*). |
+| **Pembelian & Supplier** | Pencatatan pembelian dari supplier (tunai/tempo) yang otomatis menambah stok serta memperbarui harga pokok dan tanggal kedaluwarsa produk. |
+| **Hutang & Piutang** | Daftar piutang pelanggan dan hutang supplier lengkap dengan form pembayaran angsuran. |
+| **Kas & Pengeluaran** | Pencatatan pengeluaran operasional toko (listrik, gaji, transport, dll) dengan filter dan ringkasan per periode. |
+| **Shift Kasir & Z-Report** | Buka/tutup shift dengan kas awal, kas seharusnya, kas aktual, dan selisih; riwayat shift tersimpan untuk audit. |
+| **Laporan Penjualan** | Filter rentang tanggal, ringkasan omzet & laba, rekap per metode bayar, produk terlaris, rekap harian, serta **void** dan **retur** penjualan. |
+| **Pelanggan Toko** | Data pelanggan POS, saldo poin, penyesuaian poin manual, dan riwayat mutasi poin. |
+| **Keranjang Ditahan (Hold)** | Menahan beberapa transaksi sekaligus (mis. pelanggan lupa ambil barang) untuk dilanjutkan kapan saja. |
+| **QRIS Statis Toko** | Payload QRIS statis dapat disimpan di Pengaturan POS untuk ditampilkan saat pembayaran QRIS. |
+| **Struk Thermal** | Halaman struk mandiri ukuran 80 mm (`/toko/struk/:id`) siap cetak, tanpa elemen sidebar. |
+
+### Pengaturan POS
+
+Menu **Pengaturan** (khusus administrator) di `/toko/pengaturan` mengatur identitas toko, footer struk, program loyalti, QRIS statis, dan operasional:
+
+| Grup | Contoh Pengaturan |
+|---|---|
+| **Identitas Toko** | Nama toko (kosong = ikut nama perusahaan), alamat, telepon |
+| **Struk** | Footer struk, tampilkan logo |
+| **Loyalti** | Aktif/nonaktif, nominal belanja per 1 poin, nilai rupiah per poin |
+| **Pembayaran** | Payload QRIS statis toko |
+| **Operasional** | Stok minimum default, persentase pajak, peringatan stok menipis |
+
+### Catatan Teknis
+
+- Seluruh tabel modul POS diberi awalan **`pos_`** (mis. `pos_products`, `pos_sales`, `pos_shifts`) agar tidak bertabrakan dengan tabel inventaris perangkat ISP yang sudah ada (`inventory_items`, `inventory_stock`, dan sejenisnya).
+- Data POS berada pada **basis data ZenRadius yang sama**, sehingga laporan dan backup otomatis ikut terbawa tanpa proses sinkronisasi terpisah.
+- Modul ini berdiri sendiri dari data pelanggan internet: pelanggan toko (*walk-in*) tidak otomatis menjadi pelanggan ISP.
 
 ---
 

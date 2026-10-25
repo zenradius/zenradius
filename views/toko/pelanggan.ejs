@@ -1,0 +1,211 @@
+<%- include('partials/head', { title: 'Pelanggan Toko' }) %>
+<%- include('partials/nav', { activeTab: 'pelanggan' }) %>
+
+<div class="card">
+  <div class="card-hd" style="flex-wrap:wrap;gap:10px">
+    <h6><i class="bi bi-people"></i> Pelanggan Toko (<%= customers.length %>)</h6>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <form method="GET" action="/toko/pelanggan" style="display:flex;gap:8px;align-items:center;margin:0">
+        <div class="sinput">
+          <i class="bi bi-search"></i>
+          <input type="text" class="fc" name="q" value="<%= search %>" placeholder="Cari nama / telepon...">
+        </div>
+        <button class="btn btn-g btn-sm" type="submit"><i class="bi bi-search"></i></button>
+      </form>
+      <button class="btn btn-p btn-sm" onclick="openCust()"><i class="bi bi-person-plus"></i> Pelanggan Baru</button>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="dtbl">
+      <thead><tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th class="num">Poin</th><th>Aksi</th></tr></thead>
+      <tbody>
+      <% if (!customers.length) { %>
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px">
+          Belum ada pelanggan toko. Pelanggan toko dipakai untuk transaksi tempo dan program poin.
+        </td></tr>
+      <% } %>
+      <% customers.forEach(function(c){ %>
+        <tr>
+          <td>
+            <div style="font-weight:600"><%= c.name %></div>
+            <% if (c.note) { %><div style="font-size:11px;color:var(--muted)"><%= c.note %></div><% } %>
+          </td>
+          <td><%= c.phone || '-' %></td>
+          <td style="font-size:12px;color:var(--muted)"><%= c.address || '-' %></td>
+          <td class="num" style="font-weight:700;color:var(--primary)"><%= c.points || 0 %></td>
+          <td>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">
+              <button type="button" class="btn btn-g btn-sm" onclick="openPoints(<%= c.id %>, '<%= String(c.name).replace(/'/g, "\\'") %>', <%= c.points || 0 %>)"><i class="bi bi-star"></i></button>
+              <button type="button" class="btn btn-g btn-sm" onclick="openCust(<%= c.id %>)"><i class="bi bi-pencil"></i></button>
+              <button type="button" class="btn btn-g btn-sm" onclick="openHistory(<%= c.id %>, '<%= String(c.name).replace(/'/g, "\\'") %>')"><i class="bi bi-clock-history"></i></button>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="alert alert-i">
+  <i class="bi bi-info-circle"></i>
+  Setiap belanja Rp <%= formatMoney(settings.loyalty_spend_per_point || 10000) %> menghasilkan 1 poin
+  (1 poin setara Rp <%= formatMoney(settings.loyalty_point_value || 100) %> saat ditukar).
+  <% if (!settings.loyalty_enabled) { %><strong>Program poin sedang dinonaktifkan.</strong><% } %>
+</div>
+
+<!-- ── Modal: pelanggan ── -->
+<div class="mo" id="custModal">
+  <div class="mb" style="max-width:480px">
+    <form method="POST" action="/toko/pelanggan/simpan">
+      <div class="mh">
+        <span class="mt" id="custTitle">Pelanggan Baru</span>
+        <button type="button" class="mc" onclick="closeModal('custModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="mbody">
+        <input type="hidden" name="id" id="custId">
+        <div class="fg">
+          <label class="fl">Nama <span style="color:var(--danger)">*</span></label>
+          <input type="text" class="fc" name="name" id="custName" required>
+        </div>
+        <div class="fg">
+          <label class="fl">Telepon</label>
+          <input type="text" class="fc" name="phone" id="custPhone" placeholder="08xxxxxxxxxx">
+        </div>
+        <div class="fg">
+          <label class="fl">Alamat</label>
+          <input type="text" class="fc" name="address" id="custAddress">
+        </div>
+        <div class="fg">
+          <label class="fl">Catatan</label>
+          <input type="text" class="fc" name="note" id="custNote" placeholder="Opsional">
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('custModal')">Batal</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Modal: penyesuaian poin ── -->
+<div class="mo" id="pointsModal">
+  <div class="mb" style="max-width:420px">
+    <form method="POST" action="/toko/pelanggan/poin">
+      <div class="mh">
+        <span class="mt"><i class="bi bi-star"></i> Sesuaikan Poin</span>
+        <button type="button" class="mc" onclick="closeModal('pointsModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="mbody">
+        <input type="hidden" name="customer_id" id="pointCustomerId">
+        <div class="fg">
+          <label class="fl">Pelanggan</label>
+          <div class="fc" id="pointCustomerName" style="background:var(--bg3)"></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Jumlah Poin Saat Ini</label>
+          <div class="fc" id="pointCurrent" style="background:var(--bg3);font-weight:700;color:var(--primary)"></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Perubahan Poin <span style="color:var(--danger)">*</span></label>
+          <input type="number" name="points_change" class="fc" required step="1" placeholder="Contoh: 10 atau -5">
+          <div class="pos-hint">Gunakan tanda minus untuk mengurangi poin.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Alasan</label>
+          <input type="text" class="fc" name="reason" placeholder="Contoh: bonus ulang tahun">
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('pointsModal')">Batal</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Modal: riwayat poin ── -->
+<div class="mo" id="historyModal">
+  <div class="mb" style="max-width:560px">
+    <div class="mh">
+      <span class="mt" id="historyTitle"><i class="bi bi-clock-history"></i> Riwayat Poin</span>
+      <button type="button" class="mc" onclick="closeModal('historyModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="mbody" id="historyBody"><div class="pos-empty">Memuat...</div></div>
+  </div>
+</div>
+
+</div></div><!-- /.page /.mw -->
+
+<script>
+  const CUSTOMERS = <%= JSON.stringify(customers).replace(/</g, '\\u003c') %>;
+
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('.mo').forEach(function (m) {
+    m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+  });
+  setTimeout(function () { document.querySelectorAll('.alert').forEach(function (a) { a.style.display = 'none'; }); }, 5000);
+
+  function openCust(id) {
+    if (!id) {
+      document.getElementById('custTitle').textContent = 'Pelanggan Baru';
+      document.getElementById('custId').value = '';
+      ['custName', 'custPhone', 'custAddress', 'custNote'].forEach(function (f) { document.getElementById(f).value = ''; });
+    } else {
+      const c = CUSTOMERS.find(function (x) { return String(x.id) === String(id); });
+      if (!c) return;
+      document.getElementById('custTitle').textContent = 'Edit Pelanggan';
+      document.getElementById('custId').value = c.id;
+      document.getElementById('custName').value = c.name || '';
+      document.getElementById('custPhone').value = c.phone || '';
+      document.getElementById('custAddress').value = c.address || '';
+      document.getElementById('custNote').value = c.note || '';
+    }
+    openModal('custModal');
+  }
+
+  function openPoints(id, name, points) {
+    document.getElementById('pointCustomerId').value = id;
+    document.getElementById('pointCustomerName').textContent = name;
+    document.getElementById('pointCurrent').textContent = points + ' poin';
+    openModal('pointsModal');
+  }
+
+  async function openHistory(id, name) {
+    document.getElementById('historyTitle').innerHTML = '<i class="bi bi-clock-history"></i> Riwayat Poin — ' + name;
+    document.getElementById('historyBody').innerHTML = '<div class="pos-empty">Memuat...</div>';
+    openModal('historyModal');
+
+    try {
+      const res = await fetch('/toko/api/pelanggan/' + id + '/poin', { credentials: 'same-origin' });
+      const data = await res.json();
+      const logs = (data && data.data) || [];
+
+      if (!logs.length) {
+        document.getElementById('historyBody').innerHTML = '<div class="pos-empty">Belum ada mutasi poin untuk pelanggan ini.</div>';
+        return;
+      }
+
+      document.getElementById('historyBody').innerHTML =
+        '<div class="tbl-wrap" style="max-height:340px;overflow-y:auto"><table class="dtbl">'
+        + '<thead><tr><th>Waktu</th><th>Jenis</th><th>Keterangan</th><th class="num">Poin</th></tr></thead><tbody>'
+        + logs.map(function (l) {
+            const change = Number(l.points_change || 0);
+            const color = change < 0 ? 'var(--danger)' : 'var(--success)';
+            return '<tr>'
+              + '<td style="font-size:11px;white-space:nowrap">' + new Date(l.created_at).toLocaleString('id-ID') + '</td>'
+              + '<td><span style="font-size:11px">' + (l.type || '-') + '</span></td>'
+              + '<td style="font-size:12px">' + (l.description || '-') + (l.invoice_no ? ' <code>' + l.invoice_no + '</code>' : '') + '</td>'
+              + '<td class="num" style="font-weight:700;color:' + color + '">' + (change > 0 ? '+' : '') + change + '</td>'
+              + '</tr>';
+          }).join('')
+        + '</tbody></table></div>';
+    } catch (_) {
+      document.getElementById('historyBody').innerHTML = '<div class="pos-empty">Gagal memuat riwayat.</div>';
+    }
+  }
+</script>
+</body>
+</html>

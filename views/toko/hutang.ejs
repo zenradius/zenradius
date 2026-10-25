@@ -1,0 +1,169 @@
+<%- include('partials/head', { title: 'Piutang & Hutang' }) %>
+<%- include('partials/nav', { activeTab: 'hutang' }) %>
+
+<div class="pos-stats">
+  <div class="pos-stat warn">
+    <div class="pos-stat-l"><i class="bi bi-journal-text"></i> Total Piutang Pelanggan</div>
+    <div class="pos-stat-v"><%= formatMoney(customerDebts.reduce(function(s, d){ return s + Number(d.debt_balance || 0); }, 0)) %></div>
+    <div class="pos-stat-s"><%= customerDebts.length %> nota belum lunas</div>
+  </div>
+  <div class="pos-stat">
+    <div class="pos-stat-l"><i class="bi bi-wallet2"></i> Total Hutang ke Supplier</div>
+    <div class="pos-stat-v"><%= formatMoney(supplierDebts.reduce(function(s, d){ return s + Number(d.debt_balance || 0); }, 0)) %></div>
+    <div class="pos-stat-s"><%= supplierDebts.length %> pembelian belum lunas</div>
+  </div>
+</div>
+
+<!-- ── Piutang pelanggan (tempo) ── -->
+<div class="card">
+  <div class="card-hd"><h6><i class="bi bi-person-lines-fill"></i> Piutang Pelanggan (Penjualan Tempo)</h6></div>
+  <div class="tbl-wrap">
+    <table class="dtbl">
+      <thead>
+        <tr><th>Nota</th><th>Pelanggan</th><th class="num">Total</th><th class="num">Sisa Piutang</th><th>Jatuh Tempo</th><th>Aksi</th></tr>
+      </thead>
+      <tbody>
+      <% if (!customerDebts.length) { %>
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">Tidak ada piutang. Semua nota tempo sudah lunas.</td></tr>
+      <% } %>
+      <% customerDebts.forEach(function(d){ %>
+        <tr>
+          <td>
+            <code><%= d.invoice_no %></code>
+            <div style="font-size:11px;color:var(--muted)"><%= new Date(d.sale_date).toLocaleDateString('id-ID') %></div>
+          </td>
+          <td><%= d.customer_name %><div style="font-size:11px;color:var(--muted)"><%= d.customer_phone || '-' %></div></td>
+          <td class="num"><%= formatMoney(d.total_amount) %></td>
+          <td class="num" style="font-weight:700;color:var(--warning)"><%= formatMoney(d.debt_balance) %></td>
+          <td>
+            <%= d.due_date || '-' %>
+            <% if (d.due_date && d.days_overdue > 0) { %>
+              <div style="font-size:10.5px;color:var(--danger);font-weight:600">Lewat <%= d.days_overdue %> hari</div>
+            <% } %>
+          </td>
+          <td>
+            <button type="button" class="btn btn-p btn-sm"
+              onclick="openPay('customer', <%= d.id %>, '<%= d.invoice_no %>', <%= d.debt_balance %>)">
+              <i class="bi bi-cash-coin"></i> Bayar
+            </button>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Hutang ke supplier ── -->
+<div class="card">
+  <div class="card-hd"><h6><i class="bi bi-truck"></i> Hutang ke Supplier (Pembelian Tempo)</h6></div>
+  <div class="tbl-wrap">
+    <table class="dtbl">
+      <thead>
+        <tr><th>Nomor PO</th><th>Supplier</th><th class="num">Total</th><th class="num">Sisa Hutang</th><th>Jatuh Tempo</th><th>Aksi</th></tr>
+      </thead>
+      <tbody>
+      <% if (!supplierDebts.length) { %>
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">Tidak ada hutang ke supplier.</td></tr>
+      <% } %>
+      <% supplierDebts.forEach(function(d){ %>
+        <tr>
+          <td>
+            <code><%= d.purchase_no %></code>
+            <div style="font-size:11px;color:var(--muted)"><%= new Date(d.purchase_date).toLocaleDateString('id-ID') %></div>
+          </td>
+          <td><%= d.supplier_name %><div style="font-size:11px;color:var(--muted)"><%= d.supplier_phone || '-' %></div></td>
+          <td class="num"><%= formatMoney(d.total_amount) %></td>
+          <td class="num" style="font-weight:700;color:var(--danger)"><%= formatMoney(d.debt_balance) %></td>
+          <td><%= d.due_date || '-' %></td>
+          <td>
+            <button type="button" class="btn btn-p btn-sm"
+              onclick="openPay('supplier', <%= d.id %>, '<%= d.purchase_no %>', <%= d.debt_balance %>)">
+              <i class="bi bi-cash-coin"></i> Bayar
+            </button>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Modal: pembayaran ── -->
+<div class="mo" id="payModal">
+  <div class="mb" style="max-width:440px">
+    <form method="POST" action="/toko/hutang/pelanggan" id="payForm">
+      <!-- Diisi oleh openPay(): sale_id (piutang) atau purchase_id (hutang). -->
+      <input type="hidden" name="target_id" id="payTargetId">
+      <div class="mh">
+        <span class="mt" id="payTitle"><i class="bi bi-cash-coin"></i> Pembayaran</span>
+        <button type="button" class="mc" onclick="closeModal('payModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">Dokumen</label>
+          <div class="fc" id="payDoc" style="background:var(--bg3);font-family:ui-monospace,monospace"></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Sisa Tagihan</label>
+          <div class="fc" id="payBalance" style="background:var(--bg3);font-weight:700;color:var(--warning)"></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Jumlah Bayar <span style="color:var(--danger)">*</span></label>
+          <input type="number" class="fc" name="amount" id="payAmount" min="1" step="100" required>
+          <div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">
+            <button type="button" class="btn btn-g btn-sm" onclick="fillPay()">Bayar Penuh</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Catatan</label>
+          <input type="text" class="fc" name="note" placeholder="Opsional">
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('payModal')">Batal</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pembayaran</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</div></div><!-- /.page /.mw -->
+
+<script>
+  const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+  let payBalanceValue = 0;
+
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('.mo').forEach(function (m) {
+    m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+  });
+  setTimeout(function () { document.querySelectorAll('.alert').forEach(function (a) { a.style.display = 'none'; }); }, 5000);
+
+  /** kind: 'customer' (piutang nota) atau 'supplier' (hutang pembelian). */
+  function openPay(kind, id, doc, balance) {
+    const form = document.getElementById('payForm');
+    payBalanceValue = Number(balance || 0);
+
+    if (kind === 'customer') {
+      form.action = '/toko/hutang/pelanggan';
+      document.getElementById('payTitle').innerHTML = '<i class="bi bi-person-lines-fill"></i> Bayar Piutang Pelanggan';
+    } else {
+      form.action = '/toko/hutang/supplier';
+      document.getElementById('payTitle').innerHTML = '<i class="bi bi-truck"></i> Bayar Hutang ke Supplier';
+    }
+
+    // Satu field target dipakai bergantian; route membaca nama yang cocok saja.
+    document.getElementById('payTargetId').name = kind === 'customer' ? 'sale_id' : 'purchase_id';
+    document.getElementById('payTargetId').value = id;
+    document.getElementById('payDoc').textContent = doc;
+    document.getElementById('payBalance').textContent = rupiah(payBalanceValue);
+    document.getElementById('payAmount').value = '';
+    openModal('payModal');
+  }
+
+  function fillPay() { document.getElementById('payAmount').value = payBalanceValue; }
+</script>
+</body>
+</html>

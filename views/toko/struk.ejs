@@ -1,0 +1,115 @@
+<%#
+  Struk siap cetak (printer thermal 80mm atau cetak browser).
+  Halaman mandiri: tidak memakai sidebar/topbar, hanya blok .receipt.
+%>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/theme-tokens.css">
+  <link rel="stylesheet" href="/css/toko.css">
+  <style>
+    body { background: #eef1f5; padding: 18px 0; }
+    .no-print-bar { width: 80mm; margin: 0 auto 14px; display: flex; gap: 8px; justify-content: center; }
+    @media print { body { background: #fff; padding: 0; } }
+  </style>
+</head>
+<body>
+
+<div class="no-print-bar">
+  <button type="button" class="btn btn-p" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
+  <button type="button" class="btn btn-g" onclick="window.close()">Tutup</button>
+</div>
+
+<div class="receipt">
+  <h4><%= String(posSettings.store_name || company).toUpperCase() %></h4>
+  <% if (posSettings.store_address) { %>
+    <div class="ctr muted"><%= posSettings.store_address %></div>
+  <% } %>
+  <% if (posSettings.store_phone) { %>
+    <div class="ctr muted">Telp: <%= posSettings.store_phone %></div>
+  <% } %>
+
+  <div class="sep"></div>
+
+  <table>
+    <tr><td>No. Nota</td><td class="r"><%= sale.invoice_no %></td></tr>
+    <tr><td>Tanggal</td><td class="r"><%= new Date(sale.sale_date).toLocaleString('id-ID') %></td></tr>
+    <tr><td>Kasir</td><td class="r"><%= sale.cashier_name || '-' %></td></tr>
+    <tr><td>Pelanggan</td><td class="r"><%= sale.customer_name || 'Umum' %></td></tr>
+    <% if (sale.payment_status === 'VOID') { %>
+      <tr><td colspan="2" class="ctr" style="font-weight:700;padding-top:4px">*** DIBATALKAN (VOID) ***</td></tr>
+    <% } %>
+  </table>
+
+  <div class="sep"></div>
+
+  <% sale.items.forEach(function(item){ %>
+    <div><%= item.product_name %></div>
+    <table>
+      <tr>
+        <td class="muted">
+          <%= item.qty %> <%= item.unit_name %> &times; <%= formatMoney(item.price_used) %>
+          <% if (Number(item.refunded_qty || 0) > 0) { %>
+            <br><span style="font-size:10px">retur: <%= item.refunded_qty %> <%= item.unit_name %></span>
+          <% } %>
+        </td>
+        <td class="r"><%= formatMoney(item.subtotal) %></td>
+      </tr>
+    </table>
+  <% }) %>
+
+  <div class="sep"></div>
+
+  <table>
+    <tr><td>Subtotal</td><td class="r"><%= formatMoney(sale.subtotal) %></td></tr>
+    <% if (Number(sale.discount_amount) > 0) { %>
+      <tr><td>Diskon</td><td class="r">-<%= formatMoney(sale.discount_amount) %></td></tr>
+    <% } %>
+    <% if (Number(sale.points_discount) > 0) { %>
+      <tr><td>Tukar poin (<%= sale.points_redeemed %>)</td><td class="r">-<%= formatMoney(sale.points_discount) %></td></tr>
+    <% } %>
+    <tr style="font-weight:700">
+      <td>TOTAL</td><td class="r"><%= formatMoney(sale.total_amount) %></td>
+    </tr>
+    <tr><td>Bayar (<%= sale.payment_type %>)</td><td class="r"><%= formatMoney(sale.paid_amount) %></td></tr>
+    <% if (Number(sale.change_amount) > 0) { %>
+      <tr><td>Kembali</td><td class="r"><%= formatMoney(sale.change_amount) %></td></tr>
+    <% } %>
+    <% if (Number(sale.debt_balance) > 0) { %>
+      <tr style="font-weight:700">
+        <td>SISA TEMPO</td><td class="r"><%= formatMoney(sale.debt_balance) %></td>
+      </tr>
+      <% if (sale.due_date) { %>
+        <tr><td class="muted">Jatuh tempo</td><td class="r muted"><%= sale.due_date %></td></tr>
+      <% } %>
+    <% } %>
+  </table>
+
+  <% if (sale.refunds && sale.refunds.length) { %>
+    <div class="sep"></div>
+    <div style="font-weight:700;font-size:10px">RETUR:</div>
+    <% sale.refunds.forEach(function(r){ %>
+      <table>
+        <tr>
+          <td class="muted"><%= r.product_name %> &times; <%= r.qty %></td>
+          <td class="r muted">-<%= formatMoney(r.amount) %></td>
+        </tr>
+      </table>
+    <% }) %>
+  <% } %>
+
+  <% if (Number(sale.points_earned) > 0) { %>
+    <div class="sep"></div>
+    <div class="muted">Poin didapat: <%= sale.points_earned %></div>
+  <% } %>
+
+  <div class="sep"></div>
+  <div class="ctr muted" style="white-space:pre-line"><%= posSettings.receipt_footer || 'Terima kasih atas kunjungan Anda' %></div>
+  <div class="ctr muted" style="margin-top:6px;font-size:9px">Dicetak: <%= new Date().toLocaleString('id-ID') %></div>
+</div>
+
+</body>
+</html>

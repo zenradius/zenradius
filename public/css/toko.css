@@ -1,0 +1,98 @@
+/* =============================================================================
+   Point of Sale (Toko) — gaya tambahan untuk panel ZenRadius.
+   Memakai token warna dari theme-tokens.css agar otomatis ikut tema aplikasi
+   (space / orbit) tanpa duplikasi variabel.
+   ============================================================================= */
+
+/* ── Navigasi tab halaman POS ── */
+.pos-tabs{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:18px;width:fit-content;flex-wrap:wrap}
+.pos-tab{padding:8px 16px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.pos-tab:hover{color:var(--text)}
+.pos-tab.active{background:var(--btn-bg);color:var(--btn-color)}
+
+/* ── Kartu statistik dashboard ── */
+.pos-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px}
+.pos-stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px}
+.pos-stat-l{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.pos-stat-l i{color:var(--primary)}
+.pos-stat-v{font-size:22px;font-weight:700;color:var(--text);line-height:1.15;word-break:break-word}
+.pos-stat-s{font-size:11.5px;color:var(--muted);margin-top:5px}
+.pos-stat.ok .pos-stat-v{color:var(--success)}
+.pos-stat.warn .pos-stat-v{color:var(--warning)}
+.pos-stat.bad .pos-stat-v{color:var(--danger)}
+
+/* ── Layar kasir: grid produk + keranjang ── */
+.pos-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;align-items:start}
+@media(max-width:1200px){.pos-layout{grid-template-columns:1fr}}
+
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:62vh;overflow-y:auto;padding:2px}
+.pos-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px;cursor:pointer;text-align:left;transition:border-color .18s,transform .18s;display:flex;flex-direction:column;gap:5px}
+.pos-card:hover{border-color:color-mix(in srgb,var(--primary) 45%,var(--border));transform:translateY(-1px)}
+.pos-card:disabled,.pos-card.disabled{opacity:.45;cursor:not-allowed;transform:none}
+.pos-card-n{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pos-card-s{font-size:11px;color:var(--muted);font-family:ui-monospace,monospace}
+.pos-card-p{font-size:13px;font-weight:700;color:var(--success);margin-top:auto}
+.pos-card-st{font-size:10.5px;color:var(--muted)}
+.pos-card-st.low{color:var(--warning)}
+.pos-card-st.out{color:var(--danger)}
+
+/* ── Keranjang ── */
+.pos-cart{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:sticky;top:14px}
+.pos-cart-hd{padding:12px 15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pos-cart-hd h6{margin:0;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.pos-cart-hd h6 i{color:var(--primary)}
+.pos-cart-bd{padding:12px 15px;max-height:42vh;overflow-y:auto}
+.pos-cart-ft{padding:13px 15px;border-top:1px solid var(--border);background:var(--bg3)}
+.pos-empty{text-align:center;color:var(--muted);font-size:12.5px;padding:22px 8px}
+
+.pos-line{display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px 0;border-bottom:1px dashed var(--border)}
+.pos-line:last-child{border-bottom:none}
+.pos-line-n{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.3}
+.pos-line-m{font-size:11px;color:var(--muted);margin-top:2px}
+.pos-line-r{text-align:right}
+.pos-line-t{font-size:12.5px;font-weight:700;color:var(--text)}
+.pos-qty{display:inline-flex;align-items:center;gap:4px;margin-top:6px}
+.pos-qty button{width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.pos-qty button:hover{border-color:var(--primary);color:var(--primary)}
+.pos-qty span{min-width:34px;text-align:center;font-size:12px;font-weight:600;font-family:ui-monospace,monospace}
+
+.pos-total{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:12.5px;color:var(--muted)}
+.pos-total.grand{margin-top:8px;padding-top:9px;border-top:1px solid var(--border);font-size:15px;font-weight:700;color:var(--text)}
+.pos-total.grand span:last-child{color:var(--success);font-size:19px}
+
+.pos-pay{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:11px 0}
+.pos-pay button{padding:9px 4px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s}
+.pos-pay button.active{background:var(--btn-bg);color:var(--btn-color);border-color:var(--btn-border)}
+.pos-change{display:flex;justify-content:space-between;font-size:12.5px;padding:7px 10px;border-radius:8px;background:var(--pdim);color:var(--text);margin-bottom:9px}
+.pos-change strong{color:var(--success)}
+
+/* ── Tabel ringkas khusus POS ── */
+.pos-num{font-family:ui-monospace,monospace;font-size:12px;text-align:right;white-space:nowrap}
+.pos-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.pos-badge.cash{background:var(--sdim);color:var(--success);border-color:rgba(63,185,80,.3)}
+.pos-badge.qris{background:var(--idim);color:var(--info);border-color:rgba(88,166,255,.3)}
+.pos-badge.credit{background:var(--wdim);color:var(--warning);border-color:rgba(210,153,34,.3)}
+.pos-badge.void{background:var(--ddim);color:var(--danger);border-color:rgba(248,81,73,.3)}
+.pos-badge.paid{background:var(--sdim);color:var(--success)}
+.pos-badge.unpaid{background:var(--ddim);color:var(--danger)}
+
+/* ── Baris satuan konversi pada form produk ── */
+.pos-unit-row{display:grid;grid-template-columns:1.4fr .8fr 1fr 1fr .9fr auto;gap:7px;align-items:end;margin-bottom:7px}
+@media(max-width:768px){.pos-unit-row{grid-template-columns:1fr 1fr;gap:8px}}
+.pos-unit-row .btn{height:38px}
+.pos-hint{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
+
+/* ── Struk cetak ── */
+.receipt{background:#fff;color:#000;width:80mm;padding:6mm 3mm;margin:0 auto;font-family:'Courier New',ui-monospace,monospace;font-size:11px;line-height:1.45}
+.receipt h4{margin:0 0 2px;font-size:13px;text-align:center;font-weight:700}
+.receipt .ctr{text-align:center}
+.receipt .sep{border-top:1px dashed #000;margin:5px 0}
+.receipt table{width:100%;border-collapse:collapse}
+.receipt td{padding:1px 0;vertical-align:top}
+.receipt .r{text-align:right}
+.receipt .muted{font-size:10px}
+@media print{
+  body{background:#fff}
+  .mw,.topbar,.sb,.no-print{display:none!important}
+  .receipt{width:auto;box-shadow:none;margin:0}
+}

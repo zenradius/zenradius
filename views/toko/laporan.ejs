@@ -1,0 +1,249 @@
+<%- include('partials/head', { title: 'Laporan Toko' }) %>
+<%- include('partials/nav', { activeTab: 'laporan' }) %>
+
+<div class="card">
+  <div class="card-hd" style="flex-wrap:wrap;gap:10px">
+    <h6><i class="bi bi-funnel"></i> Periode Laporan</h6>
+    <form method="GET" action="/toko/laporan" style="display:flex;gap:8px;align-items:center;margin:0;flex-wrap:wrap">
+      <input type="date" class="fc" name="start" value="<%= startDate %>" style="width:auto">
+      <span style="color:var(--muted)">s/d</span>
+      <input type="date" class="fc" name="end" value="<%= endDate %>" style="width:auto">
+      <button class="btn btn-p btn-sm" type="submit"><i class="bi bi-search"></i> Tampilkan</button>
+      <a href="/toko/laporan" class="btn btn-g btn-sm">Reset</a>
+    </form>
+  </div>
+</div>
+
+<div class="pos-stats">
+  <div class="pos-stat ok">
+    <div class="pos-stat-l"><i class="bi bi-cash-stack"></i> Total Penjualan</div>
+    <div class="pos-stat-v"><%= formatMoney(report.summary.total_sales) %></div>
+    <div class="pos-stat-s"><%= report.summary.total_tx %> transaksi</div>
+  </div>
+  <div class="pos-stat ok">
+    <div class="pos-stat-l"><i class="bi bi-graph-up-arrow"></i> Laba Kotor</div>
+    <div class="pos-stat-v"><%= formatMoney(report.summary.total_profit) %></div>
+    <div class="pos-stat-s">dari harga jual − modal</div>
+  </div>
+  <div class="pos-stat warn">
+    <div class="pos-stat-l"><i class="bi bi-tag"></i> Total Diskon</div>
+    <div class="pos-stat-v"><%= formatMoney(report.summary.total_discount) %></div>
+    <div class="pos-stat-s">diskon yang diberikan</div>
+  </div>
+  <div class="pos-stat">
+    <div class="pos-stat-l"><i class="bi bi-calculator"></i> Rata-rata / Nota</div>
+    <div class="pos-stat-v">
+      <%= formatMoney(report.summary.total_tx > 0 ? report.summary.total_sales / report.summary.total_tx : 0) %>
+    </div>
+    <div class="pos-stat-s">nilai transaksi rata-rata</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:16px">
+  <!-- Rincian per metode bayar -->
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-credit-card-2-front"></i> Rincian Metode Bayar</h6></div>
+    <div class="tbl-wrap">
+      <table class="dtbl">
+        <thead><tr><th>Metode</th><th class="num">Total</th><th class="num">Transaksi</th></tr></thead>
+        <tbody>
+        <% if (!report.byPayment.length) { %>
+          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:22px">Tidak ada data</td></tr>
+        <% } %>
+        <% report.byPayment.forEach(function(p){ %>
+          <tr>
+            <td><span class="pos-badge <%= p.payment_type === 'CASH' ? 'cash' : p.payment_type === 'QRIS' ? 'qris' : 'credit' %>"><%= p.payment_type %></span></td>
+            <td class="num"><%= formatMoney(p.total) %></td>
+            <td class="num"><%= p.count %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Produk terlaris -->
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-star"></i> Produk Terlaris</h6></div>
+    <div class="tbl-wrap" style="max-height:420px;overflow-y:auto">
+      <table class="dtbl">
+        <thead><tr><th>Produk</th><th class="num">Terjual</th><th class="num">Omzet</th><th class="num">Laba</th></tr></thead>
+        <tbody>
+        <% if (!topSelling.length) { %>
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">Belum ada penjualan</td></tr>
+        <% } %>
+        <% topSelling.forEach(function(p){ %>
+          <tr>
+            <td><%= p.name %><div style="font-size:10.5px;color:var(--muted)"><%= p.sku || '-' %> · <%= p.category_name || '-' %></div></td>
+            <td class="num" style="font-weight:700"><%= p.qty_sold %></td>
+            <td class="num"><%= formatMoney(p.revenue) %></td>
+            <td class="num" style="color:var(--success)"><%= formatMoney(p.profit) %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Penjualan harian -->
+<div class="card">
+  <div class="card-hd"><h6><i class="bi bi-calendar3"></i> Rekap Harian</h6></div>
+  <div class="tbl-wrap" style="max-height:360px;overflow-y:auto">
+    <table class="dtbl">
+      <thead><tr><th>Tanggal</th><th class="num">Transaksi</th><th class="num">Penjualan</th><th class="num">Laba</th></tr></thead>
+      <tbody>
+      <% if (!report.daily.length) { %>
+        <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">Tidak ada data</td></tr>
+      <% } %>
+      <% report.daily.forEach(function(d){ %>
+        <tr>
+          <td><%= d.day %></td>
+          <td class="num"><%= d.count %></td>
+          <td class="num"><%= formatMoney(d.total) %></td>
+          <td class="num" style="color:var(--success)"><%= formatMoney(d.profit) %></td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Riwayat nota -->
+<div class="card">
+  <div class="card-hd"><h6><i class="bi bi-receipt"></i> Riwayat Nota (100 terakhir)</h6></div>
+  <div class="tbl-wrap" style="max-height:460px;overflow-y:auto">
+    <table class="dtbl">
+      <thead>
+        <tr><th>Nota</th><th>Waktu</th><th>Pelanggan</th><th class="num">Total</th><th>Bayar</th><th>Status</th><th>Aksi</th></tr>
+      </thead>
+      <tbody>
+      <% if (!sales.length) { %>
+        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">Belum ada transaksi.</td></tr>
+      <% } %>
+      <% sales.forEach(function(s){ %>
+        <tr>
+          <td><code><%= s.invoice_no %></code></td>
+          <td style="font-size:11px;white-space:nowrap"><%= new Date(s.sale_date).toLocaleString('id-ID') %></td>
+          <td><%= s.customer_name || 'Umum' %></td>
+          <td class="num"><%= formatMoney(s.total_amount) %></td>
+          <td><span class="pos-badge <%= s.payment_type === 'CASH' ? 'cash' : s.payment_type === 'QRIS' ? 'qris' : 'credit' %>"><%= s.payment_type %></span></td>
+          <td>
+            <% if (s.payment_status === 'VOID') { %>
+              <span class="pos-badge void">VOID</span>
+            <% } else if (s.payment_status === 'UNPAID') { %>
+              <span class="pos-badge unpaid">TEMPO</span>
+            <% } else { %>
+              <span class="pos-badge paid">LUNAS</span>
+            <% } %>
+          </td>
+          <td>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">
+              <a href="/toko/struk/<%= s.id %>" target="_blank" class="btn btn-g btn-sm" title="Cetak struk"><i class="bi bi-printer"></i></a>
+              <% if (typeof session !== 'undefined' && session && session.isAdmin && s.payment_status !== 'VOID') { %>
+                <form method="POST" action="/toko/penjualan/void" style="margin:0" onsubmit="return confirm('Batalkan nota <%= s.invoice_no %>? Stok akan dikembalikan.')">
+                  <input type="hidden" name="sale_id" value="<%= s.id %>">
+                  <button class="btn btn-g btn-sm" type="submit" title="Batalkan nota"><i class="bi bi-x-octagon"></i></button>
+                </form>
+              <% } %>
+              <% if (s.payment_status !== 'VOID') { %>
+                <button type="button" class="btn btn-g btn-sm" title="Retur barang" onclick="openRefund(<%= s.id %>, '<%= s.invoice_no %>')"><i class="bi bi-arrow-return-left"></i></button>
+              <% } %>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Modal: retur barang ── -->
+<div class="mo" id="refundModal">
+  <div class="mb" style="max-width:520px">
+    <form method="POST" action="/toko/penjualan/retur">
+      <div class="mh">
+        <span class="mt" id="refundTitle"><i class="bi bi-arrow-return-left"></i> Retur Barang</span>
+        <button type="button" class="mc" onclick="closeModal('refundModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="mbody">
+        <input type="hidden" name="sale_id" id="refundSaleId">
+        <div class="fg">
+          <label class="fl">Pilih Barang yang Dikembalikan <span style="color:var(--danger)">*</span></label>
+          <select class="fc" name="sale_item_id" id="refundItem" required></select>
+        </div>
+        <div class="fg">
+          <label class="fl">Jumlah Retur <span style="color:var(--danger)">*</span></label>
+          <input type="number" class="fc" name="qty" id="refundQty" min="1" step="1" required value="1">
+          <div class="pos-hint" id="refundHint"></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Alasan Retur</label>
+          <input type="text" class="fc" name="reason" placeholder="Contoh: barang rusak / salah beli">
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('refundModal')">Batal</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Proses Retur</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</div></div><!-- /.page /.mw -->
+
+<script>
+  const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('.mo').forEach(function (m) {
+    m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+  });
+  setTimeout(function () { document.querySelectorAll('.alert').forEach(function (a) { a.style.display = 'none'; }); }, 5000);
+
+  /** Ambil item yang masih bisa diretur untuk nota tertentu. */
+  async function openRefund(saleId, invoiceNo) {
+    document.getElementById('refundTitle').innerHTML = '<i class="bi bi-arrow-return-left"></i> Retur — ' + invoiceNo;
+    document.getElementById('refundSaleId').value = saleId;
+    const select = document.getElementById('refundItem');
+    select.innerHTML = '<option value="">Memuat...</option>';
+    openModal('refundModal');
+
+    try {
+      const res = await fetch('/toko/api/riwayat/' + saleId, { credentials: 'same-origin' });
+      const data = await res.json();
+      const items = ((data && data.data && data.data.items) || []).filter(function (i) {
+        return (Number(i.qty) - Number(i.refunded_qty || 0)) > 0;
+      });
+
+      if (!items.length) {
+        select.innerHTML = '<option value="">Tidak ada barang yang bisa diretur</option>';
+        document.getElementById('refundHint').textContent = 'Semua barang pada nota ini sudah pernah diretur atau notasinya dibatalkan.';
+        return;
+      }
+
+      select.innerHTML = items.map(function (i) {
+        const remaining = Number(i.qty) - Number(i.refunded_qty || 0);
+        return '<option value="' + i.id + '" data-max="' + remaining + '">' + i.product_name + ' — ' + remaining + ' ' + i.unit_name + ' @ ' + rupiah(i.price_used) + '</option>';
+      }).join('');
+
+      updateRefundMax();
+      select.onchange = updateRefundMax;
+    } catch (_) {
+      select.innerHTML = '<option value="">Gagal memuat data</option>';
+    }
+  }
+
+  function updateRefundMax() {
+    const select = document.getElementById('refundItem');
+    const opt = select.selectedOptions[0];
+    const max = Number(opt?.dataset?.max || 1);
+    const qty = document.getElementById('refundQty');
+    qty.max = max;
+    if (Number(qty.value) > max) qty.value = max;
+    document.getElementById('refundHint').textContent = 'Maksimal ' + max + ' unit untuk barang ini.';
+  }
+</script>
+</body>
+</html>

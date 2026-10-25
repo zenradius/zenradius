@@ -1,0 +1,129 @@
+<%- include('partials/head', { title: 'Point of Sale' }) %>
+<%- include('partials/nav', { activeTab: 'dashboard' }) %>
+
+<div class="pos-stats">
+  <div class="pos-stat">
+    <div class="pos-stat-l"><i class="bi bi-cart-check"></i> Penjualan Hari Ini</div>
+    <div class="pos-stat-v"><%= formatMoney(stats.today.total_sales) %></div>
+    <div class="pos-stat-s"><%= stats.today.total_tx %> transaksi</div>
+  </div>
+  <div class="pos-stat ok">
+    <div class="pos-stat-l"><i class="bi bi-graph-up-arrow"></i> Laba Hari Ini</div>
+    <div class="pos-stat-v"><%= formatMoney(stats.today.net_profit) %></div>
+    <div class="pos-stat-s">Laba kotor <%= formatMoney(stats.today.total_profit) %> − biaya <%= formatMoney(stats.today.expenses) %></div>
+  </div>
+  <div class="pos-stat warn">
+    <div class="pos-stat-l"><i class="bi bi-journal-text"></i> Piutang Pelanggan</div>
+    <div class="pos-stat-v"><%= formatMoney(stats.receivable) %></div>
+    <div class="pos-stat-s"><a href="/toko/hutang" style="color:var(--primary)">Lihat detail</a></div>
+  </div>
+  <div class="pos-stat">
+    <div class="pos-stat-l"><i class="bi bi-wallet2"></i> Hutang Supplier</div>
+    <div class="pos-stat-v"><%= formatMoney(stats.payable) %></div>
+    <div class="pos-stat-s"><a href="/toko/hutang" style="color:var(--primary)">Lihat detail</a></div>
+  </div>
+  <div class="pos-stat">
+    <div class="pos-stat-l"><i class="bi bi-calendar-month"></i> Penjualan Bulan Ini</div>
+    <div class="pos-stat-v"><%= formatMoney(stats.month.total_sales) %></div>
+    <div class="pos-stat-s"><%= stats.month.total_tx %> transaksi · laba <%= formatMoney(stats.month.net_profit) %></div>
+  </div>
+  <div class="pos-stat <%= stats.lowStock > 0 ? 'bad' : 'ok' %>">
+    <div class="pos-stat-l"><i class="bi bi-exclamation-triangle"></i> Stok Menipis</div>
+    <div class="pos-stat-v"><%= stats.lowStock %></div>
+    <div class="pos-stat-s">dari <%= stats.productCount %> produk aktif</div>
+  </div>
+</div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+  <a href="/toko/kasir" class="btn btn-p"><i class="bi bi-cart-check"></i> Mulai Transaksi</a>
+  <a href="/toko/produk" class="btn btn-g"><i class="bi bi-plus-lg"></i> Kelola Produk</a>
+  <a href="/toko/pembelian" class="btn btn-g"><i class="bi bi-truck"></i> Input Stok Masuk</a>
+  <% if (!shift) { %>
+    <a href="/toko/shift" class="btn btn-g"><i class="bi bi-clock-history"></i> Buka Shift Kasir</a>
+  <% } %>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px">
+  <!-- Transaksi terakhir -->
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-receipt"></i> Transaksi Terakhir</h6>
+      <a href="/toko/laporan" class="btn btn-g btn-sm">Semua</a>
+    </div>
+    <div class="tbl-wrap">
+      <table class="dtbl">
+        <thead><tr><th>Nota</th><th>Pelanggan</th><th class="num">Total</th><th>Status</th></tr></thead>
+        <tbody>
+        <% if (!stats.recentSales.length) { %>
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">Belum ada transaksi</td></tr>
+        <% } %>
+        <% stats.recentSales.forEach(function(s){ %>
+          <tr>
+            <td><code><%= s.invoice_no %></code><div style="font-size:11px;color:var(--muted)"><%= new Date(s.sale_date).toLocaleString('id-ID') %></div></td>
+            <td><%= s.customer_name || 'Umum' %></td>
+            <td class="num"><%= formatMoney(s.total_amount) %></td>
+            <td>
+              <% if (s.payment_status === 'VOID') { %>
+                <span class="pos-badge void">VOID</span>
+              <% } else if (s.payment_status === 'UNPAID') { %>
+                <span class="pos-badge unpaid">TEMPO</span>
+              <% } else { %>
+                <span class="pos-badge <%= s.payment_type === 'CASH' ? 'cash' : s.payment_type === 'QRIS' ? 'qris' : 'credit' %>"><%= s.payment_type %></span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Stok menipis -->
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-box-seam"></i> Stok Menipis</h6>
+      <a href="/toko/produk?low=1" class="btn btn-g btn-sm">Lihat semua</a>
+    </div>
+    <div class="tbl-wrap">
+      <table class="dtbl">
+        <thead><tr><th>Produk</th><th class="num">Stok</th><th class="num">Minimum</th></tr></thead>
+        <tbody>
+        <% if (!stats.lowStockItems.length) { %>
+          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:22px">Semua stok aman</td></tr>
+        <% } %>
+        <% stats.lowStockItems.forEach(function(p){ %>
+          <tr>
+            <td><%= p.name %><div style="font-size:11px;color:var(--muted)"><%= p.category_name || '-' %></div></td>
+            <td class="num" style="color:<%= p.stock <= 0 ? 'var(--danger)' : 'var(--warning)' %>;font-weight:700"><%= p.stock %></td>
+            <td class="num"><%= p.min_stock %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mutasi stok terakhir -->
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-clock-history"></i> Mutasi Stok Terakhir</h6></div>
+    <div class="tbl-wrap">
+      <table class="dtbl">
+        <thead><tr><th>Produk</th><th>Jenis</th><th class="num">Perubahan</th></tr></thead>
+        <tbody>
+        <% if (!stats.stockLogs.length) { %>
+          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:22px">Belum ada mutasi</td></tr>
+        <% } %>
+        <% stats.stockLogs.forEach(function(l){ %>
+          <tr>
+            <td><%= l.product_name || '-' %><div style="font-size:11px;color:var(--muted)"><%= l.reference || '' %></div></td>
+            <td><span style="font-size:11px"><%= l.type %></span></td>
+            <td class="num" style="color:<%= l.qty_change < 0 ? 'var(--danger)' : 'var(--success)' %>;font-weight:700"><%= l.qty_change > 0 ? '+' : '' %><%= l.qty_change %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div></div><!-- /.page /.mw -->
+</body>
+</html>

@@ -37,6 +37,7 @@ const MENU_DEFINITIONS = [
   { key: 'inventory', section: 'service', href: '/admin/inventory', icon: 'bi bi-boxes', labelKey: 'admin.nav.inventory', labelDefault: 'Inventaris (Stok)', roles: ['admin', 'cashier'], activePages: ['inventory'] },
   { key: 'onu_stickers', section: 'service', href: '/admin/onu-stickers', icon: 'bi bi-qr-code-scan', labelKey: 'admin.nav.onu_stickers', labelDefault: 'Cetak Stiker ONU', roles: ['admin', 'cashier'], activePages: ['onu_stickers'] },
   { key: 'digiflazz', section: 'service', href: '/admin/digiflazz', icon: 'bi bi-phone', labelKey: 'admin.nav.digiflazz', labelDefault: 'Digiflazz', roles: ['admin'], activePages: ['digiflazz'] },
+  { key: 'pos_toko', section: 'service', href: '/toko', icon: 'bi bi-shop', labelKey: 'admin.nav.pos_toko', labelDefault: 'Point of Sale', roles: ['admin', 'cashier'], activePages: ['pos_toko'] },
 
   { key: 'reports', section: 'finance', href: '/admin/reports', icon: 'bi bi-bar-chart-line', labelKey: 'admin.nav.finance_report', labelDefault: 'Laporan Keuangan', roles: ['admin', 'cashier'], activePages: ['reports'] },
   { key: 'cashiers_reports', section: 'finance', href: '/admin/cashiers/reports', icon: 'bi bi-journal-text', labelKey: 'admin.nav.cashiers_reports', labelDefault: 'Laporan Kasir', roles: ['admin', 'cashier'], activePages: ['cashiers_reports'] },
@@ -104,6 +105,7 @@ const DEFAULT_MENU_STATES = {
   voucher_packages: STATE_VISIBLE,
   billing: STATE_VISIBLE,
   digiflazz: STATE_VISIBLE,
+  pos_toko: STATE_VISIBLE,
   reports: STATE_VISIBLE,
   cashiers_reports: STATE_VISIBLE,
   collector_payments: STATE_VISIBLE,

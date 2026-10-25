@@ -1343,6 +1343,249 @@ try {
 
 console.log('[DB] Schema migration complete');
 
+// ─── POINT OF SALE (TOKO) ────────────────────────────────────────────────
+// Semua tabel POS memakai prefiks pos_ agar tidak bentrok dengan tabel
+// inventory_* milik ISP (yang menyimpan ONU, kabel, dll) maupun tabel lain.
+try {
+  db.exec(`
+    -- Kategori produk toko
+    CREATE TABLE IF NOT EXISTS pos_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT DEFAULT '',
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Master produk (multi-satuan: pcs, pak, dus)
+    CREATE TABLE IF NOT EXISTS pos_products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sku TEXT UNIQUE,                       -- barcode / kode barang
+      name TEXT NOT NULL,
+      category_id INTEGER REFERENCES pos_categories(id) ON DELETE SET NULL,
+      unit TEXT DEFAULT 'pcs',               -- satuan dasar
+      cost_price REAL NOT NULL DEFAULT 0,    -- harga modal per satuan dasar
+      price_retail REAL NOT NULL DEFAULT 0,  -- harga jual default
+      stock INTEGER NOT NULL DEFAULT 0,      -- stok dalam satuan dasar
+      min_stock INTEGER NOT NULL DEFAULT 0,
+      expiry_date DATE,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT (NOW_LOCAL()),
+      updated_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Satuan konversi (Pak = 10 pcs, Dus = 40 pcs) + harga grosir
+    CREATE TABLE IF NOT EXISTS pos_product_units (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL REFERENCES pos_products(id) ON DELETE CASCADE,
+      unit_name TEXT NOT NULL,
+      conversion_factor INTEGER NOT NULL DEFAULT 1,
+      price_retail REAL NOT NULL DEFAULT 0,
+      price_wholesale REAL NOT NULL DEFAULT 0,
+      wholesale_min_qty INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS pos_suppliers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      note TEXT DEFAULT '',
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    CREATE TABLE IF NOT EXISTS pos_customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      points INTEGER DEFAULT 0,
+      note TEXT DEFAULT '',
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Penjualan (nota)
+    CREATE TABLE IF NOT EXISTS pos_sales (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      invoice_no TEXT NOT NULL UNIQUE,
+      customer_id INTEGER REFERENCES pos_customers(id) ON DELETE SET NULL,
+      subtotal REAL NOT NULL DEFAULT 0,
+      discount_amount REAL NOT NULL DEFAULT 0,
+      points_discount REAL NOT NULL DEFAULT 0,
+      points_earned INTEGER DEFAULT 0,
+      points_redeemed INTEGER DEFAULT 0,
+      total_amount REAL NOT NULL DEFAULT 0,
+      total_profit REAL NOT NULL DEFAULT 0,
+      payment_type TEXT NOT NULL DEFAULT 'CASH',  -- CASH | QRIS | CREDIT
+      payment_status TEXT NOT NULL DEFAULT 'PAID', -- PAID | UNPAID | VOID
+      paid_amount REAL NOT NULL DEFAULT 0,
+      change_amount REAL NOT NULL DEFAULT 0,
+      debt_balance REAL NOT NULL DEFAULT 0,
+      due_date DATE,
+      cashier_id INTEGER,
+      cashier_name TEXT DEFAULT '',
+      note TEXT DEFAULT '',
+      sale_date DATETIME DEFAULT (NOW_LOCAL()),
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    CREATE TABLE IF NOT EXISTS pos_sale_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sale_id INTEGER NOT NULL REFERENCES pos_sales(id) ON DELETE CASCADE,
+      product_id INTEGER NOT NULL REFERENCES pos_products(id),
+      unit_id INTEGER,
+      unit_name TEXT DEFAULT 'pcs',
+      conversion_factor INTEGER NOT NULL DEFAULT 1,
+      qty REAL NOT NULL DEFAULT 0,
+      price_used REAL NOT NULL DEFAULT 0,
+      cost_price REAL NOT NULL DEFAULT 0,
+      subtotal REAL NOT NULL DEFAULT 0,
+      profit REAL NOT NULL DEFAULT 0,
+      refunded_qty REAL NOT NULL DEFAULT 0
+    );
+
+    -- Retur / refund item
+    CREATE TABLE IF NOT EXISTS pos_sale_refunds (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sale_id INTEGER NOT NULL REFERENCES pos_sales(id) ON DELETE CASCADE,
+      sale_item_id INTEGER NOT NULL REFERENCES pos_sale_items(id) ON DELETE CASCADE,
+      qty REAL NOT NULL DEFAULT 0,
+      amount REAL NOT NULL DEFAULT 0,
+      reason TEXT DEFAULT '',
+      actor TEXT DEFAULT '',
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Pembelian dari supplier (stok masuk)
+    CREATE TABLE IF NOT EXISTS pos_purchases (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchase_no TEXT NOT NULL UNIQUE,
+      supplier_id INTEGER REFERENCES pos_suppliers(id) ON DELETE SET NULL,
+      total_amount REAL NOT NULL DEFAULT 0,
+      paid_amount REAL NOT NULL DEFAULT 0,
+      debt_balance REAL NOT NULL DEFAULT 0,
+      payment_type TEXT NOT NULL DEFAULT 'CASH',  -- CASH | CREDIT
+      payment_status TEXT NOT NULL DEFAULT 'PAID', -- PAID | UNPAID
+      due_date DATE,
+      note TEXT DEFAULT '',
+      purchase_date DATETIME DEFAULT (NOW_LOCAL()),
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    CREATE TABLE IF NOT EXISTS pos_purchase_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchase_id INTEGER NOT NULL REFERENCES pos_purchases(id) ON DELETE CASCADE,
+      product_id INTEGER NOT NULL REFERENCES pos_products(id),
+      unit_name TEXT DEFAULT 'pcs',
+      conversion_factor INTEGER NOT NULL DEFAULT 1,
+      qty REAL NOT NULL DEFAULT 0,
+      cost_price REAL NOT NULL DEFAULT 0,
+      subtotal REAL NOT NULL DEFAULT 0,
+      expiry_date DATE
+    );
+
+    -- Pembayaran cicilan piutang pelanggan
+    CREATE TABLE IF NOT EXISTS pos_debt_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sale_id INTEGER NOT NULL REFERENCES pos_sales(id) ON DELETE CASCADE,
+      amount REAL NOT NULL DEFAULT 0,
+      actor TEXT DEFAULT '',
+      note TEXT DEFAULT '',
+      payment_date DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Pembayaran hutang ke supplier
+    CREATE TABLE IF NOT EXISTS pos_supplier_debt_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchase_id INTEGER NOT NULL REFERENCES pos_purchases(id) ON DELETE CASCADE,
+      amount REAL NOT NULL DEFAULT 0,
+      actor TEXT DEFAULT '',
+      note TEXT DEFAULT '',
+      payment_date DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Buku kas keluar (biaya operasional toko)
+    CREATE TABLE IF NOT EXISTS pos_expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      expense_date DATETIME DEFAULT (NOW_LOCAL()),
+      category TEXT NOT NULL,
+      amount REAL NOT NULL DEFAULT 0,
+      description TEXT DEFAULT '',
+      actor TEXT DEFAULT '',
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Shift kasir (buka/tutup + settlement)
+    CREATE TABLE IF NOT EXISTS pos_shifts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cashier_id INTEGER,
+      cashier_name TEXT DEFAULT '',
+      starting_cash REAL NOT NULL DEFAULT 0,
+      opened_at DATETIME DEFAULT (NOW_LOCAL()),
+      closed_at DATETIME,
+      cash_sales REAL DEFAULT 0,
+      qris_sales REAL DEFAULT 0,
+      credit_sales REAL DEFAULT 0,
+      debt_collected REAL DEFAULT 0,
+      expenses_paid REAL DEFAULT 0,
+      expected_cash REAL DEFAULT 0,
+      actual_cash REAL,
+      difference REAL,
+      status TEXT NOT NULL DEFAULT 'OPEN', -- OPEN | CLOSED
+      note TEXT DEFAULT ''
+    );
+
+    -- Mutasi stok (audit trail)
+    CREATE TABLE IF NOT EXISTS pos_stock_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER REFERENCES pos_products(id) ON DELETE SET NULL,
+      qty_change REAL NOT NULL DEFAULT 0,
+      stock_after REAL,
+      type TEXT NOT NULL,        -- SALE | PURCHASE | ADJUSTMENT | VOID | REFUND
+      reference TEXT DEFAULT '',
+      actor TEXT DEFAULT '',
+      note TEXT DEFAULT '',
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Keranjang tersimpan (hold/park)
+    CREATE TABLE IF NOT EXISTS pos_held_carts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      label TEXT DEFAULT '',
+      payload TEXT NOT NULL,
+      cashier_id INTEGER,
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    -- Log poin loyalitas pelanggan
+    CREATE TABLE IF NOT EXISTS pos_point_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL REFERENCES pos_customers(id) ON DELETE CASCADE,
+      sale_id INTEGER,
+      points_change INTEGER NOT NULL DEFAULT 0,
+      type TEXT NOT NULL DEFAULT 'EARN', -- EARN | REDEEM | ADJUSTMENT
+      description TEXT DEFAULT '',
+      created_at DATETIME DEFAULT (NOW_LOCAL())
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_pos_products_cat ON pos_products(category_id);
+    CREATE INDEX IF NOT EXISTS idx_pos_products_sku ON pos_products(sku);
+    CREATE INDEX IF NOT EXISTS idx_pos_units_product ON pos_product_units(product_id);
+    CREATE INDEX IF NOT EXISTS idx_pos_sales_date ON pos_sales(sale_date);
+    CREATE INDEX IF NOT EXISTS idx_pos_sales_status ON pos_sales(payment_status);
+    CREATE INDEX IF NOT EXISTS idx_pos_sales_customer ON pos_sales(customer_id);
+    CREATE INDEX IF NOT EXISTS idx_pos_items_sale ON pos_sale_items(sale_id);
+    CREATE INDEX IF NOT EXISTS idx_pos_items_product ON pos_sale_items(product_id);
+    CREATE INDEX IF NOT EXISTS idx_pos_purchases_date ON pos_purchases(purchase_date);
+    CREATE INDEX IF NOT EXISTS idx_pos_expenses_date ON pos_expenses(expense_date);
+    CREATE INDEX IF NOT EXISTS idx_pos_stock_logs_product ON pos_stock_logs(product_id);
+    CREATE INDEX IF NOT EXISTS idx_pos_stock_logs_created ON pos_stock_logs(created_at);
+    CREATE INDEX IF NOT EXISTS idx_pos_shifts_status ON pos_shifts(status);
+    CREATE INDEX IF NOT EXISTS idx_pos_point_logs_customer ON pos_point_logs(customer_id);
+  `);
+} catch (e) {
+  console.error('Failed to migrate POS schema:', e);
+}
+
 module.exports = db;
 module.exports.getAppSetting = getAppSetting;
 module.exports.saveAppSetting = saveAppSetting;

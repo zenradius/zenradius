@@ -1,0 +1,130 @@
+<%- include('partials/head', { title: 'Shift Kasir' }) %>
+<%- include('partials/nav', { activeTab: 'shift' }) %>
+
+<% if (activeShift) { %>
+  <div class="card">
+    <div class="card-hd">
+      <h6><i class="bi bi-clock-history"></i> Shift Berjalan</h6>
+      <span class="pos-badge cash">DIBUKA <%= new Date(activeShift.opened_at).toLocaleString('id-ID') %></span>
+    </div>
+    <div class="card-bd">
+      <div class="pos-stats" style="margin-bottom:14px">
+        <div class="pos-stat">
+          <div class="pos-stat-l"><i class="bi bi-cash"></i> Penjualan Tunai</div>
+          <div class="pos-stat-v"><%= formatMoney(activeShift.cash_sales) %></div>
+          <div class="pos-stat-s"><%= activeShift.cash_count %> transaksi</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-l"><i class="bi bi-qr-code"></i> Penjualan QRIS</div>
+          <div class="pos-stat-v"><%= formatMoney(activeShift.qris_sales) %></div>
+          <div class="pos-stat-s"><%= activeShift.qris_count %> transaksi</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-l"><i class="bi bi-journal-text"></i> Penjualan Tempo</div>
+          <div class="pos-stat-v"><%= formatMoney(activeShift.credit_sales) %></div>
+          <div class="pos-stat-s"><%= activeShift.credit_count %> transaksi</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-l"><i class="bi bi-arrow-repeat"></i> Piutang Tertagih</div>
+          <div class="pos-stat-v"><%= formatMoney(activeShift.debt_collected) %></div>
+          <div class="pos-stat-s">diterima di shift ini</div>
+        </div>
+        <div class="pos-stat bad">
+          <div class="pos-stat-l"><i class="bi bi-wallet2"></i> Pengeluaran</div>
+          <div class="pos-stat-v"><%= formatMoney(activeShift.expenses_paid) %></div>
+          <div class="pos-stat-s">kas keluar</div>
+        </div>
+        <div class="pos-stat ok">
+          <div class="pos-stat-l"><i class="bi bi-safe"></i> Kas Seharusnya</div>
+          <div class="pos-stat-v"><%= formatMoney(activeShift.expected_cash) %></div>
+          <div class="pos-stat-s">
+            Modal awal <%= formatMoney(activeShift.starting_cash) %> + tunai + tagihan − pengeluaran
+          </div>
+        </div>
+      </div>
+
+      <form method="POST" action="/toko/shift/tutup">
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Uang Fisik di Laci (Rp) <span style="color:var(--danger)">*</span></label>
+            <input type="number" class="fc" name="actual_cash" min="0" step="100" required placeholder="Hitung uang di laci">
+            <div class="pos-hint">Sistem akan membandingkan dengan kas seharusnya dan menampilkan selisih.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Catatan</label>
+            <input type="text" class="fc" name="note" placeholder="Opsional">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-p" onclick="return confirm('Tutup shift sekarang? Pastikan uang di laci sudah dihitung.')">
+          <i class="bi bi-lock"></i> Tutup Shift &amp; Cetak Settlement
+        </button>
+      </form>
+    </div>
+  </div>
+<% } else { %>
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-unlock"></i> Buka Shift Kasir</h6></div>
+    <div class="card-bd">
+      <div class="alert alert-i">
+        <i class="bi bi-info-circle"></i>
+        Buka shift sebelum mulai bertransaksi agar laporan kas dan settlement harian akurat.
+      </div>
+      <form method="POST" action="/toko/shift/buka">
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Modal Awal / Uang Kembalian (Rp) <span style="color:var(--danger)">*</span></label>
+            <input type="number" class="fc" name="starting_cash" min="0" step="1000" required value="0" placeholder="Contoh: 100000">
+            <div class="pos-hint">Jumlah uang tunai yang ada di laci saat shift dimulai.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Catatan</label>
+            <input type="text" class="fc" name="note" placeholder="Opsional">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-p"><i class="bi bi-unlock"></i> Buka Shift</button>
+      </form>
+    </div>
+  </div>
+<% } %>
+
+<div class="card">
+  <div class="card-hd"><h6><i class="bi bi-clock-history"></i> Riwayat Shift</h6></div>
+  <div class="tbl-wrap">
+    <table class="dtbl">
+      <thead>
+        <tr><th>Dibuka</th><th>Ditutup</th><th class="num">Tunai</th><th class="num">QRIS</th><th class="num">Tempo</th>
+            <th class="num">Kas Seharusnya</th><th class="num">Kas Fisik</th><th class="num">Selisih</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+      <% if (!shifts.length) { %>
+        <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:26px">Belum ada riwayat shift.</td></tr>
+      <% } %>
+      <% shifts.forEach(function(s){ %>
+        <tr>
+          <td style="white-space:nowrap;font-size:12px"><%= new Date(s.opened_at).toLocaleString('id-ID') %></td>
+          <td style="white-space:nowrap;font-size:12px"><%= s.closed_at ? new Date(s.closed_at).toLocaleString('id-ID') : '-' %></td>
+          <td class="num"><%= formatMoney(s.cash_sales) %></td>
+          <td class="num"><%= formatMoney(s.qris_sales) %></td>
+          <td class="num"><%= formatMoney(s.credit_sales) %></td>
+          <td class="num"><%= formatMoney(s.expected_cash) %></td>
+          <td class="num"><%= s.actual_cash === null || s.actual_cash === undefined ? '-' : formatMoney(s.actual_cash) %></td>
+          <td class="num" style="font-weight:700;color:<%= Number(s.difference || 0) === 0 ? 'var(--success)' : (Number(s.difference) > 0 ? 'var(--info)' : 'var(--danger)') %>">
+            <%= s.difference === null || s.difference === undefined ? '-' : ((Number(s.difference) > 0 ? '+' : '') + formatMoney(s.difference)) %>
+          </td>
+          <td>
+            <% if (s.status === 'OPEN') { %>
+              <span class="pos-badge cash">BERJALAN</span>
+            <% } else { %>
+              <span class="pos-badge paid">SELESAI</span>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div></div><!-- /.page /.mw -->
+</body>
+</html>

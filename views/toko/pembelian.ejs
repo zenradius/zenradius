@@ -1,0 +1,225 @@
+<%- include('partials/head', { title: 'Pembelian Stok' }) %>
+<%- include('partials/nav', { activeTab: 'pembelian' }) %>
+
+<div class="card">
+  <div class="card-hd" style="flex-wrap:wrap;gap:10px">
+    <h6><i class="bi bi-truck"></i> Riwayat Pembelian Stok</h6>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <form method="GET" action="/toko/pembelian" style="display:flex;gap:8px;align-items:center;margin:0">
+        <div class="sinput">
+          <i class="bi bi-search"></i>
+          <input type="text" class="fc" name="q" value="<%= search %>" placeholder="Cari nomor PO / supplier...">
+        </div>
+        <button class="btn btn-g btn-sm" type="submit"><i class="bi bi-search"></i></button>
+      </form>
+      <button class="btn btn-p btn-sm" onclick="openPurchase()"><i class="bi bi-plus-lg"></i> Stok Masuk</button>
+      <button class="btn btn-g btn-sm" onclick="openModal('supplierModal')"><i class="bi bi-people"></i> Supplier</button>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="dtbl">
+      <thead>
+        <tr><th>Nomor PO</th><th>Supplier</th><th class="num">Total</th><th class="num">Dibayar</th><th class="num">Sisa Hutang</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+      <% if (!purchases.length) { %>
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">
+          Belum ada pembelian. Klik <strong>Stok Masuk</strong> untuk mencatat barang datang dari supplier.
+        </td></tr>
+      <% } %>
+      <% purchases.forEach(function(p){ %>
+        <tr>
+          <td>
+            <code><%= p.purchase_no %></code>
+            <div style="font-size:11px;color:var(--muted)"><%= new Date(p.purchase_date).toLocaleString('id-ID') %></div>
+          </td>
+          <td><%= p.supplier_name || '-' %><div style="font-size:11px;color:var(--muted)"><%= p.payment_type %><%= p.due_date ? ' · tempo ' + p.due_date : '' %></div></td>
+          <td class="num"><%= formatMoney(p.total_amount) %></td>
+          <td class="num"><%= formatMoney(p.paid_amount) %></td>
+          <td class="num" style="color:<%= p.debt_balance > 0 ? 'var(--warning)' : 'var(--muted)' %>;font-weight:700"><%= formatMoney(p.debt_balance) %></td>
+          <td>
+            <% if (p.payment_status === 'UNPAID') { %>
+              <span class="pos-badge unpaid">BELUM LUNAS</span>
+            <% } else { %>
+              <span class="pos-badge paid">LUNAS</span>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Modal: pembelian baru ── -->
+<div class="mo" id="purchaseModal">
+  <div class="mb" style="max-width:860px">
+    <form method="POST" action="/toko/pembelian/simpan">
+      <div class="mh">
+        <span class="mt"><i class="bi bi-box-arrow-in-down"></i> Stok Masuk dari Supplier</span>
+        <button type="button" class="mc" onclick="closeModal('purchaseModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="mbody">
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Supplier</label>
+            <select class="fc" name="supplier_id">
+              <option value="">Pilih supplier</option>
+              <% suppliers.forEach(function(s){ %>
+                <option value="<%= s.id %>"><%= s.name %></option>
+              <% }) %>
+            </select>
+            <div class="pos-hint">Wajib bila pembayaran tempo.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Cara Bayar</label>
+            <select class="fc" name="payment_type" id="buyPayType" onchange="toggleBuyDebt()">
+              <option value="CASH">Tunai (lunas)</option>
+              <option value="CREDIT">Tempo (hutang)</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="fl">Daftar Barang</label>
+        <div class="tbl-wrap" style="margin-bottom:10px">
+          <table class="dtbl">
+            <thead><tr><th>Produk</th><th style="width:110px">Jumlah</th><th style="width:130px">Harga Beli</th><th style="width:140px">Kadaluarsa</th><th class="num">Subtotal</th><th></th></tr></thead>
+            <tbody id="buyRows"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-g btn-sm" onclick="addBuyRow()" style="margin-bottom:14px"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+
+        <div class="form-row">
+          <div class="fg" id="buyPaidField" style="display:none">
+            <label class="fl">Uang Muka / Dibayar</label>
+            <input type="number" class="fc" name="cash_paid" min="0" step="1000" value="0">
+          </div>
+          <div class="fg" id="buyDueField" style="display:none">
+            <label class="fl">Jatuh Tempo</label>
+            <input type="date" class="fc" name="due_date">
+          </div>
+          <div class="fg">
+            <label class="fl">Catatan</label>
+            <input type="text" class="fc" name="note" placeholder="Opsional">
+          </div>
+        </div>
+
+        <div class="pos-total grand"><span>Total Pembelian</span><span id="buyTotal">Rp 0</span></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('purchaseModal')">Batal</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan &amp; Tambah Stok</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Modal: supplier ── -->
+<div class="mo" id="supplierModal">
+  <div class="mb" style="max-width:560px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-people"></i> Supplier</span>
+      <button type="button" class="mc" onclick="closeModal('supplierModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="mbody">
+      <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;margin-bottom:16px">
+        <table class="dtbl">
+          <thead><tr><th>Nama</th><th>Telepon</th></tr></thead>
+          <tbody>
+          <% if (!suppliers.length) { %>
+            <tr><td colspan="2" style="text-align:center;color:var(--muted);padding:18px">Belum ada supplier</td></tr>
+          <% } %>
+          <% suppliers.forEach(function(s){ %>
+            <tr><td style="font-weight:600"><%= s.name %><div style="font-size:11px;color:var(--muted)"><%= s.address || '' %></div></td><td><%= s.phone || '-' %></td></tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <form method="POST" action="/toko/supplier/simpan">
+        <div class="fg">
+          <label class="fl">Nama Supplier</label>
+          <input type="text" class="fc" name="name" required placeholder="Contoh: PT Sumber Rejeki">
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Telepon</label><input type="text" class="fc" name="phone" placeholder="Opsional"></div>
+          <div class="fg"><label class="fl">Alamat</label><input type="text" class="fc" name="address" placeholder="Opsional"></div>
+        </div>
+        <button type="submit" class="btn btn-p" style="width:100%;justify-content:center"><i class="bi bi-plus-lg"></i> Tambah Supplier</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+</div></div><!-- /.page /.mw -->
+
+<script>
+  const PRODUCTS = <%= JSON.stringify(products).replace(/</g, '\\u003c') %>;
+  const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('.mo').forEach(function (m) {
+    m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+  });
+  setTimeout(function () { document.querySelectorAll('.alert').forEach(function (a) { a.style.display = 'none'; }); }, 5000);
+
+  function productOptions(selected) {
+    return '<option value="">Pilih produk</option>' + PRODUCTS.map(function (p) {
+      return '<option value="' + p.id + '"' + (String(selected) === String(p.id) ? ' selected' : '') + '>' + p.name + (p.sku ? ' (' + p.sku + ')' : '') + '</option>';
+    }).join('');
+  }
+
+  function addBuyRow() {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><select class="fs" name="item_product" required onchange="updateBuyRow(this)">' + productOptions() + '</select>'
+      + '<div class="pos-hint" data-unit-hint></div></td>'
+      + '<td><input type="number" class="fc" name="item_qty" min="1" step="1" value="1" required oninput="recalcBuy()"></td>'
+      + '<td><input type="number" class="fc" name="item_cost" min="0" step="100" value="0" required oninput="recalcBuy()"></td>'
+      + '<td><input type="date" class="fc" name="item_expiry"></td>'
+      + '<td class="num" data-subtotal>Rp 0</td>'
+      + '<td><button type="button" class="btn btn-g btn-sm" onclick="this.closest(\'tr\').remove(); recalcBuy()"><i class="bi bi-x-lg"></i></button></td>';
+    document.getElementById('buyRows').appendChild(tr);
+  }
+
+  /** Saat produk dipilih, isi otomatis harga modal terakhir sebagai saran. */
+  function updateBuyRow(select) {
+    const tr = select.closest('tr');
+    const p = PRODUCTS.find(function (x) { return String(x.id) === String(select.value); });
+    if (p) {
+      const costInput = tr.querySelector('input[name="item_cost"]');
+      if (!costInput.value || Number(costInput.value) === 0) costInput.value = p.cost_price || 0;
+      const baseUnit = (p.units || []).find(function (u) { return u.conversion_factor === 1; }) || {};
+      const hint = tr.querySelector('[data-unit-hint]');
+      if (hint) hint.textContent = 'Satuan dasar: ' + (baseUnit.unit_name || p.unit) + ' · stok kini ' + p.stock;
+    }
+    recalcBuy();
+  }
+
+  function recalcBuy() {
+    let total = 0;
+    document.querySelectorAll('#buyRows tr').forEach(function (tr) {
+      const qty = Number(tr.querySelector('input[name="item_qty"]').value || 0);
+      const cost = Number(tr.querySelector('input[name="item_cost"]').value || 0);
+      const sub = qty * cost;
+      total += sub;
+      tr.querySelector('[data-subtotal]').textContent = rupiah(sub);
+    });
+    document.getElementById('buyTotal').textContent = rupiah(total);
+  }
+
+  function toggleBuyDebt() {
+    const isCredit = document.getElementById('buyPayType').value === 'CREDIT';
+    document.getElementById('buyPaidField').style.display = isCredit ? 'block' : 'none';
+    document.getElementById('buyDueField').style.display = isCredit ? 'block' : 'none';
+  }
+
+  function openPurchase() {
+    document.getElementById('buyRows').innerHTML = '';
+    addBuyRow();
+    recalcBuy();
+    openModal('purchaseModal');
+  }
+</script>
+</body>
+</html>
