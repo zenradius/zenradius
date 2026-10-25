@@ -4,13 +4,14 @@
 
 **One Platform for Your Network** 🚀
 
-Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE, dan portal mandiri pelanggan (*Customer Self-Service*) — modern, responsif, dan siap produksi sebagai aplikasi web berbasis PWA (*Progressive Web App*).
+Platform serba-satu untuk ISP: manajemen billing & tagihan, otomasi jaringan Mikrotik, billing Hotspot/PPPoE, **kasir Point of Sale (toko)**, serta **lima portal mandiri** (Pelanggan, Teknisi, Reseller, Kolektor, dan Kasir) — modern, responsif, dan siap produksi sebagai PWA (*Progressive Web App*).
 
 ![Node.js](https://img.shields.io/badge/Node.js-v18%2B-339933?logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-Framework-black?logo=express&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-better--sqlite3-003B57?logo=sqlite&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa&logoColor=white)
 ![License](https://img.shields.io/badge/License-Proprietary-red)
+![Version](https://img.shields.io/badge/version-1.17.0-blue)
 
 ![ZenRadius Hero](public/img/hero.png)
 
@@ -27,6 +28,7 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 ## 📖 Daftar Isi
 
 - [Fitur Utama](#-fitur-utama)
+- [Daftar Modul & Portal](#-daftar-modul--portal)
 - [Point of Sale / Toko](#-point-of-sale--toko)
 - [Integrasi Payment Gateway](#-integrasi-payment-gateway)
 - [Tumpukan Teknologi](#-tumpukan-teknologi)
@@ -36,9 +38,9 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 - [Konfigurasi Domain & HTTPS](#-konfigurasi-domain--https)
 - [Auto-Start Setelah Reboot Server](#-auto-start-setelah-reboot-server)
 - [Update Aplikasi](#-update-aplikasi-setelah-deploy-ke-vps)
-- [Tutorial Instalasi Lengkap](#-tutorial-instalasi-lengkap)
+- [Dokumentasi & Tutorial Instalasi](#-dokumentasi--tutorial-instalasi)
 - [Akun Akses Default](#-akun-akses-default)
-- [Lisensi](#-lisensi)
+- [Lisensi & Model Pembelian](#-lisensi--model-pembelian)
 
 ---
 
@@ -58,6 +60,35 @@ Platform manajemen billing ISP, otomasi jaringan Mikrotik, billing Hotspot/PPPoE
 | **Cek Tagihan Mandiri** | Akses instan untuk memeriksa invoice dan melakukan pembayaran via QRIS Statis maupun Virtual Account. |
 | **Asisten Obrolan AI** | Chatbot responsif yang disematkan langsung di portal pelanggan untuk bantuan instan 24/7. |
 
+### 💰 Billing, Tagihan & Keuangan
+| Fitur | Deskripsi |
+|---|---|
+| **Tagihan Otomatis** | Pembuatan invoice bulanan/tempo, prorata invoice pertama, harga promo, serta pengingat jatuh tempo. |
+| **Paket Fleksibel** | Kecepatan up/down, PPN & USO, FUP, night speed, dan penugasan profil router per paket. |
+| **Isolir & Tunggakan** | Penangguhan otomatis plus pembukaan isolir instan begitu pembayaran terverifikasi. |
+| **Laporan Keuangan** | Pendapatan, pengeluaran, laba/rugi, kas masuk, dan ekspor Excel/CSV. |
+| **Payroll** | Slip gaji karyawan dengan tunjangan, potongan absensi, komisi kolektor, dan bonus tiket. |
+
+### 🛒 Kasir Toko (Point of Sale)
+Menyatu di panel admin (tepat di bawah menu **DigiFlazz**) untuk menjual perangkat jaringan, aksesoris, pulsa/token, atau kebutuhan toko. Ringkasnya: kasir multi-satuan (Pcs/Pak/Dus) dengan **harga grosir otomatis**, pembayaran **Tunai/QRIS Dinamis/Tempo**, **poin loyalti**, **pembelian supplier**, **piutang & hutang**, **shift kasir + Z-Report**, **retur & void**, dan **laporan laba bersih**. Selengkapnya di [Point of Sale / Toko](#-point-of-sale--toko).
+
+### 🧑‍💼 Lima Portal Mandiri
+Setiap peran mendapat antarmuka sendiri yang ringkas dan *mobile-first*, jadi tidak semua orang berbagi satu dashboard besar:
+
+- **Portal Pelanggan** (`/`) — tagihan, voucher, top up, tiket gangguan, dan chatbot AI.
+- **Portal Teknisi** (`/teknisi`) — daftar tugas, tiket baru, absensi, peta, dan monitor jaringan.
+- **Portal Reseller** (`/mitra`) — saldo, penjualan voucher, serta pulsa/PPOB.
+- **Portal Kolektor** (`/penagih`) — tagihan per wilayah, pencatatan setoran, dan absensi.
+- **Akses Kasir** (`/admin`) — panel terbatas: tagihan, pelanggan, kas, tiket, dan Point of Sale.
+
+Rincian lengkap tiap portal ada di [Daftar Modul & Portal](#-daftar-modul--portal).
+
+### 🕒 Absensi & Manajemen Karyawan
+| Fitur | Deskripsi |
+|---|---|
+| **Absensi Bergambar** | Check-in/out dengan foto, stempel lokasi (GPS), dan perhitungan durasi kerja. |
+| **Manajemen Tim** | Data teknisi, kasir, kolektor, dan reseller beserta area kerja serta komisi. |
+
 ### 📱 Progressive Web App (PWA)
 Mendukung instalasi mandiri (*standalone mode*) ke layar beranda perangkat mobile/desktop dengan branding sesuai peran pengguna:
 
@@ -70,6 +101,93 @@ Mendukung instalasi mandiri (*standalone mode*) ke layar beranda perangkat mobil
 | Kolektor Keuangan | **ZenRadius Kolektor** |
 
 Aset statis di-cache menggunakan strategi **Stale-While-Revalidate** untuk pengalaman akses yang instan tanpa jeda pembersihan berkas oleh pengguna akhir.
+
+---
+
+## 🧭 Daftar Modul & Portal
+
+Seluruh modul dalam satu basis data. Menu dapat **disembunyikan, dikunci, atau diatur urutannya** per peran melalui **Pengaturan Sidebar** (`/admin/sidebar-settings`).
+
+### Panel Admin — Section UTAMA
+
+| Modul | Alamat | Hak Akses | Fungsi Singkat |
+|---|---|---|---|
+| **Dashboard** | `/admin` | Admin, Kasir | Ringkasan pelanggan, tagihan, pendapatan, dan grafik. |
+| **MikroTik** | `/admin/mikrotik` | Admin, Kasir | Profil PPPoE/Hotspot, PPP Secret, DHCP, monitor resource router. |
+| **GenieACS Pro** | `/admin/acs` | Admin | Manajemen perangkat ONU/ONT (TR-069) beserta tugas & parameter. |
+| **ONU Provision** | `/admin/onu-provision` | Admin | Registrasi otomatis ONU, penugasan PPPoE, dan konfigurasi massal. |
+| **Manajemen OLT** | `/admin/olts` | Admin | Pemantauan OLT (ZTE/Huawei/VSOL dan sejenisnya) dan data PON. |
+| **RADIUS Server** | `/admin/radius-settings` | Admin, Kasir | NAS, akuntansi sesi, dan pengaturan autentikasi RADIUS. |
+| **WhatsApp** | `/admin/whatsapp` | Admin, Kasir | Gateway WA (Baileys/Fonnte/Wablas/Meta), template pesan, koneksi. |
+| **Broadcast WA** | `/admin/whatsapp/broadcast` | Admin, Kasir | Pengiriman pesan massal bertarget dengan penjadwalan. |
+| **Live Chat WA** | `/admin/whatsapp/live-chat` | Admin, Kasir | Percakapan masuk/keluar dengan pelanggan dalam satu inbox. |
+| **Gemini Bot** | `/admin/gemini-bot` | Admin | Asisten AI untuk operasional (perintah bahasa alami). |
+| **Telegram Bot** | `/admin/telegram-bot` | Admin | Notifikasi dan backup ke Telegram. |
+| **Area Layanan** | `/admin/areas` | Admin, Kasir | Pembagian wilayah kerja untuk teknisi dan kolektor. |
+| **Peta Jaringan** | `/admin/map` | Admin, Kasir | Sebaran pelanggan, ODP, dan OLT dalam peta. |
+| **Promo Slides** | `/admin/promo-slides` | Admin | Banner promo pada halaman login/portal pelanggan. |
+
+### Panel Admin — Section BILLING
+
+| Modul | Alamat | Hak Akses | Fungsi Singkat |
+|---|---|---|---|
+| **Pelanggan** | `/admin/customers` | Admin, Kasir | Data pelanggan, paket, perangkat, isolir, dan pendaftaran online. |
+| **Paket Internet** | `/admin/packages` | Admin, Kasir | Paket kecepatan, harga, PPN/USO, FUP, night speed, promo. |
+| **Paket Voucher** | `/admin/vouchers/packages` | Admin, Kasir | Template voucher Hotspot dan pembuatan massal. |
+| **Tagihan** | `/admin/billing` | Admin, Kasir | Invoice bulanan, pembayaran, pengingat, dan tunggakan. |
+
+### Panel Admin — Section LAYANAN
+
+| Modul | Alamat | Hak Akses | Fungsi Singkat |
+|---|---|---|---|
+| **Tiket Customer** | `/admin/tickets` | Admin, Kasir | Tiket gangguan, penugasan teknisi, dan riwayat penanganan. |
+| **Approval Kolektor** | `/admin/collector-payments` | Admin, Kasir | Verifikasi setoran pembayaran dari kolektor lapangan. |
+| **Inventaris (Stok)** | `/admin/inventory` | Admin, Kasir | Stok perangkat ISP (ONU, router, kabel) beserta nomor seri. |
+| **Cetak Stiker ONU** | `/admin/onu-stickers` | Admin, Kasir | Generator label QR/barcode perangkat untuk pelanggan. |
+| **DigiFlazz** | `/admin/digiflazz` | Admin | Produk PPOB/pulsa/token dan transaksi staf. |
+| **Point of Sale** | `/toko` | Admin, Kasir | Kasir toko ritel/grosir — lihat [bagian khusus](#-point-of-sale--toko). |
+
+### Panel Admin — Section KEUANGAN
+
+| Modul | Alamat | Hak Akses | Fungsi Singkat |
+|---|---|---|---|
+| **Laporan Keuangan** | `/admin/reports` | Admin, Kasir | Pendapatan, pengeluaran, laba/rugi, dan ekspor Excel/CSV. |
+| **Laporan Kasir** | `/admin/cashiers/reports` | Admin, Kasir | Rekap setoran dan transaksi per kasir. |
+| **Gaji & Payroll** | `/admin/payroll` | Admin | Slip gaji, tunjangan, potongan, komisi, dan bonus tiket. |
+| **Kas Masuk** | `/admin/finance/cash-in` | Admin, Kasir | Pencatatan kas masuk di luar tagihan (mis. suntikan modal). |
+| **Pengeluaran** | `/admin/finance/expenses` | Admin, Kasir | Biaya operasional dengan kategori dan filter periode. |
+| **Kategori Pengeluaran** | `/admin/finance/expense-categories` | Admin | Pengelompokan jenis biaya (perangkat, utilitas, gaji, dll). |
+
+### Panel Admin — Section MANAJEMEN USER & SISTEM
+
+| Modul | Alamat | Hak Akses | Fungsi Singkat |
+|---|---|---|---|
+| **Akses Role** | `/admin/users` | Admin | Pengguna, peran, dan izin menu per akun. |
+| **Teknisi / Kasir / Kolektor / Reseller** | `/admin/technicians`, `/admin/cashiers`, `/admin/collectors`, `/admin/agents` | Admin | Data karyawan dan mitra beserta komisi/fee. |
+| **Absensi Karyawan** | `/admin/attendance` | Admin, Kasir | Kehadiran, foto, dan lokasi (*geotagging*). |
+| **Payment Gateway** | `/admin/payment-gateway` | Admin | Kredensial gateway pembayaran otomatis. |
+| **Payment QRIS Statis** | `/admin/payment-qris-static` | Admin | Payload/gambar QRIS statis merchant. |
+| **Notifikasi E-Wallet** | `/admin/ewallet-logs` | Admin | Log notifikasi pembayaran masuk untuk rekonsiliasi. |
+| **Backup & Recovery** | `/admin/backup` | Admin | Backup/restore basis data (unduh, unggah, Telegram). |
+| **Monitoring Sistem** | `/admin/monitoring` | Admin | Kesehatan server, basis data, dan status layanan. |
+| **Log Aktivitas** | `/admin/audit-logs` | Admin | Jejak audit perubahan dan aksi pengguna. |
+| **Pengaturan** | `/admin/settings` | Admin | Identitas, WhatsApp, MikroTik, pajak, dan setelan umum. |
+| **Tema Aplikasi** | `/admin/theme-settings` | Admin | Tema tampilan (Space/Orbit) dan warna aksen. |
+| **Update System** | `/admin/update` | Admin | Pembaruan aplikasi langsung dari panel. |
+
+### Lima Portal Mandiri
+
+Masing-masing portal memiliki login, **PWA** sendiri, dan navigasi bawah khusus untuk perangkat mobile.
+
+| Portal | Alamat | Untuk | Isi Utama |
+|---|---|---|---|
+| **Portal Pelanggan** | `/` | Pelanggan internet | Cek & bayar tagihan, simulasi paket, voucher, top up saldo, tiket gangguan, chatbot AI, notifikasi. |
+| **Portal Teknisi** | `/teknisi` | Teknisi lapangan | Tugas saya, tiket baru (pool), absensi, peta, monitor jaringan, tambah pelanggan. |
+| **Portal Reseller** | `/mitra` | Mitra/agen | Saldo, tagihan pelanggan, jual voucher, pulsa/PPOB, riwayat transaksi. |
+| **Portal Kolektor** | `/penagih` | Kolektor keuangan | Daftar tagihan wilayah, pencatatan setoran, absensi. |
+| **Akses Kasir** | `/admin` | Kasir | Panel admin versi terbatas: dashboard, tagihan, pelanggan, kas, tiket, dan Point of Sale. |
+
+> **Catatan peran:** peran kanonik di basis data adalah `admin`, `customer_service`, `teknisi`, `pelanggan`, `reseller`, dan `kolektor`. Peran `customer_service` ditampilkan sebagai **Kasir** di antarmuka.
 
 ---
 
@@ -89,21 +207,26 @@ Modul **Point of Sale (POS)** adalah kasir penjualan barang ritel yang menyatu d
 
 | Fitur | Deskripsi |
 |---|---|
-| **Kasir (POS)** | Antarmuka kasir satu layar: cari/scan produk, keranjang, diskon, tukar poin, hitung kembalian, dan cetak struk 80 mm. |
+| **Kasir (POS)** | Antarmuka kasir satu layar: cari/scan produk, keranjang, diskon, tukar poin, hitung kembalian, dan cetak struk 80 mm. Dilengkapi **umpan suara** (bunyi pemindai & nada sukses) dan **pintasan keyboard** `F1` (proses bayar) / `F2` (kosongkan keranjang). |
 | **Scan Barcode / SKU** | Kolom pencarian menerima input scanner barcode; menekan **Enter** langsung menambahkan produk yang paling cocok ke keranjang. |
+| **Produk Cepat (Terlaris)** | Strip sekali-klik berisi produk terlaris 30 hari terakhir sehingga transaksi tersering tidak perlu dicari. |
 | **Satuan Bertingkat** | Satu produk dapat memiliki beberapa satuan (mis. Pcs, Pak, Dus) beserta faktor konversi dan harga jual per satuan. |
 | **Harga Grosir** | Harga khusus otomatis berlaku jika jumlah beli mencapai minimum grosir yang ditentukan per satuan. |
-| **Tipe Pembayaran** | **Tunai (CASH)**, **QRIS**, dan **Tempo/Kredit (CREDIT)** dengan jatuh tempo, saldo hutang, serta pembayaran cicilan. |
+| **Tipe Pembayaran** | **Tunai (CASH)**, **QRIS**, dan **Tempo/Kredit (CREDIT)**. Tempo mendukung **uang muka** dengan status **PARTIAL** (beda dari UNPAID/belum bayar), jatuh tempo, sisa hutang, dan pembayaran cicilan. |
+| **QRIS Dinamis (EMVCo)** | Mengubah QRIS statis merchant menjadi **QRIS dinamis bernominal pasti** (tag 54 + CRC16 dihitung ulang), sehingga pelanggan tidak perlu mengetik jumlah bayar. Bila payload tidak valid, sistem otomatis menampilkan QRIS statis sebagai cadangan. |
 | **Program Loyalti** | Poin otomatis diperoleh dari nominal belanja; poin dapat ditukar menjadi potongan harga saat checkout. |
 | **Manajemen Produk** | Kategori, SKU, harga pokok, harga jual, stok minimum, tanggal kedaluwarsa, dan penyesuaian stok dengan kartu stok (*stock log*). |
+| **Impor & Ekspor Produk (CSV)** | Unduh seluruh produk (satu baris per satuan), sunting di Excel/spreadsheet, lalu impor kembali. Kategori baru dibuat otomatis, dan tersedia mode **upsert** (perbarui) atau **insert_only** (lewati yang sudah ada). |
 | **Pembelian & Supplier** | Pencatatan pembelian dari supplier (tunai/tempo) yang otomatis menambah stok serta memperbarui harga pokok dan tanggal kedaluwarsa produk. |
 | **Hutang & Piutang** | Daftar piutang pelanggan dan hutang supplier lengkap dengan form pembayaran angsuran. |
 | **Kas & Pengeluaran** | Pencatatan pengeluaran operasional toko (listrik, gaji, transport, dll) dengan filter dan ringkasan per periode. |
 | **Shift Kasir & Z-Report** | Buka/tutup shift dengan kas awal, kas seharusnya, kas aktual, dan selisih; riwayat shift tersimpan untuk audit. |
-| **Laporan Penjualan** | Filter rentang tanggal, ringkasan omzet & laba, rekap per metode bayar, produk terlaris, rekap harian, serta **void** dan **retur** penjualan. |
+| **Laporan Penjualan** | Filter rentang tanggal, ringkasan **omzet bersih**, **laba bersih**, total retur, rekap per metode bayar, produk terlaris, rekap harian, serta **void** dan **retur** penjualan. |
+| **Analisis Barang Lambat Laku** | Menampilkan produk yang masih menumpuk stok tetapi paling sedikit terjual, lengkap dengan nilai **modal tertahan** dan **berapa hari menganggur** — untuk memutuskan diskon, retur ke supplier, atau berhenti memesan ulang. |
+| **Retur dengan Metode Pengembalian** | Retur barang per item dengan pilihan **Tunai** (kas keluar, otomatis tercatat sebagai pengeluaran agar kas shift tetap seimbang) atau **Potong Piutang** (untuk pelanggan yang masih berhutang). Nota asli tetap utuh sebagai jejak audit. |
 | **Pelanggan Toko** | Data pelanggan POS, saldo poin, penyesuaian poin manual, dan riwayat mutasi poin. |
 | **Keranjang Ditahan (Hold)** | Menahan beberapa transaksi sekaligus (mis. pelanggan lupa ambil barang) untuk dilanjutkan kapan saja. |
-| **QRIS Statis Toko** | Payload QRIS statis dapat disimpan di Pengaturan POS untuk ditampilkan saat pembayaran QRIS. |
+| **Kirim Struk via WhatsApp** | Struk ringkas dapat dikirim ke nomor pelanggan memakai gateway WhatsApp yang sudah aktif di ZenRadius (tanpa konfigurasi tambahan). |
 | **Struk Thermal** | Halaman struk mandiri ukuran 80 mm (`/toko/struk/:id`) siap cetak, tanpa elemen sidebar. |
 
 ### Pengaturan POS
@@ -115,7 +238,7 @@ Menu **Pengaturan** (khusus administrator) di `/toko/pengaturan` mengatur identi
 | **Identitas Toko** | Nama toko (kosong = ikut nama perusahaan), alamat, telepon |
 | **Struk** | Footer struk, tampilkan logo |
 | **Loyalti** | Aktif/nonaktif, nominal belanja per 1 poin, nilai rupiah per poin |
-| **Pembayaran** | Payload QRIS statis toko |
+| **Pembayaran** | Payload QRIS statis toko. Bila dikosongkan, modul toko otomatis memakai QRIS Statis global ZenRadius, sehingga merchant tidak perlu mengisi dua kali. |
 | **Operasional** | Stok minimum default, persentase pajak, peringatan stok menipis |
 
 ### Catatan Teknis
@@ -123,6 +246,15 @@ Menu **Pengaturan** (khusus administrator) di `/toko/pengaturan` mengatur identi
 - Seluruh tabel modul POS diberi awalan **`pos_`** (mis. `pos_products`, `pos_sales`, `pos_shifts`) agar tidak bertabrakan dengan tabel inventaris perangkat ISP yang sudah ada (`inventory_items`, `inventory_stock`, dan sejenisnya).
 - Data POS berada pada **basis data ZenRadius yang sama**, sehingga laporan dan backup otomatis ikut terbawa tanpa proses sinkronisasi terpisah.
 - Modul ini berdiri sendiri dari data pelanggan internet: pelanggan toko (*walk-in*) tidak otomatis menjadi pelanggan ISP.
+- Perubahan skema pada pembaruan versi ditangani **otomatis (auto-migrate)** saat aplikasi dijalankan — instalasi yang sudah berjalan cukup melakukan update dari panel admin, tanpa migrasi manual.
+
+**Belum tersedia** (direncanakan pada versi berikutnya):
+
+| Fitur | Keterangan |
+|---|---|
+| Cetak label barcode 33×15 mm | Generator label harga/barcode untuk ditempel di rak. Sementara ini gunakan **Cetak Stiker ONU** untuk perangkat jaringan, atau cetak via Excel dari hasil **Ekspor CSV**. |
+| Kick cash drawer | Membuka laci uang otomatis saat struk dicetak (perlu printer ESC/POS atau WebUSB). |
+| Impor Excel (`.xlsx`) | Saat ini memakai **CSV** yang bisa dibuka dan disimpan langsung oleh Excel. |
 
 ---
 
@@ -390,7 +522,7 @@ sudo systemctl enable docker
 Tidak ada langkah tambahan lain — setelah ini, aplikasi akan otomatis hidup kembali tanpa intervensi manual.
 
 ### ⚙️ Opsi B: `install.sh` (Sudah Otomatis)
-Jika Anda men-deploy menggunakan `install.sh` (lihat bagian [Instalasi Otomatis via Skrip](#-instalasi-otomatis-via-skrip-vpsproduction)), **PM2 sudah otomatis dikonfigurasi** untuk auto-start saat reboot — tidak ada langkah tambahan yang perlu dilakukan.
+Jika Anda men-deploy menggunakan `install.sh` (lihat bagian [Instalasi via install.sh](#-instalasi-via-installsh-vpsproduction)), **PM2 sudah otomatis dikonfigurasi** untuk auto-start saat reboot — tidak ada langkah tambahan yang perlu dilakukan.
 
 Jika Anda menjalankan aplikasi secara manual di luar `install.sh` (langsung `node app-customer.js`), pasang PM2 sendiri:
 ```bash
