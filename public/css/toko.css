@@ -148,26 +148,6 @@
 
 .pbody{padding:20px}
 
-/* ── Kepala halaman + navigasi segmen ── */
-.phead{margin-bottom:16px}
-.phead-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.phead-h1{margin:0;font-size:19px;font-weight:700;color:var(--text);letter-spacing:-.2px}
-.phead-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-
-.pseg{
-  display:flex;gap:3px;background:var(--bg2);border:1px solid var(--border);
-  border-radius:11px;padding:4px;overflow-x:auto;scrollbar-width:none
-}
-.pseg::-webkit-scrollbar{display:none}
-.pseg-i{
-  display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;
-  color:var(--muted);text-decoration:none;font-size:12.5px;font-weight:500;
-  white-space:nowrap;transition:background .16s,color .16s
-}
-.pseg-i i{font-size:14px}
-.pseg-i:hover{background:var(--bg3);color:var(--text)}
-.pseg-i.active{background:var(--btn-bg);color:var(--btn-color);font-weight:600}
-
 /* ── Notifikasi dalam aplikasi (bukan alert Bootstrap) ── */
 .pos-alert{
   display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;
@@ -199,11 +179,6 @@
   .pbody{padding:14px}
   .ptop{padding:11px 14px}
   .ptop-s{display:none}
-  .phead-h1{font-size:17px}
-  /* Navigasi segmen jadi baris ikon yang dapat digulir mendatar. */
-  .pseg-i span{display:none}
-  .pseg-i{padding:8px 12px}
-  .pseg-i i{font-size:16px}
 
   /* ── Modal: lebar penuh, tombol menumpuk agar mudah dijangkau jempol ── */
   .mo{padding:10px}
@@ -330,7 +305,7 @@
   /* Sembunyikan seluruh kerangka aplikasi (shell admin maupun shell POS)
      agar yang tercetak hanya isi laporan/struk. */
   .mw,.topbar,.sb,.no-print,
-  .pside,.pside-ov,.ptop,.pseg,.phead{display:none!important}
+  .pside,.pside-ov,.ptop{display:none!important}
   .pshell{display:block!important}
   .pbody{padding:0!important}
   .receipt{width:auto;box-shadow:none;margin:0}
