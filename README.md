@@ -193,15 +193,22 @@ Masing-masing portal memiliki login, **PWA** sendiri, dan navigasi bawah khusus 
 
 ## 🛒 Point of Sale / Toko
 
-Modul **Point of Sale (POS)** adalah kasir penjualan barang ritel yang menyatu di dalam ZenRadius — cocok untuk ISP yang juga menjual perangkat (router, kabel, adaptor), aksesoris, pulsa/token, atau kebutuhan toko lainnya. Modul ini muncul pada sidebar panel admin tepat **di bawah menu DigiFlazz**.
+Modul **Point of Sale (POS)** adalah kasir penjualan barang ritel — cocok untuk ISP yang juga menjual perangkat (router, kabel, adaptor), aksesoris, pulsa/token, atau kebutuhan toko lainnya.
+
+POS berdiri sebagai **aplikasi mandiri**, bukan sub-halaman panel admin:
 
 | Item | Keterangan |
 |---|---|
 | **Nama Menu** | Point of Sale |
-| **Posisi Menu** | Sidebar admin → section **LAYANAN**, tepat di bawah **DigiFlazz** |
-| **Alamat Akses** | `https://domainanda.com/toko` |
-| **Hak Akses** | Administrator & Kasir (`cashier`) |
-| **Branding** | Mengikuti nama perusahaan (`company_header`); bisa ditimpa per toko lewat **Nama Toko** di menu Pengaturan POS |
+| **Posisi Menu** | Sidebar admin → section **LAYANAN**, tepat di bawah **DigiFlazz**, dengan penanda ikon ↗ |
+| **Cara Membuka** | Klik menu akan membuka **tab baru**, sehingga kasir tidak meninggalkan pekerjaan admin yang sedang berjalan |
+| **Alamat Akses** | `https://domainanda.com/toko` (boleh dibuka/di-bookmark langsung) |
+| **Hak Akses** | Administrator & Kasir (`customer_service`) — memakai sesi login yang sama, tidak perlu login ulang |
+| **Tata Letak** | **Sidebar & topbar sendiri**, terpisah dari menu billing/MikroTik panel admin agar kasir tetap fokus pada pekerjaan toko |
+| **Branding** | Nama & **logo toko sendiri**; bila logo belum diunggah, memakai logo aplikasi |
+| **PWA** | Dapat dipasang sendiri sebagai **aplikasi kasir** (*standalone*), terpisah dari PWA panel admin |
+
+Sidebar POS dikelompokkan per pekerjaan (Utama, Katalog & Stok, Keuangan, Analisis, Sistem) dan menampilkan lencana **Shift Aktif** serta ringkasan kas saat shift berjalan. Untuk keluar digunakan menu **Keluar** di bagian bawah sidebar.
 
 ### Fitur Utama POS
 
@@ -227,7 +234,11 @@ Modul **Point of Sale (POS)** adalah kasir penjualan barang ritel yang menyatu d
 | **Pelanggan Toko** | Data pelanggan POS, saldo poin, penyesuaian poin manual, dan riwayat mutasi poin. |
 | **Keranjang Ditahan (Hold)** | Menahan beberapa transaksi sekaligus (mis. pelanggan lupa ambil barang) untuk dilanjutkan kapan saja. |
 | **Kirim Struk via WhatsApp** | Struk ringkas dapat dikirim ke nomor pelanggan memakai gateway WhatsApp yang sudah aktif di ZenRadius (tanpa konfigurasi tambahan). |
+| **Logo Toko Sendiri** | Unggah logo toko (PNG/JPG/WebP, maks 2 MB) di Pengaturan POS. Logo tampil di sidebar dan dapat dicetak pada struk. Terpisah dari logo aplikasi, jadi branding ZenRadius tidak berubah. |
 | **Struk Thermal** | Halaman struk mandiri ukuran 80 mm (`/toko/struk/:id`) siap cetak, tanpa elemen sidebar. |
+| **Aplikasi Kasir (PWA)** | POS punya manifest sendiri (`/toko/manifest.webmanifest`, scope `/toko/`) sehingga dapat dipasang ke layar beranda tablet/HP kasir dan berjalan *standalone* tanpa bilah peramban. |
+| **Ramah Layar Sentuh** | Tampilan mobile dioptimalkan: sidebar menjadi panel geser (*drawer*), modal lebar penuh dengan tombol menumpuk, tabel dapat digulir mendatar, dan target sentuh tombol diperbesar. |
+| **Pintasan & Umpan Suara** | `F1` memproses pembayaran, `F2` mengosongkan keranjang; tersedia bunyi pemindai dan nada transaksi berhasil. |
 
 ### Pengaturan POS
 
@@ -236,7 +247,8 @@ Menu **Pengaturan** (khusus administrator) di `/toko/pengaturan` mengatur identi
 | Grup | Contoh Pengaturan |
 |---|---|
 | **Identitas Toko** | Nama toko (kosong = ikut nama perusahaan), alamat, telepon |
-| **Struk** | Footer struk, tampilkan logo |
+| **Logo Toko** | Unggah/ganti/hapus logo toko (PNG, JPG, WebP — maks 2 MB). Pratinjau tampil langsung. |
+| **Struk** | Footer struk, cetak logo pada struk |
 | **Loyalti** | Aktif/nonaktif, nominal belanja per 1 poin, nilai rupiah per poin |
 | **Pembayaran** | Payload QRIS statis toko. Bila dikosongkan, modul toko otomatis memakai QRIS Statis global ZenRadius, sehingga merchant tidak perlu mengisi dua kali. |
 | **Operasional** | Stok minimum default, persentase pajak, peringatan stok menipis |
@@ -246,6 +258,7 @@ Menu **Pengaturan** (khusus administrator) di `/toko/pengaturan` mengatur identi
 - Seluruh tabel modul POS diberi awalan **`pos_`** (mis. `pos_products`, `pos_sales`, `pos_shifts`) agar tidak bertabrakan dengan tabel inventaris perangkat ISP yang sudah ada (`inventory_items`, `inventory_stock`, dan sejenisnya).
 - Data POS berada pada **basis data ZenRadius yang sama**, sehingga laporan dan backup otomatis ikut terbawa tanpa proses sinkronisasi terpisah.
 - Modul ini berdiri sendiri dari data pelanggan internet: pelanggan toko (*walk-in*) tidak otomatis menjadi pelanggan ISP.
+- Logo toko disimpan di `public/uploads/branding/` (volume persisten saat Docker) dan disajikan lewat `/toko/logo` yang **memerlukan sesi** — bukan aset publik. Format berkas dideteksi dari isi (*magic bytes*), bukan dari nama berkas kiriman.
 - Perubahan skema pada pembaruan versi ditangani **otomatis (auto-migrate)** saat aplikasi dijalankan — instalasi yang sudah berjalan cukup melakukan update dari panel admin, tanpa migrasi manual.
 
 **Belum tersedia** (direncanakan pada versi berikutnya):
