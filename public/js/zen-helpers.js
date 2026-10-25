@@ -123,6 +123,18 @@
   scrollTopBtn.innerHTML = '<i class="bi bi-arrow-up-short"></i>';
   document.body.appendChild(scrollTopBtn);
 
+  /**
+   * Wadah gulir yang sedang aktif.
+   * Panel admin memakai `.mw` sebagai wadah gulir; POS (aplikasi terpisah)
+   * tidak memakainya sehingga menggulir pada dokumen. Tanpa deteksi ini,
+   * tombol "ke atas" tidak pernah muncul di POS karena `.mw` tidak ada.
+   */
+  function getScroller() {
+    const mwNode = document.querySelector('.mw');
+    if (mwNode) return mwNode;
+    return document.scrollingElement || document.documentElement;
+  }
+
   // Hover animations
   scrollTopBtn.addEventListener('mouseenter', () => {
     scrollTopBtn.style.background = 'linear-gradient(135deg, #2d7774 0%, #1d5264 100%)';
@@ -134,15 +146,12 @@
   });
 
   scrollTopBtn.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    const mwNode = document.querySelector('.mw');
-    if (mwNode) mwNode.scrollTo({ top: 0, behavior: 'smooth' });
+    getScroller().scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // Scroll visibility handler (check standard scroll & .mw block container scrolls)
+  // Scroll visibility handler (mendukung wadah gulir .mw maupun POS)
   function handleScroll() {
-    const mwNode = document.querySelector('.mw');
-    const scrollY = window.scrollY || (mwNode ? mwNode.scrollTop : 0);
+    const scrollY = getScroller().scrollTop;
     if (scrollY > 300) {
       scrollTopBtn.style.opacity = '1';
       scrollTopBtn.style.transform = 'translateY(0) scale(1)';
