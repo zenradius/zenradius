@@ -25,3 +25,4 @@ data/
 nodemon.json
 scripts/dev/
 scripts/test-*.js
+scripts/dev/**

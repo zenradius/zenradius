@@ -28,6 +28,45 @@
     </div>
   </div>
 
+  <!-- Logo toko: formulir terpisah karena mengirim berkas (multipart/form-data),
+       sehingga tidak boleh digabung dengan form pengaturan utama di bawah. -->
+  <div class="card">
+    <div class="card-hd"><h6><i class="bi bi-image"></i> Logo Toko</h6></div>
+    <div class="card-bd">
+      <div class="alert alert-i">
+        <i class="bi bi-info-circle"></i>
+        Logo ini khusus untuk <strong>toko</strong> dan dipakai pada sidebar POS
+        <% if (posSettings.receipt_show_logo) { %> serta struk<% } %>.
+        Bila dikosongkan, POS memakai logo utama ZenRadius.
+      </div>
+      <div class="logo-row">
+        <div class="logo-box">
+          <% if (typeof hasStoreLogo !== 'undefined' && hasStoreLogo) { %>
+            <img src="/toko/logo?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : '' %>" alt="Logo toko">
+          <% } else { %>
+            <span class="logo-none"><i class="bi bi-shop"></i><em>Belum ada logo</em></span>
+          <% } %>
+        </div>
+        <div class="logo-side">
+          <form method="POST" action="/toko/logo/unggah" enctype="multipart/form-data" class="logo-form">
+            <div class="fg" style="margin-bottom:10px">
+              <label class="fl">Unggah Logo Baru</label>
+              <input type="file" name="logo" class="fc" accept="image/png,image/jpeg,image/webp" required>
+              <div class="pos-hint">PNG, JPG, atau WebP. Maksimal 2 MB. Sebaiknya gambar persegi (mis. 512×512) agar tampil tajam.</div>
+            </div>
+            <button type="submit" class="btn btn-p btn-sm"><i class="bi bi-upload"></i> Unggah Logo</button>
+          </form>
+          <% if (typeof hasStoreLogo !== 'undefined' && hasStoreLogo) { %>
+            <form method="POST" action="/toko/logo/hapus" style="margin-top:8px"
+                  onsubmit="return confirm('Hapus logo toko dan kembali memakai logo aplikasi?')">
+              <button type="submit" class="btn btn-g btn-sm"><i class="bi bi-trash3"></i> Hapus Logo</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-hd"><h6><i class="bi bi-receipt"></i> Struk</h6></div>
     <div class="card-bd">

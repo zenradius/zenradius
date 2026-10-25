@@ -24,6 +24,22 @@
 </div>
 
 <div class="receipt">
+  <%#
+    Logo struk. Printer thermal mencetak 1 warna, jadi gambar dijadikan
+    skala abu-abu dengan kontras dinaikkan agar tidak tampak pudar.
+    Dipakai logo toko bila ada; jika belum, logo aplikasi.
+  %>
+  <% if (posSettings.receipt_show_logo) { %>
+    <div class="ctr">
+      <% if (typeof hasStoreLogo !== 'undefined' && hasStoreLogo) { %>
+        <img src="/toko/logo?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : '' %>"
+             alt="Logo" style="max-width:42mm;max-height:20mm;object-fit:contain;filter:grayscale(1) contrast(1.3)">
+      <% } else { %>
+        <img src="/img/logo.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : '' %>"
+             alt="Logo" style="max-width:42mm;max-height:20mm;object-fit:contain;filter:grayscale(1) contrast(1.3)">
+      <% } %>
+    </div>
+  <% } %>
   <h4><%= String(posSettings.store_name || company).toUpperCase() %></h4>
   <% if (posSettings.store_address) { %>
     <div class="ctr muted"><%= posSettings.store_address %></div>

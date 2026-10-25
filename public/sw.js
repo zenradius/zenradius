@@ -143,7 +143,7 @@ self.addEventListener('fetch', (event) => {
   if (path === '/img/logo.png' || path === '/img/icon.png' ||
       path === '/manifest.webmanifest' || path === '/admin/manifest.webmanifest' ||
       path === '/teknisi/manifest.webmanifest' || path === '/penagih/manifest.webmanifest' ||
-      path === '/mitra/manifest.webmanifest') {
+      path === '/mitra/manifest.webmanifest' || path === '/toko/manifest.webmanifest') {
     event.respondWith(networkFirst(req));
     return;
   }

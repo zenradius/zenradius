@@ -18,7 +18,11 @@
 %>
 <aside class="pside" id="posSide">
   <div class="pside-brand">
-    <div class="pside-brand-ic"><i class="bi bi-shop"></i></div>
+    <% if (typeof hasStoreLogo !== 'undefined' && hasStoreLogo) { %>
+      <img class="pside-brand-logo" src="/toko/logo?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : '' %>" alt="Logo <%= storeName || company %>">
+    <% } else { %>
+      <div class="pside-brand-ic"><i class="bi bi-shop"></i></div>
+    <% } %>
     <div class="pside-brand-tx">
       <div class="pside-brand-n"><%= storeName || company %></div>
       <div class="pside-brand-s">Point of Sale</div>

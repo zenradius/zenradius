@@ -22,15 +22,23 @@
  */
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 
 const pos = require('../services/posService');
 const txn = require('../services/posTransactionService');
 const sidebarMenuSvc = require('../services/sidebarMenuService');
 const { getSetting, getSettings } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
+const brandAssets = require('../utils/brandAssets');
 const QRCode = require('qrcode');
 const qrisUtil = require('../utils/qrisUtil');
 const waSvc = require('../services/whatsappService');
+
+// Logo toko diunggah ke memori lalu divalidasi isinya sebelum ditulis ke disk.
+const logoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }
+});
 
 const MENU_KEY = 'pos_toko';
 const PAGE_TITLE = 'Point of Sale';
@@ -130,16 +138,25 @@ router.use((req, res, next) => {
   const s = req.session || {};
   res.locals.session = s;
   res.locals.isMasterAdmin = Boolean(s.isMasterAdmin);
-  res.locals.sidebarSections = sidebarMenuSvc.getSidebarSections(s);
-  res.locals.sidebarBottomNavItems = sidebarMenuSvc.getBottomNavItems(s);
   res.locals.settings = getSettings();
   res.locals.company = company();
   res.locals.storeName = storeName();
   res.locals.menuKey = MENU_KEY;
+  // Logo toko sendiri (bila diunggah) dipakai pada sidebar & struk.
+  try {
+    res.locals.hasStoreLogo = brandAssets.hasStoreLogo();
+    res.locals.brandVersion = brandAssets.getBrandVersion();
+  } catch (_) {
+    res.locals.hasStoreLogo = false;
+  }
 
-  // Ringkasan shift dipakai sidebar & topbar untuk lencana "Shift Aktif".
-  // Hanya dihitung pada permintaan halaman HTML, agar panggilan JSON dari
-  // layar kasir tidak menambah satu query basis data pada tiap aksi.
+  // Catatan: POS kini memakai sidebar-nya sendiri, jadi data sidebar panel
+  // admin (getSidebarSections/getBottomNavItems) TIDAK lagi dihitung di sini.
+  // Sebelumnya dua panggilan itu membaca state menu dari basis data pada
+  // setiap request — termasuk semua panggilan JSON layar kasir.
+  //
+  // Ringkasan shift dipakai sidebar & topbar untuk lencana "Shift Aktif",
+  // dan hanya perlu dihitung untuk permintaan halaman HTML.
   res.locals.posActiveShift = null;
   if (req.method === 'GET' && !String(req.originalUrl || '').includes('/api/')) {
     try {
@@ -357,6 +374,62 @@ router.get('/keluar', (req, res) => {
     res.redirect('/admin/login?keluar=1');
   });
 });
+
+/**
+ * Manifest PWA khusus POS supaya dapat dipasang sebagai aplikasi sendiri
+ * (nama & ikon mengikuti toko) dan tidak memakai manifest panel admin.
+ * Sesi tidak diwajibkan: peramban meminta manifest sebelum pengguna masuk.
+ */
+router.get('/manifest.webmanifest', (req, res) => {
+  res.type('application/manifest+json');
+  const name = storeName();
+  const icon = brandAssets.hasStoreLogo() ? '/toko/logo' : '/img/icon.png';
+  res.send({
+    name: `${name} - Point of Sale`,
+    short_name: name.slice(0, 30),
+    description: `Aplikasi kasir ${name}`,
+    start_url: '/toko',
+    scope: '/toko/',
+    display: 'standalone',
+    orientation: 'any',
+    background_color: '#0f172a',
+    theme_color: '#0f172a',
+    icons: [
+      { src: icon, sizes: 'any', type: 'image/png', purpose: 'any' }
+    ]
+  });
+});
+
+/* ───────────────────────── Logo toko (Point of Sale) ─────────────────────────
+   Logo disajikan lewat route sendiri (bukan folder statis publik) supaya
+   dapat dipakai walau middleware file statis tidak melayani /uploads, dan
+   supaya header cache bisa diatur. */
+
+/** Sajikan logo toko yang sedang aktif. */
+router.get('/logo', requirePosSession, requirePosAccess, (req, res) => {
+  const logo = brandAssets.resolveStoreLogo();
+  if (!logo) return res.status(404).end();
+  res.setHeader('Content-Type', logo.mime);
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendFile(logo.path);
+});
+
+/** Unggah logo toko (khusus admin). */
+router.post('/logo/unggah', requirePosSession, requirePosAdmin,
+  logoUpload.single('logo'), wrap((req, res) => {
+    const f = req.file;
+    if (!f || !f.buffer || !f.size) throw new Error('Berkas logo tidak ditemukan atau kosong.');
+    brandAssets.saveStoreLogo(f.buffer);
+    setFlash(req, 'success', 'Logo toko berhasil diperbarui.');
+    res.redirect('/toko/pengaturan');
+  }, '/toko/pengaturan'));
+
+/** Hapus logo toko (kembali memakai logo aplikasi). */
+router.post('/logo/hapus', requirePosSession, requirePosAdmin, wrap((req, res) => {
+  brandAssets.removeStoreLogo();
+  setFlash(req, 'success', 'Logo toko dihapus.');
+  res.redirect('/toko/pengaturan');
+}, '/toko/pengaturan'));
 
 /** Struk siap cetak — dipakai untuk printer thermal maupun cetak browser. */
 router.get('/struk/:id', requirePosSession, requirePosAccess, wrap((req, res) => {
