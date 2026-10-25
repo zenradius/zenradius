@@ -32,26 +32,47 @@ const { logger } = require('../config/logger');
 const MENU_KEY = 'pos_toko';
 const PAGE_TITLE = 'Point of Sale';
 
+/**
+ * Apakah permintaan mengharapkan balasan JSON?
+ * Selain cek header dari klien, semua endpoint di bawah /toko/api/ selalu
+ * dianggap permintaan API agar error tidak pernah dibalas dengan redirect HTML
+ * (klien memanggil res.json() dan akan gagal parsing bila dibalas HTML).
+ */
+function wantsJson(req) {
+  return Boolean(
+    req.xhr
+    || (req.get('accept') || '').includes('application/json')
+    || String(req.originalUrl || req.url || '').includes('/api/')
+  );
+}
+
 /* ───────────────────────────── Middleware ───────────────────────────── */
 
 /** Sesi admin/kasir yang valid. Mengikuti aturan panel admin. */
+function isAdminSession(s) {
+  return s?.isAdmin === true || String(s?.role || '').trim().toLowerCase() === 'admin';
+}
+
+function isCashierSession(s) {
+  return s?.isCashier === true || String(s?.role || '').trim().toLowerCase() === 'customer_service';
+}
+
 function requirePosSession(req, res, next) {
   const s = req.session || {};
-  const role = String(s.role || '').trim().toLowerCase();
-  const isAdmin = s.isAdmin === true || role === 'admin';
-  const isCashier = s.isCashier === true || role === 'customer_service';
-  if (isAdmin || isCashier) return next();
+  if (isAdminSession(s) || isCashierSession(s)) return next();
   return res.redirect('/admin/login');
 }
 
 /** Kasir dibatasi oleh pengaturan sidebar menu (sama seperti menu admin lain). */
 function requirePosAccess(req, res, next) {
   const s = req.session || {};
-  if (!s.isCashier) return next();
+  // Admin selalu lolos. Selain admin (termasuk kasir dengan role kanonik
+  // customer_service tanpa flag isCashier) wajib diperiksa izin menunya.
+  if (isAdminSession(s)) return next();
   try {
     const access = sidebarMenuSvc.evaluateMenuAccess(MENU_KEY, s);
     if (!access.allowed) {
-      if (req.xhr || (req.get('accept') || '').includes('application/json')) {
+      if (wantsJson(req)) {
         return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke menu ini.' });
       }
       req.session._msg = { type: 'error', text: 'Anda tidak memiliki akses ke menu Point of Sale.' };
@@ -64,9 +85,8 @@ function requirePosAccess(req, res, next) {
 /** Hanya admin (untuk pengaturan, hapus, dan laporan sensitif). */
 function requirePosAdmin(req, res, next) {
   const s = req.session || {};
-  const role = String(s.role || '').trim().toLowerCase();
-  if (s.isAdmin === true || role === 'admin') return next();
-  if (req.xhr || (req.get('accept') || '').includes('application/json')) {
+  if (isAdminSession(s)) return next();
+  if (wantsJson(req)) {
     return res.status(403).json({ success: false, message: 'Hanya Admin yang dapat melakukan aksi ini.' });
   }
   req.session._msg = { type: 'error', text: 'Hanya Admin yang dapat melakukan aksi ini.' };
@@ -117,7 +137,7 @@ function wrap(fn, failRedirect = '/toko') {
       if (out && typeof out.catch === 'function') {
         out.catch((e) => {
           logger.error(`[POS] ${req.method} ${req.originalUrl}: ${e.message}`);
-          if (req.xhr || (req.get('accept') || '').includes('application/json')) {
+          if (wantsJson(req)) {
             return res.status(400).json({ success: false, message: e.message });
           }
           setFlash(req, 'error', e.message);
@@ -126,7 +146,7 @@ function wrap(fn, failRedirect = '/toko') {
       }
     } catch (e) {
       logger.error(`[POS] ${req.method} ${req.originalUrl}: ${e.message}`);
-      if (req.xhr || (req.get('accept') || '').includes('application/json')) {
+      if (wantsJson(req)) {
         return res.status(400).json({ success: false, message: e.message });
       }
       setFlash(req, 'error', e.message);

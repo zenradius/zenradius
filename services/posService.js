@@ -243,16 +243,20 @@ function adjustStock({ productId, qtyChange, note = '', actor = 'Admin' }) {
   })();
 }
 
-/** Produk yang mendekati/melewati tanggal kadaluarsa. */
+/**
+ * Produk yang mendekati/melewati tanggal kadaluarsa.
+ * Pembanding memakai NOW_LOCAL() (waktu dinding zona aplikasi) agar konsisten
+ * dengan kolom lain dan tidak bergeser saat zona OS berbeda dari zona aplikasi.
+ */
 function listExpiringProducts(days = 60) {
   return db.prepare(`
     SELECT p.*, c.name AS category_name,
-           CAST(julianday(p.expiry_date) - julianday('now', 'localtime') AS INTEGER) AS days_until_expiry
+           CAST(julianday(p.expiry_date) - julianday(NOW_LOCAL()) AS INTEGER) AS days_until_expiry
     FROM pos_products p
     LEFT JOIN pos_categories c ON p.category_id = c.id
     WHERE p.is_active = 1
       AND p.expiry_date IS NOT NULL AND p.expiry_date != ''
-      AND p.expiry_date <= date('now', 'localtime', '+' || ? || ' days')
+      AND p.expiry_date <= date(NOW_LOCAL(), '+' || ? || ' days')
     ORDER BY p.expiry_date ASC
   `).all(toNumber(days, true));
 }

@@ -43,8 +43,12 @@ function formatMoney(value) {
 function generateDocNumber(prefix, table, dateColumn) {
   const now = new Date();
   const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  // Kolom tanggal sudah memakai waktu dinding zona aplikasi (NOW_LOCAL()).
+  // JANGAN tambahkan 'localtime' di sini: SQLite akan menganggap nilai itu UTC
+  // lalu menggesernya ke zona OS, sehingga setelah pukul 17:00 WIB tanggalnya
+  // maju satu hari dan nomor dokumen menjadi duplikat (UNIQUE constraint).
   const row = db.prepare(
-    `SELECT COUNT(*) AS c FROM ${table} WHERE date(${dateColumn}, 'localtime') = date('now', 'localtime')`
+    `SELECT COUNT(*) AS c FROM ${table} WHERE date(${dateColumn}) = date(NOW_LOCAL())`
   ).get();
   const seq = String((row?.c || 0) + 1).padStart(4, '0');
   return `${prefix}-${stamp}-${seq}`;
@@ -390,8 +394,10 @@ function listSales({ startDate = null, endDate = null, paymentType = null, statu
   `;
   const params = [];
 
-  if (startDate) { sql += " AND date(s.sale_date, 'localtime') >= date(?)"; params.push(startDate); }
-  if (endDate) { sql += " AND date(s.sale_date, 'localtime') <= date(?)"; params.push(endDate); }
+  // Kolom timestamp disimpan sebagai waktu dinding zona aplikasi (NOW_LOCAL()),
+  // jadi dibandingkan langsung tanpa modifier 'localtime'.
+  if (startDate) { sql += ' AND date(s.sale_date) >= date(?)'; params.push(startDate); }
+  if (endDate) { sql += ' AND date(s.sale_date) <= date(?)'; params.push(endDate); }
   if (paymentType) { sql += ' AND s.payment_type = ?'; params.push(paymentType); }
   if (status) { sql += ' AND s.payment_status = ?'; params.push(status); }
   if (search) {
@@ -438,7 +444,7 @@ function getSaleDetail(saleId) {
 function listCustomerDebts() {
   return db.prepare(`
     SELECT s.*, c.name AS customer_name, c.phone AS customer_phone,
-           CAST(julianday('now', 'localtime') - julianday(s.due_date) AS INTEGER) AS days_overdue
+          CAST(julianday(NOW_LOCAL()) - julianday(s.due_date) AS INTEGER) AS days_overdue
     FROM pos_sales s
     JOIN pos_customers c ON s.customer_id = c.id
     WHERE s.debt_balance > 0 AND s.payment_status != 'VOID'
@@ -730,8 +736,8 @@ function adjustCustomerPoints({ customerId, pointsChange, reason = '' }, session
 function listExpenses({ startDate = null, endDate = null, category = null, limit = 200 } = {}) {
   let sql = 'SELECT * FROM pos_expenses WHERE 1=1';
   const params = [];
-  if (startDate) { sql += " AND date(expense_date, 'localtime') >= date(?)"; params.push(startDate); }
-  if (endDate) { sql += " AND date(expense_date, 'localtime') <= date(?)"; params.push(endDate); }
+  if (startDate) { sql += ' AND date(expense_date) >= date(?)'; params.push(startDate); }
+  if (endDate) { sql += ' AND date(expense_date) <= date(?)'; params.push(endDate); }
   if (category) { sql += ' AND category = ?'; params.push(category); }
   sql += ' ORDER BY expense_date DESC, id DESC LIMIT ?';
   params.push(toNumber(limit, true) || 200);
@@ -891,7 +897,7 @@ function getDashboardStats() {
            COALESCE(SUM(total_profit),0) AS total_profit,
            COUNT(*) AS total_tx
     FROM pos_sales
-    WHERE date(sale_date, 'localtime') = date('now', 'localtime') AND payment_status != 'VOID'
+    WHERE date(sale_date) = date(NOW_LOCAL()) AND payment_status != 'VOID'
   `).get();
 
   const month = db.prepare(`
@@ -899,18 +905,18 @@ function getDashboardStats() {
            COALESCE(SUM(total_profit),0) AS total_profit,
            COUNT(*) AS total_tx
     FROM pos_sales
-    WHERE strftime('%Y-%m', sale_date, 'localtime') = strftime('%Y-%m', 'now', 'localtime')
+    WHERE strftime('%Y-%m', sale_date) = strftime('%Y-%m', NOW_LOCAL())
       AND payment_status != 'VOID'
   `).get();
 
   const expensesToday = db.prepare(`
     SELECT COALESCE(SUM(amount),0) AS total FROM pos_expenses
-    WHERE date(expense_date, 'localtime') = date('now', 'localtime')
+    WHERE date(expense_date) = date(NOW_LOCAL())
   `).get().total;
 
   const expensesMonth = db.prepare(`
     SELECT COALESCE(SUM(amount),0) AS total FROM pos_expenses
-    WHERE strftime('%Y-%m', expense_date, 'localtime') = strftime('%Y-%m', 'now', 'localtime')
+    WHERE strftime('%Y-%m', expense_date) = strftime('%Y-%m', NOW_LOCAL())
   `).get().total;
 
   const receivable = db.prepare('SELECT COALESCE(SUM(debt_balance),0) AS total FROM pos_sales WHERE debt_balance > 0 AND payment_status != \'VOID\'').get().total;
@@ -935,8 +941,8 @@ function getDashboardStats() {
 function getSalesReport({ startDate = null, endDate = null } = {}) {
   const where = ["payment_status != 'VOID'"];
   const params = [];
-  if (startDate) { where.push("date(sale_date, 'localtime') >= date(?)"); params.push(startDate); }
-  if (endDate) { where.push("date(sale_date, 'localtime') <= date(?)"); params.push(endDate); }
+  if (startDate) { where.push('date(sale_date) >= date(?)'); params.push(startDate); }
+  if (endDate) { where.push('date(sale_date) <= date(?)'); params.push(endDate); }
   const clause = where.join(' AND ');
 
   const summary = db.prepare(`
@@ -954,7 +960,7 @@ function getSalesReport({ startDate = null, endDate = null } = {}) {
   `).all(...params);
 
   const daily = db.prepare(`
-    SELECT date(sale_date, 'localtime') AS day,
+    SELECT date(sale_date) AS day,
            COALESCE(SUM(total_amount),0) AS total,
            COALESCE(SUM(total_profit),0) AS profit,
            COUNT(*) AS count
@@ -969,8 +975,8 @@ function getSalesReport({ startDate = null, endDate = null } = {}) {
 function getTopSelling({ startDate = null, endDate = null, limit = 20 } = {}) {
   const where = ["s.payment_status != 'VOID'"];
   const params = [];
-  if (startDate) { where.push("date(s.sale_date, 'localtime') >= date(?)"); params.push(startDate); }
-  if (endDate) { where.push("date(s.sale_date, 'localtime') <= date(?)"); params.push(endDate); }
+  if (startDate) { where.push('date(s.sale_date) >= date(?)'); params.push(startDate); }
+  if (endDate) { where.push('date(s.sale_date) <= date(?)'); params.push(endDate); }
   params.push(toNumber(limit, true) || 20);
 
   return db.prepare(`
