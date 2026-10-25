@@ -164,7 +164,9 @@ function checkout(payload, session) {
     if (type === 'CREDIT') {
       paidAmount = Math.min(toNumber(cash_amount), total);
       debtBalance = total - paidAmount;
-      paymentStatus = debtBalance > 0 ? 'UNPAID' : 'PAID';
+      // PARTIAL dipakai bila pelanggan membayar sebagian (uang muka), sehingga
+      // daftar piutang bisa membedakan bon yang belum dibayar sama sekali.
+      paymentStatus = debtBalance > 0 ? (paidAmount > 0 ? 'PARTIAL' : 'UNPAID') : 'PAID';
       if (debtBalance > 0 && !customer) {
         throw new Error('Transaksi tempo memerlukan data pelanggan.');
       }
@@ -327,15 +329,21 @@ function listRefundableItems(saleId) {
   `).all(saleId);
 }
 
-function refundSaleItem({ saleId, saleItemId, qty, reason = '' }, session) {
+function refundSaleItem({ saleId, saleItemId, qty, reason = '', refund_method = 'CASH' }, session) {
   const actor = actorName(session, 'Admin');
   const amountQty = toNumber(qty);
   if (amountQty <= 0) throw new Error('Jumlah retur harus lebih dari 0.');
+
+  const method = String(refund_method || 'CASH').toUpperCase() === 'DEBT_DEDUCTION'
+    ? 'DEBT_DEDUCTION' : 'CASH';
 
   return db.transaction(() => {
     const sale = db.prepare('SELECT * FROM pos_sales WHERE id = ?').get(saleId);
     if (!sale) throw new Error('Transaksi tidak ditemukan.');
     if (sale.payment_status === 'VOID') throw new Error('Nota sudah dibatalkan, tidak bisa diretur.');
+    if (method === 'DEBT_DEDUCTION' && toNumber(sale.debt_balance) <= 0) {
+      throw new Error('Nota ini tidak punya sisa piutang, gunakan pengembalian tunai.');
+    }
 
     const item = db.prepare('SELECT * FROM pos_sale_items WHERE id = ? AND sale_id = ?').get(saleItemId, saleId);
     if (!item) throw new Error('Item tidak ditemukan pada nota ini.');
@@ -346,7 +354,6 @@ function refundSaleItem({ saleId, saleItemId, qty, reason = '' }, session) {
     const factor = Math.max(1, toNumber(item.conversion_factor, true));
     const qtyBase = amountQty * factor;
     const amount = amountQty * toNumber(item.price_used);
-    const profitBack = amount - (qtyBase * toNumber(item.cost_price));
 
     db.prepare('UPDATE pos_products SET stock = stock + ?, updated_at = (NOW_LOCAL()) WHERE id = ?')
       .run(qtyBase, item.product_id);
@@ -366,20 +373,38 @@ function refundSaleItem({ saleId, saleItemId, qty, reason = '' }, session) {
       .run(amountQty, saleItemId);
 
     db.prepare(`
-      INSERT INTO pos_sale_refunds (sale_id, sale_item_id, qty, amount, reason, actor)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(saleId, saleItemId, amountQty, amount, String(reason || '').trim(), actor);
+      INSERT INTO pos_sale_refunds (sale_id, sale_item_id, qty, amount, reason, actor, refund_method)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(saleId, saleItemId, amountQty, amount, String(reason || '').trim(), actor, method);
 
-    // Sesuaikan total nota dan profit agar laporan tetap akurat.
-    const newTotal = Math.max(0, toNumber(sale.total_amount) - amount);
-    const newProfit = toNumber(sale.total_profit) - profitBack;
-    const newBalance = Math.max(0, toNumber(sale.debt_balance) - amount);
-    db.prepare(`
-      UPDATE pos_sales SET total_amount = ?, total_profit = ?, debt_balance = ?, payment_status = ?
-      WHERE id = ?
-    `).run(newTotal, newProfit, newBalance, newBalance > 0 ? 'UNPAID' : (sale.payment_status === 'VOID' ? 'VOID' : 'PAID'), saleId);
+    // Nota asli sengaja TIDAK diubah (mengikuti pola repo sumber): nomor nota,
+    // total, dan profit tetap sebagai catatan transaksi aslinya. Dampak
+    // keuangannya ditangani seperti ini:
+    //  - CASH          -> uang keluar dari laci, dicatat sebagai pengeluaran
+    //                     kategori "Retur Penjualan" sehingga kas shift seimbang.
+    //                     Laba tetap dihitung ulang di laporan bersih.
+    //  - DEBT_DEDUCTION-> sisa piutang pelanggan yang berkurang, tanpa uang keluar.
+    if (method === 'DEBT_DEDUCTION') {
+      const newBalance = Math.max(0, toNumber(sale.debt_balance) - amount);
+      const nextStatus = newBalance <= 0
+        ? 'PAID'
+        : (newBalance < toNumber(sale.total_amount) ? 'PARTIAL' : sale.payment_status);
 
-    return { amount, qty: amountQty, invoiceNo: sale.invoice_no };
+      db.prepare('UPDATE pos_sales SET debt_balance = ?, payment_status = ? WHERE id = ?')
+        .run(newBalance, nextStatus, saleId);
+
+      db.prepare(`
+        INSERT INTO pos_debt_payments (sale_id, amount, actor, note)
+        VALUES (?, ?, ?, ?)
+      `).run(saleId, amount, actor, `Potong piutang retur ${sale.invoice_no}`);
+    } else {
+      db.prepare(`
+        INSERT INTO pos_expenses (expense_date, category, amount, description, actor)
+        VALUES ((NOW_LOCAL()), 'Retur Penjualan', ?, ?, ?)
+      `).run(amount, `Retur ${sale.invoice_no} — ${String(reason || 'barang dikembalikan').trim()}`, actor);
+    }
+
+    return { amount, qty: amountQty, invoiceNo: sale.invoice_no, refundMethod: method };
   })();
 }
 
@@ -471,9 +496,10 @@ function payCustomerDebt({ saleId, amount, note = '' }, session) {
     `).run(saleId, value, actor, String(note || '').trim());
 
     const newBalance = toNumber(sale.debt_balance) - value;
+    // Sisa piutang setelah cicilan = PARTIAL (sudah ada pembayaran sebagian).
     db.prepare(`
       UPDATE pos_sales SET debt_balance = ?, payment_status = ? WHERE id = ?
-    `).run(newBalance, newBalance <= 0 ? 'PAID' : 'UNPAID', saleId);
+    `).run(newBalance, newBalance <= 0 ? 'PAID' : 'PARTIAL', saleId);
 
     return { invoiceNo: sale.invoice_no, paid: value, balance: newBalance };
   })();
@@ -792,6 +818,13 @@ function getShiftSummary(shift) {
     FROM pos_sales WHERE sale_date >= ? AND cashier_id = ? AND payment_type = 'CREDIT' AND payment_status != 'VOID'
   `).get(shift.opened_at, shift.cashier_id);
 
+  // Uang muka (DP) dari transaksi tempo ikut masuk ke laci kas, sehingga harus
+  // dihitung. Tanpa ini, kas seharusnya lebih kecil dari uang fisik sebenarnya.
+  const creditDownPayment = db.prepare(`
+    SELECT COALESCE(SUM(paid_amount),0) AS total
+    FROM pos_sales WHERE sale_date >= ? AND cashier_id = ? AND payment_type = 'CREDIT' AND payment_status != 'VOID'
+  `).get(shift.opened_at, shift.cashier_id).total;
+
   const debtCollected = db.prepare(`
     SELECT COALESCE(SUM(p.amount),0) AS total
     FROM pos_debt_payments p
@@ -803,13 +836,18 @@ function getShiftSummary(shift) {
     SELECT COALESCE(SUM(amount),0) AS total FROM pos_expenses WHERE expense_date >= ?
   `).get(shift.opened_at);
 
-  const expectedCash = toNumber(shift.starting_cash) + cash.total + debtCollected.total - expensesPaid.total;
+  const expectedCash = toNumber(shift.starting_cash)
+    + toNumber(cash.total)
+    + toNumber(creditDownPayment)
+    + toNumber(debtCollected.total)
+    - toNumber(expensesPaid.total);
 
   return {
     ...shift,
     cash_sales: cash.total, cash_count: cash.count,
     qris_sales: qris.total, qris_count: qris.count,
     credit_sales: credit.total, credit_count: credit.count,
+    credit_down_payment: creditDownPayment,
     total_sales: cash.total + qris.total + credit.total,
     total_transactions: cash.count + qris.count + credit.count,
     debt_collected: debtCollected.total,
@@ -959,6 +997,43 @@ function getSalesReport({ startDate = null, endDate = null } = {}) {
     GROUP BY payment_type
   `).all(...params);
 
+  // Retur tidak mengubah total nota (nota asli tetap utuh), jadi nilainya
+  // dilaporkan terpisah supaya omzet bersih dan laba bersih bisa dihitung.
+  const refundWhere = [];
+  const refundParams = [];
+  if (startDate) { refundWhere.push('date(r.created_at) >= date(?)'); refundParams.push(startDate); }
+  if (endDate) { refundWhere.push('date(r.created_at) <= date(?)'); refundParams.push(endDate); }
+  const refundClause = refundWhere.length ? `WHERE ${refundWhere.join(' AND ')}` : '';
+
+  const refunds = db.prepare(`
+    SELECT COALESCE(SUM(r.amount),0) AS total_refund,
+           COUNT(*) AS refund_count,
+           COALESCE(SUM(CASE WHEN r.refund_method = 'DEBT_DEDUCTION' THEN r.amount ELSE 0 END),0) AS refund_debt,
+           COALESCE(SUM(CASE WHEN r.refund_method != 'DEBT_DEDUCTION' THEN r.amount ELSE 0 END),0) AS refund_cash
+    FROM pos_sale_refunds r ${refundClause}
+  `).get(...refundParams);
+
+  // Harga pokok barang yang diretur, untuk menghitung laba bersih:
+  // barang kembali ke stok, jadi nilai modalnya dikurangkan lagi dari laba.
+  const refundCost = db.prepare(`
+    SELECT COALESCE(SUM(r.qty * i.conversion_factor * i.cost_price),0) AS total_cost
+    FROM pos_sale_refunds r
+    JOIN pos_sale_items i ON r.sale_item_id = i.id
+    ${refundClause}
+  `).get(...refundParams);
+
+  const totalSales = toNumber(summary.total_sales);
+  const totalProfit = toNumber(summary.total_profit);
+  const refundTotal = toNumber(refunds.total_refund);
+  const refundCostTotal = toNumber(refundCost.total_cost);
+
+  summary.refund_total = refundTotal;
+  summary.refund_cash = refunds.refund_cash;
+  summary.refund_debt = refunds.refund_debt;
+  summary.refund_count = refunds.refund_count;
+  summary.net_sales = Math.max(0, totalSales - refundTotal);
+  summary.net_profit = totalProfit - refundTotal + refundCostTotal;
+
   const daily = db.prepare(`
     SELECT date(sale_date) AS day,
            COALESCE(SUM(total_amount),0) AS total,
@@ -969,6 +1044,63 @@ function getSalesReport({ startDate = null, endDate = null } = {}) {
   `).all(...params);
 
   return { summary, byPayment, daily };
+}
+
+/**
+ * Barang bergerak lambat / tidak laku (dead stock).
+ *
+ * Menampilkan produk yang masih punya stok tetapi penjualannya paling sedikit
+ * dalam periode tertentu, lengkap dengan modal yang "tertahan" (stok x harga
+ * pokok) dan berapa hari sejak terakhir terjual. Dipakai untuk memutuskan
+ * diskon, retur ke supplier, atau berhenti memesan ulang.
+ */
+function getSlowMovingProducts({ startDate = null, endDate = null, limit = 20, maxSold = null } = {}) {
+  const where = ["s.payment_status != 'VOID'"];
+  const params = [];
+  if (startDate) { where.push('date(s.sale_date) >= date(?)'); params.push(startDate); }
+  if (endDate) { where.push('date(s.sale_date) <= date(?)'); params.push(endDate); }
+  const soldClause = where.join(' AND ');
+
+  let sql = `
+    SELECT p.id, p.sku, p.name, p.stock, p.min_stock, p.cost_price,
+           c.name AS category_name,
+           ROUND(p.stock * p.cost_price) AS tied_capital,
+           COALESCE(period.sold_qty, 0) AS sold_qty,
+           COALESCE(period.revenue, 0) AS revenue,
+           last_sale.last_sold_date,
+           CASE WHEN last_sale.last_sold_date IS NOT NULL
+                THEN CAST(julianday(NOW_LOCAL()) - julianday(last_sale.last_sold_date) AS INTEGER)
+                ELSE NULL END AS days_idle
+    FROM pos_products p
+    LEFT JOIN pos_categories c ON p.category_id = c.id
+    LEFT JOIN (
+      SELECT i.product_id,
+             SUM(i.qty * i.conversion_factor) AS sold_qty,
+             SUM(i.subtotal) AS revenue
+      FROM pos_sale_items i
+      JOIN pos_sales s ON i.sale_id = s.id
+      WHERE ${soldClause}
+      GROUP BY i.product_id
+    ) period ON period.product_id = p.id
+    LEFT JOIN (
+      SELECT i.product_id, MAX(s.sale_date) AS last_sold_date
+      FROM pos_sale_items i
+      JOIN pos_sales s ON i.sale_id = s.id
+      WHERE s.payment_status != 'VOID'
+      GROUP BY i.product_id
+    ) last_sale ON last_sale.product_id = p.id
+    WHERE p.is_active = 1 AND p.stock > 0
+  `;
+
+  if (maxSold !== null) {
+    sql += ' AND COALESCE(period.sold_qty, 0) <= ?';
+    params.push(toNumber(maxSold, true));
+  }
+
+  sql += ' ORDER BY COALESCE(period.sold_qty, 0) ASC, tied_capital DESC LIMIT ?';
+  params.push(toNumber(limit, true) || 20);
+
+  return db.prepare(sql).all(...params);
 }
 
 /** Produk terlaris berdasarkan qty dan omzet. */
@@ -999,6 +1131,7 @@ module.exports = {
   actorName,
   formatMoney,
   generateDocNumber,
+  getCustomer,
 
   checkout,
   voidSale,
@@ -1043,5 +1176,6 @@ module.exports = {
 
   getDashboardStats,
   getSalesReport,
+    getSlowMovingProducts,
   getTopSelling
 };

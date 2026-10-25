@@ -28,6 +28,9 @@ const txn = require('../services/posTransactionService');
 const sidebarMenuSvc = require('../services/sidebarMenuService');
 const { getSetting, getSettings } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
+const QRCode = require('qrcode');
+const qrisUtil = require('../utils/qrisUtil');
+const waSvc = require('../services/whatsappService');
 
 const MENU_KEY = 'pos_toko';
 const PAGE_TITLE = 'Point of Sale';
@@ -106,6 +109,23 @@ function company() {
   return String(getSetting('company_header', '') || '').trim() || 'ZenRadius';
 }
 
+/**
+ * Payload QRIS yang dipakai modul toko.
+ * Diutamakan setelan khusus toko (pos_settings.qris_static_payload); bila kosong
+ * dipakai setelan QRIS Statis global ZenRadius agar merchant tidak perlu
+ * mengisi dua kali.
+ */
+function resolveQrisPayload() {
+  const own = String(pos.getSettings().qris_static_payload || '').trim();
+  const raw = own || String(getSetting('qris_static_payload', '') || '').trim();
+  if (!raw) return '';
+  try {
+    return qrisUtil.normalizeQrisPayload(raw);
+  } catch (_) {
+    return raw;
+  }
+}
+
 router.use((req, res, next) => {
   const s = req.session || {};
   res.locals.session = s;
@@ -179,6 +199,11 @@ router.get('/kasir', requirePosSession, requirePosAccess, wrap((req, res) => {
   const customers = txn.listStoreCustomers('');
   const settings = pos.getSettings();
   const shift = txn.getActiveShift(req.session);
+  // Produk cepat = yang paling laku pada 30 hari terakhir, untuk mempercepat
+  // transaksi tanpa harus mengetik pencarian.
+  const since = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const quickProducts = txn.getTopSelling({ startDate: since, limit: 8 })
+    .map((p) => ({ id: p.id, name: p.name, sold_qty: Number(p.qty_sold || 0) }));
   res.render('toko/kasir', {
     title: 'Kasir',
     company: company(),
@@ -189,6 +214,7 @@ router.get('/kasir', requirePosSession, requirePosAccess, wrap((req, res) => {
     customers,
     settings,
     shift: shift ? txn.getShiftSummary(shift) : null,
+    quickProducts,
     formatMoney: txn.formatMoney
   });
 }));
@@ -282,6 +308,7 @@ router.get('/laporan', requirePosSession, requirePosAccess, wrap((req, res) => {
     msg: flashMsg(req),
     report: txn.getSalesReport({ startDate, endDate }),
     topSelling: txn.getTopSelling({ startDate, endDate, limit: 20 }),
+    slowMoving: txn.getSlowMovingProducts({ startDate, endDate, limit: 20 }),
     sales: txn.listSales({ startDate, endDate, limit: 100 }),
     startDate: startDate || '',
     endDate: endDate || '',
@@ -330,6 +357,37 @@ router.get('/struk/:id', requirePosSession, requirePosAccess, wrap((req, res) =>
     formatMoney: txn.formatMoney
   });
 }));
+
+/**
+ * Ekspor seluruh produk ke CSV.
+ * Satu baris per satuan (sama seperti format impor) supaya berkas hasil ekspor
+ * bisa langsung disunting lalu diimpor kembali tanpa konversi manual.
+ */
+router.get('/produk/export.csv', requirePosSession, requirePosAccess, wrap((req, res) => {
+  const csv = pos.buildProductCsv();
+  const stamp = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="produk-toko-${stamp}.csv"`);
+  // buildProductCsv() sudah menyertakan BOM UTF-8 untuk Excel.
+  res.send(csv);
+}, '/toko/produk'));
+
+/** Impor produk dari berkas CSV (tempel teks atau unggah berkas). */
+router.post('/produk/import', requirePosSession, requirePosAdmin,
+  express.urlencoded({ extended: true, limit: '8mb' }), wrap((req, res) => {
+    const body = req.body || {};
+    const text = String(body.csv_text || '');
+    if (!text.trim()) throw new Error('Isi data CSV terlebih dahulu.');
+
+    const rows = pos.parseProductCsv(text);
+    // insert_only = jangan sentuh produk yang sudah ada.
+    const mode = String(body.mode || 'upsert').toLowerCase() === 'insert_only' ? 'insert_only' : 'upsert';
+    const result = pos.importProducts(rows, mode, txn.actorName(req.session, 'Admin'));
+
+    setFlash(req, 'success',
+      `Impor selesai: ${result.inserted} produk baru, ${result.updated} diperbarui, ${result.skipped} dilewati.`);
+    res.redirect('/toko/produk');
+  }, '/toko/produk'));
 
 /* ───────────────────────────── Aksi form (POST) ───────────────────────────── */
 
@@ -537,14 +595,59 @@ router.post('/penjualan/void', requirePosSession, requirePosAdmin, express.urlen
   res.redirect('/toko/laporan');
 }, '/toko/laporan'));
 
+/**
+ * Kirim ringkasan struk ke WhatsApp pelanggan.
+ * Memakai gateway WhatsApp ZenRadius (Baileys / Fonnte / Wablas / Meta), jadi
+ * tidak perlu konfigurasi tambahan khusus modul toko.
+ */
+router.post('/penjualan/kirim-wa', requirePosSession, requirePosAccess,
+  express.urlencoded({ extended: true }), wrap(async (req, res) => {
+    const saleId = Number(req.body.sale_id);
+    const detail = txn.getSaleDetail(saleId);
+    if (!detail) throw new Error('Nota tidak ditemukan.');
+
+    // Nomor bisa diisi manual (pelanggan umum) atau diambil dari data pelanggan.
+    const manual = String(req.body.phone || '').replace(/\D/g, '');
+    const customer = detail.customer_id ? txn.getCustomer(detail.customer_id) : null;
+    const phone = manual || String(customer?.phone || '').replace(/\D/g, '');
+    if (!phone) throw new Error('Nomor WhatsApp pelanggan belum ada. Isi manual atau lengkapi data pelanggan.');
+
+    const settings = pos.getSettings();
+    const lines = (detail.items || []).map((i) =>
+      `- ${i.qty} ${i.unit_name} ${i.product_name} = Rp ${txn.formatMoney(i.subtotal)}`
+    ).join('\n');
+
+    const message = [
+      `*${storeName()}*`,
+      `Nota: ${detail.invoice_no}`,
+      `Tanggal: ${new Date(detail.sale_date).toLocaleString('id-ID')}`,
+      '',
+      lines,
+      '',
+      `Total: Rp ${txn.formatMoney(detail.total_amount)}`,
+      `Bayar: ${detail.payment_type}`,
+      Number(detail.change_amount) > 0 ? `Kembali: Rp ${txn.formatMoney(detail.change_amount)}` : '',
+      Number(detail.debt_balance) > 0 ? `Sisa hutang: Rp ${txn.formatMoney(detail.debt_balance)}` : '',
+      '',
+      settings.receipt_footer || ''
+    ].filter((l) => l !== '').join('\n');
+
+    await waSvc.sendWhatsAppMessage(phone, message);
+    setFlash(req, 'success', `Struk ${detail.invoice_no} dikirim ke WhatsApp ${phone}.`);
+    res.redirect('/toko/laporan');
+  }, '/toko/laporan'));
+
 router.post('/penjualan/retur', requirePosSession, requirePosAccess, express.urlencoded({ extended: true }), wrap((req, res) => {
   const r = txn.refundSaleItem({
     saleId: Number(req.body.sale_id),
     saleItemId: Number(req.body.sale_item_id),
     qty: req.body.qty,
-    reason: req.body.reason
+    reason: req.body.reason,
+    refund_method: req.body.refund_method
   }, req.session);
-  setFlash(req, 'success', `Retur tercatat: Rp ${txn.formatMoney(r.amount)}. Stok dikembalikan.`);
+  setFlash(req, 'success', r.refundMethod === 'DEBT_DEDUCTION'
+    ? `Retur tercatat: Rp ${txn.formatMoney(r.amount)} dari piutang pelanggan. Stok dikembalikan.`
+    : `Retur tercatat: Rp ${txn.formatMoney(r.amount)} dibayar tunai (tercatat di buku kas). Stok dikembalikan.`);
   res.redirect('/toko/laporan');
 }, '/toko/laporan'));
 
@@ -569,6 +672,47 @@ router.get('/api/pelanggan/:id/poin', requirePosSession, requirePosAccess, wrap(
 router.post('/api/checkout', requirePosSession, requirePosAccess, express.json(), wrap((req, res) => {
   const result = txn.checkout(req.body || {}, req.session);
   res.json({ success: true, data: result });
+}, '/toko/kasir'));
+
+/**
+ * QRIS dinamis untuk layar kasir.
+ * Mengubah QRIS statis merchant (setelan toko atau setelan global) menjadi
+ * QRIS dinamis bernominal pasti, supaya pelanggan tidak perlu mengetik ulang.
+ */
+router.get('/api/qris', requirePosSession, requirePosAccess, wrap(async (req, res) => {
+  const amount = Math.round(Number(req.query.amount || 0));
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return res.status(400).json({ success: false, message: 'Nominal QRIS tidak valid.' });
+  }
+
+  const payload = resolveQrisPayload();
+  if (!payload) {
+    return res.status(400).json({
+      success: false,
+      message: 'QRIS Statis belum diatur. Isi di Pengaturan Toko atau Pengaturan QRIS ZenRadius.'
+    });
+  }
+
+  try {
+    const dynamic = qrisUtil.convertStaticQrisToDynamic(payload, amount);
+    // QR dibuat di server agar layar kasir tidak perlu memuat pustaka QR.
+    const qr = await QRCode.toDataURL(dynamic, {
+      errorCorrectionLevel: 'M', margin: 1, width: 320
+    });
+    return res.json({ success: true, data: { amount, qr, dynamic: true } });
+  } catch (e) {
+    logger.error(`[POS] QRIS dinamis gagal: ${e.message}`);
+    // Payload tidak bisa dikonversi: pakai gambar QRIS statis sebagai cadangan
+    // agar kasir tetap bisa meminta pelanggan membayar tanpa nominal otomatis.
+    const fallback = String(getSetting('qris_static_qr_url', '') || '').trim();
+    if (fallback) {
+      return res.json({
+        success: true,
+        data: { amount, qr: fallback, dynamic: false, fallback: true }
+      });
+    }
+    return res.status(400).json({ success: false, message: 'QRIS Statis tidak valid.' });
+  }
 }, '/toko/kasir'));
 
 router.post('/api/hold', requirePosSession, requirePosAccess, express.json(), wrap((req, res) => {

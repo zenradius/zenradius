@@ -1452,6 +1452,7 @@ try {
       amount REAL NOT NULL DEFAULT 0,
       reason TEXT DEFAULT '',
       actor TEXT DEFAULT '',
+      refund_method TEXT DEFAULT 'CASH', -- CASH (kas keluar) | DEBT_DEDUCTION (potong piutang)
       created_at DATETIME DEFAULT (NOW_LOCAL())
     );
 
@@ -1584,6 +1585,16 @@ try {
   `);
 } catch (e) {
   console.error('Failed to migrate POS schema:', e);
+}
+
+// Migrasi kolom POS untuk instalasi yang sudah berjalan (tabel sudah pernah dibuat).
+try {
+  const posRefundCols = db.prepare('PRAGMA table_info(pos_sale_refunds)').all().map((c) => c.name);
+  if (posRefundCols.length > 0 && !posRefundCols.includes('refund_method')) {
+    db.exec("ALTER TABLE pos_sale_refunds ADD COLUMN refund_method TEXT DEFAULT 'CASH'");
+  }
+} catch (e) {
+  console.error('Failed to migrate POS refund_method column:', e);
 }
 
 module.exports = db;

@@ -27,6 +27,15 @@
         </div>
       </div>
       <div class="card-bd">
+        <% if (quickProducts && quickProducts.length) { %>
+          <div class="pos-quick" id="quickStrip">
+            <% quickProducts.forEach(function(q){ %>
+              <button type="button" class="pos-quick-btn" data-quick="<%= q.id %>" title="<%= q.sold_qty %> terjual — klik untuk menambah">
+                <%= q.name %>
+              </button>
+            <% }) %>
+          </div>
+        <% } %>
         <div class="pos-grid" id="posGrid"></div>
       </div>
     </div>
@@ -86,6 +95,13 @@
         </div>
       </div>
 
+      <div id="qrisRow" style="display:none">
+        <button type="button" class="btn btn-g" id="btnShowQris" style="width:100%;justify-content:center;margin-bottom:9px">
+          <i class="bi bi-qr-code"></i> Tampilkan QRIS
+        </button>
+        <div class="pos-hint">Nominal QR otomatis mengikuti total belanja.</div>
+      </div>
+
       <div class="fg" style="margin-bottom:9px">
         <label class="fl">Diskon (Rp)</label>
         <input type="number" id="cartDiscount" class="fc" placeholder="0" min="0" step="500">
@@ -132,6 +148,22 @@
     <div class="mf">
       <a href="#" id="donePrint" target="_blank" class="btn btn-g"><i class="bi bi-printer"></i> Cetak Struk</a>
       <button type="button" class="btn btn-p" onclick="closeModal('doneModal')"><i class="bi bi-check2"></i> Transaksi Baru</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: QRIS dinamis untuk dipindai pelanggan -->
+<div class="mo" id="qrisModal">
+  <div class="mb">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-qr-code"></i> Pembayaran QRIS</span>
+      <button type="button" class="mc" onclick="closeModal('qrisModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="mbody" id="qrisBody" style="text-align:center">
+      <div class="pos-empty">Memuat QRIS...</div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('qrisModal')">Tutup</button>
     </div>
   </div>
 </div>
@@ -230,6 +262,7 @@
         units: product.units || []
       });
     }
+    if (window.posBeepScan) window.posBeepScan();
     renderCart();
   }
 
@@ -352,7 +385,38 @@
     Array.from($('payType').children).forEach((b) => b.classList.toggle('active', b === btn));
     $('cashRow').style.display = state.payType === 'CASH' ? 'block' : 'none';
     $('creditRow').style.display = state.payType === 'CREDIT' ? 'block' : 'none';
+    $('qrisRow').style.display = state.payType === 'QRIS' ? 'block' : 'none';
     recalc();
+  });
+
+  /* ── Tampilkan QRIS bernominal (dinamis) ── */
+  $('btnShowQris').addEventListener('click', async () => {
+    const total = recalc().total;
+    if (!total || total <= 0) { alert('Keranjang masih kosong.'); return; }
+
+    const body = $('qrisBody');
+    body.innerHTML = '<div class="pos-empty">Memuat QRIS...</div>';
+    openModal('qrisModal');
+
+    try {
+      const res = await fetch('/toko/api/qris?amount=' + encodeURIComponent(total), {
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+
+      const d = data.data || {};
+      body.innerHTML =
+        '<img src="' + esc(d.qr) + '" alt="QRIS" style="width:100%;max-width:260px;border-radius:10px;background:#fff;padding:8px">'
+        + '<div style="font-size:20px;font-weight:700;margin-top:10px">' + rupiah(d.amount) + '</div>'
+        + '<div class="pos-hint">Scan dengan aplikasi bank / e-wallet apa pun.</div>'
+        + (d.fallback
+          ? '<div class="alert-w" style="margin-top:10px;text-align:left">QRIS dinamis tidak dapat dibuat, jadi yang tampil adalah QRIS statis. Pastikan payload QRIS valid di Pengaturan Toko.</div>'
+          : '');
+    } catch (err) {
+      body.innerHTML = '<div class="alert-d" style="text-align:left">' + esc(err.message) + '</div>';
+    }
   });
 
   /* ── Shortcut uang ── */
@@ -429,6 +493,7 @@
       if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
 
       showDone(data.data);
+      if (window.posChimeOk) window.posChimeOk();
       resetCart();
       await refreshStock();
     } catch (err) {
@@ -543,6 +608,48 @@
   $('posGrid').addEventListener('click', (e) => {
     const card = e.target.closest('.pos-card');
     if (card && !card.disabled) addToCart(card.dataset.id);
+  });
+
+  // Produk cepat: sekali klik langsung masuk keranjang.
+  const quickStrip = $('quickStrip');
+  if (quickStrip) {
+    quickStrip.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-quick]');
+      if (btn) addToCart(btn.dataset.quick);
+    });
+  }
+
+  /* ── Umpan balik suara (Web Audio, tanpa berkas aset) ── */
+  let audioCtx = null;
+  function beep(freq, duration, type) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (_) { /* diabaikan bila peramban memblokir audio */ }
+  }
+  window.posBeepScan = () => beep(1180, 0.07, 'square');
+  window.posChimeOk = () => { beep(880, 0.12); setTimeout(() => beep(1320, 0.16), 110); };
+
+  /* ── Pintasan keyboard: F1 proses bayar, F2 kosongkan keranjang ── */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'F1') {
+      e.preventDefault();
+      const btn = $('btnCheckout');
+      if (!btn.disabled) btn.click();
+    } else if (e.key === 'F2') {
+      e.preventDefault();
+      $('btnClear').click();
+    }
   });
 })();
 </script>

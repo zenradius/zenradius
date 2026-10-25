@@ -64,8 +64,8 @@
             <td>
               <% if (s.payment_status === 'VOID') { %>
                 <span class="pos-badge void">VOID</span>
-              <% } else if (s.payment_status === 'UNPAID') { %>
-                <span class="pos-badge unpaid">TEMPO</span>
+              <% } else if (s.payment_status === 'UNPAID' || s.payment_status === 'PARTIAL') { %>
+                <span class="pos-badge <%= s.payment_status === 'PARTIAL' ? 'partial' : 'unpaid' %>"><%= s.payment_status === 'PARTIAL' ? 'TEMPO (DP)' : 'TEMPO' %></span>
               <% } else { %>
                 <span class="pos-badge <%= s.payment_type === 'CASH' ? 'cash' : s.payment_type === 'QRIS' ? 'qris' : 'credit' %>"><%= s.payment_type %></span>
               <% } %>

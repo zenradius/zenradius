@@ -26,6 +26,16 @@
     <div class="pos-stat-s">dari harga jual − modal</div>
   </div>
   <div class="pos-stat warn">
+    <div class="pos-stat-l"><i class="bi bi-arrow-return-left"></i> Retur</div>
+    <div class="pos-stat-v"><%= formatMoney(report.summary.refund_total) %></div>
+    <div class="pos-stat-s"><%= report.summary.refund_count %> item diretur</div>
+  </div>
+  <div class="pos-stat ok">
+    <div class="pos-stat-l"><i class="bi bi-piggy-bank"></i> Laba Bersih</div>
+    <div class="pos-stat-v"><%= formatMoney(report.summary.net_profit) %></div>
+    <div class="pos-stat-s">laba kotor − retur</div>
+  </div>
+  <div class="pos-stat warn">
     <div class="pos-stat-l"><i class="bi bi-tag"></i> Total Diskon</div>
     <div class="pos-stat-v"><%= formatMoney(report.summary.total_discount) %></div>
     <div class="pos-stat-s">diskon yang diberikan</div>
@@ -86,6 +96,41 @@
   </div>
 </div>
 
+<!-- Barang kurang laku / modal tertahan -->
+<div class="card">
+  <div class="card-hd">
+    <h6><i class="bi bi-hourglass-bottom"></i> Barang Kurang Laku</h6>
+    <span class="pos-hint" style="margin:0">Modal tertahan pada stok yang penjualannya paling sedikit</span>
+  </div>
+  <div class="tbl-wrap" style="max-height:420px;overflow-y:auto">
+    <table class="dtbl">
+      <thead><tr><th>Produk</th><th class="num">Stok</th><th class="num">Terjual</th><th class="num">Modal Tertahan</th><th class="num">Terakhir Laku</th></tr></thead>
+      <tbody>
+      <% if (!slowMoving || !slowMoving.length) { %>
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:22px">Tidak ada data</td></tr>
+      <% } %>
+      <% (slowMoving || []).forEach(function(p){ %>
+        <tr>
+          <td><%= p.name %><div style="font-size:10.5px;color:var(--muted)"><%= p.sku || '-' %> · <%= p.category_name || '-' %></div></td>
+          <td class="num"><%= p.stock %></td>
+          <td class="num" style="font-weight:700"><%= Number(p.sold_qty || 0) %></td>
+          <td class="num" style="color:var(--warning)"><%= formatMoney(p.tied_capital) %></td>
+          <td class="num">
+            <% if (p.days_idle === null || p.days_idle === undefined) { %>
+              <span class="pos-badge void">Belum pernah</span>
+            <% } else if (Number(p.days_idle) === 0) { %>
+              <span class="pos-badge paid">Hari ini</span>
+            <% } else { %>
+              <span class="pos-badge <%= Number(p.days_idle) > 60 ? 'unpaid' : 'partial' %>"><%= p.days_idle %> hari lalu</span>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <!-- Penjualan harian -->
 <div class="card">
   <div class="card-hd"><h6><i class="bi bi-calendar3"></i> Rekap Harian</h6></div>
@@ -131,8 +176,8 @@
           <td>
             <% if (s.payment_status === 'VOID') { %>
               <span class="pos-badge void">VOID</span>
-            <% } else if (s.payment_status === 'UNPAID') { %>
-              <span class="pos-badge unpaid">TEMPO</span>
+            <% } else if (s.payment_status === 'UNPAID' || s.payment_status === 'PARTIAL') { %>
+              <span class="pos-badge <%= s.payment_status === 'PARTIAL' ? 'partial' : 'unpaid' %>"><%= s.payment_status === 'PARTIAL' ? 'TEMPO (DP)' : 'TEMPO' %></span>
             <% } else { %>
               <span class="pos-badge paid">LUNAS</span>
             <% } %>
@@ -140,6 +185,12 @@
           <td>
             <div style="display:flex;gap:5px;flex-wrap:wrap">
               <a href="/toko/struk/<%= s.id %>" target="_blank" class="btn btn-g btn-sm" title="Cetak struk"><i class="bi bi-printer"></i></a>
+              <% if (s.payment_status !== 'VOID') { %>
+                <button type="button" class="btn btn-g btn-sm" title="Kirim struk via WhatsApp"
+                  onclick="openWa(<%= s.id %>, '<%= s.invoice_no %>', '<%= (s.customer_phone || '').replace(/'/g, '') %>')">
+                  <i class="bi bi-whatsapp"></i>
+                </button>
+              <% } %>
               <% if (typeof session !== 'undefined' && session && session.isAdmin && s.payment_status !== 'VOID') { %>
                 <form method="POST" action="/toko/penjualan/void" style="margin:0" onsubmit="return confirm('Batalkan nota <%= s.invoice_no %>? Stok akan dikembalikan.')">
                   <input type="hidden" name="sale_id" value="<%= s.id %>">
@@ -181,10 +232,45 @@
           <label class="fl">Alasan Retur</label>
           <input type="text" class="fc" name="reason" placeholder="Contoh: barang rusak / salah beli">
         </div>
+        <div class="fg">
+          <label class="fl">Pengembalian Dana</label>
+          <select class="fc" name="refund_method" id="refundMethod">
+            <option value="CASH">Tunai — kas toko keluar (dicatat sebagai pengeluaran)</option>
+            <option value="DEBT_DEDUCTION">Potong piutang — dipakai bila pelanggan masih berhutang</option>
+          </select>
+          <div class="pos-hint">Pilih "Potong piutang" agar kas tidak keluar dua kali untuk bon yang belum lunas.</div>
+        </div>
       </div>
       <div class="mf">
         <button type="button" class="btn btn-g" onclick="closeModal('refundModal')">Batal</button>
         <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Proses Retur</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Modal: kirim struk via WhatsApp ── -->
+<div class="mo" id="waModal">
+  <div class="mb" style="max-width:440px">
+    <form method="POST" action="/toko/penjualan/kirim-wa">
+      <div class="mh">
+        <span class="mt" id="waTitle"><i class="bi bi-whatsapp"></i> Kirim Struk</span>
+        <button type="button" class="mc" onclick="closeModal('waModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="mbody">
+        <input type="hidden" name="sale_id" id="waSaleId">
+        <div class="fg">
+          <label class="fl">Nomor WhatsApp</label>
+          <input type="text" class="fc" name="phone" id="waPhone" placeholder="08123456789">
+          <div class="pos-hint">Terisi otomatis dari data pelanggan bila ada. Boleh diubah atau diisi manual.</div>
+        </div>
+        <div class="alert-i" style="text-align:left">
+          Struk dikirim lewat gateway WhatsApp yang aktif di ZenRadius. Pastikan nomor tujuan terdaftar di WhatsApp.
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('waModal')">Batal</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-send"></i> Kirim</button>
       </div>
     </form>
   </div>
@@ -201,6 +287,14 @@
     m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
   });
   setTimeout(function () { document.querySelectorAll('.alert').forEach(function (a) { a.style.display = 'none'; }); }, 5000);
+
+  /** Buka modal kirim struk WhatsApp dengan nomor pelanggan yang sudah terisi. */
+  function openWa(saleId, invoiceNo, phone) {
+    document.getElementById('waTitle').innerHTML = '<i class="bi bi-whatsapp"></i> Kirim ' + invoiceNo;
+    document.getElementById('waSaleId').value = saleId;
+    document.getElementById('waPhone').value = phone || '';
+    openModal('waModal');
+  }
 
   /** Ambil item yang masih bisa diretur untuk nota tertentu. */
   async function openRefund(saleId, invoiceNo) {

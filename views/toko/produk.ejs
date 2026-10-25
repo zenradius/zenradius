@@ -23,6 +23,10 @@
       </form>
       <button class="btn btn-p btn-sm" onclick="openItemModal()"><i class="bi bi-plus-lg"></i> Produk Baru</button>
       <button class="btn btn-g btn-sm" onclick="openModal('catModal')"><i class="bi bi-tags"></i> Kategori</button>
+      <a class="btn btn-g btn-sm" href="/toko/produk/export.csv" style="text-decoration:none"><i class="bi bi-filetype-csv"></i> Ekspor CSV</a>
+      <% if (typeof session !== 'undefined' && session && session.isAdmin) { %>
+        <button class="btn btn-g btn-sm" onclick="openModal('importModal')"><i class="bi bi-upload"></i> Impor CSV</button>
+      <% } %>
     </div>
   </div>
   <div class="tbl-wrap">
@@ -279,6 +283,48 @@
   </div>
 </div>
 
+<!-- ── Modal: impor produk dari CSV ── -->
+<div class="mo" id="importModal">
+  <div class="mb" style="max-width:600px">
+    <form method="POST" action="/toko/produk/import">
+      <div class="mh">
+        <span class="mt"><i class="bi bi-upload"></i> Impor Produk dari CSV</span>
+        <button type="button" class="mc" onclick="closeModal('importModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="mbody">
+        <div class="alert-i" style="text-align:left">
+          <strong>Format kolom</strong> (baris pertama = judul):<br>
+          <code>sku, nama, kategori, harga_modal, harga_jual, stok, stok_minimum, kadaluarsa, satuan, faktor_konversi, harga_jual_satuan, harga_grosir, grosir_min_qty</code>
+          <div style="margin-top:6px">Isi satu baris per satuan. Produk dengan SKU sama akan digabung otomatis menjadi satu produk multi-satuan. Cara termudah: unduh <strong>Ekspor CSV</strong> lalu sunting berkasnya.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Berkas CSV</label>
+          <input type="file" id="csvFile" accept=".csv,text/csv" class="fc">
+          <div class="pos-hint">Berkas dibaca di peramban lalu isinya ditempel ke kolom di bawah — tidak ada berkas yang dikirim ke server.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Isi CSV <span style="color:var(--danger)">*</span></label>
+          <textarea class="fc" name="csv_text" id="csvText" rows="8" required
+            style="font-family:monospace;font-size:11px"
+            placeholder="sku,nama,kategori,harga_modal,harga_jual,stok,..."></textarea>
+        </div>
+        <div class="fg">
+          <label class="fl">Bila SKU sudah ada</label>
+          <select class="fc" name="mode">
+            <option value="upsert">Perbarui produk yang sudah ada (upsert)</option>
+            <option value="insert_only">Lewati, jangan ubah yang sudah ada</option>
+          </select>
+          <div class="pos-hint">Mode upsert akan mengganti nama, harga, dan daftar satuan produk yang cocok.</div>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('importModal')">Batal</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-upload"></i> Proses Impor</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 </div></div><!-- /.page /.mw -->
 
 <script>
@@ -290,6 +336,23 @@
     m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
   });
   setTimeout(function () { document.querySelectorAll('.alert').forEach(function (a) { a.style.display = 'none'; }); }, 5000);
+
+  /* ── Impor CSV: baca berkas di peramban lalu isikan ke textarea ── */
+  var csvFile = document.getElementById('csvFile');
+  if (csvFile) {
+    csvFile.addEventListener('change', function () {
+      var file = this.files && this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var text = String(e.target.result || '');
+        // Buang BOM agar nama kolom pertama tetap terbaca.
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        document.getElementById('csvText').value = text;
+      };
+      reader.readAsText(file, 'UTF-8');
+    });
+  }
 
   /* ── Baris satuan konversi ── */
   function unitRow(u) {

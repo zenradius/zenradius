@@ -324,11 +324,315 @@ function listLowStock() {
   `).all();
 }
 
+/* ───────────────────────────── Impor / Ekspor produk ───────────────────────────── */
+
+/** Bungkus satu nilai CSV: kutip bila mengandung koma, kutip, atau baris baru. */
+function csvCell(value) {
+  const s = String(value == null ? '' : value);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+const CSV_HEADERS = [
+  'sku', 'nama', 'kategori', 'harga_modal', 'harga_jual',
+  'stok', 'stok_minimum', 'kadaluarsa',
+  'satuan', 'faktor_konversi', 'harga_jual_satuan', 'harga_grosir', 'grosir_min_qty'
+];
+
+/**
+ * CSV produk untuk diunduh. Satu baris per satuan: produk dengan 3 satuan
+ * menghasilkan 3 baris dengan SKU sama, sehingga impor ulang bisa menambah
+ * satuan tanpa menghapus yang lain.
+ */
+function buildProductCsv() {
+  const products = listProducts({});
+  const rows = [CSV_HEADERS.join(',')];
+
+  for (const p of products) {
+    const units = (p.units || []).length
+      ? p.units
+      : [{ unit_name: p.unit || 'pcs', conversion_factor: 1, price_retail: p.price_retail, price_wholesale: 0, wholesale_min_qty: 0 }];
+
+    for (const u of units) {
+      // Harga modal & stok hanya ditulis pada satuan dasar agar tidak berulang.
+      const isBase = Number(u.conversion_factor) === 1;
+      rows.push([
+        csvCell(p.sku || ''),
+        csvCell(p.name),
+        csvCell(p.category_name || ''),
+        csvCell(Number(p.cost_price) || 0),
+        csvCell(isBase ? (Number(p.price_retail) || 0) : ''),
+        csvCell(isBase ? (Number(p.stock) || 0) : ''),
+        csvCell(isBase ? (Number(p.min_stock) || 0) : ''),
+        csvCell(isBase ? (p.expiry_date || '') : ''),
+        csvCell(u.unit_name),
+        csvCell(Number(u.conversion_factor) || 1),
+        csvCell(Number(u.price_retail) || 0),
+        csvCell(Number(u.price_wholesale) || 0),
+        csvCell(Number(u.wholesale_min_qty) || 0)
+      ].join(','));
+    }
+  }
+
+  // BOM agar Excel di Windows membaca UTF-8 dengan benar.
+  return '\ufeff' + rows.join('\r\n') + '\r\n';
+}
+
+/** Pecah satu baris CSV dengan dukungan tanda kutip ganda. */
+function parseCsvLine(line) {
+  const out = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
+      } else cur += ch;
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',' || ch === ';') {
+      out.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out.map((s) => s.trim());
+}
+
+/**
+ * Baca teks CSV menjadi daftar baris terstruktur.
+ * Header opsional: bila baris pertama bukan angka, dianggap header dan dipetakan
+ * berdasarkan nama kolom. Nama kolom juga menerima istilah Indonesia.
+ */
+function parseProductCsv(text) {
+  const raw = String(text || '').replace(/^\ufeff/, '').replace(/\r\n?/g, '\n');
+  const lines = raw.split('\n').filter((l) => l.trim() !== '');
+  if (!lines.length) throw new Error('Berkas CSV kosong.');
+
+  const ALIAS = {
+    sku: 'sku', kode: 'sku', barcode: 'sku', id: 'sku',
+    nama: 'nama', name: 'nama', produk: 'nama',
+    kategori: 'kategori', category: 'kategori',
+    harga_modal: 'harga_modal', modal: 'harga_modal', cost: 'harga_modal', harga_beli: 'harga_modal', cost_price: 'harga_modal', cost_price_base: 'harga_modal',
+    harga_jual: 'harga_jual', jual: 'harga_jual', price: 'harga_jual', price_retail: 'harga_jual',
+    stok: 'stok', stock: 'stok', qty: 'stok',
+    stok_minimum: 'stok_minimum', min_stock: 'stok_minimum', minimum: 'stok_minimum',
+    kadaluarsa: 'kadaluarsa', expiry: 'kadaluarsa', expiry_date: 'kadaluarsa', expired: 'kadaluarsa',
+    satuan: 'satuan', unit: 'satuan', unit_name: 'satuan',
+    faktor_konversi: 'faktor_konversi', conversion_factor: 'faktor_konversi', konversi: 'faktor_konversi',
+    harga_jual_satuan: 'harga_jual_satuan',
+    harga_grosir: 'harga_grosir', price_wholesale: 'harga_grosir',
+    grosir_min_qty: 'grosir_min_qty', wholesale_min_qty: 'grosir_min_qty'
+  };
+
+  const firstCells = parseCsvLine(lines[0]);
+  const firstIsHeader = firstCells.some((c) => ALIAS[String(c || '').toLowerCase().trim()]);
+  const header = firstIsHeader
+    ? firstCells.map((c) => ALIAS[String(c || '').toLowerCase().trim()] || '')
+    : CSV_HEADERS;
+  const body = firstIsHeader ? lines.slice(1) : lines;
+
+  const rows = [];
+  for (const line of body) {
+    const cells = parseCsvLine(line);
+    const row = {};
+    header.forEach((key, i) => { if (key) row[key] = cells[i] ?? ''; });
+    if (!header.length) continue;
+    if (!String(row.nama || '').trim() && !String(row.sku || '').trim()) continue;
+    rows.push(row);
+  }
+
+  if (!rows.length) throw new Error('Tidak ada baris produk yang bisa dibaca dari berkas ini.');
+  return rows;
+}
+
+/**
+ * Ubah teks angka pada CSV menjadi number.
+ *
+ * Mendukung format Indonesia ("1.234.567,89"), format Inggris
+ * ("1,234,567.89"), dan angka polos. Pemisah ribuan wajib dibedakan dari
+ * pemisah desimal: tanpa itu "62.000" terbaca 62 dan harga produk hasil impor
+ * diam-diam menjadi jauh lebih murah dari seharusnya — kesalahan yang sangat
+ * berbahaya pada aplikasi kasir.
+ */
+function parseMoneyCell(value) {
+  let s = String(value == null ? '' : value).replace(/[^0-9.,-]/g, '').trim();
+  if (!s) return 0;
+
+  const negative = s.startsWith('-');
+  s = s.replace(/-/g, '');
+
+  const hasDot = s.includes('.');
+  const hasComma = s.includes(',');
+
+  if (hasDot && hasComma) {
+    // Pemisah yang muncul terakhir adalah desimal, sisanya pemisah ribuan.
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (hasDot) {
+    // "62.000" & "1.234.567" = ribuan; "62.5" = desimal.
+    s = /^\d{1,3}(\.\d{3})+$/.test(s) ? s.replace(/\./g, '') : s;
+  } else if (hasComma) {
+    // "62,000" = ribuan; "62,5" = desimal ala Indonesia.
+    s = /^\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, '') : s.replace(',', '.');
+  }
+
+  const n = Number(s);
+  if (!Number.isFinite(n)) return 0;
+  return negative ? -n : n;
+}
+
+/** Normalisasi tanggal dari CSV: 2026-01-31, 31/01/2026, 31-01-2026. */
+function parseDateCell(value) {
+  const s = String(value || '').trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (m) {
+    const d = String(m[1]).padStart(2, '0');
+    const mo = String(m[2]).padStart(2, '0');
+    return `${m[3]}-${mo}-${d}`;
+  }
+  return null;
+}
+
+/**
+ * Impor produk dari baris CSV hasil parseProductCsv.
+ * Beberapa baris dengan SKU sama digabung menjadi satu produk dengan banyak satuan.
+ * mode: 'upsert' (perbarui produk yang ada) atau 'insert_only' (lewati yang ada).
+ */
+function importProducts(rows, mode = 'upsert', actor = 'Admin') {
+  const list = Array.isArray(rows) ? rows : [];
+  if (!list.length) throw new Error('Daftar impor kosong.');
+
+  // Gabungkan baris per SKU (atau per nama bila SKU kosong).
+  const grouped = new Map();
+  for (const r of list) {
+    const name = String(r.nama || '').trim();
+    const sku = String(r.sku || '').trim();
+    if (!name && !sku) continue;
+    const key = (sku || name).toLowerCase();
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        sku: sku || null,
+        name: name || sku,
+        category_name: String(r.kategori || '').trim(),
+        cost_price: parseMoneyCell(r.harga_modal),
+        price_retail: parseMoneyCell(r.harga_jual),
+        stock: Math.round(parseMoneyCell(r.stok)),
+        min_stock: Math.round(parseMoneyCell(r.stok_minimum)),
+        expiry_date: parseDateCell(r.kadaluarsa),
+        units: []
+      });
+    }
+    const g = grouped.get(key);
+    // Lengkapi nilai yang belum ada dari baris satuan berikutnya.
+    if (!g.cost_price) g.cost_price = parseMoneyCell(r.harga_modal);
+    if (!g.price_retail) g.price_retail = parseMoneyCell(r.harga_jual);
+    if (!g.expiry_date) g.expiry_date = parseDateCell(r.kadaluarsa);
+
+    const unitName = String(r.satuan || '').trim() || 'pcs';
+    const factor = Math.max(1, Math.round(parseMoneyCell(r.faktor_konversi)) || 1);
+    const unitRetail = parseMoneyCell(r.harga_jual_satuan) || parseMoneyCell(r.harga_jual) || g.price_retail;
+    g.units.push({
+      unit_name: unitName,
+      conversion_factor: factor,
+      price_retail: unitRetail,
+      price_wholesale: parseMoneyCell(r.harga_grosir),
+      wholesale_min_qty: Math.round(parseMoneyCell(r.grosir_min_qty))
+    });
+  }
+
+  const findCat = db.prepare('SELECT id FROM pos_categories WHERE name = ? COLLATE NOCASE');
+  const insertCat = db.prepare('INSERT INTO pos_categories (name) VALUES (?)');
+  const findSku = db.prepare('SELECT id FROM pos_products WHERE sku = ?');
+
+  let inserted = 0;
+  let updated = 0;
+  let skipped = 0;
+
+  db.transaction(() => {
+    for (const g of grouped.values()) {
+      let categoryId = null;
+      if (g.category_name) {
+        const found = findCat.get(g.category_name);
+        categoryId = found ? found.id : Number(insertCat.run(g.category_name).lastInsertRowid);
+      }
+
+      const existing = g.sku ? findSku.get(g.sku) : null;
+      if (existing && String(mode).toLowerCase() === 'insert_only') { skipped++; continue; }
+
+      // Pastikan selalu ada satuan dasar agar konversi stok konsisten.
+      if (!g.units.some((u) => u.conversion_factor === 1)) {
+        g.units.unshift({
+          unit_name: g.units[0]?.unit_name || 'pcs',
+          conversion_factor: 1,
+          price_retail: g.units[0]?.price_retail || g.price_retail,
+          price_wholesale: 0,
+          wholesale_min_qty: 0
+        });
+      }
+
+      if (existing) {
+        db.prepare(`
+          UPDATE pos_products SET name = ?, category_id = ?, cost_price = ?, price_retail = ?,
+            min_stock = ?, expiry_date = ?, is_active = 1, updated_at = (NOW_LOCAL())
+          WHERE id = ?
+        `).run(g.name, categoryId, g.cost_price, g.price_retail, g.min_stock, g.expiry_date, existing.id);
+
+        db.prepare('DELETE FROM pos_product_units WHERE product_id = ?').run(existing.id);
+        const insertUnit = db.prepare(`
+          INSERT INTO pos_product_units (product_id, unit_name, conversion_factor, price_retail, price_wholesale, wholesale_min_qty)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        for (const u of g.units) {
+          insertUnit.run(existing.id, u.unit_name, u.conversion_factor, u.price_retail, u.price_wholesale, u.wholesale_min_qty);
+        }
+        updated++;
+      } else {
+        const info = db.prepare(`
+          INSERT INTO pos_products (sku, name, category_id, unit, cost_price, price_retail, stock, min_stock, expiry_date)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          g.sku, g.name, categoryId, g.units[0].unit_name,
+          g.cost_price, g.price_retail, g.stock, g.min_stock, g.expiry_date
+        );
+        const productId = Number(info.lastInsertRowid);
+        const insertUnit = db.prepare(`
+          INSERT INTO pos_product_units (product_id, unit_name, conversion_factor, price_retail, price_wholesale, wholesale_min_qty)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        for (const u of g.units) {
+          insertUnit.run(productId, u.unit_name, u.conversion_factor, u.price_retail, u.price_wholesale, u.wholesale_min_qty);
+        }
+        if (g.stock !== 0) {
+          logStock({
+            productId, qtyChange: g.stock, stockAfter: g.stock,
+            type: 'PURCHASE', reference: 'IMPOR CSV', actor
+          });
+        }
+        inserted++;
+      }
+    }
+  })();
+
+  return { inserted, updated, skipped, total: grouped.size };
+}
+
 module.exports = {
   SETTINGS_KEY,
   DEFAULT_SETTINGS,
   PAYMENT_TYPES,
   EXPENSE_CATEGORIES,
+  buildProductCsv,
+  parseProductCsv,
+  importProducts,
   getSettings,
   saveSettings,
 
