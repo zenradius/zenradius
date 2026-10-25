@@ -1,14 +1,20 @@
 <%#
   Partial: <head> + sidebar + topbar untuk seluruh halaman Point of Sale.
-  Dipakai lewat include dengan variabel:
-    title, activePage (menuKey), company, brandVersion, lang, appTheme
-  Setelah include, halaman membuka <div class="page"> sendiri.
+
+  Modul POS berdiri sebagai aplikasi tersendiri:
+    - Memakai sidebar POS sendiri (partials/side.ejs), bukan sidebar panel admin.
+    - Tidak menampilkan menu billing/MikroTik milik panel admin.
+    - Pintasan ke panel admin hanya muncul untuk admin (kasir tidak perlu).
+
+  Variabel: title, activeTab, company, storeName, brandVersion, lang, appTheme,
+            session, msg, posActiveShift
+  Setelah include, halaman membuka <div class="ppage"> sendiri.
 %>
 <!DOCTYPE html>
 <html lang="<%= lang || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title><%= title %> | <%= company %></title>
+  <title><%= title %> | <%= storeName || company %></title>
   <meta name="theme-color" content="<%= (typeof appTheme !== 'undefined' && appTheme === 'space') ? '#0B1028' : (typeof appTheme !== 'undefined' && appTheme === 'orbit') ? '#F2F5FA' : '#0f172a' %>">
   <link rel="icon" href="/img/icon.png?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : 'zenradius' %>" type="image/png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -16,26 +22,84 @@
   <link rel="stylesheet" href="/css/theme-tokens.css">
   <link rel="stylesheet" href="/css/toko.css">
 </head>
-<body>
-<%- include('../../admin/partials/sidebar', { activePage: 'pos_toko', company }) %>
-<div class="mw">
-  <%- include('../../admin/partials/licenseGraceBar') %>
-  <div class="topbar">
-    <div class="tb-title">
-      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
-      <i class="bi bi-shop"></i>
-      <span><%= title %></span>
-    </div>
-    <div class="tb-right">
-      <span class="adm-badge"><i class="bi bi-shop-window"></i> <%= storeName || company %></span>
-      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
-      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> Logout</a>
-    </div>
-  </div>
-  <div class="page">
-    <% if (typeof msg !== 'undefined' && msg) { %>
-      <div class="alert alert-<%= msg.type === 'success' ? 's' : 'd' %> mb16">
-        <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-triangle' %>"></i>
-        <%= msg.text %>
+<body class="pos-app">
+<div class="pshell">
+  <%- include('side', { activeTab, storeName, company, session, posActiveShift: (typeof posActiveShift !== 'undefined' ? posActiveShift : null) }) %>
+
+  <div class="pmain">
+    <header class="ptop">
+      <button type="button" class="ptop-burger" id="posSideOpen" aria-label="Buka menu"><i class="bi bi-list"></i></button>
+      <div class="ptop-title">
+        <span class="ptop-t"><%= title %></span>
+        <span class="ptop-s"><%= storeName || company %></span>
       </div>
-    <% } %>
+      <div class="ptop-right">
+        <% if (typeof posActiveShift !== 'undefined' && posActiveShift) { %>
+          <a href="/toko/shift" class="ptop-chip ok" title="Shift kasir sedang berjalan">
+            <i class="bi bi-clock-history"></i> Shift Aktif
+          </a>
+        <% } else { %>
+          <a href="/toko/shift" class="ptop-chip" title="Belum ada shift yang dibuka">
+            <i class="bi bi-clock"></i> Belum Buka Shift
+          </a>
+        <% } %>
+        <a href="/toko/kasir" class="btn btn-p btn-sm"><i class="bi bi-cart-check"></i> Kasir</a>
+      </div>
+    </header>
+
+    <script>
+      // Sidebar POS: drawer pada layar sempit. Elemen sudah ada di DOM karena
+      // skrip ini dieksekusi setelah sidebar & topbar dirender.
+      (function () {
+        var shell = document.querySelector('.pshell');
+        if (!shell) return;
+        function setOpen(open) { shell.classList.toggle('nav-open', !!open); }
+        var openBtn = document.getElementById('posSideOpen');
+        var closeBtn = document.getElementById('posSideClose');
+        var overlay = document.getElementById('posSideOv');
+        if (openBtn) openBtn.addEventListener('click', function () { setOpen(true); });
+        if (closeBtn) closeBtn.addEventListener('click', function () { setOpen(false); });
+        if (overlay) overlay.addEventListener('click', function () { setOpen(false); });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') setOpen(false);
+        });
+        // Pindah halaman saat drawer terbuka: tutup agar tidak "nyangkut"
+        // ketika pengguna menekan tombol kembali pada peramban.
+        window.addEventListener('pageshow', function () { setOpen(false); });
+      })();
+    </script>
+
+    <div class="pbody">
+    <% if (typeof msg !== 'undefined' && msg) { %>
+        <div class="pos-alert pos-alert-<%= msg.type === 'success' ? 'ok' : 'bad' %>">
+          <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-triangle' %>"></i>
+          <span><%= msg.text %></span>
+          <button type="button" class="pos-alert-x" onclick="this.parentNode.remove()" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
+        </div>
+      <% } %>
+
+      <%#
+        Header halaman + navigasi segmen.
+        Diletakkan di sini (bukan di tiap halaman) supaya `activeTab` — yang
+        hanya diteruskan ke partial ini — tetap tersedia, dan definisi menu
+        cukup ada di satu tempat.
+      %>
+      <div class="phead">
+        <div class="phead-row">
+          <h1 class="phead-h1"><%= title %></h1>
+        </div>
+        <nav class="pseg" aria-label="Navigasi Point of Sale">
+          <a href="/toko" class="pseg-i <%= activeTab === 'dashboard' ? 'active' : '' %>"><i class="bi bi-grid-1x2"></i><span>Ringkasan</span></a>
+          <a href="/toko/kasir" class="pseg-i <%= activeTab === 'kasir' ? 'active' : '' %>"><i class="bi bi-cart-check"></i><span>Kasir</span></a>
+          <a href="/toko/produk" class="pseg-i <%= activeTab === 'produk' ? 'active' : '' %>"><i class="bi bi-box-seam"></i><span>Produk</span></a>
+          <a href="/toko/pembelian" class="pseg-i <%= activeTab === 'pembelian' ? 'active' : '' %>"><i class="bi bi-truck"></i><span>Pembelian</span></a>
+          <a href="/toko/pelanggan" class="pseg-i <%= activeTab === 'pelanggan' ? 'active' : '' %>"><i class="bi bi-people"></i><span>Pelanggan</span></a>
+          <a href="/toko/hutang" class="pseg-i <%= activeTab === 'hutang' ? 'active' : '' %>"><i class="bi bi-cash-coin"></i><span>Piutang</span></a>
+          <a href="/toko/kas" class="pseg-i <%= activeTab === 'kas' ? 'active' : '' %>"><i class="bi bi-wallet2"></i><span>Buku Kas</span></a>
+          <a href="/toko/shift" class="pseg-i <%= activeTab === 'shift' ? 'active' : '' %>"><i class="bi bi-clock-history"></i><span>Shift</span></a>
+          <a href="/toko/laporan" class="pseg-i <%= activeTab === 'laporan' ? 'active' : '' %>"><i class="bi bi-bar-chart-line"></i><span>Laporan</span></a>
+          <% if (typeof session !== 'undefined' && session && session.isAdmin) { %>
+            <a href="/toko/pengaturan" class="pseg-i <%= activeTab === 'pengaturan' ? 'active' : '' %>"><i class="bi bi-sliders"></i><span>Pengaturan</span></a>
+          <% } %>
+        </nav>
+      </div>

@@ -1,5 +1,5 @@
-<%- include('partials/head', { title: 'Piutang & Hutang' }) %>
-<%- include('partials/nav', { activeTab: 'hutang' }) %>
+<%- include('partials/head', { title: 'Piutang & Hutang', activeTab: 'hutang' }) %>
+
 
 <div class="pos-stats">
   <div class="pos-stat warn">
@@ -128,7 +128,9 @@
   </div>
 </div>
 
-</div></div><!-- /.page /.mw -->
+</div><!-- /.pbody -->
+</div><!-- /.pmain -->
+</div><!-- /.pshell -->
 
 <script>
   const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');

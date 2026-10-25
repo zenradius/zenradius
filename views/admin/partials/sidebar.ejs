@@ -133,14 +133,18 @@ try { localStorage.removeItem('app-theme'); } catch(e) {}
         </div>
         <div class="sb-section-items">
           <% section.items.forEach((item) => { %>
+            <%# Menu dengan aplikasi sendiri (mis. Point of Sale) dibuka di tab baru. %>
             <a
               href="<%= item.hrefResolved %>"
               class="sb-item <%= (item.activePages || []).includes(activePage) ? 'active' : '' %>"
+              <% if (item.hrefTarget) { %>target="<%= item.hrefTarget %>" rel="noopener"<% } %>
             >
               <i class="<%= item.icon %>"></i>
               <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
               <% if (item.key === 'update') { %>
                 <span id="updateBadge" style="display:none;margin-left:auto;padding:2px 7px;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;animation:pulse 1.5s infinite">● Update</span>
+              <% } else if (item.hrefTarget) { %>
+                <i class="bi bi-box-arrow-up-right" style="margin-left:auto;font-size:10px;opacity:.65" title="Terbuka di tab baru"></i>
               <% } %>
             </a>
           <% }) %>

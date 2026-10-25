@@ -37,7 +37,9 @@ const MENU_DEFINITIONS = [
   { key: 'inventory', section: 'service', href: '/admin/inventory', icon: 'bi bi-boxes', labelKey: 'admin.nav.inventory', labelDefault: 'Inventaris (Stok)', roles: ['admin', 'cashier'], activePages: ['inventory'] },
   { key: 'onu_stickers', section: 'service', href: '/admin/onu-stickers', icon: 'bi bi-qr-code-scan', labelKey: 'admin.nav.onu_stickers', labelDefault: 'Cetak Stiker ONU', roles: ['admin', 'cashier'], activePages: ['onu_stickers'] },
   { key: 'digiflazz', section: 'service', href: '/admin/digiflazz', icon: 'bi bi-phone', labelKey: 'admin.nav.digiflazz', labelDefault: 'Digiflazz', roles: ['admin'], activePages: ['digiflazz'] },
-  { key: 'pos_toko', section: 'service', href: '/toko', icon: 'bi bi-shop', labelKey: 'admin.nav.pos_toko', labelDefault: 'Point of Sale', roles: ['admin', 'cashier'], activePages: ['pos_toko'] },
+  // Point of Sale sengaja dibuka di TAB BARU: modul ini punya sidebar dan
+  // tata letaknya sendiri, sehingga kasir tidak "terkurung" di panel admin.
+  { key: 'pos_toko', section: 'service', href: '/toko', icon: 'bi bi-shop', labelKey: 'admin.nav.pos_toko', labelDefault: 'Point of Sale', roles: ['admin', 'cashier'], activePages: [], newTab: true },
 
   { key: 'reports', section: 'finance', href: '/admin/reports', icon: 'bi bi-bar-chart-line', labelKey: 'admin.nav.finance_report', labelDefault: 'Laporan Keuangan', roles: ['admin', 'cashier'], activePages: ['reports'] },
   { key: 'cashiers_reports', section: 'finance', href: '/admin/cashiers/reports', icon: 'bi bi-journal-text', labelKey: 'admin.nav.cashiers_reports', labelDefault: 'Laporan Kasir', roles: ['admin', 'cashier'], activePages: ['cashiers_reports'] },
@@ -306,6 +308,8 @@ function enrichMenu(menu, states) {
     locked,
     hidden,
     hrefResolved: menu.href,
+    // Menu yang punya aplikasi sendiri (mis. POS) dibuka di tab baru.
+    hrefTarget: menu.newTab ? '_blank' : null,
     lockedMessage: ''
   };
 }

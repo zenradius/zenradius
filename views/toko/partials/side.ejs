@@ -1,0 +1,92 @@
+<%#
+  Partial: SIDEBAR MANDIRI Point of Sale.
+
+  Modul POS punya tata letak sendiri (bukan menempel di panel admin), sehingga
+  kasir tetap fokus pada pekerjaan toko tanpa melihat menu billing/MikroTik.
+
+  Variabel yang dipakai:
+    activeTab    -> menu yang sedang dibuka
+    storeName    -> nama toko (setelan POS, fallback nama perusahaan)
+    company      -> nama perusahaan
+    session      -> untuk cek peran (admin / kasir)
+    posActiveShift -> ringkasan shift berjalan (untuk lencana), boleh kosong
+%>
+<%
+  const isAdminUser = typeof session !== 'undefined' && session && session.isAdmin;
+  const active = (k) => (activeTab === k ? 'active' : '');
+  const hasShift = typeof posActiveShift !== 'undefined' && posActiveShift;
+%>
+<aside class="pside" id="posSide">
+  <div class="pside-brand">
+    <div class="pside-brand-ic"><i class="bi bi-shop"></i></div>
+    <div class="pside-brand-tx">
+      <div class="pside-brand-n"><%= storeName || company %></div>
+      <div class="pside-brand-s">Point of Sale</div>
+    </div>
+    <button type="button" class="pside-x" id="posSideClose" aria-label="Tutup menu"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <nav class="pside-nav">
+    <div class="pside-sec">Utama</div>
+    <a href="/toko" class="pside-item <%= active('dashboard') %>">
+      <i class="bi bi-grid-1x2"></i><span>Ringkasan</span>
+    </a>
+    <a href="/toko/kasir" class="pside-item pside-cta <%= active('kasir') %>">
+      <i class="bi bi-cart-check"></i><span>Kasir</span>
+      <% if (hasShift) { %><em class="pside-dot" title="Shift sedang berjalan"></em><% } %>
+    </a>
+
+    <div class="pside-sec">Katalog &amp; Stok</div>
+    <a href="/toko/produk" class="pside-item <%= active('produk') %>">
+      <i class="bi bi-box-seam"></i><span>Produk</span>
+    </a>
+    <a href="/toko/pembelian" class="pside-item <%= active('pembelian') %>">
+      <i class="bi bi-truck"></i><span>Pembelian Stok</span>
+    </a>
+    <a href="/toko/pelanggan" class="pside-item <%= active('pelanggan') %>">
+      <i class="bi bi-people"></i><span>Pelanggan Toko</span>
+    </a>
+
+    <div class="pside-sec">Keuangan</div>
+    <a href="/toko/hutang" class="pside-item <%= active('hutang') %>">
+      <i class="bi bi-cash-coin"></i><span>Piutang &amp; Hutang</span>
+    </a>
+    <a href="/toko/kas" class="pside-item <%= active('kas') %>">
+      <i class="bi bi-wallet2"></i><span>Buku Kas</span>
+    </a>
+    <a href="/toko/shift" class="pside-item <%= active('shift') %>">
+      <i class="bi bi-clock-history"></i><span>Shift Kasir</span>
+      <% if (hasShift) { %><span class="pside-tag">Aktif</span><% } %>
+    </a>
+
+    <div class="pside-sec">Analisis</div>
+    <a href="/toko/laporan" class="pside-item <%= active('laporan') %>">
+      <i class="bi bi-bar-chart-line"></i><span>Laporan</span>
+    </a>
+
+    <% if (isAdminUser) { %>
+      <div class="pside-sec">Sistem</div>
+      <a href="/toko/pengaturan" class="pside-item <%= active('pengaturan') %>">
+        <i class="bi bi-sliders"></i><span>Pengaturan Toko</span>
+      </a>
+    <% } %>
+  </nav>
+
+  <div class="pside-foot">
+    <div class="pside-user">
+      <div class="pside-user-ic"><i class="bi bi-person-fill"></i></div>
+      <div class="pside-user-tx">
+        <div class="pside-user-n"><%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Administrator' %></div>
+        <div class="pside-user-s"><%= storeName || company %></div>
+      </div>
+    </div>
+    <%# Pintasan ke panel admin hanya untuk admin; kasir tidak perlu ke sana. %>
+    <% if (isAdminUser) { %>
+      <a href="/admin" class="pside-back" title="Buka panel admin di tab ini">
+        <i class="bi bi-arrow-left-right"></i> Panel Admin
+      </a>
+    <% } %>
+    <a href="/toko/keluar" class="pside-out"><i class="bi bi-box-arrow-left"></i> Keluar</a>
+  </div>
+</aside>
+<div class="pside-ov" id="posSideOv"></div>

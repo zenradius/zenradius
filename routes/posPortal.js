@@ -136,6 +136,17 @@ router.use((req, res, next) => {
   res.locals.company = company();
   res.locals.storeName = storeName();
   res.locals.menuKey = MENU_KEY;
+
+  // Ringkasan shift dipakai sidebar & topbar untuk lencana "Shift Aktif".
+  // Hanya dihitung pada permintaan halaman HTML, agar panggilan JSON dari
+  // layar kasir tidak menambah satu query basis data pada tiap aksi.
+  res.locals.posActiveShift = null;
+  if (req.method === 'GET' && !String(req.originalUrl || '').includes('/api/')) {
+    try {
+      const shift = txn.getActiveShift(s);
+      res.locals.posActiveShift = shift ? txn.getShiftSummary(shift) : null;
+    } catch (_) { /* sesi belum valid / bukan kasir: abaikan */ }
+  }
   next();
 });
 
@@ -184,7 +195,6 @@ router.get('/', requirePosSession, requirePosAccess, wrap((req, res) => {
   res.render('toko/dashboard', {
     title: PAGE_TITLE,
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     stats,
     settings,
@@ -207,7 +217,6 @@ router.get('/kasir', requirePosSession, requirePosAccess, wrap((req, res) => {
   res.render('toko/kasir', {
     title: 'Kasir',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     products,
     categories,
@@ -225,7 +234,6 @@ router.get('/produk', requirePosSession, requirePosAccess, wrap((req, res) => {
   res.render('toko/produk', {
     title: 'Produk Toko',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     products: pos.listProducts({ search, categoryId, lowStockOnly: req.query.low === '1' }),
     categories: pos.listCategories(),
@@ -243,7 +251,6 @@ router.get('/pembelian', requirePosSession, requirePosAccess, wrap((req, res) =>
   res.render('toko/pembelian', {
     title: 'Pembelian Stok',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     purchases: txn.listPurchases({ search: String(req.query.q || '').trim() }),
     suppliers: txn.listSuppliers(),
@@ -257,7 +264,6 @@ router.get('/hutang', requirePosSession, requirePosAccess, wrap((req, res) => {
   res.render('toko/hutang', {
     title: 'Piutang & Hutang',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     customerDebts: txn.listCustomerDebts(),
     supplierDebts: txn.listSupplierDebts(),
@@ -270,7 +276,6 @@ router.get('/kas', requirePosSession, requirePosAccess, wrap((req, res) => {
   res.render('toko/kas', {
     title: 'Buku Kas Toko',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     expenses: txn.listExpenses({
       startDate: req.query.start || null,
@@ -290,7 +295,6 @@ router.get('/shift', requirePosSession, requirePosAccess, wrap((req, res) => {
   res.render('toko/shift', {
     title: 'Shift Kasir',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     activeShift: shift ? txn.getShiftSummary(shift) : null,
     shifts: txn.listShifts(req.session, 50),
@@ -304,7 +308,6 @@ router.get('/laporan', requirePosSession, requirePosAccess, wrap((req, res) => {
   res.render('toko/laporan', {
     title: 'Laporan Toko',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     report: txn.getSalesReport({ startDate, endDate }),
     topSelling: txn.getTopSelling({ startDate, endDate, limit: 20 }),
@@ -320,7 +323,6 @@ router.get('/pelanggan', requirePosSession, requirePosAccess, wrap((req, res) =>
   res.render('toko/pelanggan', {
     title: 'Pelanggan Toko',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     customers: txn.listStoreCustomers(String(req.query.q || '').trim()),
     search: String(req.query.q || '').trim(),
@@ -333,13 +335,28 @@ router.get('/pengaturan', requirePosSession, requirePosAdmin, wrap((req, res) =>
   res.render('toko/pengaturan', {
     title: 'Pengaturan Toko',
     company: company(),
-    activePage: MENU_KEY,
     msg: flashMsg(req),
     posSettings: pos.getSettings(),
     defaults: pos.DEFAULT_SETTINGS,
     formatMoney: txn.formatMoney
   });
 }));
+
+/**
+ * Keluar dari aplikasi POS.
+ * Sesi POS memakai sesi admin yang sama, jadi keluar di sini juga mengakhiri
+ * sesi panel admin — dan sebaliknya. Dipisahkan agar kasir yang bekerja di
+ * POS tidak perlu menyentuh alamat /admin/logout.
+ */
+router.get('/keluar', (req, res) => {
+  const s = req.session || {};
+  if (!s.cookie) return res.redirect('/admin/login');
+  // Hancurkan sesi lalu arahkan ke halaman login admin (satu-satunya login).
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.redirect('/admin/login?keluar=1');
+  });
+});
 
 /** Struk siap cetak — dipakai untuk printer thermal maupun cetak browser. */
 router.get('/struk/:id', requirePosSession, requirePosAccess, wrap((req, res) => {

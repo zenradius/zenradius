@@ -1,5 +1,5 @@
-<%- include('partials/head', { title: 'Pelanggan Toko' }) %>
-<%- include('partials/nav', { activeTab: 'pelanggan' }) %>
+<%- include('partials/head', { title: 'Pelanggan Toko', activeTab: 'pelanggan' }) %>
+
 
 <div class="card">
   <div class="card-hd" style="flex-wrap:wrap;gap:10px">
@@ -136,7 +136,9 @@
   </div>
 </div>
 
-</div></div><!-- /.page /.mw -->
+</div><!-- /.pbody -->
+</div><!-- /.pmain -->
+</div><!-- /.pshell -->
 
 <script>
   const CUSTOMERS = <%= JSON.stringify(customers).replace(/</g, '\\u003c') %>;

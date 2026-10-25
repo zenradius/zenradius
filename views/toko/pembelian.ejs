@@ -1,5 +1,5 @@
-<%- include('partials/head', { title: 'Pembelian Stok' }) %>
-<%- include('partials/nav', { activeTab: 'pembelian' }) %>
+<%- include('partials/head', { title: 'Pembelian Stok', activeTab: 'pembelian' }) %>
+
 
 <div class="card">
   <div class="card-hd" style="flex-wrap:wrap;gap:10px">
@@ -150,7 +150,9 @@
   </div>
 </div>
 
-</div></div><!-- /.page /.mw -->
+</div><!-- /.pbody -->
+</div><!-- /.pmain -->
+</div><!-- /.pshell -->
 
 <script>
   const PRODUCTS = <%= JSON.stringify(products).replace(/</g, '\\u003c') %>;
