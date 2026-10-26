@@ -625,10 +625,17 @@ router.use((req, res, next) => {
 });
 
 let loginRateLimiter = (req, res, next) => res.status(503).send('Layanan login sementara tidak tersedia.');
+// Limiter tersendiri untuk pembuatan QR: QR dimuat otomatis tiap halaman login
+// dibuka, sehingga tidak boleh memakai jatah yang sama dengan percobaan login
+// kata sandi (dampaknya Admin bisa terkunci dari login password).
+let qrChallengeRateLimiter = loginRateLimiter;
 try {
   const rlMod = require('../middleware/rateLimiter');
   if (rlMod && typeof rlMod.loginRateLimiter === 'function') {
     loginRateLimiter = rlMod.loginRateLimiter;
+  }
+  if (rlMod && typeof rlMod.qrChallengeRateLimiter === 'function') {
+    qrChallengeRateLimiter = rlMod.qrChallengeRateLimiter;
   }
 } catch (e) {}
 
@@ -643,7 +650,7 @@ function adminQrServerUrl(req) {
   return `${protocol}://${req.get('host')}`;
 }
 
-router.post('/login/qr-challenge', loginRateLimiter, (req, res) => {
+router.post('/login/qr-challenge', qrChallengeRateLimiter, (req, res) => {
   if (req.session?.isAdmin || req.session?.isCashier) {
     return res.status(409).json({ success: false, error: { code: 'ALREADY_AUTHENTICATED', message: 'Sesi web sudah masuk.' } });
   }

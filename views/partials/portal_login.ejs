@@ -1,13 +1,31 @@
 <%#
-  Shared portal login template (based on tech/login.ejs).
-  Params: title, heading, subtitle, copy, action, usernameLabel, usernamePlaceholder,
-          appLabel, manifest (optional), backLink (optional), idPrefix
+  Shared portal login template.
+
+  Dua tata letak dalam satu berkas:
+    - `qrLoginEnabled: true` (khusus Login Admin) -> tata letak DUA KOLOM:
+      panel QR di kiri, form login di kanan. Pada layar sempit tersusun ulang
+      menjadi satu kolom (form lebih dulu, lalu QR).
+    - lainnya (Mitra, Kolektor, Teknisi) -> tetap SATU kolom seperti semula.
+
+  Params: title, heading, subtitle, copy, action, usernameLabel,
+          usernamePlaceholder, appLabel, manifest (opsional),
+          backLink (opsional), idPrefix, qrLoginEnabled (opsional)
+%>
+<%
+  const _qrEnabled = typeof qrLoginEnabled !== 'undefined' && qrLoginEnabled;
+  const _q = {
+    usernameField: (typeof usernameField !== 'undefined' && usernameField) || 'username',
+    usernameType: (typeof usernameType !== 'undefined' && usernameType) || 'text',
+    links: (typeof links !== 'undefined' && Array.isArray(links)) ? links : [],
+    userLabel: (typeof usernameLabel !== 'undefined' && usernameLabel) || 'Username',
+    userPlaceholder: (typeof usernamePlaceholder !== 'undefined' && usernamePlaceholder) || 'Username'
+  };
 %>
 <!DOCTYPE html>
 <html lang="<%= (typeof lang !== 'undefined' && lang) || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="<%= (typeof appTheme !== 'undefined' && appTheme === 'space') ? '#0B1028' : (typeof appTheme !== 'undefined' && appTheme === 'orbit') ? '#F2F5FA' : '#173945' %>">
   <title><%= title %> - <%= company %></title>
   <% if (typeof manifest !== 'undefined' && manifest) { %><link rel="manifest" href="<%= manifest %>"><% } %>
@@ -19,14 +37,18 @@
   <link rel="stylesheet" href="/css/theme-tokens.css">
   <script src="/js/app-ui.js" defer></script>
   <style>
-    *{box-sizing:border-box} html,body{height:100%}
+    *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       background:var(--body-bg-solid, #173945);
       background-image:var(--body-bg-image, radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%));
+      background-attachment:fixed;
       color:#f8fafc;min-height:100vh;min-height:100dvh;
       display:flex;align-items:center;justify-content:center;
       font-family:'DM Sans',sans-serif;padding:24px;
     }
+
+    /* ── Kartu dasar (tata letak satu kolom) ── */
     .login-card{
       background: var(--portal-surface, rgba(255, 255, 255, 0.03));
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -48,6 +70,9 @@
     }
     .login-card form{width:100%;max-width:320px;display:flex;flex-direction:column;align-items:stretch}
     .login-card .form-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,0.64)!important;font-weight:700}
+
+    /* ── Kontrol form ── */
+    .form-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,0.64);font-weight:700}
     .form-control{
       background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:#ffffff;
       padding:12px 14px 12px 40px;border-radius:10px;font-size:14px;
@@ -84,15 +109,244 @@
     .login-links a{color:var(--portal-primary, #3b82f6);font-weight:700;text-decoration:none;transition:color 0.2s;}
     .login-links a:hover{color:var(--portal-primary-strong, #7c5cff);text-decoration:underline}
     .alert-success{background:rgba(74,222,128,.1);color:#86efac;border:1px solid rgba(74,222,128,.22)}
-    .qr-login{width:100%;max-width:320px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)}
-    .qr-login-copy{color:rgba(255,255,255,.62);font-size:12px;line-height:1.5;margin:8px 0 12px}
-    .qr-login-panel{display:none;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
-    .qr-login-panel.is-visible{display:flex}
-    .qr-login-image{width:220px;height:220px;padding:10px;background:#fff;border-radius:12px}
-    .qr-login-status{min-height:20px;color:rgba(255,255,255,.72);font-size:12px;text-align:center}
+    .alert-danger{background:rgba(248,113,113,.1);color:#fca5a5;border:1px solid rgba(248,113,113,.22)}
+
+    .qr-login-status{min-height:18px;color:rgba(255,255,255,.66);font-size:11.5px;text-align:center;line-height:1.5}
+
+    /* ══════════════════════════════════════════════════════════════════
+       TATA LETAK DUA KOLOM — khusus Login Admin (.login-split)
+       Panel QR di kiri, form login di kanan. Memanfaatkan lebar layar
+       desktop: sebelumnya QR hanya berupa tombol di bawah form sehingga
+       tampak tidak rapi dan kolom form terlalu panjang.
+       ══════════════════════════════════════════════════════════════════ */
+    .login-split{
+      width:100%;max-width:980px;display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,0.92fr);
+      align-items:stretch;
+      background: var(--portal-surface, rgba(255, 255, 255, 0.03));
+      border:1px solid rgba(255, 255, 255, 0.08);
+      border-radius:22px;overflow:hidden;
+      box-shadow: 0 40px 120px -20px rgba(59, 130, 246, 0.15), 0 20px 60px -10px rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);-webkit-backdrop-filter: blur(12px);
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+    .login-split:hover{background:rgba(255, 255, 255, 0.055);border-color:rgba(255, 255, 255, 0.14)}
+
+    /* ── Kolom kiri: panel QR ── */
+    .qr-pane{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:13px;padding:38px 32px;text-align:center;
+      border-right:1px solid rgba(255,255,255,0.07);
+      background:rgba(255,255,255,0.015);
+    }
+    .qr-pane-badge{
+      display:inline-flex;align-items:center;gap:7px;
+      font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+      color:var(--portal-primary, #3b82f6);
+      background:var(--pdim, rgba(59,130,246,.15));
+      border:1px solid rgba(59,130,246,.28);
+      padding:6px 13px;border-radius:999px;
+    }
+    .qr-pane h2{font-size:17px;font-weight:800;margin:0;color:#f8fafc}
+    .qr-pane p{font-size:12px;line-height:1.6;color:rgba(255,255,255,0.60);margin:0;max-width:300px}
+
+    /* Bingkai QR berukuran tetap: tata letak tidak melompat saat gambar
+       dimuat atau QR dibuat ulang. */
+    .qr-frame{
+      position:relative;width:210px;height:210px;flex:0 0 auto;
+      background:#fff;border-radius:16px;padding:12px;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 18px 44px -14px rgba(0,0,0,0.6);
+    }
+    .qr-frame img{width:100%;height:100%;object-fit:contain;border-radius:6px;display:block}
+    .qr-frame img:not([src]){visibility:hidden}
+    /* Penanda status di tengah bingkai (memuat / kedaluwarsa / gagal). */
+    .qr-overlay{
+      position:absolute;inset:12px;border-radius:9px;
+      display:none;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+      background:rgba(15,23,42,.92);color:#e2e8f0;
+      font-size:11.5px;font-weight:600;text-align:center;padding:16px;line-height:1.5;
+    }
+    .qr-overlay.is-visible{display:flex}
+    .qr-overlay i{font-size:26px;color:var(--portal-primary, #3b82f6)}
+    .qr-overlay.is-error i{color:#f87171}
+    /* Kerangka QR saat sedang dibuat. */
+    .qr-skeleton{
+      position:absolute;inset:12px;border-radius:9px;
+      display:none;align-items:center;justify-content:center;
+      background:repeating-linear-gradient(45deg,#eef2f7,#eef2f7 10px,#e4e9f1 10px,#e4e9f1 20px);
+      color:#334155;font-size:11px;font-weight:700;letter-spacing:.03em
+    }
+    .qr-skeleton.is-visible{display:flex}
+
+    /* Hitung mundur masa berlaku QR. */
+    .qr-timer{
+      display:inline-flex;align-items:center;gap:7px;
+      font-size:11.5px;font-weight:700;color:rgba(255,255,255,0.70);
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+      padding:6px 13px;border-radius:999px;
+    }
+    .qr-timer.is-expired{color:#fca5a5;border-color:rgba(248,113,113,.32);background:rgba(248,113,113,.1)}
+
+    /* Langkah-langkah penggunaan QR. */
+    .qr-steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;max-width:300px}
+    .qr-steps li{display:flex;gap:10px;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,0.60)}
+    .qr-steps b{
+      flex:0 0 20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+      background:var(--pdim, rgba(59,130,246,.16));color:var(--portal-primary, #3b82f6);font-size:10.5px;font-weight:800
+    }
+    .qr-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+
+    /* ── Kolom kanan: form login ── */
+    .form-pane{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:38px 32px;text-align:center;
+    }
+    .form-pane .brand-icon{margin-bottom:14px}
+    .form-pane .brand-icon img{width:180px;max-width:82%;height:auto}
+    .form-pane h1{font-size:21px;font-weight:800;margin:0 0 4px}
+    .form-pane .login-copy{margin:6px auto 20px}
+    .form-pane form{width:100%;max-width:320px}
+     /* Input pada panel kanan tidak memakai ikon di dalamnya, sehingga padding
+       kiri bawaan (40px) hanya membuat teks tampak menjorok tanpa alasan. */
+     .form-pane .form-control{padding-left:14px}
+
+    /* ══ Penyesuaian tema terang (Orbit) ══
+       Panel kiri dibuat memakai latar lebih gelap agar QR putih menonjol,
+       namun seluruh teksnya tetap harus terbaca pada tema terang. */
+    [data-app-theme="orbit"] .login-split{
+      background: var(--card-bg) !important;
+      border-color: var(--border) !important;
+      box-shadow: 0 4px 18px rgba(15,23,42,.06) !important;
+      backdrop-filter: none !important;-webkit-backdrop-filter: none !important;
+    }
+    [data-app-theme="orbit"] .login-split:hover{background: var(--card-bg) !important;border-color: var(--border-strong) !important}
+    [data-app-theme="orbit"] .qr-pane{background: var(--bg3) !important;border-right-color: var(--border) !important}
+    [data-app-theme="orbit"] .qr-pane h2{color:var(--text)}
+    [data-app-theme="orbit"] .qr-pane p,
+    [data-app-theme="orbit"] .qr-steps li{color:var(--muted)}
+    [data-app-theme="orbit"] .qr-timer{color:var(--text);background:var(--bg2);border-color:var(--border)}
+    [data-app-theme="orbit"] .qr-timer.is-expired{color:var(--danger);border-color:var(--danger);background:var(--ddim)}
+    [data-app-theme="orbit"] .qr-login-status{color:var(--muted)}
+    [data-app-theme="orbit"] .form-pane h1{color:var(--text)}
+    [data-app-theme="orbit"] .login-copy,
+    [data-app-theme="orbit"] .form-label{color:var(--muted)}
+    [data-app-theme="orbit"] .form-control{
+      background:var(--bg2) !important;border-color:var(--border) !important;color:var(--text) !important;
+    }
+    [data-app-theme="orbit"] .form-control::placeholder{color:var(--muted)}
+    [data-app-theme="orbit"] .password-field-wrapper .eye-toggle{color:var(--muted)}
+    [data-app-theme="orbit"] .password-field-wrapper .eye-toggle:hover{color:var(--text)}
+    [data-app-theme="orbit"] .btn-pwa{background:var(--bg2);border-color:var(--border);color:var(--muted)}
+    [data-app-theme="orbit"] .btn-pwa:hover{background:var(--bg3);color:var(--text)}
+    [data-app-theme="orbit"] .back-link,
+    [data-app-theme="orbit"] .agent-footer{color:var(--muted)}
+
+    /* ── Responsif ── */
+    @media(max-width:900px){
+      /* Satu kolom: form lebih dulu (paling sering dipakai), QR di bawahnya. */
+      .login-split{grid-template-columns:1fr;max-width:440px}
+      .qr-pane{order:2;border-right:none;border-top:1px solid rgba(255,255,255,0.07);padding:28px 24px}
+      .form-pane{order:1;padding:32px 24px}
+      [data-app-theme="orbit"] .qr-pane{border-top-color:var(--border)!important;border-right:none!important}
+    }
+    @media(max-width:420px){
+      body{padding:14px}
+      .qr-frame{width:184px;height:184px}
+      .form-pane{padding:26px 20px}
+      .qr-pane{padding:24px 20px}
+      .form-pane .brand-icon img{width:150px}
+      .login-card{padding-top:24px}
+    }
   </style>
 </head>
 <body>
+<% if (_qrEnabled) { %>
+  <!-- ═══════ LOGIN ADMIN: DUA KOLOM (QR di kiri, Form di kanan) ═══════ -->
+  <div class="login-split">
+
+    <!-- ── Kiri: masuk lewat aplikasi Admin (QR) ── -->
+    <section class="qr-pane">
+      <span class="qr-pane-badge"><i class="bi bi-phone"></i> Cara Cepat</span>
+      <h2>Masuk dengan Aplikasi Admin</h2>
+      <p>Pindai QR di bawah memakai aplikasi <%= company %>, lalu setujui permintaan login dari ponsel Anda.</p>
+
+      <div class="qr-frame">
+        <img id="admin-qr-image" alt="QR login Admin">
+        <div id="admin-qr-overlay" class="qr-overlay" aria-live="polite">
+          <i class="bi bi-phone"></i>
+          <span id="admin-qr-overlay-text">Menyiapkan QR…</span>
+        </div>
+        <div id="admin-qr-skeleton" class="qr-skeleton">MENYIAPKAN QR…</div>
+      </div>
+
+      <div id="admin-qr-timer" class="qr-timer" style="display:none">
+        <i class="bi bi-clock"></i> <span id="admin-qr-timer-text">Berlaku 02:00</span>
+      </div>
+
+      <ol class="qr-steps">
+        <li><b>1</b><span>Buka aplikasi <strong><%= company %></strong> di ponsel Anda.</span></li>
+        <li><b>2</b><span>Pindai QR di atas, lalu tekan <strong>Setujui</strong>.</span></li>
+        <li><b>3</b><span>Halaman ini terbuka otomatis setelah disetujui.</span></li>
+      </ol>
+
+      <div class="qr-actions">
+        <button type="button" id="btn-admin-qr-refresh" class="btn btn-sm btn-pwa">
+          <i class="bi bi-arrow-clockwise me-1"></i> Muat Ulang QR
+        </button>
+      </div>
+      <div id="admin-qr-status" class="qr-login-status" aria-live="polite"></div>
+    </section>
+
+    <!-- ── Kanan: form username & password ── -->
+    <section class="form-pane">
+      <div class="brand-icon"><img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= company %>" onerror="this.src='/img/icon.png'"></div>
+      <h1><%= heading %></h1>
+      <p class="login-copy"><%= copy %></p>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger py-2 small rounded-3" style="width:100%;max-width:320px"><%= error %></div>
+      <% } %>
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-success py-2 small rounded-3" style="width:100%;max-width:320px"><%= success %></div>
+      <% } %>
+
+      <form method="POST" action="<%= action %>" id="portal-login-form">
+        <div class="mb-3 text-start">
+          <label class="form-label small mb-1" for="<%= idPrefix %>-username"><%= _q.userLabel %></label>
+          <input type="<%= _q.usernameType %>" id="<%= idPrefix %>-username" name="<%= _q.usernameField %>" class="form-control" required autocomplete="username" placeholder="<%= _q.userPlaceholder %>" <%= _q.usernameType === 'tel' ? 'inputmode="numeric"' : '' %>>
+        </div>
+        <div class="mb-4 text-start">
+          <label class="form-label small mb-1" for="<%= idPrefix %>-password">Password</label>
+          <div class="password-field-wrapper">
+            <input type="password" id="<%= idPrefix %>-password" name="password" class="form-control" required autocomplete="current-password" placeholder="Password">
+            <button type="button" class="eye-toggle" data-target="<%= idPrefix %>-password" title="Tampilkan/Sembunyikan password"><i class="bi bi-eye"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-login" id="portal-login-btn" style="width:100%;max-width:none"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang</button>
+      </form>
+
+      <% if (_q.links.length) { %>
+        <div class="login-links">
+          <% _q.links.forEach((l) => { %><a href="<%= l.href %>"><%= l.label %></a><% }) %>
+        </div>
+      <% } %>
+
+      <div style="margin-top:16px;margin-bottom:8px;">
+        <button type="button" id="btn-install-pwa" class="btn btn-sm btn-pwa d-inline-flex align-items-center gap-2 px-3 py-2 fw-bold" title="Pasang di layar utama HP Anda">
+          <i class="bi bi-download"></i> <%= appLabel %>
+        </button>
+      </div>
+
+      <% if (typeof backLink !== 'undefined' && backLink) { %>
+        <a href="<%= backLink %>" class="back-link"><i class="bi bi-arrow-left"></i> Kembali ke Beranda</a>
+      <% } %>
+
+      <div class="agent-footer" style="width:100%;max-width:320px">&copy; <%= new Date().getFullYear() %> <%- footerInfo %></div>
+    </section>
+  </div>
+<% } else { %>
+  <!-- ═══════ PORTAL LAIN: tetap SATU kolom (tidak diubah) ═══════ -->
   <div class="login-card text-center">
     <div class="brand-icon"><img src="/img/logo.png?v=<%= typeof brandVersion !== "undefined" ? brandVersion : "zenradius" %>" alt="<%= company %>" onerror="this.src='/img/icon.png'" style="width:210px;max-width:80%;height:auto;"></div>
     <h3 class="mb-1 fw-bold"><%= heading %></h3>
@@ -105,17 +359,10 @@
       <div class="alert alert-success py-2 small rounded-3"><%= success %></div>
     <% } %>
 
-    <%
-      const _userField = (typeof usernameField !== 'undefined' && usernameField) || 'username';
-      const _userType = (typeof usernameType !== 'undefined' && usernameType) || 'text';
-      const _links = (typeof links !== 'undefined' && Array.isArray(links)) ? links : [];
-      const _userLabel = (typeof usernameLabel !== 'undefined' && usernameLabel) || 'Username';
-      const _userPlaceholder = (typeof usernamePlaceholder !== 'undefined' && usernamePlaceholder) || 'Username';
-    %>
     <form method="POST" action="<%= action %>" id="portal-login-form">
       <div class="mb-3 text-start">
-        <label class="form-label small mb-1" for="<%= idPrefix %>-username"><%= _userLabel %></label>
-        <input type="<%= _userType %>" id="<%= idPrefix %>-username" name="<%= _userField %>" class="form-control" required autocomplete="username" placeholder="<%= _userPlaceholder %>" <%= _userType === 'tel' ? 'inputmode="numeric"' : '' %>>
+        <label class="form-label small mb-1" for="<%= idPrefix %>-username"><%= _q.userLabel %></label>
+        <input type="<%= _q.usernameType %>" id="<%= idPrefix %>-username" name="<%= _q.usernameField %>" class="form-control" required autocomplete="username" placeholder="<%= _q.userPlaceholder %>" <%= _q.usernameType === 'tel' ? 'inputmode="numeric"' : '' %>>
       </div>
       <div class="mb-4 text-start">
         <label class="form-label small mb-1" for="<%= idPrefix %>-password">Password</label>
@@ -127,23 +374,9 @@
       <button type="submit" class="btn btn-login" id="portal-login-btn"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang</button>
     </form>
 
-    <% if (typeof qrLoginEnabled !== 'undefined' && qrLoginEnabled) { %>
-      <div class="qr-login">
-        <button type="button" id="btn-admin-qr-login" class="btn btn-sm btn-pwa fw-bold w-100">
-          <i class="bi bi-qr-code-scan me-1"></i> Masuk dengan aplikasi Admin
-        </button>
-        <p class="qr-login-copy">Pindai QR ini dari aplikasi <%= company %> dengan akun Administrator, lalu setujui login web.</p>
-        <div id="admin-qr-panel" class="qr-login-panel" aria-live="polite">
-          <img id="admin-qr-image" class="qr-login-image" alt="QR login Admin">
-          <div id="admin-qr-status" class="qr-login-status">Membuat QR login...</div>
-          <button type="button" id="btn-admin-qr-cancel" class="btn btn-sm btn-pwa">Tutup QR</button>
-        </div>
-      </div>
-    <% } %>
-
-    <% if (_links.length) { %>
+    <% if (_q.links.length) { %>
       <div class="login-links">
-        <% _links.forEach((l) => { %><a href="<%= l.href %>"><%= l.label %></a><% }) %>
+        <% _q.links.forEach((l) => { %><a href="<%= l.href %>"><%= l.label %></a><% }) %>
       </div>
     <% } %>
 
@@ -159,6 +392,7 @@
 
     <div class="agent-footer">&copy; <%= new Date().getFullYear() %> <%- footerInfo %></div>
   </div>
+<% } %>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -180,17 +414,82 @@
       });
     });
 
-    <% if (typeof qrLoginEnabled !== 'undefined' && qrLoginEnabled) { %>
-    (() => {
-      const startButton = document.getElementById('btn-admin-qr-login');
-      const cancelButton = document.getElementById('btn-admin-qr-cancel');
-      const panel = document.getElementById('admin-qr-panel');
-      const image = document.getElementById('admin-qr-image');
-      const status = document.getElementById('admin-qr-status');
-      let polling = false;
-      let challenge = '';
+    let deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPwaPrompt = e; });
+    document.getElementById('btn-install-pwa')?.addEventListener('click', () => {
+      if (!deferredPwaPrompt) return;
+      deferredPwaPrompt.prompt();
+      deferredPwaPrompt.userChoice.then(() => { deferredPwaPrompt = null; });
+    });
 
-      const stopPolling = () => { polling = false; };
+    <% if (_qrEnabled) { %>
+    /* ═══════════════ Login QR Admin ═══════════════
+       QR dibuat OTOMATIS saat halaman dibuka (tidak perlu menekan tombol),
+       karena QR kini menjadi elemen utama di panel kiri.
+
+       Masa berlaku dihitung mundur dari `expiresAt` milik server, bukan dari
+       hitungan lokal, supaya tetap benar walau jam perangkat tidak akurat. */
+    (() => {
+      const refreshButton = document.getElementById('btn-admin-qr-refresh');
+      const image = document.getElementById('admin-qr-image');
+      const overlay = document.getElementById('admin-qr-overlay');
+      const overlayText = document.getElementById('admin-qr-overlay-text');
+      const skeleton = document.getElementById('admin-qr-skeleton');
+      const status = document.getElementById('admin-qr-status');
+      const timerBox = document.getElementById('admin-qr-timer');
+      const timerText = document.getElementById('admin-qr-timer-text');
+
+      let polling = false;       // polling status sedang berjalan
+      let challenge = '';        // challenge aktif
+      let pollTimer = null;      // setTimeout polling
+      let countdownTimer = null; // setInterval hitung mundur
+      let expiresAtMs = 0;       // waktu kedaluwarsa (epoch ms)
+      let requestToken = 0;      // penjaga: respons lama tidak menimpa yang baru
+
+      const showOverlay = (text, isError) => {
+        if (!overlay) return;
+        overlayText.textContent = text;
+        overlay.classList.toggle('is-error', !!isError);
+        overlay.classList.add('is-visible');
+      };
+      const hideOverlay = () => overlay?.classList.remove('is-visible');
+      const showSkeleton = (on) => skeleton?.classList.toggle('is-visible', !!on);
+
+      const stopAll = () => {
+        polling = false;
+        if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+        if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+      };
+
+      const renderCountdown = () => {
+        if (!timerBox || !timerText) return;
+        const leftMs = expiresAtMs - Date.now();
+        if (leftMs <= 0) {
+          timerBox.classList.add('is-expired');
+          timerText.textContent = 'QR kedaluwarsa';
+          return;
+        }
+        const total = Math.floor(leftMs / 1000);
+        const mm = String(Math.floor(total / 60)).padStart(2, '0');
+        const ss = String(total % 60).padStart(2, '0');
+        timerBox.classList.remove('is-expired');
+        timerText.textContent = `Berlaku ${mm}:${ss}`;
+      };
+
+      const startCountdown = (expiresAtSeconds) => {
+        if (countdownTimer) clearInterval(countdownTimer);
+        // expiresAt dari server dalam satuan detik; cadangan 2 menit bila kosong.
+        expiresAtMs = expiresAtSeconds > 0 ? expiresAtSeconds * 1000 : Date.now() + 120000;
+        renderCountdown();
+        countdownTimer = setInterval(() => {
+          renderCountdown();
+          if (expiresAtMs - Date.now() <= 0) {
+            stopAll();
+            if (status) status.textContent = 'QR sudah kedaluwarsa. Klik "Muat Ulang QR" untuk mencoba lagi.';
+          }
+        }, 1000);
+      };
+
       const pollStatus = async () => {
         if (!polling || !challenge) return;
         try {
@@ -202,29 +501,44 @@
           });
           const result = await response.json();
           if (!response.ok || !result.success) throw new Error(result.error?.message || 'Status QR tidak dapat diperiksa.');
+
           if (result.data.status === 'authorized') {
-            stopPolling();
-            status.textContent = 'Login berhasil. Membuka Admin...';
+            stopAll();
+            if (status) status.textContent = 'Berhasil! Membuka panel admin…';
+            showOverlay('Berhasil masuk', false);
             window.location.replace(result.data.redirect || '/admin');
             return;
           }
           if (result.data.status === 'expired') {
-            stopPolling();
-            status.textContent = 'QR kedaluwarsa. Tutup dan buat QR baru.';
+            stopAll();
+            if (status) status.textContent = 'QR sudah kedaluwarsa. Klik "Muat Ulang QR" untuk mencoba lagi.';
+            showOverlay('QR kedaluwarsa', true);
+            timerBox?.classList.add('is-expired');
+            if (timerText) timerText.textContent = 'QR kedaluwarsa';
             return;
           }
-          status.textContent = 'Menunggu persetujuan Administrator dari aplikasi...';
-          window.setTimeout(pollStatus, 1500);
+          if (status) status.textContent = 'Menunggu persetujuan dari aplikasi…';
+          pollTimer = window.setTimeout(pollStatus, 1500);
         } catch (error) {
-          stopPolling();
-          status.textContent = error.message || 'Koneksi polling terputus. Coba buat QR baru.';
+          stopAll();
+          if (status) status.textContent = error.message || 'Koneksi terputus. Coba muat ulang QR.';
+          showOverlay('Gagal memeriksa status', true);
         }
       };
 
-      startButton?.addEventListener('click', async () => {
-        startButton.disabled = true;
-        panel?.classList.add('is-visible');
-        status.textContent = 'Membuat QR login...';
+      const createChallenge = async () => {
+        // Hentikan sesi sebelumnya agar tidak ada dua polling berjalan.
+        stopAll();
+        challenge = '';
+        const token = ++requestToken;
+
+        image?.removeAttribute('src');
+        hideOverlay();
+        showSkeleton(true);
+        if (refreshButton) refreshButton.disabled = true;
+        if (timerBox) { timerBox.style.display = 'none'; timerBox.classList.remove('is-expired'); }
+        if (status) status.textContent = '';
+
         try {
           const response = await fetch('/admin/login/qr-challenge', {
             method: 'POST',
@@ -232,35 +546,44 @@
             headers: { 'Accept': 'application/json' }
           });
           const result = await response.json();
+          // Abaikan respons kedaluwarsa bila pengguna sudah menekan "Muat Ulang QR".
+          if (token !== requestToken) return;
           if (!response.ok || !result.success) throw new Error(result.error?.message || 'QR login gagal dibuat.');
+
           challenge = result.data.challenge;
-          image.src = result.data.qrDataUrl;
+          if (image) image.src = result.data.qrDataUrl;
+          showSkeleton(false);
+          if (timerBox) timerBox.style.display = '';
+          startCountdown(Number(result.data.expiresAt) || 0);
           polling = true;
-          status.textContent = 'Berlaku 2 menit. Pindai dari aplikasi Admin.';
+          if (status) status.textContent = 'Menunggu persetujuan dari aplikasi…';
           pollStatus();
         } catch (error) {
-          status.textContent = error.message || 'QR login gagal dibuat.';
+          if (token !== requestToken) return;
+          showSkeleton(false);
+          showOverlay('QR gagal dibuat', true);
+          if (status) status.textContent = error.message || 'QR login gagal dibuat.';
         } finally {
-          startButton.disabled = false;
+          if (token === requestToken && refreshButton) refreshButton.disabled = false;
+        }
+      };
+
+      refreshButton?.addEventListener('click', createChallenge);
+      // Muat QR pertama kali secara otomatis.
+      createChallenge();
+
+      // Hemat permintaan: hentikan polling saat tab tidak terlihat,
+      // lalu periksa ulang begitu tab kembali aktif.
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+        } else if (polling && challenge && !pollTimer) {
+          pollStatus();
         }
       });
-
-      cancelButton?.addEventListener('click', () => {
-        stopPolling();
-        challenge = '';
-        image.removeAttribute('src');
-        panel?.classList.remove('is-visible');
-      });
+      window.addEventListener('pagehide', stopAll);
     })();
     <% } %>
-
-    let deferredPwaPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPwaPrompt = e; });
-    document.getElementById('btn-install-pwa')?.addEventListener('click', () => {
-      if (!deferredPwaPrompt) return;
-      deferredPwaPrompt.prompt();
-      deferredPwaPrompt.userChoice.then(() => { deferredPwaPrompt = null; });
-    });
   </script>
 </body>
 </html>
