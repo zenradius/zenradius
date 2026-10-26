@@ -24,7 +24,7 @@
       </thead>
       <tbody>
       <% if (!customerDebts.length) { %>
-        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">Tidak ada piutang. Semua nota tempo sudah lunas.</td></tr>
+        <tr><td colspan="6" class="tbl-empty">Tidak ada piutang. Semua nota tempo sudah lunas.</td></tr>
       <% } %>
       <% customerDebts.forEach(function(d){ %>
         <tr>
@@ -64,7 +64,7 @@
       </thead>
       <tbody>
       <% if (!supplierDebts.length) { %>
-        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">Tidak ada hutang ke supplier.</td></tr>
+        <tr><td colspan="6" class="tbl-empty">Tidak ada hutang ke supplier.</td></tr>
       <% } %>
       <% supplierDebts.forEach(function(d){ %>
         <tr>
@@ -101,7 +101,7 @@
       </div>
       <div class="mbody">
         <div class="fg">
-          <label class="fl">Dokumen</label>
+          <label class="fl">Nomor Dokumen</label>
           <div class="fc" id="payDoc" style="background:var(--bg3);font-family:ui-monospace,monospace"></div>
         </div>
         <div class="fg">
@@ -109,15 +109,20 @@
           <div class="fc" id="payBalance" style="background:var(--bg3);font-weight:700;color:var(--warning)"></div>
         </div>
         <div class="fg">
-          <label class="fl">Jumlah Bayar <span style="color:var(--danger)">*</span></label>
+          <label class="fl" for="payAmount">Jumlah Bayar <span class="req">*</span></label>
           <input type="number" class="fc" name="amount" id="payAmount" min="1" step="100" required>
           <div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">
             <button type="button" class="btn btn-g btn-sm" onclick="fillPay()">Bayar Penuh</button>
           </div>
+          <div class="pos-hint">
+            Boleh dibayar sebagian. Sisa tagihan akan otomatis diperbarui, dan status berubah
+            menjadi <strong>Lunas</strong> bila sudah terbayar seluruhnya.
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Catatan</label>
-          <input type="text" class="fc" name="note" placeholder="Opsional">
+          <label class="fl" for="payNote">Catatan</label>
+          <input type="text" id="payNote" class="fc" name="note" placeholder="Transfer BCA, diterima via kolektor">
+          <div class="pos-hint">Opsional, tersimpan pada riwayat pembayaran.</div>
         </div>
       </div>
       <div class="mf">

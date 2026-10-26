@@ -39,7 +39,7 @@
       </thead>
       <tbody>
       <% if (!products.length) { %>
-        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">
+        <tr><td colspan="7" class="tbl-empty">
           Belum ada produk. Klik <strong>Produk Baru</strong> untuk mulai mengisi katalog toko.
         </td></tr>
       <% } %>
@@ -86,7 +86,7 @@
         <thead><tr><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="num">Perubahan</th><th class="num">Sisa</th></tr></thead>
         <tbody>
         <% if (!stockLogs.length) { %>
-          <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:22px">Belum ada mutasi</td></tr>
+          <tr><td colspan="5" class="tbl-empty">Belum ada mutasi</td></tr>
         <% } %>
         <% stockLogs.forEach(function(l){ %>
           <tr>
@@ -110,7 +110,7 @@
         <thead><tr><th>Produk</th><th>Tanggal</th><th class="num">Sisa Hari</th></tr></thead>
         <tbody>
         <% if (!expiring.length) { %>
-          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:22px">Tidak ada produk yang mendekati kadaluarsa</td></tr>
+          <tr><td colspan="3" class="tbl-empty">Tidak ada produk yang mendekati kadaluarsa</td></tr>
         <% } %>
         <% expiring.forEach(function(p){ %>
           <tr>
@@ -139,18 +139,21 @@
         <input type="hidden" name="id" id="itemId">
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Nama Produk <span style="color:var(--danger)">*</span></label>
+            <label class="fl" for="itemName">Nama Produk <span class="req">*</span></label>
             <input type="text" class="fc" name="name" id="itemName" required placeholder="Contoh: Gula Pasir 1kg">
           </div>
           <div class="fg">
-            <label class="fl">SKU / Barcode</label>
+            <label class="fl" for="itemSku">SKU / Barcode</label>
             <input type="text" class="fc" name="sku" id="itemSku" placeholder="Scan atau ketik kode">
-            <div class="pos-hint">Dikosongkan bila belum ada. Bisa dipakai scanner barcode di kasir.</div>
+            <div class="pos-hint">
+              Kode unik produk. Boleh dikosongkan bila belum ada.
+              Bila diisi, kode ini dapat dipindai langsung dengan <em>barcode scanner</em> di layar kasir.
+            </div>
           </div>
         </div>
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Kategori</label>
+            <label class="fl" for="itemCategory">Kategori</label>
             <select class="fc" name="category_id" id="itemCategory">
               <option value="">Tanpa kategori</option>
               <% categories.forEach(function(c){ %>
@@ -159,41 +162,49 @@
             </select>
           </div>
           <div class="fg">
-            <label class="fl">Satuan Dasar</label>
-            <input type="text" class="fc" name="unit" id="itemUnit" value="pcs" placeholder="pcs / kg / botol">
+            <label class="fl" for="itemUnit">Satuan Dasar</label>
+            <input type="text" class="fc" name="unit" id="itemUnit" value="pcs" placeholder="pcs">
+            <div class="pos-hint">Satuan terkecil dari produk ini, mis. <strong>pcs</strong>, <strong>kg</strong>, atau <strong>botol</strong>.</div>
           </div>
         </div>
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Harga Modal (per satuan dasar)</label>
+            <label class="fl" for="itemCost">Harga Modal</label>
             <input type="number" class="fc" name="cost_price" id="itemCost" min="0" step="100" value="0">
+            <div class="pos-hint">Harga beli dari supplier per satuan dasar. Dipakai untuk menghitung laba.</div>
           </div>
           <div class="fg">
-            <label class="fl">Harga Jual (per satuan dasar)</label>
+            <label class="fl" for="itemPrice">Harga Jual</label>
             <input type="number" class="fc" name="price_retail" id="itemPrice" min="0" step="100" value="0">
+            <div class="pos-hint">Harga jual ke pelanggan per satuan dasar.</div>
           </div>
         </div>
         <div class="form-row">
           <div class="fg" id="stockField">
-            <label class="fl">Stok Awal</label>
+            <label class="fl" for="itemStock">Stok Awal</label>
             <input type="number" class="fc" name="stock" id="itemStock" min="0" step="1" value="0">
-            <div class="pos-hint">Hanya untuk produk baru. Setelah tersimpan, gunakan tombol penyesuaian stok.</div>
+            <div class="pos-hint">
+              Hanya berlaku saat menambah produk baru. Untuk mengubah stok produk yang sudah ada,
+              gunakan tombol <strong>Penyesuaian Stok</strong>.
+            </div>
           </div>
           <div class="fg">
-            <label class="fl">Stok Minimum</label>
+            <label class="fl" for="itemMinStock">Stok Minimum</label>
             <input type="number" class="fc" name="min_stock" id="itemMinStock" min="0" step="1" value="<%= settings.default_min_stock || 5 %>">
-            <div class="pos-hint">Sistem menandai produk saat stok mencapai angka ini.</div>
+            <div class="pos-hint">Produk ditandai <strong>stok menipis</strong> bila jumlahnya mencapai angka ini.</div>
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Tanggal Kadaluarsa (opsional)</label>
+          <label class="fl" for="itemExpiry">Tanggal Kadaluarsa (opsional)</label>
           <input type="date" class="fc" name="expiry_date" id="itemExpiry">
+          <div class="pos-hint">Isi bila produk memiliki masa berlaku, agar muncul peringatan mendekati kadaluarsa.</div>
         </div>
 
         <label class="fl" style="margin-top:6px">Satuan &amp; Harga Grosir</label>
         <div class="pos-hint" style="margin-bottom:8px">
-          Isi bila produk dijual dalam satuan besar (mis. Pak = 10 pcs, Dus = 40 pcs).
-          Harga grosir dipakai otomatis saat jumlah beli mencapai minimum.
+          Isi bagian ini bila produk juga dijual dalam satuan besar,
+          misalnya <strong>Pak = 10 pcs</strong> atau <strong>Dus = 40 pcs</strong>.
+          Harga grosir akan otomatis dipakai saat jumlah beli mencapai batas minimum yang ditentukan.
         </div>
         <div id="unitRows"></div>
         <button type="button" class="btn btn-g btn-sm" onclick="addUnitRow()"><i class="bi bi-plus-lg"></i> Tambah Satuan</button>
@@ -222,12 +233,16 @@
         </div>
         <div class="fg">
           <label class="fl">Perubahan Stok</label>
-          <input type="number" class="fc" name="qty_change" required step="1" placeholder="Contoh: 10 atau -3">
-          <div class="pos-hint">Gunakan angka positif untuk menambah, negatif untuk mengurangi (mis. barang rusak).</div>
+          <input type="number" class="fc" name="qty_change" required step="1" placeholder="10">
+          <div class="pos-hint">
+            Gunakan angka <strong>positif</strong> untuk menambah stok (barang masuk) dan
+            angka <strong>negatif</strong> untuk mengurangi (mis. barang rusak atau hilang).
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Alasan / Catatan</label>
-          <input type="text" class="fc" name="note" placeholder="Contoh: stok opname, barang rusak">
+          <label class="fl" for="stockNote">Alasan / Catatan</label>
+          <input type="text" id="stockNote" class="fc" name="note" placeholder="Stok opname, barang rusak">
+          <div class="pos-hint">Tersimpan pada riwayat mutasi stok sebagai jejak audit. Boleh dikosongkan.</div>
         </div>
       </div>
       <div class="mf">
@@ -251,7 +266,7 @@
           <thead><tr><th>Nama</th><th>Keterangan</th><th>Aksi</th></tr></thead>
           <tbody>
           <% if (!categories.length) { %>
-            <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:18px">Belum ada kategori</td></tr>
+            <tr><td colspan="3" class="tbl-empty">Belum ada kategori</td></tr>
           <% } %>
           <% categories.forEach(function(c){ %>
             <tr>
@@ -270,12 +285,13 @@
       </div>
       <form method="POST" action="/toko/kategori/simpan">
         <div class="fg">
-          <label class="fl">Nama Kategori Baru</label>
-          <input type="text" class="fc" name="name" required placeholder="Contoh: Minuman">
+          <label class="fl" for="catName">Nama Kategori Baru</label>
+          <input type="text" id="catName" class="fc" name="name" required placeholder="Minuman">
         </div>
         <div class="fg">
-          <label class="fl">Keterangan</label>
-          <input type="text" class="fc" name="description" placeholder="Opsional">
+          <label class="fl" for="catDesc">Keterangan</label>
+          <input type="text" id="catDesc" class="fc" name="description" placeholder="Minuman dingin & kemasan">
+          <div class="pos-hint">Catatan bebas untuk membedakan kategori. Boleh dikosongkan.</div>
         </div>
         <button type="submit" class="btn btn-p" style="width:100%;justify-content:center"><i class="bi bi-plus-lg"></i> Tambah Kategori</button>
       </form>
@@ -293,33 +309,61 @@
       </div>
       <div class="mbody">
         <div class="alert-i" style="text-align:left">
-          <strong>Format kolom</strong> (baris pertama = judul):<br>
-          <code>sku, nama, kategori, harga_modal, harga_jual, stok, stok_minimum, kadaluarsa, satuan, faktor_konversi, harga_jual_satuan, harga_grosir, grosir_min_qty</code>
-          <div style="margin-top:6px">Isi satu baris per satuan. Produk dengan SKU sama akan digabung otomatis menjadi satu produk multi-satuan. Cara termudah: unduh <strong>Ekspor CSV</strong> lalu sunting berkasnya.</div>
+          <div>
+            <strong>Cara termudah:</strong> klik <strong>Ekspor CSV</strong>, sunting berkasnya di
+            Excel atau Google Spreadsheet, lalu unggah kembali di sini.
+          </div>
+          <div style="margin-top:8px">
+            <strong>Kolom yang dikenali</strong> (baris pertama berisi nama kolom):
+            <code>sku</code>, <code>nama</code>, <code>kategori</code>, <code>harga_modal</code>,
+            <code>harga_jual</code>, <code>stok</code>, <code>stok_minimum</code>, <code>kadaluarsa</code>,
+            <code>satuan</code>, <code>faktor_konversi</code>, <code>harga_jual_satuan</code>,
+            <code>harga_grosir</code>, dan <code>grosir_min_qty</code>.
+          </div>
+          <div style="margin-top:8px">
+            Kolom dibaca berdasarkan <strong>namanya</strong>, jadi urutan kolom bebas.
+            Kolom yang tidak diperlukan boleh dihilangkan. Bila baris pertama bukan nama kolom,
+            sistem memakai urutan bawaan hasil Ekspor CSV.
+          </div>
+          <div style="margin-top:8px">
+            Tulis <strong>satu baris untuk setiap satuan</strong>. Baris dengan SKU yang sama akan
+            otomatis digabung menjadi satu produk bersatuan banyak. Kolom <code>kategori</code> yang
+            belum ada akan dibuat otomatis.
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Berkas CSV</label>
+          <label class="fl" for="csvFile">Berkas CSV</label>
           <input type="file" id="csvFile" accept=".csv,text/csv" class="fc">
-          <div class="pos-hint">Berkas dibaca di peramban lalu isinya ditempel ke kolom di bawah — tidak ada berkas yang dikirim ke server.</div>
+          <div class="pos-hint">
+            Berkas dibaca langsung di peramban, lalu isinya mengisi kolom di bawah.
+            Berkas tidak dikirim ke server.
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Isi CSV <span style="color:var(--danger)">*</span></label>
+          <label class="fl" for="csvText">Isi CSV <span class="req">*</span></label>
           <textarea class="fc" name="csv_text" id="csvText" rows="8" required
             style="font-family:monospace;font-size:11px"
-            placeholder="sku,nama,kategori,harga_modal,harga_jual,stok,..."></textarea>
+            placeholder="sku,nama,kategori,harga_modal,harga_jual,stok&#10;GLP-1,Gula Pasir 1kg,Sembako,12000,14000,20&#10;GLP-1,Gula Pasir 1kg (dus),Sembako,12000,140000,0,.,dus,10,140000"></textarea>
+          <div class="pos-hint">
+            Dapat diisi manual, atau terisi otomatis setelah memilih berkas di atas.
+            Contoh di atas mengimpor satu produk dengan satuan <strong>pcs</strong> (baris 1) dan <strong>dus</strong> isi 10 (baris 2).
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Bila SKU sudah ada</label>
+          <label class="fl" for="csvMode">Bila SKU sudah ada</label>
           <select class="fc" name="mode">
-            <option value="upsert">Perbarui produk yang sudah ada (upsert)</option>
-            <option value="insert_only">Lewati, jangan ubah yang sudah ada</option>
+            <option value="upsert">Perbarui produk yang sudah ada</option>
+            <option value="insert_only">Lewati produk yang sudah ada</option>
           </select>
-          <div class="pos-hint">Mode upsert akan mengganti nama, harga, dan daftar satuan produk yang cocok.</div>
+          <div class="pos-hint">
+            <strong>Perbarui</strong> akan mengganti nama, harga, dan daftar satuan produk yang cocok.
+            <strong>Lewati</strong> tidak mengubah produk yang sudah ada, hanya menambah produk baru.
+          </div>
         </div>
       </div>
       <div class="mf">
         <button type="button" class="btn btn-g" onclick="closeModal('importModal')">Batal</button>
-        <button type="submit" class="btn btn-p"><i class="bi bi-upload"></i> Proses Impor</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-upload"></i> Mulai Impor</button>
       </div>
     </form>
   </div>

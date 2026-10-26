@@ -54,7 +54,7 @@
         <thead><tr><th>Nota</th><th>Pelanggan</th><th class="num">Total</th><th>Status</th></tr></thead>
         <tbody>
         <% if (!stats.recentSales.length) { %>
-          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">Belum ada transaksi</td></tr>
+          <tr><td colspan="4" class="tbl-empty">Belum ada transaksi</td></tr>
         <% } %>
         <% stats.recentSales.forEach(function(s){ %>
           <tr>
@@ -87,7 +87,7 @@
         <thead><tr><th>Produk</th><th class="num">Stok</th><th class="num">Minimum</th></tr></thead>
         <tbody>
         <% if (!stats.lowStockItems.length) { %>
-          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:22px">Semua stok aman</td></tr>
+          <tr><td colspan="3" class="tbl-empty">Semua stok aman</td></tr>
         <% } %>
         <% stats.lowStockItems.forEach(function(p){ %>
           <tr>
@@ -109,7 +109,7 @@
         <thead><tr><th>Produk</th><th>Jenis</th><th class="num">Perubahan</th></tr></thead>
         <tbody>
         <% if (!stats.stockLogs.length) { %>
-          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:22px">Belum ada mutasi</td></tr>
+          <tr><td colspan="3" class="tbl-empty">Belum ada mutasi</td></tr>
         <% } %>
         <% stats.stockLogs.forEach(function(l){ %>
           <tr>

@@ -4,8 +4,10 @@
 <% if (!shift) { %>
   <div class="alert alert-w" style="margin-bottom:16px">
     <i class="bi bi-exclamation-triangle"></i>
-    Shift kasir belum dibuka. Anda tetap bisa bertransaksi, tetapi laporan settlement kas
-    hanya akurat bila shift dibuka.
+    <span>
+      Shift kasir belum dibuka. Transaksi tetap dapat dilakukan, tetapi perhitungan
+      <strong>kas seharusnya</strong> pada laporan shift hanya akurat bila shift dibuka lebih dulu.
+    </span>
     <a href="/toko/shift" class="btn btn-g btn-sm" style="margin-left:auto"><i class="bi bi-clock-history"></i> Buka Shift</a>
   </div>
 <% } %>
@@ -17,7 +19,7 @@
       <div class="card-hd" style="flex-wrap:wrap;gap:10px">
         <h6><i class="bi bi-search"></i> Pilih Produk</h6>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input type="text" id="posSearch" class="fc" placeholder="Scan barcode / cari nama produk..." style="min-width:250px" autocomplete="off">
+          <input type="text" id="posSearch" class="fc" placeholder="Scan barcode atau cari nama produk…" style="min-width:250px" autocomplete="off">
           <select id="posCategory" class="fs" style="min-width:150px">
             <option value="">Semua kategori</option>
             <% categories.forEach(function(c){ %>
@@ -97,20 +99,23 @@
 
       <div id="qrisRow" style="display:none">
         <button type="button" class="btn btn-g" id="btnShowQris" style="width:100%;justify-content:center;margin-bottom:9px">
-          <i class="bi bi-qr-code"></i> Tampilkan QRIS
+          <i class="bi bi-qr-code"></i> Tampilkan QRIS ke Pelanggan
         </button>
-        <div class="pos-hint">Nominal QR otomatis mengikuti total belanja.</div>
+        <div class="pos-hint">
+          Menampilkan QR untuk dipindai pelanggan. Nominalnya otomatis mengikuti total belanja.
+        </div>
       </div>
 
       <div class="fg" style="margin-bottom:9px">
-        <label class="fl">Diskon (Rp)</label>
+        <label class="fl" for="cartDiscount">Diskon (Rp)</label>
         <input type="number" id="cartDiscount" class="fc" placeholder="0" min="0" step="500">
+        <div class="pos-hint">Potongan harga untuk seluruh transaksi ini. Biarkan 0 bila tanpa diskon.</div>
       </div>
 
       <div class="fg" style="margin-bottom:9px" id="pointsRow">
-        <label class="fl">Tukar Poin</label>
+        <label class="fl" for="cartPoints">Tukar Poin</label>
         <input type="number" id="cartPoints" class="fc" placeholder="0" min="0" step="1" disabled>
-        <div class="pos-hint" id="pointsHint">Pilih pelanggan untuk menukar poin.</div>
+        <div class="pos-hint" id="pointsHint">Pilih pelanggan terlebih dahulu untuk dapat menukar poin.</div>
       </div>
 
       <div class="pos-total"><span>Subtotal</span><span id="sumSubtotal">Rp 0</span></div>

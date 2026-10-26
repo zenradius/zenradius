@@ -118,6 +118,9 @@
 @media(max-width:640px){
   .logo-row{grid-template-columns:1fr;justify-items:center;text-align:center}
   .logo-side{width:100%}
+  /* Tombol simpan selebar penuh agar mudah ditekan dengan jempol. */
+  .pfoot-actions{flex-direction:column;align-items:stretch}
+  .pfoot-actions .btn{width:100%;justify-content:center}
 }
 
 /* ── Area utama ── */
@@ -147,6 +150,20 @@
 .ptop-chip.ok{background:var(--sdim);color:var(--success);border-color:color-mix(in srgb,var(--success) 30%,transparent)}
 
 .pbody{padding:20px}
+
+/* ── Baris aksi simpan pada halaman pengaturan ── */
+.pfoot-actions{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding-top:4px;margin-bottom:8px
+}
+
+/* Penanda kolom wajib isi (menggantikan inline style berulang). */
+.req{color:var(--danger);font-weight:700}
+
+/* Keadaan kosong pada tabel: satu pesan yang informatif, bukan "Tidak ada data". */
+.tbl-empty{
+  text-align:center;color:var(--muted);padding:22px;font-size:12.5px
+}
 
 /* ── Notifikasi dalam aplikasi (bukan alert Bootstrap) ── */
 .pos-alert{

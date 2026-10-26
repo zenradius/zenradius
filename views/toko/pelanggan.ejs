@@ -20,7 +20,7 @@
       <thead><tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th class="num">Poin</th><th>Aksi</th></tr></thead>
       <tbody>
       <% if (!customers.length) { %>
-        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px">
+        <tr><td colspan="5" class="tbl-empty">
           Belum ada pelanggan toko. Pelanggan toko dipakai untuk transaksi tempo dan program poin.
         </td></tr>
       <% } %>
@@ -49,9 +49,13 @@
 
 <div class="alert alert-i">
   <i class="bi bi-info-circle"></i>
-  Setiap belanja Rp <%= formatMoney(settings.loyalty_spend_per_point || 10000) %> menghasilkan 1 poin
-  (1 poin setara Rp <%= formatMoney(settings.loyalty_point_value || 100) %> saat ditukar).
-  <% if (!settings.loyalty_enabled) { %><strong>Program poin sedang dinonaktifkan.</strong><% } %>
+  <span>
+    Setiap belanja <strong>Rp <%= formatMoney(settings.loyalty_spend_per_point || 10000) %></strong> mendapat
+    <strong>1 poin</strong>, dan 1 poin bernilai <strong>Rp <%= formatMoney(settings.loyalty_point_value || 100) %></strong> saat ditukar.
+    <% if (!settings.loyalty_enabled) { %>
+      <br><strong>Program poin saat ini dinonaktifkan</strong>, sehingga poin tidak bertambah pada transaksi baru.
+    <% } %>
+  </span>
 </div>
 
 <!-- ── Modal: pelanggan ── -->
@@ -65,20 +69,23 @@
       <div class="mbody">
         <input type="hidden" name="id" id="custId">
         <div class="fg">
-          <label class="fl">Nama <span style="color:var(--danger)">*</span></label>
+          <label class="fl" for="custName">Nama <span class="req">*</span></label>
           <input type="text" class="fc" name="name" id="custName" required>
         </div>
         <div class="fg">
-          <label class="fl">Telepon</label>
-          <input type="text" class="fc" name="phone" id="custPhone" placeholder="08xxxxxxxxxx">
+          <label class="fl" for="custPhone">Telepon</label>
+          <input type="text" class="fc" name="phone" id="custPhone" placeholder="08123456789">
+          <div class="pos-hint">Dipakai untuk mengirim struk lewat WhatsApp dan menghubungi pelanggan.</div>
         </div>
         <div class="fg">
-          <label class="fl">Alamat</label>
-          <input type="text" class="fc" name="address" id="custAddress">
+          <label class="fl" for="custAddress">Alamat</label>
+          <input type="text" class="fc" name="address" id="custAddress" placeholder="Jl. Melati No. 5">
+          <div class="pos-hint">Berguna untuk pelanggan langganan atau pengiriman barang.</div>
         </div>
         <div class="fg">
-          <label class="fl">Catatan</label>
-          <input type="text" class="fc" name="note" id="custNote" placeholder="Opsional">
+          <label class="fl" for="custNote">Catatan</label>
+          <input type="text" class="fc" name="note" id="custNote" placeholder="Pelanggan langganan, bayar tiap awal bulan">
+          <div class="pos-hint">Opsional. Hanya terlihat oleh kasir.</div>
         </div>
       </div>
       <div class="mf">
@@ -108,13 +115,17 @@
           <div class="fc" id="pointCurrent" style="background:var(--bg3);font-weight:700;color:var(--primary)"></div>
         </div>
         <div class="fg">
-          <label class="fl">Perubahan Poin <span style="color:var(--danger)">*</span></label>
-          <input type="number" name="points_change" class="fc" required step="1" placeholder="Contoh: 10 atau -5">
-          <div class="pos-hint">Gunakan tanda minus untuk mengurangi poin.</div>
+          <label class="fl" for="pointsChange">Perubahan Poin <span class="req">*</span></label>
+          <input type="number" id="pointsChange" name="points_change" class="fc" required step="1" placeholder="10">
+          <div class="pos-hint">
+            Isi angka <strong>positif</strong> untuk menambah poin (mis. bonus) dan
+            angka <strong>negatif</strong> untuk mengurangi (mis. koreksi).
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Alasan</label>
-          <input type="text" class="fc" name="reason" placeholder="Contoh: bonus ulang tahun">
+          <label class="fl" for="pointsReason">Alasan</label>
+          <input type="text" id="pointsReason" class="fc" name="reason" placeholder="Bonus ulang tahun">
+          <div class="pos-hint">Tersimpan pada riwayat mutasi poin pelanggan.</div>
         </div>
       </div>
       <div class="mf">

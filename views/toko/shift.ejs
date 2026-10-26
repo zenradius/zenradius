@@ -46,13 +46,17 @@
       <form method="POST" action="/toko/shift/tutup">
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Uang Fisik di Laci (Rp) <span style="color:var(--danger)">*</span></label>
-            <input type="number" class="fc" name="actual_cash" min="0" step="100" required placeholder="Hitung uang di laci">
-            <div class="pos-hint">Sistem akan membandingkan dengan kas seharusnya dan menampilkan selisih.</div>
+            <label class="fl" for="closeCash">Uang Fisik di Laci (Rp) <span class="req">*</span></label>
+            <input type="number" id="closeCash" class="fc" name="actual_cash" min="0" step="100" required placeholder="Hitung seluruh uang di laci">
+            <div class="pos-hint">
+              Masukkan hasil hitung uang tunai yang benar-benar ada di laci.
+              Sistem akan membandingkannya dengan <strong>kas seharusnya</strong> dan menampilkan selisihnya.
+            </div>
           </div>
           <div class="fg">
-            <label class="fl">Catatan</label>
-            <input type="text" class="fc" name="note" placeholder="Opsional">
+            <label class="fl" for="closeNote">Catatan</label>
+            <input type="text" id="closeNote" class="fc" name="note" placeholder="Setoran ke bank, kasbon">
+            <div class="pos-hint">Sebaiknya diisi bila ada selisih, agar mudah ditelusuri nanti.</div>
           </div>
         </div>
         <button type="submit" class="btn btn-p" onclick="return confirm('Tutup shift sekarang? Pastikan uang di laci sudah dihitung.')">
@@ -67,18 +71,25 @@
     <div class="card-bd">
       <div class="alert alert-i">
         <i class="bi bi-info-circle"></i>
-        Buka shift sebelum mulai bertransaksi agar laporan kas dan settlement harian akurat.
+        <span>
+          Buka shift sebelum mulai bertransaksi. Tanpa shift, sistem tidak dapat menghitung
+          <strong>kas seharusnya</strong> sehingga laporan penyetoran kas menjadi tidak akurat.
+        </span>
       </div>
       <form method="POST" action="/toko/shift/buka">
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Modal Awal / Uang Kembalian (Rp) <span style="color:var(--danger)">*</span></label>
-            <input type="number" class="fc" name="starting_cash" min="0" step="1000" required value="0" placeholder="Contoh: 100000">
-            <div class="pos-hint">Jumlah uang tunai yang ada di laci saat shift dimulai.</div>
+            <label class="fl" for="openCash">Modal Awal / Uang Kembalian (Rp) <span class="req">*</span></label>
+            <input type="number" id="openCash" class="fc" name="starting_cash" min="0" step="1000" required value="0" placeholder="100000">
+            <div class="pos-hint">
+              Jumlah uang tunai yang sudah ada di laci saat shift dimulai.
+              Isi <strong>0</strong> bila laci benar-benar kosong.
+            </div>
           </div>
           <div class="fg">
-            <label class="fl">Catatan</label>
-            <input type="text" class="fc" name="note" placeholder="Opsional">
+            <label class="fl" for="openNote">Catatan</label>
+            <input type="text" id="openNote" class="fc" name="note" placeholder="Shift pagi, kasir: Siti">
+            <div class="pos-hint">Opsional, mis. nama kasir atau waktu shift.</div>
           </div>
         </div>
         <button type="submit" class="btn btn-p"><i class="bi bi-unlock"></i> Buka Shift</button>
@@ -97,7 +108,7 @@
       </thead>
       <tbody>
       <% if (!shifts.length) { %>
-        <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:26px">Belum ada riwayat shift.</td></tr>
+        <tr><td colspan="9" class="tbl-empty">Belum ada riwayat shift.</td></tr>
       <% } %>
       <% shifts.forEach(function(s){ %>
         <tr>

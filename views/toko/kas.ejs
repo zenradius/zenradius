@@ -32,7 +32,7 @@
       <thead><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Dicatat oleh</th><th class="num">Jumlah</th><th>Aksi</th></tr></thead>
       <tbody>
       <% if (!expenses.length) { %>
-        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">
+        <tr><td colspan="6" class="tbl-empty">
           Belum ada pengeluaran pada periode ini.
         </td></tr>
       <% } %>
@@ -70,7 +70,7 @@
       </div>
       <div class="mbody">
         <div class="fg">
-          <label class="fl">Kategori <span style="color:var(--danger)">*</span></label>
+          <label class="fl" for="expCategory">Kategori <span class="req">*</span></label>
           <select class="fc" name="category" required>
             <% categories.forEach(function(c){ %>
               <option value="<%= c %>"><%= c %></option>
@@ -78,17 +78,18 @@
           </select>
         </div>
         <div class="fg">
-          <label class="fl">Jumlah (Rp) <span style="color:var(--danger)">*</span></label>
-          <input type="number" class="fc" name="amount" min="1" step="100" required placeholder="Contoh: 50000">
+          <label class="fl" for="expAmount">Jumlah (Rp) <span class="req">*</span></label>
+          <input type="number" id="expAmount" class="fc" name="amount" min="1" step="100" required placeholder="50000">
         </div>
         <div class="fg">
-          <label class="fl">Keterangan</label>
-          <input type="text" class="fc" name="description" placeholder="Contoh: beli plastik & kantong">
+          <label class="fl" for="expDesc">Keterangan</label>
+          <input type="text" id="expDesc" class="fc" name="description" placeholder="Beli plastik & kantong">
+          <div class="pos-hint">Rincian singkat pengeluaran. Boleh dikosongkan.</div>
         </div>
         <div class="fg">
-          <label class="fl">Tanggal</label>
-          <input type="date" class="fc" name="expense_date">
-          <div class="pos-hint">Kosongkan untuk memakai waktu sekarang.</div>
+          <label class="fl" for="expDate">Tanggal</label>
+          <input type="date" id="expDate" class="fc" name="expense_date">
+          <div class="pos-hint">Kosongkan untuk memakai tanggal hari ini.</div>
         </div>
       </div>
       <div class="mf">

@@ -7,62 +7,27 @@
     <div class="card-bd">
       <div class="alert alert-i">
         <i class="bi bi-info-circle"></i>
-        Kosongkan nama toko untuk memakai nama perusahaan dari Pengaturan utama
-        (<strong><%= company %></strong>). Brand utama aplikasi tetap mengikuti pengaturan ZenRadius.
+        <span>
+          Isi identitas toko Anda. Kolom yang dikosongkan akan memakai data dari
+          <strong>Pengaturan utama ZenRadius</strong> (nama perusahaan saat ini: <strong><%= company %></strong>).
+        </span>
       </div>
       <div class="form-row">
         <div class="fg">
-          <label class="fl">Nama Toko</label>
-          <input type="text" class="fc" name="store_name" value="<%= posSettings.store_name || '' %>" placeholder="<%= company %>">
-          <div class="pos-hint">Tampil pada struk dan header modul POS.</div>
+          <label class="fl" for="storeName">Nama Toko</label>
+          <input type="text" id="storeName" class="fc" name="store_name" value="<%= posSettings.store_name || '' %>" placeholder="<%= company %>">
+          <div class="pos-hint">Tercetak pada struk dan tampil pada judul sidebar POS.</div>
         </div>
         <div class="fg">
-          <label class="fl">Telepon Toko</label>
-          <input type="text" class="fc" name="store_phone" value="<%= posSettings.store_phone || '' %>" placeholder="08xxxxxxxxxx">
+          <label class="fl" for="storePhone">Telepon Toko</label>
+          <input type="text" id="storePhone" class="fc" name="store_phone" value="<%= posSettings.store_phone || '' %>" placeholder="08123456789">
+          <div class="pos-hint">Nomor yang dapat dihubungi pelanggan, tercetak pada struk.</div>
         </div>
       </div>
       <div class="fg">
-        <label class="fl">Alamat Toko</label>
-        <textarea class="fc" name="store_address" placeholder="Alamat lengkap"><%= posSettings.store_address || '' %></textarea>
-      </div>
-    </div>
-  </div>
-
-  <!-- Logo toko: formulir terpisah karena mengirim berkas (multipart/form-data),
-       sehingga tidak boleh digabung dengan form pengaturan utama di bawah. -->
-  <div class="card">
-    <div class="card-hd"><h6><i class="bi bi-image"></i> Logo Toko</h6></div>
-    <div class="card-bd">
-      <div class="alert alert-i">
-        <i class="bi bi-info-circle"></i>
-        Logo ini khusus untuk <strong>toko</strong> dan dipakai pada sidebar POS
-        <% if (posSettings.receipt_show_logo) { %> serta struk<% } %>.
-        Bila dikosongkan, POS memakai logo utama ZenRadius.
-      </div>
-      <div class="logo-row">
-        <div class="logo-box">
-          <% if (typeof hasStoreLogo !== 'undefined' && hasStoreLogo) { %>
-            <img src="/toko/logo?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : '' %>" alt="Logo toko">
-          <% } else { %>
-            <span class="logo-none"><i class="bi bi-shop"></i><em>Belum ada logo</em></span>
-          <% } %>
-        </div>
-        <div class="logo-side">
-          <form method="POST" action="/toko/logo/unggah" enctype="multipart/form-data" class="logo-form">
-            <div class="fg" style="margin-bottom:10px">
-              <label class="fl">Unggah Logo Baru</label>
-              <input type="file" name="logo" class="fc" accept="image/png,image/jpeg,image/webp" required>
-              <div class="pos-hint">PNG, JPG, atau WebP. Maksimal 2 MB. Sebaiknya gambar persegi (mis. 512×512) agar tampil tajam.</div>
-            </div>
-            <button type="submit" class="btn btn-p btn-sm"><i class="bi bi-upload"></i> Unggah Logo</button>
-          </form>
-          <% if (typeof hasStoreLogo !== 'undefined' && hasStoreLogo) { %>
-            <form method="POST" action="/toko/logo/hapus" style="margin-top:8px"
-                  onsubmit="return confirm('Hapus logo toko dan kembali memakai logo aplikasi?')">
-              <button type="submit" class="btn btn-g btn-sm"><i class="bi bi-trash3"></i> Hapus Logo</button>
-            </form>
-          <% } %>
-        </div>
+        <label class="fl" for="storeAddress">Alamat Toko</label>
+        <textarea id="storeAddress" class="fc" name="store_address" placeholder="Jl. Merdeka No. 10, Bandung"><%= posSettings.store_address || '' %></textarea>
+        <div class="pos-hint">Tercetak pada struk, di bawah nama toko.</div>
       </div>
     </div>
   </div>
@@ -71,13 +36,17 @@
     <div class="card-hd"><h6><i class="bi bi-receipt"></i> Struk</h6></div>
     <div class="card-bd">
       <div class="fg">
-        <label class="fl">Catatan Kaki Struk</label>
-        <textarea class="fc" name="receipt_footer" placeholder="Terima kasih atas kunjungan Anda"><%= posSettings.receipt_footer || '' %></textarea>
+        <label class="fl" for="receiptFooter">Catatan Kaki Struk</label>
+        <textarea id="receiptFooter" class="fc" name="receipt_footer" placeholder="Terima kasih atas kunjungan Anda"><%= posSettings.receipt_footer || '' %></textarea>
+        <div class="pos-hint">Kalimat penutup di bagian paling bawah struk. Boleh dikosongkan.</div>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)">
         <input type="checkbox" name="receipt_show_logo" value="1" <%= posSettings.receipt_show_logo ? 'checked' : '' %>>
-        Cetak logo pada struk (memakai logo dari Pengaturan ZenRadius)
+        Cetak logo pada struk
       </label>
+      <div class="pos-hint" style="margin-left:24px">
+        Memakai <strong>Logo Toko</strong> di bawah. Bila belum diunggah, dipakai logo utama ZenRadius.
+      </div>
     </div>
   </div>
 
@@ -86,18 +55,27 @@
     <div class="card-bd">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);margin-bottom:14px">
         <input type="checkbox" name="loyalty_enabled" value="1" <%= posSettings.loyalty_enabled ? 'checked' : '' %>>
-        Aktifkan poin loyalitas untuk pelanggan toko
+        Aktifkan poin loyalitas
       </label>
+      <div class="pos-hint" style="margin:-8px 0 14px 24px">
+        Poin otomatis terkumpul dari belanja pelanggan dan dapat ditukar menjadi potongan harga saat pembayaran.
+      </div>
       <div class="form-row">
         <div class="fg">
-          <label class="fl">Belanja per 1 Poin (Rp)</label>
-          <input type="number" class="fc" name="loyalty_spend_per_point" min="100" step="100" value="<%= posSettings.loyalty_spend_per_point %>">
-          <div class="pos-hint">Contoh: 10.000 artinya setiap Rp 10.000 belanja mendapat 1 poin.</div>
+          <label class="fl" for="loyaltySpend">Belanja per 1 Poin (Rp)</label>
+          <input type="number" id="loyaltySpend" class="fc" name="loyalty_spend_per_point" min="100" step="100" value="<%= posSettings.loyalty_spend_per_point %>">
+          <div class="pos-hint">
+            Nominal belanja yang dibutuhkan untuk mendapat 1 poin.
+            Contoh: isi <strong>10000</strong> berarti setiap Rp 10.000 belanja mendapat 1 poin.
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Nilai Tukar 1 Poin (Rp)</label>
-          <input type="number" class="fc" name="loyalty_point_value" min="1" step="1" value="<%= posSettings.loyalty_point_value %>">
-          <div class="pos-hint">Potongan harga saat poin ditukar.</div>
+          <label class="fl" for="loyaltyValue">Nilai Tukar 1 Poin (Rp)</label>
+          <input type="number" id="loyaltyValue" class="fc" name="loyalty_point_value" min="1" step="1" value="<%= posSettings.loyalty_point_value %>">
+          <div class="pos-hint">
+            Besar potongan harga untuk setiap 1 poin yang ditukar.
+            Contoh: isi <strong>100</strong> berarti 10 poin bernilai Rp 1.000.
+          </div>
         </div>
       </div>
     </div>
@@ -107,10 +85,15 @@
     <div class="card-hd"><h6><i class="bi bi-qr-code"></i> QRIS Statis</h6></div>
     <div class="card-bd">
       <div class="fg">
-        <label class="fl">Payload QRIS Statis Merchant</label>
-        <textarea class="fc" name="qris_static_payload" placeholder="00020101021126..."><%= posSettings.qris_static_payload || '' %></textarea>
+        <label class="fl" for="qrisPayload">Payload QRIS Statis</label>
+        <textarea id="qrisPayload" class="fc" name="qris_static_payload" placeholder="00020101021126..."><%= posSettings.qris_static_payload || '' %></textarea>
         <div class="pos-hint">
-          Salin payload QRIS statis dari merchant Anda. Dipakai sebagai rujukan nominal saat menerima pembayaran QRIS.
+          Tempelkan <em>payload</em> QRIS statis dari penyedia pembayaran Anda (deretan angka panjang yang diawali <code>000201</code>).
+          Sistem mengubahnya menjadi <strong>QRIS dinamis</strong> bernominal tetap, sehingga pelanggan tidak perlu mengetik jumlah bayar.
+        </div>
+        <div class="pos-hint">
+          Bila dikosongkan, POS otomatis memakai <strong>QRIS Statis global</strong> dari menu
+          <a href="/admin/payment-qris-static" target="_blank" rel="noopener" style="color:var(--primary)">Payment QRIS Statis</a>.
         </div>
       </div>
     </div>
@@ -121,25 +104,83 @@
     <div class="card-bd">
       <div class="form-row">
         <div class="fg">
-          <label class="fl">Stok Minimum Default</label>
-          <input type="number" class="fc" name="default_min_stock" min="0" step="1" value="<%= posSettings.default_min_stock %>">
-          <div class="pos-hint">Dipakai sebagai saran saat menambah produk baru.</div>
+          <label class="fl" for="defaultMinStock">Stok Minimum Default</label>
+          <input type="number" id="defaultMinStock" class="fc" name="default_min_stock" min="0" step="1" value="<%= posSettings.default_min_stock %>">
+          <div class="pos-hint">
+            Nilai awal yang terisi otomatis pada form produk baru.
+            Produk ditandai <strong>stok menipis</strong> bila jumlahnya mencapai angka ini.
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Pajak (%)</label>
-          <input type="number" class="fc" name="tax_percent" min="0" max="100" step="0.1" value="<%= posSettings.tax_percent %>">
-          <div class="pos-hint">Isi 0 bila tidak memakai pajak.</div>
+          <label class="fl" for="taxPercent">Pajak (%)</label>
+          <input type="number" id="taxPercent" class="fc" name="tax_percent" min="0" max="100" step="0.1" value="<%= posSettings.tax_percent %>">
+          <div class="pos-hint">Persentase pajak yang ditambahkan ke total belanja. Isi <strong>0</strong> bila tidak memakai pajak.</div>
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)">
         <input type="checkbox" name="low_stock_alert" value="1" <%= posSettings.low_stock_alert ? 'checked' : '' %>>
-        Tampilkan peringatan stok menipis di ringkasan POS
+        Tampilkan peringatan stok menipis
       </label>
+      <div class="pos-hint" style="margin-left:24px">
+        Menampilkan daftar produk yang perlu segera dipesan ulang pada halaman Ringkasan.
+      </div>
     </div>
   </div>
 
-  <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan Toko</button>
+  <div class="pfoot-actions">
+    <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+    <span class="pos-hint" style="margin:0">Perubahan berlaku langsung setelah disimpan.</span>
+  </div>
 </form>
+
+<!--
+  Logo Toko berada DI LUAR <form> pengaturan di atas.
+  HTML tidak mengizinkan <form> bersarang: bila diletakkan di dalam, peramban
+  menutup form terluar lebih awal sehingga tombol "Simpan Pengaturan" bisa
+  mengirim data yang salah. Kartu ini memakai formnya sendiri karena mengirim
+  berkas (multipart/form-data).
+-->
+<div class="card">
+  <div class="card-hd"><h6><i class="bi bi-image"></i> Logo Toko</h6></div>
+  <div class="card-bd">
+    <div class="alert alert-i">
+      <i class="bi bi-info-circle"></i>
+      <span>
+        Logo khusus toko Anda. Dipakai pada sidebar POS
+        <% if (posSettings.receipt_show_logo) { %>dan struk<% } %>.
+        Bila dikosongkan, POS memakai logo utama ZenRadius.
+      </span>
+    </div>
+    <div class="logo-row">
+      <div class="logo-box">
+        <% if (typeof hasStoreLogo !== 'undefined' && hasStoreLogo) { %>
+          <img src="/toko/logo?v=<%= typeof brandVersion !== 'undefined' ? brandVersion : '' %>" alt="Logo toko">
+        <% } else { %>
+          <span class="logo-none"><i class="bi bi-shop"></i><em>Belum ada logo</em></span>
+        <% } %>
+      </div>
+      <div class="logo-side">
+        <form method="POST" action="/toko/logo/unggah" enctype="multipart/form-data" class="logo-form">
+          <div class="fg" style="margin-bottom:10px">
+            <label class="fl" for="logoFile">Pilih Berkas Logo</label>
+            <input type="file" id="logoFile" name="logo" class="fc" accept="image/png,image/jpeg,image/webp" required>
+            <div class="pos-hint">
+              Format PNG, JPG, atau WebP. Ukuran maksimal 2 MB.
+              Sebaiknya gambar persegi (mis. 512×512 piksel) agar tidak terpotong dan tetap tajam.
+            </div>
+          </div>
+          <button type="submit" class="btn btn-p btn-sm"><i class="bi bi-upload"></i> Unggah Logo</button>
+        </form>
+        <% if (typeof hasStoreLogo !== 'undefined' && hasStoreLogo) { %>
+          <form method="POST" action="/toko/logo/hapus" class="logo-form" style="margin-top:8px"
+                onsubmit="return confirm('Hapus logo toko dan kembali memakai logo aplikasi?')">
+            <button type="submit" class="btn btn-g btn-sm"><i class="bi bi-trash3"></i> Hapus Logo</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
 
 </div><!-- /.pbody -->
 </div><!-- /.pmain -->

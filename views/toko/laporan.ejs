@@ -58,7 +58,7 @@
         <thead><tr><th>Metode</th><th class="num">Total</th><th class="num">Transaksi</th></tr></thead>
         <tbody>
         <% if (!report.byPayment.length) { %>
-          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:22px">Tidak ada data</td></tr>
+          <tr><td colspan="3" class="tbl-empty">Belum ada transaksi pada periode ini.</td></tr>
         <% } %>
         <% report.byPayment.forEach(function(p){ %>
           <tr>
@@ -80,7 +80,7 @@
         <thead><tr><th>Produk</th><th class="num">Terjual</th><th class="num">Omzet</th><th class="num">Laba</th></tr></thead>
         <tbody>
         <% if (!topSelling.length) { %>
-          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">Belum ada penjualan</td></tr>
+          <tr><td colspan="4" class="tbl-empty">Belum ada penjualan</td></tr>
         <% } %>
         <% topSelling.forEach(function(p){ %>
           <tr>
@@ -100,14 +100,16 @@
 <div class="card">
   <div class="card-hd">
     <h6><i class="bi bi-hourglass-bottom"></i> Barang Kurang Laku</h6>
-    <span class="pos-hint" style="margin:0">Modal tertahan pada stok yang penjualannya paling sedikit</span>
+    <span class="pos-hint" style="margin:0">
+      Produk yang stoknya masih banyak tetapi paling sedikit terjual — nilai modal yang tertahan di rak
+    </span>
   </div>
   <div class="tbl-wrap" style="max-height:420px;overflow-y:auto">
     <table class="dtbl">
       <thead><tr><th>Produk</th><th class="num">Stok</th><th class="num">Terjual</th><th class="num">Modal Tertahan</th><th class="num">Terakhir Laku</th></tr></thead>
       <tbody>
       <% if (!slowMoving || !slowMoving.length) { %>
-        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:22px">Tidak ada data</td></tr>
+        <tr><td colspan="5" class="tbl-empty">Belum ada produk yang perlu diperhatikan. Semua stok bergerak baik.</td></tr>
       <% } %>
       <% (slowMoving || []).forEach(function(p){ %>
         <tr>
@@ -139,7 +141,7 @@
       <thead><tr><th>Tanggal</th><th class="num">Transaksi</th><th class="num">Penjualan</th><th class="num">Laba</th></tr></thead>
       <tbody>
       <% if (!report.daily.length) { %>
-        <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">Tidak ada data</td></tr>
+        <tr><td colspan="4" class="tbl-empty">Belum ada penjualan pada periode ini.</td></tr>
       <% } %>
       <% report.daily.forEach(function(d){ %>
         <tr>
@@ -164,7 +166,7 @@
       </thead>
       <tbody>
       <% if (!sales.length) { %>
-        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">Belum ada transaksi.</td></tr>
+        <tr><td colspan="7" class="tbl-empty">Belum ada transaksi.</td></tr>
       <% } %>
       <% sales.forEach(function(s){ %>
         <tr>
@@ -220,30 +222,37 @@
       <div class="mbody">
         <input type="hidden" name="sale_id" id="refundSaleId">
         <div class="fg">
-          <label class="fl">Pilih Barang yang Dikembalikan <span style="color:var(--danger)">*</span></label>
+          <label class="fl" for="refundItem">Barang yang Dikembalikan <span class="req">*</span></label>
           <select class="fc" name="sale_item_id" id="refundItem" required></select>
+          <div class="pos-hint">Hanya barang yang masih dapat diretur dari nota ini yang ditampilkan.</div>
         </div>
         <div class="fg">
-          <label class="fl">Jumlah Retur <span style="color:var(--danger)">*</span></label>
+          <label class="fl" for="refundQty">Jumlah Retur <span class="req">*</span></label>
           <input type="number" class="fc" name="qty" id="refundQty" min="1" step="1" required value="1">
           <div class="pos-hint" id="refundHint"></div>
         </div>
         <div class="fg">
-          <label class="fl">Alasan Retur</label>
-          <input type="text" class="fc" name="reason" placeholder="Contoh: barang rusak / salah beli">
+          <label class="fl" for="refundReason">Alasan Retur</label>
+          <input type="text" id="refundReason" class="fc" name="reason" placeholder="Barang rusak, salah beli">
+          <div class="pos-hint">Tersimpan pada riwayat retur sebagai jejak audit. Boleh dikosongkan.</div>
         </div>
         <div class="fg">
-          <label class="fl">Pengembalian Dana</label>
+          <label class="fl" for="refundMethod">Pengembalian Dana</label>
           <select class="fc" name="refund_method" id="refundMethod">
-            <option value="CASH">Tunai — kas toko keluar (dicatat sebagai pengeluaran)</option>
-            <option value="DEBT_DEDUCTION">Potong piutang — dipakai bila pelanggan masih berhutang</option>
+            <option value="CASH">Tunai — uang dikembalikan ke pelanggan</option>
+            <option value="DEBT_DEDUCTION">Potong piutang — untuk nota tempo yang belum lunas</option>
           </select>
-          <div class="pos-hint">Pilih "Potong piutang" agar kas tidak keluar dua kali untuk bon yang belum lunas.</div>
+          <div class="pos-hint">
+            Pilih <strong>Tunai</strong> untuk mengembalikan uang secara langsung; kas toko berkurang dan
+            otomatis tercatat sebagai pengeluaran.
+            Pilih <strong>Potong piutang</strong> bila pelanggan masih berhutang, agar kas tidak
+            berkurang padahal uangnya belum pernah diterima.
+          </div>
         </div>
       </div>
       <div class="mf">
         <button type="button" class="btn btn-g" onclick="closeModal('refundModal')">Batal</button>
-        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Proses Retur</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-arrow-return-left"></i> Proses Retur</button>
       </div>
     </form>
   </div>
@@ -260,17 +269,22 @@
       <div class="mbody">
         <input type="hidden" name="sale_id" id="waSaleId">
         <div class="fg">
-          <label class="fl">Nomor WhatsApp</label>
+          <label class="fl" for="waPhone">Nomor WhatsApp Tujuan</label>
           <input type="text" class="fc" name="phone" id="waPhone" placeholder="08123456789">
-          <div class="pos-hint">Terisi otomatis dari data pelanggan bila ada. Boleh diubah atau diisi manual.</div>
+          <div class="pos-hint">
+            Terisi otomatis dari data pelanggan bila tersedia. Boleh diubah atau diisi manual.
+          </div>
         </div>
         <div class="alert-i" style="text-align:left">
-          Struk dikirim lewat gateway WhatsApp yang aktif di ZenRadius. Pastikan nomor tujuan terdaftar di WhatsApp.
+          <span>
+            Struk dikirim melalui gateway WhatsApp yang aktif di ZenRadius.
+            Pastikan nomor tujuan terdaftar di WhatsApp dan diawali kode negara atau <code>0</code>.
+          </span>
         </div>
       </div>
       <div class="mf">
         <button type="button" class="btn btn-g" onclick="closeModal('waModal')">Batal</button>
-        <button type="submit" class="btn btn-p"><i class="bi bi-send"></i> Kirim</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-send"></i> Kirim Struk</button>
       </div>
     </form>
   </div>
