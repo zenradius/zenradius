@@ -25,7 +25,7 @@
 <html lang="<%= (typeof lang !== 'undefined' && lang) || 'id' %>" data-app-theme="<%= typeof appTheme !== 'undefined' ? appTheme : 'current' %>">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="<%= (typeof appTheme !== 'undefined' && appTheme === 'space') ? '#0B1028' : (typeof appTheme !== 'undefined' && appTheme === 'orbit') ? '#F2F5FA' : '#173945' %>">
   <title><%= title %> - <%= company %></title>
   <% if (typeof manifest !== 'undefined' && manifest) { %><link rel="manifest" href="<%= manifest %>"><% } %>
@@ -38,14 +38,35 @@
   <script src="/js/app-ui.js" defer></script>
   <style>
     *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
+    /* PENTING (bug mobile): jangan memberi `height:100%` pada body.
+       Dengan body setinggi viewport + `align-items:center`, kartu yang lebih
+       tinggi dari layar akan terpusat sehingga luapannya terbagi ke atas dan
+       ke bawah. Bagian atas (logo & judul) lalu TERPOTONG dan tidak bisa
+       dijangkau scroll sama sekali. Solusinya: body hanya diberi `min-height`
+       agar tumbuh mengikuti isi, sehingga seluruh halaman dapat digulir. */
+    html{
       background:var(--body-bg-solid, #173945);
       background-image:var(--body-bg-image, radial-gradient(circle at 8% 0%,#236060 0%,transparent 34%),radial-gradient(circle at 100% 100%,#173e4d 0%,transparent 42%),linear-gradient(135deg,#173740 0%,#183f51 52%,#194251 100%));
       background-attachment:fixed;
-      color:#f8fafc;min-height:100vh;min-height:100dvh;
-      display:flex;align-items:center;justify-content:center;
-      font-family:'DM Sans',sans-serif;padding:24px;
+      background-repeat:no-repeat;
+      background-size:cover;
+      -webkit-text-size-adjust:100%;
+    }
+    body{
+      /* Latar dipasang di <html>: `background-attachment:fixed` pada <body>
+         tidak andal di iOS Safari dan bisa meninggalkan area kosong. */
+      background:transparent;
+      color:#f8fafc;
+      min-height:100vh;min-height:100dvh;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      font-family:'DM Sans',sans-serif;
+      /* Ruang aman untuk notch / bilah gestur pada perangkat mobile. */
+      padding:28px 24px;
+      padding-top:max(28px, env(safe-area-inset-top));
+      padding-bottom:max(28px, env(safe-area-inset-bottom));
+      padding-left:max(24px, env(safe-area-inset-left));
+      padding-right:max(24px, env(safe-area-inset-right));
     }
 
     /* ── Kartu dasar (tata letak satu kolom) ── */
@@ -242,21 +263,81 @@
     [data-app-theme="orbit"] .back-link,
     [data-app-theme="orbit"] .agent-footer{color:var(--muted)}
 
-    /* ── Responsif ── */
+    /* ══════════════════ RESPONSIF ══════════════════ */
+
+    /* Tablet & ponsel: satu kolom. Form lebih dulu karena paling sering
+       dipakai, QR di bawahnya sebagai alternatif. */
     @media(max-width:900px){
-      /* Satu kolom: form lebih dulu (paling sering dipakai), QR di bawahnya. */
-      .login-split{grid-template-columns:1fr;max-width:440px}
-      .qr-pane{order:2;border-right:none;border-top:1px solid rgba(255,255,255,0.07);padding:28px 24px}
-      .form-pane{order:1;padding:32px 24px}
-      [data-app-theme="orbit"] .qr-pane{border-top-color:var(--border)!important;border-right:none!important}
+      .login-split{grid-template-columns:1fr;max-width:460px;border-radius:18px}
+      .qr-pane{
+        order:2;border-right:none;
+        border-top:1px solid rgba(255,255,255,0.07);
+        padding:30px 26px;
+      }
+      .form-pane{order:1;padding:34px 26px}
+      /* Kolom isian dibuat 16px agar iOS Safari TIDAK memperbesar halaman
+         otomatis saat kolom disentuh (font < 16px memicu auto-zoom). */
+      .form-control{font-size:16px;padding:13px 14px}
+      .password-field-wrapper .form-control.with-eye{padding-right:48px}
+      /* Target sentuh minimal 44px sesuai panduan aksesibilitas. */
+      .btn-login{min-height:46px;font-size:14px}
+      .btn-pwa{min-height:40px}
+      .password-field-wrapper .eye-toggle{
+        width:44px;height:44px;right:2px;font-size:17px;
+      }
+      .login-links{flex-wrap:wrap;justify-content:center;gap:10px 18px}
+      /* Tautan teks kecil sulit ditekan; beri ruang sentuh vertikal. */
+      .back-link,.login-links a{padding:6px 2px}
+      .back-link{font-size:12.5px}
+      /* Bingkai QR sedikit lebih kecil agar tidak mendominasi layar. */
+      .qr-frame{width:196px;height:196px}
     }
-    @media(max-width:420px){
-      body{padding:14px}
-      .qr-frame{width:184px;height:184px}
-      .form-pane{padding:26px 20px}
-      .qr-pane{padding:24px 20px}
-      .form-pane .brand-icon img{width:150px}
-      .login-card{padding-top:24px}
+
+    /* Ponsel sempit (>=360px tetap aman). */
+    @media(max-width:480px){
+      body{padding:18px 14px;padding-bottom:max(18px, env(safe-area-inset-bottom))}
+      .login-split{border-radius:16px}
+      .form-pane{padding:28px 20px}
+      .qr-pane{padding:26px 20px}
+      .form-pane h1{font-size:19px}
+      .form-pane .login-copy{font-size:11.5px;margin-bottom:18px}
+      .form-pane .brand-icon img{width:158px}
+      .qr-frame{width:180px;height:180px;padding:10px}
+      .qr-pane h2{font-size:15.5px}
+      .qr-pane p{font-size:11.5px}
+      .qr-steps li{font-size:11px;gap:8px}
+      .qr-timer{font-size:11px;padding:5px 11px}
+      .qr-actions{width:100%}
+      .qr-actions .btn{width:100%;justify-content:center}
+      .agent-footer{margin-top:18px;padding-top:12px}
+    }
+
+    /* Ponsel sangat kecil / layar pendek (mis. ponsel lama 320px). */
+    @media(max-width:360px){
+      body{padding:14px 10px}
+      .form-pane{padding:24px 16px}
+      .qr-pane{padding:22px 16px}
+      .qr-frame{width:164px;height:164px}
+      .form-pane .brand-icon img{width:140px}
+      .login-card{padding:26px 18px 22px}
+    }
+
+    /* Layar rendah (ponsel mode mendatar): rapatkan jarak vertikal agar
+       form tetap terjangkau tanpa perlu banyak menggulir. */
+    @media(max-height:560px){
+      body{padding-top:14px;padding-bottom:14px}
+      .form-pane,.qr-pane{padding-top:20px;padding-bottom:20px}
+      .qr-frame{width:150px;height:150px}
+      .form-pane .brand-icon img{width:130px}
+      .form-pane .login-copy{display:none}
+      .qr-steps{display:none}
+    }
+
+    /* Hormati preferensi pengguna yang membatasi animasi. */
+    @media(prefers-reduced-motion:reduce){
+      *{transition:none!important;animation:none!important}
+      .btn-login:hover{transform:none}
+      .login-split:hover,.login-card:hover{background:inherit}
     }
   </style>
 </head>
@@ -362,7 +443,7 @@
     <form method="POST" action="<%= action %>" id="portal-login-form">
       <div class="mb-3 text-start">
         <label class="form-label small mb-1" for="<%= idPrefix %>-username"><%= _q.userLabel %></label>
-        <input type="<%= _q.usernameType %>" id="<%= idPrefix %>-username" name="<%= _q.usernameField %>" class="form-control" required autocomplete="username" placeholder="<%= _q.userPlaceholder %>" <%= _q.usernameType === 'tel' ? 'inputmode="numeric"' : '' %>>
+        <input type="<%= _q.usernameType %>" id="<%= idPrefix %>-username" name="<%= _q.usernameField %>" class="form-control" required autocomplete="username" placeholder="<%= _q.userPlaceholder %>" <%= _q.usernameType === 'tel' ? 'type="tel"' : '' %> <%= _q.usernameType === 'tel' ? 'inputmode="numeric"' : '' %>>
       </div>
       <div class="mb-4 text-start">
         <label class="form-label small mb-1" for="<%= idPrefix %>-password">Password</label>
